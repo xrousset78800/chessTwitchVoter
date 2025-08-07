@@ -1,0 +1,844 @@
+#board_wrapper{
+    position: relative;
+	display: inline-block;
+  width: 630px;
+  height: 630px;
+	vertical-align: top;
+}
+
+#primary_canvas, #drawing_canvas, #myBoard{
+    position: absolute; 
+    top: 0px; 
+    left: 0px;
+}
+
+#myBoard {
+    z-index: -1;
+	display: inline-block;
+}
+
+#primary_canvas, #drawing_canvas {
+    opacity: 0.8;
+}
+
+ul {
+	list-style:none;
+	margin: 0;
+    padding: 0;
+}
+li {
+	display: inline-block;
+}
+h1, h2, h3, h4, h5 {
+	margin: 0;
+}
+h5 {
+  color: white;
+}
+h1 {
+	text-align: center;
+}
+body {
+	transition: background-color 2s ease;
+	font-family: 'Roboto Condensed', sans-serif;
+    width: 1033px;
+    height: 720px;
+	min-width: 1033px;
+	min-height: 720px;
+	max-width: 1033px;
+	max-height: 720px;
+}
+
+body.omg-win h1{
+	color: green;
+}
+body.omg-lose h1{
+  color: red;
+}
+
+/*
+body.omg-lose [data-omgSolution] {
+  display: inline-block !important;
+}*/
+
+.omg-win h3 {
+  display: none !important;
+}
+.omg-win h4 {
+  display: block;
+}
+
+body.noBg:before {
+  content: '';
+  transition: background-color 0s ease;
+  background-image: inherit;
+  background-color: #00FF00;
+  animation: inherit !important;
+}
+body:before {
+	content: '';
+	top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background-size: cover;
+  background-image: url(../img/bg.jpg);
+  z-index: -1;
+}
+
+body[data-team="w"]:before {
+	content:'';
+	animation: 0.3s invertionwb;
+	animation-fill-mode: forwards;
+}
+
+body[data-team="b"]:before {
+	content:'';
+	animation: 0.3s invertionbw;
+	animation-fill-mode: forwards;
+}
+
+@keyframes invertionbw {
+  from { filter: invert(100%) brightness(0.7); }
+  to   { filter: invert(0%) brightness(0.7); }
+}
+
+@keyframes invertionwb {
+  from { filter: invert(0%) brightness(0.7); }
+  to   { filter: invert(100%) brightness(0.7); }
+}
+
+body[data-team="b"] {
+	color: #f1f1f1;
+  font-weight: normal;
+}
+
+body[data-team="b"] #availableList li {
+  background: #444444;
+}
+
+body[data-team="w"] #availableList li {
+  background: #dfdfdf;
+}
+
+body[data-team="b"] [data-team="w"], body[data-team="w"] [data-team="b"]{
+	display: none !important;
+}
+body[data-team="w"] {
+	color: #171717;
+  font-weight: normal;
+}
+h3, h4 {
+	width: 600px;
+	text-align: center;
+	font-size: 23px;
+	font-weight: bold;
+	line-height: 40px;
+  color: white;
+}
+[data-rating] {
+  position: absolute;
+}
+
+.poll{
+	display: inline-block;
+	width: 150px;
+	height: 544px;
+	vertical-align: top;
+    font-size: 10px;
+	font-weight: bold;
+    overflow-y: auto;
+    overflow-x: hidden;
+    text-align: left;
+	position: relative;
+    padding: 10px 0;
+}
+.poll ol {
+  padding-left: 25px;
+  position: relative;
+  overflow: auto;
+  margin: 0;
+}
+
+.poll li {
+	display: list-item;
+	margin-bottom: 3px;
+	font-weight: normal;
+}
+.poll li span{
+  font-size: 17px;
+  width: 45%;
+  border-radius: 10px;
+  position: relative;
+  display: inline-block;
+  text-align: center;
+  padding: 0;
+}
+.poll li span.w {
+  color: black;
+  background: white;
+}
+.poll li span.b {
+  color: white;
+  background: black;
+}
+.poll li span:hover{
+	cursor: pointer;
+	font-weight: bold;
+}
+.bloc-available {
+    width: 220px;
+    /* border: 1px solid grey; */
+    /* padding: 5px; */
+    font-size: 16px;
+    display: inline-block;
+    vertical-align: top;
+    height: 625px;
+    text-align: left;
+    position: relative;
+    z-index: 11;
+}
+#availableList li {
+    padding: 2px 5px;
+    border: 1px solid;
+    margin: 3px;
+	cursor: pointer;
+	
+}
+#availableList li:hover {
+	font-weight: bold;
+}
+
+
+#availableList li {
+  position: relative;
+}
+
+
+
+.notation-322f9 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.highlight-white {
+  box-shadow: inset 0 0 3px 3px yellow;
+}
+.highlight-black {
+  box-shadow: inset 0 0 3px 3px blue;
+}
+
+@property --q {
+  syntax: "<number>";
+  initial-value: 10;
+  inherits: true;
+}
+
+@property --t {
+  syntax: "<number>";
+  initial-value: 10;
+  inherits: true;
+}
+
+/* won't be needed once Chrome supports round() */
+@property --s {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: true;
+}
+[data-move=a3] {
+  color: red !important;
+}
+
+.countdown {
+  /* when Chrome supports round(), this can be simplified */
+  /* more on this rounding trick
+   * https://css-tricks.com/using-absolute-value-sign-rounding-and-modulo-in-css-today/ */
+  --s: calc(var(--t) / 1);
+  display: none;
+  width: 400px;
+  height: 400px;
+  animation: t 10s linear infinite;
+    position: absolute;
+    right: 35px;
+    z-index: 1;
+    bottom: 30px;
+}
+.showTimer .countdown {
+	display: grid;
+}
+
+
+
+.countdown::after {
+  grid-column: 1;
+  grid-row: 1;
+  place-self: center;
+  font: 2.3em/2 'Fjalla One', monospace;
+  counter-reset: s var(--s);
+  content: counter(s, decimal-leading-zero);
+}
+
+@keyframes t {
+  to {
+    --t: 0;
+  }
+}
+svg {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+[r] {
+  fill: none;
+  stroke: silver;
+}
+[r] + [r] {
+  --k: calc(var(--t) /var(--q));
+  transform: rotate(-90deg);
+  stroke-linecap: round;
+  stroke: color-mix(in hsl shorter hue, #8a9b0f calc(var(--k) * 100%), #940a3d);
+  stroke-dasharray: var(--k) 1;
+}
+
+.todo {
+	font-size: 11px;
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    list-style: inherit;
+    background: #ffffff88;
+    padding: 5px;
+    margin-right: 5px;
+}
+
+.todo li {
+	display: list-item;
+}
+
+[data-lang] {
+	display: none;
+}
+html[data-lang] {
+	display: inherit;
+}
+html[data-lang='fr-FR'] [data-lang='fr-FR']{
+	display: inherit;
+}
+html[data-lang='en-EN'] [data-lang='en-EN']{
+	display: inherit;
+}
+
+.available ul ul {
+	display: block;
+	margin: 4px 0px;
+	padding-left: 32px;
+	position: relative;
+	overflow: hidden;
+  user-select: none;
+}
+
+
+.available ul ul:before {
+    content: '';
+    width: 50px;
+    height: 30px;
+    /*background-image: url(../img/chesspieces/wikipedia/bB.png);*/
+    background-size: contain;
+    display: inline-block;
+    position: absolute;
+    left: 0;
+    background-repeat: no-repeat;
+}
+
+#availableListP:before {
+	background-image: url("../img/chesspieces/wikipedia/bP.png");
+}
+#availableListB:before {
+	background-image: url("../img/chesspieces/wikipedia/bB.png");
+}
+#availableListN:before {
+	background-image: url("../img/chesspieces/wikipedia/bN.png");
+}
+#availableListR:before {
+	background-image: url("../img/chesspieces/wikipedia/bR.png");
+}
+#availableListQ:before {
+	background-image: url("../img/chesspieces/wikipedia/bQ.png");
+}
+#availableListK:before {
+	background-image: url("../img/chesspieces/wikipedia/bK.png");
+}
+
+body[data-team="w"] #availableListP:before {
+	background-image: url("../img/chesspieces/wikipedia/wP.png");
+}
+body[data-team="w"] #availableListB:before {
+	background-image: url("../img/chesspieces/wikipedia/wB.png");
+}
+body[data-team="w"] #availableListN:before {
+	background-image: url("../img/chesspieces/wikipedia/wN.png");
+}
+body[data-team="w"] #availableListR:before {
+	background-image: url("../img/chesspieces/wikipedia/wR.png");
+}
+body[data-team="w"] #availableListQ:before {
+	background-image: url("../img/chesspieces/wikipedia/wQ.png");
+}
+body[data-team="w"] #availableListK:before {
+	background-image: url("../img/chesspieces/wikipedia/wK.png");
+}
+
+
+ol.prefixed {
+  counter-reset: item;
+  list-style-type: none;
+  *list-style-type: decimal;
+  /*Conditional hack for ie7*/
+}
+ol.prefixed li:before {
+  content: 'Q' counter(item, decimal) '. ';
+  counter-increment: item;
+}
+/* The <ol> needs to have its counter-reset redefined for each version you want to create. */
+ol.steps {
+  counter-reset: item;
+}
+ol.steps li:before {
+  content: 'Step ' counter(item, decimal) '. ';
+}
+ol.nodot {
+  counter-reset: item;
+}
+ol.nodot li:before {
+  content: 'Step ' counter(item, decimal) ' ';
+}
+ol.styled {
+  counter-reset: item;
+  margin: 0;
+}
+ol.styled li {
+  background: rgba(125, 125, 125, 0.3);
+  border-radius: 4px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  line-height: 2;
+  background: #4e443c;
+  border-radius: 4px;
+  color: #f7f7ef;
+  font-size: 15px;
+  margin: 0 5px 0 8px;
+  padding: 4px 7px;
+  padding: 0 5px;
+  margin: 5px 10px 0 0;
+}
+ol.styled li:before {
+  content: '' counter(item, decimal) '. ';
+  font-size: 10px;
+}
+
+.votes {
+  /*background: #77777799;*/
+  width: 630px;
+}
+
+
+:root {
+  --color-background: #31037d;
+  --axis-x: 1px;
+  --axis-y: 1rem;
+  --delay: 10;
+  --color-black: #000;
+  --color-white: #fff;
+  --color-orange: #d49c3d;
+  --color-red: #d14b3d;
+  --color-violet: #cf52eb;
+  --color-blue: #44a3f7;
+  --color-green: #5acb3c;
+  --color-yellow: #debf40;
+  --color-foreground: var(--color-white);
+  --font-name: Righteous;
+}
+
+.c-rainbow {
+  counter-reset: rainbow;
+  position: relative;
+  display: block;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 1;
+  line-height: 630px;
+  text-align: center;
+}
+.c-rainbow__layer {
+  --text-color: var(--color-foreground);
+  counter-increment: rainbow;
+  font-size: 3rem;
+  color: var(--text-color);
+  text-shadow: -1px -1px 0 var(--color-black), 1px -1px 0 var(--color-black), -1px 1px 0 var(--color-black), 1px 1px 0 var(--color-black), 4px 4px 0 rgba(0, 0, 0, 0.2);
+  animation: rainbow 1.5s ease-in-out infinite;
+  width: 630px;
+}
+.c-rainbow__layer:nth-child(1) {
+  animation-delay: calc(1 / var(--delay) * 1s);
+  left: calc(var(--axis-x) * 1);
+  z-index: -10;
+}
+.c-rainbow__layer:nth-child(2) {
+  animation-delay: calc(2 / var(--delay) * 1s);
+  left: calc(var(--axis-x) * 2);
+  z-index: -20;
+}
+.c-rainbow__layer:nth-child(3) {
+  animation-delay: calc(3 / var(--delay) * 1s);
+  left: calc(var(--axis-x) * 3);
+  z-index: -30;
+}
+.c-rainbow__layer:nth-child(4) {
+  animation-delay: calc(4 / var(--delay) * 1s);
+  left: calc(var(--axis-x) * 4);
+  z-index: -40;
+}
+.c-rainbow__layer:nth-child(5) {
+  animation-delay: calc(5 / var(--delay) * 1s);
+  left: calc(var(--axis-x) * 5);
+  z-index: -50;
+}
+.c-rainbow__layer:nth-child(6) {
+  animation-delay: calc(6 / var(--delay) * 1s);
+  left: calc(var(--axis-x) * 6);
+  z-index: -60;
+}
+.c-rainbow__layer:nth-child(7) {
+  animation-delay: calc(7 / var(--delay) * 1s);
+  left: calc(var(--axis-x) * 7);
+  z-index: -70;
+}
+.c-rainbow__layer:not(:first-child) {
+  position: absolute;
+  top: 0;
+}
+.c-rainbow__layer--white {
+  --text-color: var(--color-white);
+}
+.c-rainbow__layer--orange {
+  --text-color: var(--color-orange);
+}
+.c-rainbow__layer--red {
+  --text-color: var(--color-red);
+}
+.c-rainbow__layer--violet {
+  --text-color: var(--color-violet);
+}
+.c-rainbow__layer--blue {
+  --text-color: var(--color-blue);
+}
+.c-rainbow__layer--green {
+  --text-color: var(--color-green);
+}
+.c-rainbow__layer--yellow {
+  --text-color: var(--color-yellow);
+}
+
+@keyframes rainbow {
+  0%, 100% {
+    transform: translatey(var(--axis-y));
+  }
+  50% {
+    transform: translatey(calc(var(--axis-y) * -1));
+  }
+}
+
+
+
+
+#probleminfo div {
+
+}
+
+#probleminfo div p{
+  display: inline-block;
+}
+
+.omg-win #probleminfo, .omg-lose #probleminfo {
+  display: inline-block;
+}
+
+
+/* Wheel  */
+body.randomWheel #chart {
+  opacity: 1;
+}
+
+body.randomWheel .chart-container {
+  opacity: 0;
+}
+
+#chart{
+    position:absolute;
+    width:400px;
+    height:400px;
+    bottom: 20px;
+    right: 20px;
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+
+
+/*
+Chart
+
+
+*/
+body.omg-win .chart-container, body.omg-lose .chart-container, body.no-timer .chart-container{
+  opacity: 0;
+}
+
+.chart-container {
+  position: relative;
+  width: 600px;
+  height: 150px;
+  margin: auto;
+    opacity: 1;
+    transition: opacity 1s;
+  }
+
+.poll-heading {
+  padding: 1rem;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(to right, transparent, #333, transparent) 1;
+}
+.poll-body {
+  padding: 1rem;
+}
+.poll-body ul {
+  list-style-type: none;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+}
+.poll-body li label {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+}
+.poll-body li label:hover {
+  background-color: #eee;
+}
+.poll-body li:first-child label {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;  
+}
+.poll-body li:last-child label {
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;  
+}
+.poll-body li label input[type="radio"] {
+  margin-right: 0.5rem;
+}
+.poll-body li label input[type="radio"]:checked + span {
+  font-weight: bold;
+}
+
+
+#configForm input {
+  background: none;
+   color: white;
+   display: inline-block;
+}
+legend {
+  color: #dfdfdf;
+}
+fieldset {
+  margin: 5px 0;
+}
+
+input[type="text"],
+input[type="number"] {
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.most-voted {
+    /* Style pour mettre en évidence l'élément le plus voté */
+    /* Par exemple : */
+    transform: scale(1.2);
+    transition: all 0.5s;
+    font-weight: bold;
+}
+
+.most-voted {
+  --angle: 0deg;
+  border-image: conic-gradient(from var(--angle), red, yellow, lime, aqua, blue, magenta, red) 1 !important;
+  animation: 10s rotate linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+
+
+
+
+#configForm i {
+  width: 25px;
+  text-align: center;
+   color: white;
+  float: left;
+}
+#configForm label {
+   color: white;
+   width: 68%;
+  display: inline-block;
+  padding-left: 5px;
+}
+#configForm input[type=text] {
+   width: 20%;
+}
+#configForm input[type=number] {
+    width: 40px;
+}
+
+#configForm [data-game-mode] {
+  display: none;
+}
+
+#configForm [data-game-mode] label{
+  text-align: right;
+  margin-right: 5px;
+}
+
+.form-btn {
+  background: transparent;
+  padding: 5px 10px;
+  display: block;
+  margin: 10px auto;
+      color: white;
+}
+/* Style pour le bouton d'ouverture */
+#openFormButton {
+    background-color: #00000055; /* Couleur du bouton */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+/* Style pour le formulaire */
+#configForm, #probleminfo {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #000000dd;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Assure que le formulaire apparaît au-dessus du reste du contenu */
+    display: none; /* Par défaut, le formulaire est caché */
+    color: #dfdfdf;
+}
+
+/* Style pour le fond semi-transparent */
+
+/* Style pour le centrage du formulaire */
+@media (max-width: 600px) {
+    /* Si l'écran est petit, centrer le formulaire à 80% de la largeur */
+    #configForm {
+        width: 80%;
+    }
+}
+
+
+
+
+
+
+
+
+@keyframes phantomSlideIn {
+    0% { opacity: 0; transform: translateX(100%); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes phantomSlideOut {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(100%); }
+}
+
+#phantom-controls {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 15px 0;
+    color: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+#phantom-controls h4 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    text-align: center;
+}
+
+#phantom-status {
+    font-weight: bold;
+    margin: 10px 0;
+    padding: 8px;
+    border-radius: 5px;
+    text-align: center;
+    background: rgba(255,255,255,0.1);
+}
+
+.phantom-button {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 5px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.phantom-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.phantom-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+#phantom-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#phantom-battery {
+    color: #4CAF50;
+    font-weight: bold;
+}

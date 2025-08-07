@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Twitchess</title>
+  <base href="../">
+  <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+  <link rel="stylesheet" href="/css/style.css">
+	  <script src="/js/tmi.min.js"></script>
+	  <script src="/twitchToken.js"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+	  <script src="/js/phantom.js" charset="utf-8"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Inclure Font Awesome -->
+
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.1.0/chartjs-plugin-datalabels.min.js"></script>
+  <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+</head>
+<body data-team="w"> 
+	<b data-rating></b>
+	<h1 data-lang="fr-FR">Twitchess</h1>
+	<h1 data-lang="en-EN">Twitchess</h1>
+
+	<!--- Begin Example HTML ------------------------------------------------------>
+	<div id="board_wrapper">
+		<canvas id="primary_canvas" width="630" height="630" ></canvas>
+		<canvas id="drawing_canvas"  width="630" height="630" ></canvas>
+		<div id="myBoard" style="width: 630px;"></div>
+		<ul class="c-rainbow">
+			 <li class="c-rainbow__layer c-rainbow__layer--white"></li>
+			 <li class="c-rainbow__layer c-rainbow__layer--orange"></li>
+			 <li class="c-rainbow__layer c-rainbow__layer--red"></li>
+			 <li class="c-rainbow__layer c-rainbow__layer--violet"></li>
+			 <li class="c-rainbow__layer c-rainbow__layer--blue"></li>
+			 <li class="c-rainbow__layer c-rainbow__layer--green"></li>
+			 <li class="c-rainbow__layer c-rainbow__layer--yellow"></li>
+		</ul>
+	</div>
+
+	<!--- End Example HTML -------------------------------------------------------->
+	<div class="bloc-available">
+		<div class="available">
+			<ul id="availableList">
+				<ul id="availableListP">
+				</ul>
+				<ul id="availableListB">
+				</ul>
+				<ul id="availableListN">
+				</ul>
+				<ul id="availableListR">
+				</ul>
+				<ul id="availableListQ">
+				</ul>
+				<ul id="availableListK">
+				</ul>
+			</ul>
+		</div>
+	</div>
+	<div class="poll prefixed styled">
+		<ol>
+
+		</ol>
+	</div>
+
+	<div class="votes">
+		<!--h5 style="position: absolute;">(ex: e5, Qxa3)</h5-->
+		<h3 data-lang="fr-FR" data-team="w">Trait aux blancs<b></b></h3>
+		<h3 data-lang="en-EN" data-team="w">Whites to play <b></b></h3>
+		<h3 data-lang="fr-FR" data-team="b">Trait aux noirs <b></b></h3>
+		<h3 data-lang="en-EN" data-team="b">Blacks to play <b></b></h3>
+		<h4 data-lang="en-EN" class="status"></h4>
+		<ol class="prefixed styled"></ol>
+		<div id="chart"></div>
+		<div class="chart-container">
+	  	<canvas id="chartPoll" width="600" height="150"></canvas>
+		</div>
+	</div>
+	<div id="probleminfo">
+		<div>
+			<span>Ouverture : </span>
+			<span data-opening-tags></span>
+		</div>
+		<div>
+			<span>Tags : </span>
+			<span data-tags></span>
+		</div>		
+		<div>
+			<span>Solution : </span>
+			<b><p data-solution></p></b>
+		</div>
+		<div>
+			<span>Nb de coups : </span>
+			<h2 data-length></h2>
+		</div>					
+		<span data-attempt="0"></span>
+		<p style="display: none;" data-omgSolution></p>
+	</div>
+	<div id="countdown" class="countdown">
+	  <svg viewBox="-50 -50 100 100" stroke-width="10">
+		<circle r="20"></circle>
+		<circle r="20" pathLength="1"></circle>
+	  </svg>
+	</div>
+
+    <form id="configForm">
+    	<span id="openFormButton2" style="position: absolute;right: 10px;top: 10px;cursor: pointer;"><i class="fas fa-cog"></i></span>
+	        <label for="probMode">Jouer en mode YOLO</label><i class="fas fa-users"></i><i class="fas fa-users"></i><i class="fas fa-users"></i>
+	        <input type="radio" id="yoloMode" name="gameMode" value="normal">
+	        <br>
+	        <label for="probMode">Jouer en mode problèmes</label><i class="fas fa-cogs"></i>
+	        <input type="radio" id="probMode" name="gameMode" value="probMode">
+	        <br>
+	    		<label for="mod1vViewers">Seul contre tous</label><i class="fas fa-user"></i><i class="fas fa-users"></i>
+	        <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">
+	        <div data-game-mode="mod1vViewers">
+		        <label for="mod1vViewersPlayer">Pseudo du joueur</label>
+		        <input type="text" id="mod1vViewersPlayer" name="mod1vViewersPlayer" >
+	    		</div>
+	    		<br>
+	    		<label for="mod1v1">Un contre un</label><i class="fas fa-user"></i><i class="fas fa-user"></i>
+	        <input type="radio" id="mod1v1" name="gameMode" value="mod1v1">
+	        <div data-game-mode="mod1v1">
+		        <label for="oneVsOneModeList0">Pseudo du Joueur1</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
+		        <label for="oneVsOneModeList1">Pseudo du Joueur2</label><input type="text" id="oneVsOneModeList1" name="oneVsOneModeList1">
+		      </div>
+		      <br>
+	    		<label for="modStreamerChatvStreamerChat">Chat contre Chat</label><i class="fas fa-users"></i><i class="fas fa-users"></i>
+	        <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
+	        <div data-game-mode="modStreamerChatvStreamerChat">
+		        <label for="streamerChatvStreamerChat0">Pseudo du Streamer1</label><input type="text" id="streamerChatvStreamerChat0" name="streamerChatvStreamerChat0">
+		        <label for="streamerChatvStreamerChat1">Pseudo du Streamer2</label><input type="text" id="streamerChatvStreamerChat1" name="streamerChatvStreamerChat1">
+		      </div>
+	        <label for="modViewersvViewers">Tous contre tous (id pair/impair)</label><i class="fas fa-users"></i><i class="fas fa-users"></i>
+	        <input type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
+
+
+    		<fieldset>
+	    		<legend>Mode Vote !</legend> 
+	        <label for="timerMode">Activer le mode vote</label><i class="fas fa-clock"></i>
+	        <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
+	        <div data-time-mode>
+		        <label for="InitialvoterTimer">Temps d'un tour</label><i class="fas fa-hourglass-half"></i>
+		        <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
+		        <br>	        	
+		        <label for="timerWheelAnimation">Animation de la roue </label><i class="fas fa-circle-notch"></i>
+		        <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
+		        <br>
+		        <label for="limitToOneVote">Vote unique</label><i class="fas fa-ban"></i>
+		        <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
+		        <br>
+		        <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label><i class="fas fa-balance-scale"></i>
+		        <input type="checkbox" id="majorityMode" name="majorityMode">		        
+	        </div>
+        </fieldset>	        
+    		<fieldset>
+	    		<legend>Options de timer</legend> 
+		        <label for="pauseAfterWinLose">Durée de la pause</label><i class="fas fa-hourglass-end"></i>
+		        <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
+		        <label for="timerMoveBot">Animation du bot</label><i class="fas fa-robot"></i>
+		        <input type="number" id="timerMoveBot" name="timerMoveBot" min="0"> s
+		        <br>
+		        <label for="timerMoveText">Animation du coup joué</label><i class="fas fa-file-alt"></i>
+		        <input type="number" id="timerMoveText" name="timerMoveText" min="0"> s
+        </fieldset>
+				<fieldset>
+				    <legend>Restrictions d'accès</legend>
+				    <label for="followMode">Mode followers uniquement</label><i class="fas fa-heart"></i>
+				    <input type="checkbox" id="followMode" name="followMode">
+				    <br>
+				    <label for="subMode">Mode abonnés uniquement</label><i class="fas fa-crown"></i>
+				    <input type="checkbox" id="subMode" name="subMode">
+				    <br>
+				    <small style="color: #aaa; font-size: 12px;">
+				        Note: Les modérateurs, VIPs et le broadcaster peuvent toujours jouer
+				    </small>
+				</fieldset>
+    		<fieldset>
+	    		<legend>Autres options</legend> 
+	        <label for="noBg">Supprimer le background (test sur OBS ?)</label><i class="fas fa-image"></i>
+	        <input type="checkbox" id="noBg" name="noBg">	        
+        </fieldset>
+
+        <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>
+    </form>
+    <button id="openFormButton"><i class="fas fa-cog"></i></button>
+
+	<script
+	  src="https://code.jquery.com/jquery-3.7.1.min.js"
+	  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+	  crossorigin="anonymous"></script>
+	<script src="/js/chessboard-1.0.0.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js" integrity="sha384-s3XgLpvmHyscVpijnseAmye819Ee3yaGa8NxstkJVyA6nuDFjt59u1QvuEl/mecz" crossorigin="anonymous"></script>
+	<script src="/js/chessboard-arrows.js"></script>
+	<script src="/js/config.js"></script>
+	<script src="/js/client.js"></script>
+	<script src="/js/chessVoterApp.js"></script>
+</body>
+</html>

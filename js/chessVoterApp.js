@@ -1,0 +1,1416 @@
+const appToken = configTwitch.TWITCH_TOKEN;
+
+const opts = {
+  identity: {
+    username: 'chessbot',
+    password: 'oauth:'+appToken
+  },
+  channels: [
+    'xou____'//, 'luxchess'
+  ]
+};
+
+const clickOpts = {
+  identity: {
+    username: 'xou____',
+  },
+  id: 1
+};
+
+var problems = null;
+
+var userLang = navigator.language || navigator.userLanguage;
+
+if(userLang !== "fr-FR" && userLang !== "fr" && userLang !== "fr-fr" ) {
+	userLang = "en-EN";
+}
+
+$("html").attr("data-lang", userLang);
+
+var globalVolume = 1;
+var takeAudio = new Audio('mp3/take.mp3');
+var checkAudio = new Audio('mp3/check.mp3');
+var moveAudio = new Audio('mp3/move.mp3');
+var mateAudio = new Audio('mp3/mate.wav');
+takeAudio.volume = globalVolume*0.8;
+checkAudio.volume = globalVolume*0.8;
+moveAudio.volume = globalVolume*0.8;
+mateAudio.volume = globalVolume*0.8;
+
+//http-server C:\Users\gnole\Documents\GitHub\chessTwitchVoter
+/*
+
+- selecteur de theme de problème
+- vérifier échec et mat (mauvaise détection)
+- bug sur le timer entre les problèmes
+- Possibilité de créer des "teams" (1 ou 2 poll d'inscriptions ?)
+- Améliorer le design un peu dégueu
+- Réflexion sur la connexion (siteweb ? Extension ? Local pour le moment ?)
+- Vérifier certains bugs (notation complexe (Deux pièces concurrentes, sous promotion))
+- Trouver le moyen de connecter 2 streameurs (Ou 2 chats de streameurs) ok ?
+- Meilleurs gestion du temps (pause, affichage, transitions)
+
+*/
+
+$(document).ready(function() {
+		addPhantomBridgeControls();
+    console.log('🐍 Phantom Bridge Client initialisé');
+});
+
+var colorArray = [
+'#f2ff93','#dc90e8','#88e600','#e5c0ff','#01d04b','#ff9cc9','#37ff85','#ffaca6','#08c55c','#ffa837','#85f9ff','#e5c700','#a8d7ff','#84c600','#67b8c3','#fff55e','#01c2a0','#d5a517','#02dbae','#df9f4d','#89ff89','#ffe7dd','#7cbc5f','#ffdfa1','#97ffe0','#a9b174','#bbffa4','#79b8a3','#e6ffcf','#98b391'];
+
+// Create a client with our options
+const client = new tmi.client(opts);
+var voteOpen = true;
+// Register our event handlers (defined below)
+client.on('message', onMessageHandler);
+//client.on('connected', onConnectedHandler);
+
+// Connect to Twitch:
+client.connect();
+
+var teamToPlay = 0;
+
+var prob  = null;
+var chess = null;
+var moves = null;
+
+var p1 = null;
+var p2 = null;
+
+var board = null;
+
+var $board = $('#myBoard')
+var squareToHighlight = null
+var squareClass = 'square-55d63'
+var currentProbPgn = "";
+
+var pollData = [];
+var voterTimer = pauseAfterWinLose;
+
+var defaultConfig = {
+  orientation: 'white',
+  position: 'start',
+  moveSpeed: 'slow',
+  snapbackSpeed: 500,
+  snapSpeed: 100
+}
+
+const pieceImages = {};
+
+function preloadPieceImages() {
+    const pieces = ['P', 'R', 'N', 'B', 'Q', 'K'];
+    const colors = ['w', 'b'];
+    
+    pieces.forEach(piece => {
+        colors.forEach(color => {
+            const img = new Image();
+            img.src = `img/chesspieces/wikipedia/${color}${piece}.png`;
+            pieceImages[`${color}${piece}`] = img;
+        });
+    });
+}
+
+// Appeler au chargement
+preloadPieceImages();
+
+// NOUVELLE FONCTION : Obtenir la pièce d'un coup
+function getPieceFromMove(move) {
+    let piece = 'P'; // Pion par défaut
+    
+    if (move.slice(0, 1) === "Q" || 
+        move.slice(0, 1) === "K" || 
+        move.slice(0, 1) === "R" || 
+        move.slice(0, 1) === "B" ||
+        move.slice(0, 1) === "N") {
+        piece = move.slice(0, 1);
+    }
+    
+    return piece;
+}
+
+function drawLabelsOnChart() {
+    const chart = pollChart;
+    const ctx = chart.ctx;
+    
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 14px Arial';
+    
+    // Ombre pour le texte
+    ctx.shadowColor = 'black';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+    ctx.fillStyle = 'white';
+    
+    const meta = chart.getDatasetMeta(0);
+    
+    meta.data.forEach((bar, index) => {
+        const label = chart.data.labels[index];
+        
+        if (label && bar.height > 0) {
+            const piece = getPieceFromMove(label);
+            const color = (teamToPlay == 0) ? "w" : "b";
+            const pieceKey = `${color}${piece}`;
+            const pieceImage = pieceImages[pieceKey];
+            
+            const centerY = bar.y + (bar.height / 2);
+            
+            // Image à gauche du centre
+            const imageX = bar.x - 25;
+            const imageY = centerY - 10;
+            
+            // Texte à droite du centre
+            const textX = bar.x - 2;
+            
+            // Dessiner l'image
+            if (pieceImage && pieceImage.complete) {
+                ctx.shadowColor = 'transparent';
+                ctx.drawImage(pieceImage, imageX, imageY, 20, 20);
+                ctx.shadowColor = 'black';
+            }
+            
+            // Dessiner le texte
+            ctx.fillText(label, textX, centerY);
+        }
+    });
+    
+    ctx.restore();
+}
+function updateChartIncremental(move, color) {
+    const currentLabels = pollChart.data.labels;
+    const currentData = pollChart.data.datasets[0].data;
+    const currentColors = pollChart.data.datasets[0].backgroundColor;
+    
+    // Chercher si le coup existe déjà
+    const existingIndex = currentLabels.indexOf(move);
+    
+    if (existingIndex !== -1) {
+        // LE COUP EXISTE → Incrémenter la valeur
+        currentData[existingIndex]++;
+    } else {
+        // NOUVEAU COUP → Ajouter à la fin
+        currentLabels.push(move);
+        currentData.push(1);
+        currentColors.push(color);
+    }
+    
+    // Mettre à jour sans recréer
+    pollChart.data.datasets[0] = {
+        label: 'Votes',
+        data: currentData,
+        backgroundColor: currentColors,
+        borderWidth: 0,
+        categoryPercentage: 1.0,
+        barPercentage: 0.9
+    };
+    
+    pollChart.update('none'); // ← 'none' = pas d'animation pour être plus rapide
+    setTimeout(() => {
+        drawLabelsOnChart();
+    }, 100);
+}
+
+function updateChartData() {
+    // Compter les votes par coup
+    var result = poll.reduce((acc, o) => (acc[o.move] = (acc[o.move] || 0) + 1, acc), {});
+    
+    // Extraire les labels et données
+    const labels = Object.keys(result);
+    const data = Object.values(result);
+    const colors = labels.map(move => {
+        const pollItem = poll.find(p => p.move === move);
+        return pollItem ? pollItem.color : colorArray[0];
+    });
+    
+    // CORRECTION - Structure correcte
+    pollChart.data.labels = labels;
+    pollChart.data.datasets = [{  // ← UN SEUL dataset
+        label: 'Votes',
+        data: data,
+        backgroundColor: colors,
+        borderWidth: 0,
+        categoryPercentage: 1.0,  // ← AJOUTER ICI
+        barPercentage: 0.95   
+    }];
+    
+    pollChart.update();
+}
+
+
+var intervalId = null;
+
+
+const ctx = document.getElementById('chartPoll').getContext('2d');
+const pollChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Votes',
+      data: [],
+      backgroundColor: [],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+	  interaction: {
+	    intersect: false,
+	    mode: 'none' // ← Désactive les hovers
+	  },    
+	  elements: {
+	    bar: {
+	      categoryPercentage: 0.3,
+	      barPercentage: 0.5
+	    }
+	  },    
+    scales: {
+      x: {
+        display: false
+      },
+      y: {
+        display: false
+      }
+    },
+    animation: {
+		  onProgress: function(animation) {
+		    const chart = this;
+		    const ctx = chart.ctx;
+		    
+		    ctx.save();
+		    ctx.textAlign = 'center';
+		    ctx.textBaseline = 'middle';
+		    ctx.fillStyle = 'white';
+		    ctx.font = 'bold 16px Arial';
+		    
+		    // CORRECTION - Utiliser seulement le dataset 0
+		    const dataset = chart.data.datasets[0];
+		    const meta = chart.getDatasetMeta(0);
+		    
+		    meta.data.forEach((bar, index) => {
+		      const label = chart.data.labels[index];  // ← Maintenant ça devrait marcher !
+		      
+		      if (label && bar.height > 0) {
+		        const yPosition = bar.y + bar.height - 15;
+		        ctx.fillText(label, bar.x, yPosition);
+		      }
+		    });
+		    
+		    ctx.restore();
+		  }
+    }
+  }
+});
+
+if (gameMode !== "probMode") {
+	$("h1[data-lang=fr-FR]").append(" - Partie classique");
+	$("h1[data-lang=en-EN]").append(" - Classic");  
+} else {
+	$("h1[data-lang=fr-FR]").append(" - Mode problèmes");
+	$("h1[data-lang=en-EN]").append(" - Problems");  
+}
+
+if(timerMode == true){
+	//startTimer(InitialvoterTimer, true);
+	$("h1[data-lang=fr-FR]").append(" - ModeVote ("+InitialvoterTimer+"s)");
+	$("h1[data-lang=en-EN]").append(" - modeVote ("+InitialvoterTimer+"s)");
+	if(majorityMode == true) {
+			$("h1[data-lang=fr-FR]").append(" - majorité");
+			$("h1[data-lang=en-EN]").append(" - majority");
+	} else {
+			$("h1[data-lang=en-EN]").append(" - tirage au sort");
+			$("h1[data-lang=fr-FR]").append(" - random ");
+	}
+} else {
+	$("body").addClass("no-timer");
+	$("h1[data-lang=fr-FR]").append(" - sans timer");
+	$("h1[data-lang=en-EN]").append(" - no timer");	
+}
+
+//Start new game
+if(noBg) {
+	$("body").addClass("noBg");
+}
+
+var overlay = new ChessboardArrows('board_wrapper');
+if (gameMode !== "probMode") {
+	loadNewgame();
+} else {
+  loadNewProblem();
+}
+
+
+/***********************************************************************************************************************/
+/**********************************     OMG Voter     *****************************************************************/
+/***********************************************************************************************************************/
+
+
+
+/***********************************************************************************************************************/
+/**********************************     OMG Voter     *****************************************************************/
+/***********************************************************************************************************************/
+
+
+function loadNewgame() {
+	chess = new Chess();
+	let vs = "";
+	
+	if(mod1v1) {
+		p1 = oneVsOneModeList0;
+		p2 = oneVsOneModeList1;
+		
+	} else if(modViewersvViewers) {
+		p1 = "viewers W";
+		p2 = "viewers B";
+	}
+	else if(mod1vViewers) {
+		p1 = mod1vViewersPlayer;
+		p2 = "viewers";		
+	}	else if(modStreamerChatvStreamerChat) {
+    p1 = streamer1Channel + " chat";
+    p2 = streamer2Channel + " chat";
+	} else{
+		p1 = "*";
+		p2 = "*";
+	}
+	vs = " - "+p1+" vs "+p2;
+
+	if(chess.turn() == 'b') {
+		defaultConfig.orientation='black';
+		teamToPlay = 1;
+	} else {
+		defaultConfig.orientation='white';
+		teamToPlay = 0;
+	}
+
+	if(timerMode == true) {
+		startTimer(InitialvoterTimer, true);
+	}
+
+	refreshBoard(chess);
+	board = Chessboard('myBoard', defaultConfig);
+	//var overlay = new ChessboardArrows('board_wrapper');
+
+
+	var moves = chess.moves();
+}
+
+function loadNewProblem() {
+	//fetch('js/tests.csv')
+	fetch('js/problemsV2.csv')
+	  .then(response => response.text())
+	  .then(data => {
+	  	$(".poll ol").empty();
+	  	poll = [];
+	    const lines = data.split("\n");
+	    const array = lines.map(line => line.split(","));
+	    let firstMove = "";
+	    problems = array;
+	    prob = problems[(Math.floor(Math.random() * problems.length))];
+	    console.log(prob);
+			currentProbPgn = prob[1];
+			chess = new Chess(prob[1]);
+			defaultConfig.position = prob[1];
+			teamToPlay = 0;
+
+			if(chess.turn() == 'b') {
+				defaultConfig.orientation='white';
+				
+			} else {
+				defaultConfig.orientation='black';
+			}
+
+			$("[data-opening-tags]").text(prob[9]);
+			$("[data-tags]").text(prob[7]);
+			$("[data-rating]").text("ELO : "+prob[3]);
+			
+			$("[data-omgSolution]").text(prob[2]);
+			$("[data-attempt]").attr("data-attempt", 0);
+			$("[data-length]").attr('data-length', prob[2].split(" ").length);
+			$("[data-length]").text(prob[2].split(" ").length/2);
+			board = Chessboard('myBoard', defaultConfig);
+			
+			firstMove = playPbm();
+			console.log("first move");
+			moveAction(firstMove);
+			var moves = chess.moves();
+			refreshBoard(chess);
+
+			if(timerMode) {
+				startTimer(InitialvoterTimer, true);
+			}
+
+			(teamToPlay == 1) ? 0 : 1;
+	  })
+	  .catch(error => console.error("An error occurred:", error));
+}
+
+
+/***********************************************************************************************/
+/***************************************      voter     ****************************************/
+/***********************************************************************************************/
+
+function stopTimer() {
+  clearInterval(intervalId);
+}
+
+function startPauseTimer(duration, callback) {
+	setTimeout(callback, duration * 1000);
+}
+
+function bip(boolTimerVote) {
+    voterTimer--;
+
+    if(voterTimer == 0){
+        $("body").removeClass('showTimer');
+        if(boolTimerVote == true) {
+            voteResult(poll);
+            
+            // CORRECTION : Réinitialiser correctement le graphique
+            pollChart.data.labels = [];
+            pollChart.data.datasets = [{
+                label: 'Votes',
+                data: [],
+                backgroundColor: [],
+                borderWidth: 0,
+                categoryPercentage: 0.3,
+                barPercentage: 0.5
+            }];
+            pollChart.update();
+
+            poll = [];
+        }
+        stopTimer();
+    }
+    else {	
+        console.log(voterTimer + " secondes restantes");
+    }
+}
+
+function startTimer(timer, boolTimerVote){
+	voterTimer = timer;
+	console.log("start timer "+timer);
+
+	intervalId = setInterval(bip.bind(null, boolTimerVote),1000);
+	
+	//+ css + animate * 2 
+	var element = document.getElementById("countdown");
+	element.style.setProperty("--q", timer);
+	element.style.setProperty("--t", timer);
+	$(".countdown").css("animation-duration", timer+"s");
+	$("body").addClass('showTimer');
+}
+
+
+function addMoveToPoll(player, move){
+    // Vérifier si le joueur a déjà voté
+    if(limitToOneVote && poll.find(p => p.player === player) !== undefined) {
+        console.log("Already vote");
+        return false;
+    }
+
+		let existingVote = poll.find(p => p.move === move);
+    let color = existingVote ? existingVote.color : colorArray[Math.floor(Math.random() * colorArray.length)];
+    
+    poll.push({'player': player, 'move': move, 'color': color});
+
+    updateChartIncremental(move, color);
+
+    showCurrentmax(poll);
+}
+
+function showCurrentmax(poll) {
+  var result = poll.reduce((acc, o) => (acc[o.move] = (acc[o.move] || 0) + 1, acc), {});
+  let max = Math.max.apply(null, Object.values(result));
+
+  $(".available li").each(function() {
+      let move = $(this).text();
+      if (result[move] === max) {
+          $(this).addClass("most-voted");
+      } else {
+          $(this).removeClass("most-voted");
+      }
+  });
+}
+
+function voteResult(poll) {
+	
+	let vote = "";
+	var randomIdx = null;
+	console.log(poll);
+	if(Object.entries(poll).length > 0) {
+		// FUNCTION Meilleur vote
+		console.log("on a des votes")
+		//console.log(poll)
+		//Pas de proportionnel en mode problème
+		if(majorityMode || probMode) {
+			var result = poll.reduce( (acc, o) => (acc[o.move] = (acc[o.move] || 0)+1, acc), {} );
+			let max = Math.max.apply(null, Object.values(result));
+
+			//console.log(result);
+			$.each(result, function(i, value) {
+			  if(value === max) {
+			  	vote = i;
+			  }
+			});
+			//console.log(vote);
+    	moveAction(vote)
+
+		  if(!probMode && checkforChemate()) {
+		      $("body").addClass('omg-win');
+		      startTimer(pauseAfterWinLose, false);
+		      setTimeout(function() {
+		          $("body").removeClass('omg-win');
+		          loadNewgame();
+		      }, pauseAfterWinLose*1000);
+		      return; // Important : arrêter l'exécution
+		  }
+
+
+
+			$("body").addClass("showTimer");
+			startTimer(InitialvoterTimer, true);
+			voteOpen = true;
+		} else {
+			console.log("Pas mode majorité, donc random sur les votes");
+
+			$(".votes ol").html("");
+			$("body").addClass("randomWheel");
+
+			$.each(moves, function(i, value) {
+			  poll.push({"player": moves.player, "move": moves.move});
+			});
+
+			let move = randomWheel(poll, chess.turn());
+			voteOpen = false;
+			setTimeout(function(){
+      	$("body").removeClass("randomWheel");
+				$(".votes ol").html("");
+      	moveAction(move)
+				$("body").addClass("showTimer");
+				startTimer(InitialvoterTimer, true);
+				voteOpen = true;
+    	}, timerWheelAnimation * 1000)
+		}
+	}	else{
+		if(probMode == true){
+			//GAME OVER
+			console.log("game over")
+			$("body").addClass('omg-lose');
+				if(timerMode) {
+					stopTimer();
+				}
+	
+			startPauseTimer(pauseAfterWinLose, function() {
+				$("body").removeClass('omg-lose');
+				if(probMode == true) {
+					globalReloadProblem(false);
+				}
+			});
+
+			//GAME OVER
+		} else {
+			// FUNCTION RANDOM MOVE QUAND PAS DE VOTE
+			var moves = chess.moves();
+			$.each(moves, function(i, value) {
+				let color = colorArray[Math.floor(Math.random() * colorArray.length)];
+			  poll.push({"player": 'random', "move": value, color: color });
+			});
+
+			$(".votes ol").html("");
+			console.log("pas de résultat, random sur les choix dispo");
+			$("body").addClass("randomWheel");
+
+			let move = randomWheel(poll, chess.turn());
+			//console.log(move);
+			voteOpen = false;
+			setTimeout(function(){
+				moveAction(move)
+      	$("body").removeClass("randomWheel");
+				$(".votes ol").html("");
+				$("body").addClass("showTimer");
+				startTimer(InitialvoterTimer, true);
+				voteOpen = true;
+    	}, timerWheelAnimation * 1000)
+
+			// FUNCTION RANDOM MOVE QUAND PAS DE VOTE
+		}
+
+	}
+
+	if(probMode == true) {
+		let verif = verifPbm();
+		let status;
+		if(verif == false) {
+			//Nope, erreur
+			status = 'Erreur !';
+			$(".c-rainbow li").text(status);
+			console.log("faute dans le pb mode timer");
+			
+			var tmp = $("[data-solution]").text();
+			$("[data-square]").removeClass("highlight-black");
+			$("[data-square="+tmp.slice(0,2)+"]").addClass("highlight-black");
+			$("[data-square="+tmp.slice(2,4)+"]").addClass("highlight-black");		
+			
+
+			chess.move({from:tmp.slice(0,2), to:tmp.slice(2,4)});
+			board.position(chess);
+
+			globalReloadProblem(false);
+		} else {
+			//On vérifie si c'est la fin du problème
+			console.log("Correct, on continue par le move du bot dans le timer");
+
+			if ($("[data-attempt]").attr("data-attempt") == $("[data-length]").attr("data-length")) {
+				globalReloadProblem(true);
+		  } else {
+				setTimeout(function() {
+					let move = playPbm();
+						moveAction(move);
+						var moves = chess.moves();
+						refreshBoard(chess);
+
+
+				}, timerMoveBot*1000);
+		  }
+		}
+	} else {
+
+
+
+	  // checkmate?
+		if(checkforChemate()) {
+			$("body").addClass('omg-win');
+		  startTimer(pauseAfterWinLose, false);
+			setTimeout(function() {
+				$("body").removeClass('omg-win');
+						loadNewgame();
+			}, pauseAfterWinLose*1000);
+		}
+	}
+}	
+/***********************************************************************************************/
+/***************************************      voter     ****************************************/
+/***********************************************************************************************/
+
+
+
+let formOpen = false;
+
+document.getElementById('openFormButton').addEventListener('click', function() {
+    if (formOpen) {
+        document.getElementById('configForm').style.display = 'none';
+    } else {
+        document.getElementById('configForm').style.display = 'block';
+    }
+    formOpen = !formOpen; // Inversion de l'état du formulaire
+});
+document.getElementById('openFormButton2').addEventListener('click', function() {
+    if (formOpen) {
+        document.getElementById('configForm').style.display = 'none';
+    } else {
+        document.getElementById('configForm').style.display = 'block';
+    }
+    formOpen = !formOpen; // Inversion de l'état du formulaire
+});
+
+
+
+/***********************************************************************************************/
+/**************************************      Problems     **************************************/
+/***********************************************************************************************/
+function verifPbm(){
+	console.log("verif");
+	let undo = chess.history({ verbose: true });
+	let concat = "";
+	let idx = parseInt($("[data-attempt]").attr("data-attempt"));
+	let arrMoves = [];
+
+	arrMoves = $("[data-omgSolution]").text().split(" ");
+
+	console.log(undo)
+	let promotion = "";
+
+    if(undo[idx-1] && undo[idx-1].promotion) {
+    	promotion = undo[idx-1].promotion;
+    }
+
+	concat = undo[idx-1].from+""+undo[idx-1].to+promotion;
+	$("[data-solution]").text(arrMoves[idx-1]);
+
+	if(concat !== arrMoves[idx-1]) {/*
+			// ANIMATION DU MOVE
+			$(".c-rainbow li").text("Nope, right move was : " + arrMoves[idx-1]);
+			setTimeout(function() {
+				$(".c-rainbow li").text("");
+			}, timerMoveText * 1000);*/
+		//localStorage.setItem("Erreur:"+arrMoves[idx-1], concat);
+		return false;
+	}
+	/*$(".c-rainbow li").text("Nice !");
+	setTimeout(function() {
+		$(".c-rainbow li").text("");
+	}, timerMoveText * 1000);*/
+	//window.location.reload();
+
+	return true;
+}
+
+function convertirNotationEchecs(c1, c2, promotion = '') {
+    // Récupérer la pièce à la position de départ
+    const piece = chess.get(c1);
+    if (!piece) return null;
+
+    // Vérifier si c'est une promotion de pion
+    const isPromotion = (piece.type === 'p' && (c2[1] === '8' || c2[1] === '1'));
+    
+    // Vérifier si c'est une capture
+    const isCapture = chess.get(c2) !== null;
+
+    // Vérifier si c'est un roque
+    const isKing = piece.type === 'k';
+    const isKingSideCastle = isKing && c1 === 'e1' && c2 === 'g1' || c1 === 'e8' && c2 === 'g8';
+    const isQueenSideCastle = isKing && c1 === 'e1' && c2 === 'c1' || c1 === 'e8' && c2 === 'c8';
+
+    // Obtenir tous les coups possibles qui mènent à la case cible
+    const legalMoves = chess.moves({ verbose: true })
+        .filter(m => m.to === c2 && m.piece === piece.type);
+
+    // Tester le coup
+    try {
+        const moveAttempt = {
+            from: c1,
+            to: c2
+        };
+
+        // Ajouter la promotion si nécessaire
+        if (isPromotion && promotion) {
+            moveAttempt.promotion = promotion;
+        }
+
+        const move = chess.move(moveAttempt);
+        if (!move) return null;
+
+        // Annuler le coup pour permettre d'autres tests
+        chess.undo();
+
+        // Gérer les cas spéciaux
+        if (isKingSideCastle) return 'O-O';
+        if (isQueenSideCastle) return 'O-O-O';
+
+        let notation = '';
+
+        // Ajouter la pièce (sauf pour les pions)
+        if (piece.type !== 'p') {
+            notation += piece.type.toUpperCase();
+        }
+
+        // Gérer l'ambiguïté
+				if (legalMoves.length > 1) {
+				    // Vérifier s'il y a des pièces sur différentes colonnes (même rangée)
+				    const differentFiles = legalMoves.some(m => m.from[0] !== c1[0]);
+				    // Vérifier s'il y a des pièces sur différentes rangées (même colonne) 
+				    const differentRanks = legalMoves.some(m => m.from[1] !== c1[1]);
+				    
+				    if (differentFiles && !differentRanks) {
+				        // Pièces sur même rangée, colonnes différentes -> spécifier la colonne
+				        notation += c1[0];
+				    } else if (differentRanks && !differentFiles) {
+				        // Pièces sur même colonne, rangées différentes -> spécifier la rangée
+				        notation += c1[1];
+				    } else if (differentFiles && differentRanks) {
+				        // Pièces sur colonnes ET rangées différentes -> spécifier la colonne par défaut
+				        notation += c1[0];
+				    }
+				}
+
+        // Ajouter le 'x' pour les captures
+        if (isCapture) notation += 'x';
+
+        // Ajouter la destination
+        notation += c2;
+
+        // Ajouter la promotion
+        if (isPromotion && promotion) {
+            notation += '=' + promotion.toUpperCase();
+        }
+
+        // Ajouter le check/mate si présent
+        if (move.san.endsWith('+')) notation += '+';
+        if (move.san.endsWith('#')) notation += '#';
+
+        return notation;
+
+    } catch (error) {
+        console.error('Error converting move notation:', error);
+        return null;
+    }
+}
+
+function playPbm(){
+    let idx = parseInt($("[data-attempt]").attr("data-attempt"));
+    let arrMoves = $("[data-omgSolution]").text().split(" ");
+    
+    let c1 = arrMoves[idx].slice(0, 2);
+    let c2 = arrMoves[idx].slice(2, 4);
+    let promotion = arrMoves[idx].slice(4, 5) || '';  // Gestion de la promotion
+
+    $("[data-square]").removeClass("highlight-white");
+    $("[data-square="+c1+"]").addClass("highlight-white");
+    $("[data-square="+c2+"]").addClass("highlight-white");
+
+    return convertirNotationEchecs(c1, c2, promotion);
+}
+
+function globalReloadProblem(isWinner = true){
+	if(isWinner) {
+		$("body").addClass('omg-win');
+
+    let status = 'Probleme résolu';
+		$(".c-rainbow li").text(status);
+
+		setTimeout(function() {
+			$(".c-rainbow li").text("");
+		}, timerMoveText * 1000);
+
+	}
+	else {
+		$("body").addClass('omg-lose');
+    let status = 'Erreur';
+		$(".c-rainbow li").text(status);
+
+		setTimeout(function() {
+			$(".c-rainbow li").text("");
+		}, timerMoveText * 1000);		
+		board.position(chess.fen(chess.undo()), false)
+	}
+	
+	$("[data-attempt]").attr("data-attempt", 0);
+	$("[data-square]").removeClass("highlight-white");
+	
+	startPauseTimer(pauseAfterWinLose, function() {
+		$("body").removeClass('omg-win');		
+		$("body").removeClass('omg-lose');
+		loadNewProblem();
+		$("[data-square]").removeClass("highlight-black");
+	});
+}
+
+function ReloadPgn(pgn, target, chess, context) {
+	console.log("omg restart");
+	chess = new Chess(pgn);
+	defaultConfig.position = pgn;
+	if(chess.turn() == 'b') {
+		defaultConfig.orientation='black';
+		teamToPlay = 1;
+	}
+	refreshBoard(chess, null);
+	$(".poll ol").empty();
+	board = Chessboard('myBoard', defaultConfig);
+	var overlay = new ChessboardArrows('board_wrapper');
+}
+
+function playSoundForMove(chess) {
+  const history = chess.history({ verbose: true });
+  const lastMove = history[history.length - 1];
+
+  if (chess.in_checkmate()) {
+    mateAudio.play();
+  } else if (chess.in_check()) {
+    checkAudio.play();
+  } else if (lastMove && lastMove.captured) {
+    takeAudio.play();
+  } else {
+    moveAudio.play();
+  }
+}
+
+/***********************************************************************************************/
+/**************************************      Problems     **************************************/
+/***********************************************************************************************/
+
+var poll = [];
+var moves = [];
+
+function moveAction(move) {
+		(teamToPlay == 1) ? 0 : 1;
+		chess.move(move);
+		board.position(chess.fen());
+
+    playSoundForMove(chess)
+
+		if(chess.turn() == 'b') {
+			$(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+		} else {
+			if($(".poll ol li").length == 0) {
+				$(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+			} else {
+				$(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
+			}
+		}
+		// ANIMATION DU MOVE
+		if(timerMoveText > 0) {
+			$(".c-rainbow li").text(move);
+			setTimeout(function() {
+				$(".c-rainbow li").text("");
+			}, timerMoveText * 1000);
+		}
+		// ANIMATION DU MOVE
+		console.log("move action")
+	  $("[data-attempt]").attr("data-attempt", parseInt($("[data-attempt]").attr("data-attempt"))+1 );
+
+		$(".poll ol").animate({ scrollTop: $(".poll").offset().top }, 500);
+		refreshBoard(chess);
+
+		$("[data-fen]").click(function(){
+			board.position($(this).data("fen"));
+		});
+	}
+
+function play(target, context, args) {
+	if(!voteOpen) { 
+		console.log("not vote open")
+	}else{
+		moves = chess.moves();
+		if (args.length == 1) {
+			let move = args[0];
+			
+
+			switch(gameMode) {
+			    case 'mod1vViewers':
+							if(context.username === mod1vViewersPlayer && teamToPlay == 1) {
+								//client.say(target, `Nope, it's viewers turn`);
+								return false;
+							}
+							if(context.username !== mod1vViewersPlayer && teamToPlay == 0) {
+								//client.say(target, `Nope, it's @${mod1vViewersPlayer} turn`);
+								return false;
+							}		
+							console.log(context.username+ "vote : "+ move);
+			        break;
+			    case 'mod1v1':
+							console.log("mod1v1");
+							if(context.username === oneVsOneModeList0 && teamToPlay == 1) {
+								//client.say(target, `Nope, it's @${oneVsOneModeList1} turn`);
+								return false;
+							}
+							if(context.username === oneVsOneModeList1 && teamToPlay == 0) {
+								//client.say(target, `Nope, it's @${oneVsOneModeList0} turn`);
+								return false;
+							}
+
+			        break;
+			    case 'modViewersvViewers':
+			    		//hack
+							if(!context['user-id']) {
+								context['user-id'] = 0;
+							}
+
+							if(context['user-id'] % 2 == 0 && teamToPlay == 1) {
+								//client.say(target, `Nope, Black to play`);
+								//console.log("nope");
+								return false;
+							}
+							if(context['user-id'] % 2 == 1 && teamToPlay == 0) {
+								//client.say(target, `Nope, White to play`);
+								//console.log("nope");
+								return false;
+							}		
+			        break;
+			    case 'modStreamerChatvStreamerChat':
+			    		let playerTeam = getTeamByChannel(target, context);
+			        if(playerTeam !== teamToPlay) {
+			            return false; // Pas le bon chat
+			        }
+			        break;
+			    default:
+			}
+
+			// Fonction pour vérifier si l'utilisateur est le propriétaire de la chaîne
+			function isChannelOwner(context, target) {
+				// Récupérer le nom du canal sans le #
+				let channelName = target.replace('#', '').toLowerCase();
+				return context.username.toLowerCase() === channelName;
+			}
+			
+			// Vérification du mode followers
+			if(followMode == true) {
+				// Le propriétaire de la chaîne peut toujours jouer
+				if(isChannelOwner(context, target)) {
+					console.log("Channel owner can always play:", context.username);
+				} else {
+					// Vérifier si l'utilisateur a le badge follower
+					let isFollower = context.badges && context.badges.follower;
+					// Vérifier si c'est un abonné, VIP, modérateur ou broadcaster (ils ont toujours accès)
+					let hasSpecialAccess = (context.badges && (
+						context.badges.subscriber || 
+						context.badges.vip || 
+						context.badges.moderator || 
+						context.badges.broadcaster
+					)) || context['user-type'] === 'mod' || context.mod;
+					
+					if(!isFollower && !hasSpecialAccess) {
+						console.log("User is not a follower:", context.username);
+						//client.say(target, `@${context.username} Seuls les followers peuvent jouer !`);
+						return false;
+					}
+				}
+			}
+
+			// Vérification du mode abonnés
+			if(subMode == true) {
+				// Le propriétaire de la chaîne peut toujours jouer
+				if(isChannelOwner(context, target)) {
+					console.log("Channel owner can always play:", context.username);
+				} else {
+					// Vérifier si l'utilisateur a le badge subscriber
+					let isSubscriber = context.badges && context.badges.subscriber;
+					// Vérifier si c'est un VIP, modérateur ou broadcaster (ils ont toujours accès)
+					let hasSpecialAccess = (context.badges && (
+						context.badges.vip || 
+						context.badges.moderator || 
+						context.badges.broadcaster
+					)) || context['user-type'] === 'mod' || context.mod;
+					
+					if(!isSubscriber && !hasSpecialAccess) {
+						console.log("User is not a subscriber:", context.username);
+						//client.say(target, `@${context.username} Seuls les abonnés peuvent jouer !`);
+						return false;
+					}
+				}
+			}
+
+			// Move invalide ?
+			if(moves.includes(move) !== true && moves.includes(move+"#") !== true && moves.includes(move+"+") !== true){
+				//client.say(target, `Invalid move`);
+				//console.log("Invalid move");
+				showAvailableMoves(target, chess, context);
+				return false;
+			}
+
+			// FUNCTION MOVE
+			//client.say(target, `@${context.username} vote for ${move}`);
+			
+			// Move = resetTimeOut  + nouveau coup		
+			if(timerMode && ((!mod1v1) || (mod1vViewers && context.username !== mod1vViewersPlayer))) {
+				addMoveToPoll(context.username, move);
+			} else {
+				moveAction(move);
+
+				if(gameMode == "probMode") {
+					let verif = verifPbm();
+					if(verif == false) {
+						//Nope, erreur
+						let status = 'Erreur !';
+						$(".c-rainbow li").text(status);
+						console.log("faute dans le pb mode pas timer");
+						
+						var tmp = $("[data-solution]").text();
+						$("[data-square]").removeClass("highlight-black");
+						$("[data-square="+tmp.slice(0,2)+"]").addClass("highlight-black");
+						$("[data-square="+tmp.slice(2,4)+"]").addClass("highlight-black");		
+						
+
+						chess.move({from:tmp.slice(0,2), to:tmp.slice(2,4)});
+						board.position(chess);
+
+						globalReloadProblem(false);
+					} else {
+						//On vérifie si c'est la fin du problème
+						console.log("Correct, on continue par le move du bot");
+
+						if ($("[data-attempt]").attr("data-attempt") == $("[data-length]").attr("data-length")) {
+
+							globalReloadProblem(true);
+					  } else {
+							setTimeout(function() {
+								let move = playPbm();
+									moveAction(move);
+									var moves = chess.moves();
+									refreshBoard(chess);
+							}, timerMoveBot*1000);
+					  }
+					}
+				}
+
+				if(checkforChemate()) {
+					$("body").addClass('omg-win');
+				  startTimer(pauseAfterWinLose, false);
+					setTimeout(function() {
+						$("body").removeClass('omg-win');
+								loadNewgame();
+					}, pauseAfterWinLose*1000);
+				}
+
+
+			}
+		} else {
+			//client.say(target, `Syntaxe : !p XXXX `);
+			//console.log("Syntax error : !p _MOVE_");
+		}
+	}
+}
+
+function getTeamByChannel(target, context) {
+    if(target === '#'+streamerChatvStreamerChat0) return 0; // Blancs
+    if(target === '#'+streamerChatvStreamerChat1) return 1; // Noirs
+}
+
+function refreshBoard(chess, context=null) {
+	if(chess.turn() == 'w') {
+		teamToPlay = 0;
+		if(p1 !== null) {
+			$('h3 b').text(" ( "+p1+" )");
+		}
+	}
+	else {
+		teamToPlay = 1
+		if(p2 !== null) {
+			$('h3 b').text(" ( "+p2+" )");
+		}
+	}
+
+	$('body').attr('data-team', chess.turn());
+
+	$("#availableList ul").empty();
+ 
+	let moves = chess.moves().sort(function(a, b) {
+		if(a === b) return 0; 
+		return a > b ? 1 : -1;
+	});
+	
+	moves.forEach((item) => {	
+		let li = document.createElement("li");
+		let val = item.replaceAll('#', '').replaceAll('+', '');
+		
+		let list = document.getElementById("availableList"+val.slice(0,1));
+		
+		if(list == null)
+			list = document.getElementById("availableListP");
+		
+		li.innerText = val
+		list.appendChild(li);
+	});
+	
+	$("#availableList ul li").on("click", function(){
+			play("Xou____", clickOpts.identity, [$(this).text()]);
+	});
+	
+}
+
+function checkforChemate() {
+	//console.log(chess)
+		let status;
+	  if (chess.in_checkmate()) {
+	    status = 'Game over, ' + chess.turn() + ' is in checkmate.';
+
+	    return true;
+	  }
+
+	  // draw?
+	  else if (chess.in_draw()) {
+	    status = 'Game over, drawn position';
+	    $(".votes h3 b").text(status);
+	    return true;
+	  }
+
+	  // game still on
+	  else {
+	    // check?
+	    if (chess.in_check()) {
+	      //status += ', ' + chess.turn() + ' is in check';
+	    	$("[data-piece="+chess.turn()+"K]").closest('[data-square]').addClass("highlight-white");
+	    } else {
+	    	$("[data-square]").removeClass("highlight-white");
+	    }
+	  }
+	  return false;
+}
+
+
+/***********************************************************************************************/
+/***************************************   Wheel  ****************************************/
+/***********************************************************************************************/
+
+function randomWheel(poll, turn) {
+
+$('#chart').html('');
+	var padding = {top:0, right:20, bottom:0, left:0},
+            w = 400 - padding.left - padding.right,
+            h = 400 - padding.top  - padding.bottom,
+            r = Math.min(w, h)/2,
+            rotation = 0,
+            oldrotation = 0,
+            picked = 100000,
+            oldpick = [],
+            data = [],
+            col = 'black',
+            //color = colorArray;//category20c()
+            //color = d3.scale.category20();//category20c()
+
+  			player = poll[0].player;
+  			for(var i=0; i < poll.length; i++){
+            data.push({label: poll[i].move, value: poll[i].move, color: poll[i].color});
+            color = poll[i].color;
+        }
+
+        var svg = d3.select('#chart')
+            .append("svg")
+            .data([data])
+            .attr("width",  w + padding.left + padding.right)
+            .attr("height", h + padding.top + padding.bottom);
+        var container = svg.append("g")
+            .attr("class", "chartholder")
+            .attr("transform", "translate(" + (w/2 + padding.left) + "," + (h/2 + padding.top) + ")");
+        var vis = container
+            .append("g");
+            
+        var pie = d3.layout.pie().sort(null).value(function(d){return 1;});
+        // declare an arc generator function
+        var arc = d3.svg.arc().outerRadius(r);
+        // select paths, use arc generator to draw
+        var arcs = vis.selectAll("g.slice")
+            .data(pie)
+            .enter()
+            .append("g")
+            .attr("class", "slice");
+            
+        arcs.append("path")
+            .attr("fill", function(d, i){ return d.data.color+'ee'; })
+            .attr("d", function (d) { return arc(d); });
+        // add the text
+
+        arcs.append("text").attr("transform", function(d){
+                d.innerRadius = 0;
+                d.outerRadius = r;
+                d.angle = (d.startAngle + d.endAngle)/2;
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius -20) +")";
+            })
+        		.attr('x', -10)
+        		.attr('y', 3)
+        		.attr("text-anchor", "end")
+            .text( function(d, i) {
+                return data[i].label;
+             });
+
+        if(turn=='b') {
+        	colorImage = 'b'
+        }
+        else{
+        	colorImage = 'w'
+        }
+
+				arcs.append("image")
+					  .attr({
+					    "xlink:href": function(d) {
+					    	let piece = 'P';
+
+				        if (d.data.label.slice(0, 1) == "Q" || 
+				        	 d.data.label.slice(0, 1) == "K" || 
+				        	 d.data.label.slice(0, 1) == "R" || 
+				        	 d.data.label.slice(0, 1) == "B" ||
+				        	 d.data.label.slice(0, 1) == "N" ) {
+				        	piece = d.data.label.slice(0, 1);
+				        }
+                return "../img/chesspieces/wikipedia/"+colorImage+piece+".png";
+             },
+					    width: 20,
+					    height: 20
+					  })
+					  .attr("text-anchor", "end")
+					  .attr('y', -15)
+					  .attr("transform", function(d){
+                d.innerRadius = 0;
+                d.outerRadius = r;
+                d.angle = (d.startAngle + d.endAngle)/2;
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius - 30) +")";
+            })
+
+        container.on("click", spin);
+        function spin(d){
+            container.on("click", null);
+            //all slices have been seen, all done
+            //console.log("OldPick: " + oldpick.length, "Data length: " + data.length);
+            if(oldpick.length == data.length){
+                console.log("done");
+
+                return;
+            }
+            var  dataSize = data.length,
+            			ps       = 360/dataSize,
+                 pieslice = Math.round(1440/dataSize),
+                 rng      = Math.floor((Math.random() * 1440) + 360);
+            
+            let rngmin = rng - ((ps / 2)-1);
+            let rngmax = rng + ((ps / 2)-1);
+
+            let random =  Math.floor(Math.random() * (rngmax - rngmin + 1) + rngmin);
+//						console.log(random);
+//						console.log(rng);
+//						console.log(rngmin);
+//						console.log(rngmax);
+
+            rotation = random;
+
+            picked = Math.round(dataSize - (rotation % 360)/ps);
+            picked = picked >= dataSize ? (picked % dataSize) : picked;
+            if(oldpick.indexOf(picked) !== -1){
+                d3.select(this).call(spin);
+                return;
+            } else {
+                oldpick.push(picked);
+            }
+
+            rotation += 90 - (Math.round(ps/2));
+
+            //console.log(rotation);
+            vis.transition()
+                .duration(timerWheelAnimation * 1000)
+                .attrTween("transform", rotTween)
+                .each("end", function(){
+                    oldrotation = rotation;
+                    /* Get the result value from object "data" */
+                });
+        }
+        //make arrow
+
+        if(turn=='b') {
+        	col = 'white'
+        }
+        else{
+        	col = 'black'
+        }
+
+        svg.append("g")
+            .attr("transform", "translate(" + (w + padding.left + padding.right) + "," + ((h/2)+padding.top) + ")")
+            .append("path")
+            .attr("d", "M-" + (r*.15) + ",0L0," + (r*.05) + "L0,-" + (r*.05) + "Z")
+            .style({"fill":col});
+        //draw spin circle
+        container.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 15)
+            .style({"fill":"#ffffffff","cursor":"pointer"});       
+
+        function rotTween(to) {
+          var i = d3.interpolate(oldrotation % 360, rotation);
+          return function(t) {
+            return "rotate(" + i(t) + ")";
+          };
+        }
+        spin(data);
+        return data[picked].value;
+}
+/***********************************************************************************************/
+/***************************************   Wheel  ****************************************/
+/***********************************************************************************************/
