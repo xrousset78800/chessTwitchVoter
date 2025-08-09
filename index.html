@@ -112,6 +112,32 @@
 	        <br>
 	        <label for="probMode">Jouer en mode problèmes</label><i class="fas fa-cogs"></i>
 	        <input type="radio" id="probMode" name="gameMode" value="probMode">
+	        <div data-game-mode="probMode">
+		        <fieldset class="theme-filter-section">
+					    <legend>Filtrage par thèmes</legend>
+					    
+					    <div class="filter-controls">
+					        <button type="button" class="btn btn-secondary" onclick="selectAllThemes()">
+					            Tout sélectionner
+					        </button>
+					        <button type="button" class="btn btn-danger" onclick="clearThemeFilter()">
+					            Effacer la sélection
+					        </button>
+					    </div>
+					    
+					    <div class="problem-count" id="problemCount">
+					        Problèmes disponibles : <span id="availableProblems">-</span>
+					    </div>
+					    
+					    <div class="theme-list" id="themeList">
+					        <!-- Les thèmes seront générés dynamiquement -->
+					    </div>
+					    
+					    <div class="selected-themes" id="selectedThemes" style="display: none;">
+					        <div id="selectedThemesTags"></div>
+					    </div>
+						</fieldset>
+					</div>
 	        <br>
 	    		<label for="mod1vViewers">Seul contre tous</label><i class="fas fa-user"></i><i class="fas fa-users"></i>
 	        <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">

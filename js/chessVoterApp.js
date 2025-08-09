@@ -52,6 +52,11 @@ mateAudio.volume = globalVolume*0.8;
 
 */
 
+var allProblems = [];
+var filteredProblems = [];
+var selectedThemes = new Set();
+var themeStats = {};
+
 $(document).ready(function() {
 		addPhantomBridgeControls();
     console.log('🐍 Phantom Bridge Client initialisé');
@@ -405,53 +410,81 @@ function loadNewgame() {
 }
 
 function loadNewProblem() {
-	//fetch('js/tests.csv')
-	fetch('js/problemsV2.csv')
-	  .then(response => response.text())
-	  .then(data => {
-	  	$(".poll ol").empty();
-	  	poll = [];
-	    const lines = data.split("\n");
-	    const array = lines.map(line => line.split(","));
-	    let firstMove = "";
-	    problems = array;
-	    prob = problems[(Math.floor(Math.random() * problems.length))];
-	    console.log(prob);
-			currentProbPgn = prob[1];
-			chess = new Chess(prob[1]);
-			defaultConfig.position = prob[1];
-			teamToPlay = 0;
+    console.log('🔄 Chargement d\'un nouveau problème...');
+    console.log('🎯 Thèmes sélectionnés:', Array.from(selectedThemes));
+    
+    fetch('js/problemsV2.csv')
+        .then(response => response.text())
+        .then(data => {
+            $('.poll ol').empty();
+            poll = [];
+            
+            const lines = data.split("\n").filter(line => line.trim());
+            console.log('📁 Lignes lues du CSV:', lines.length);
+            
+            // Parser chaque ligne correctement (en gérant les guillemets)
+            const array = lines.map(line => parseCSVLine(line));
+            
+            // Stocker tous les problèmes pour le filtrage (ignorer la première ligne qui contient les headers)
+            allProblems = array.slice(1).filter(row => row.length > 7);
+            console.log('✅ Problèmes chargés:', allProblems.length);
+            
+            // Analyser les thèmes si c'est la première fois
+            if (Object.keys(themeStats).length === 0) {
+                console.log('🔍 Première analyse des thèmes...');
+                analyzeAndRenderThemes();
+            }
+            
+            // LOGIC DE FILTRAGE
+            let problemsToUse = getFilteredProblems();
+            console.log('🎲 Problèmes après filtrage:', problemsToUse.length);
+            
+            if (problemsToUse.length === 0) {
+                console.warn('⚠️ Aucun problème ne correspond aux filtres, utilisation de tous les problèmes');
+                problemsToUse = allProblems;
+            }
+            
+            let firstMove = "";
+            
+            // SÉLECTION ALÉATOIRE DANS LES PROBLÈMES FILTRÉS
+            prob = problemsToUse[Math.floor(Math.random() * problemsToUse.length)];
+            
+            console.log('🎯 Problème sélectionné:', prob[0], 'avec thèmes:', prob[7]);
+            
+            currentProbPgn = prob[1];
+            chess = new Chess(prob[1]);
+            defaultConfig.position = prob[1];
+            teamToPlay = 0;
 
-			if(chess.turn() == 'b') {
-				defaultConfig.orientation='white';
-				
-			} else {
-				defaultConfig.orientation='black';
-			}
+            if(chess.turn() == 'b') {
+                defaultConfig.orientation='white';
+            } else {
+                defaultConfig.orientation='black';
+            }
 
-			$("[data-opening-tags]").text(prob[9]);
-			$("[data-tags]").text(prob[7]);
-			$("[data-rating]").text("ELO : "+prob[3]);
-			
-			$("[data-omgSolution]").text(prob[2]);
-			$("[data-attempt]").attr("data-attempt", 0);
-			$("[data-length]").attr('data-length', prob[2].split(" ").length);
-			$("[data-length]").text(prob[2].split(" ").length/2);
-			board = Chessboard('myBoard', defaultConfig);
-			
-			firstMove = playPbm();
-			console.log("first move");
-			moveAction(firstMove);
-			var moves = chess.moves();
-			refreshBoard(chess);
+            $("[data-opening-tags]").text(prob[9] || '');
+            $("[data-tags]").text(prob[7] || '');
+            $("[data-rating]").text("ELO : " + (prob[3] || 'N/A'));
+            
+            $("[data-omgSolution]").text(prob[2]);
+            $("[data-attempt]").attr("data-attempt", 0);
+            $("[data-length]").attr('data-length', prob[2].split(" ").length);
+            $("[data-length]").text(prob[2].split(" ").length/2);
+            board = Chessboard('myBoard', defaultConfig);
+            
+            firstMove = playPbm();
+            console.log("first move");
+            moveAction(firstMove);
+            var moves = chess.moves();
+            refreshBoard(chess);
 
-			if(timerMode) {
-				startTimer(InitialvoterTimer, true);
-			}
+            if(timerMode) {
+                startTimer(InitialvoterTimer, true);
+            }
 
-			(teamToPlay == 1) ? 0 : 1;
-	  })
-	  .catch(error => console.error("An error occurred:", error));
+            (teamToPlay == 1) ? 0 : 1;
+        })
+        .catch(error => console.error("❌ Erreur lors du chargement:", error));
 }
 
 
@@ -1414,3 +1447,198 @@ $('#chart').html('');
 /***********************************************************************************************/
 /***************************************   Wheel  ****************************************/
 /***********************************************************************************************/
+
+
+// ========== FONCTIONS DE FILTRAGE PAR THÈMES ==========
+
+function analyzeAndRenderThemes() {
+    themeStats = {};
+    
+    console.log('Analyse des thèmes pour', allProblems.length, 'problèmes');
+    
+    // Analyser tous les thèmes disponibles
+    allProblems.forEach((problem, index) => {
+        if (problem[7]) { // Colonne des thèmes
+            let themesString = problem[7];
+            
+            // Nettoyer la chaîne (enlever les guillemets)
+            themesString = themesString.replace(/^"/, '').replace(/"$/, '');
+            
+            // Déterminer le séparateur : virgule ou espace
+            let themes = [];
+            if (themesString.includes(',')) {
+                // Séparés par virgules
+                themes = themesString.split(',');
+            } else {
+                // Séparés par espaces
+                themes = themesString.split(' ');
+            }
+            
+            themes.forEach(theme => {
+                theme = theme.trim();
+                if (theme && theme !== '') {
+                    themeStats[theme] = (themeStats[theme] || 0) + 1;
+                }
+            });
+            
+            // Debug pour les premiers problèmes
+            if (index < 3) {
+                console.log(`Problème ${index}:`, problem[0], 'Thèmes bruts:', problem[7], 'Thèmes parsés:', themes);
+            }
+        }
+    });
+    
+    console.log('Thèmes trouvés:', Object.keys(themeStats).length);
+    console.log('Statistiques des thèmes:', themeStats);
+    
+    // Trier par fréquence décroissante
+    const sortedThemes = Object.keys(themeStats).sort((a, b) => themeStats[b] - themeStats[a]);
+    themeStats = Object.fromEntries(sortedThemes.map(theme => [theme, themeStats[theme]]));
+    
+    renderThemeList();
+    updateProblemCount();
+}
+
+function renderThemeList() {
+    const themeListElement = document.getElementById('themeList');
+    if (!themeListElement) {
+        console.warn('Élément themeList non trouvé');
+        return;
+    }
+    
+    themeListElement.innerHTML = '';
+    
+    if (Object.keys(themeStats).length === 0) {
+        themeListElement.innerHTML = '<div style="text-align: center; color: #aaa;">Aucun thème trouvé</div>';
+        return;
+    }
+    
+    Object.entries(themeStats).forEach(([theme, count]) => {
+        const themeItem = document.createElement('div');
+        themeItem.className = 'theme-item';
+        
+        // Échapper les caractères spéciaux pour l'ID
+        const safeThemeId = theme.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        themeItem.innerHTML = `
+            <input type="checkbox" id="theme_${safeThemeId}" value="${theme}" onchange="toggleTheme('${theme}')">
+            <label for="theme_${safeThemeId}">${theme}</label>
+            <span class="theme-count">(${count})</span>
+        `;
+        
+        themeListElement.appendChild(themeItem);
+    });
+}
+
+function toggleTheme(theme) {
+    if (selectedThemes.has(theme)) {
+        selectedThemes.delete(theme);
+    } else {
+        selectedThemes.add(theme);
+    }
+    updateSelectedThemesDisplay();
+    updateProblemCount();
+    
+    console.log('Thèmes sélectionnés:', Array.from(selectedThemes));
+}
+
+function updateSelectedThemesDisplay() {
+    const container = document.getElementById('selectedThemes');
+    const tagsContainer = document.getElementById('selectedThemesTags');
+    
+    if (!container || !tagsContainer) return;
+    
+    if (selectedThemes.size === 0) {
+        container.style.display = 'none';
+    } else {
+        container.style.display = 'block';
+        tagsContainer.innerHTML = Array.from(selectedThemes)
+            .map(theme => `<span class="theme-tag">${theme}</span>`)
+            .join('');
+    }
+}
+
+function updateProblemCount() {
+    const availableElement = document.getElementById('availableProblems');
+    if (!availableElement) return;
+    
+    const filteredCount = getFilteredProblems().length;
+    availableElement.textContent = filteredCount;
+    
+    console.log('Problèmes filtrés:', filteredCount, '/', allProblems.length);
+}
+
+function getFilteredProblems() {
+    if (selectedThemes.size === 0) {
+        return allProblems;
+    }
+    
+    return allProblems.filter(problem => {
+        if (!problem[7]) return false;
+        
+        let themesString = problem[7];
+        // Nettoyer la chaîne (enlever les guillemets)
+        themesString = themesString.replace(/^"/, '').replace(/"$/, '');
+        
+        // Déterminer le séparateur et parser les thèmes
+        let problemThemes = [];
+        if (themesString.includes(',')) {
+            problemThemes = themesString.split(',').map(t => t.trim());
+        } else {
+            problemThemes = themesString.split(' ').map(t => t.trim());
+        }
+        
+        // Vérifier si le problème contient au moins un des thèmes sélectionnés
+        return Array.from(selectedThemes).some(selectedTheme => 
+            problemThemes.includes(selectedTheme)
+        );
+    });
+}
+
+function selectAllThemes() {
+    selectedThemes = new Set(Object.keys(themeStats));
+    
+    // Cocher tous les checkboxes
+    Object.keys(themeStats).forEach(theme => {
+        const safeThemeId = theme.replace(/[^a-zA-Z0-9]/g, '_');
+        const checkbox = document.getElementById(`theme_${safeThemeId}`);
+        if (checkbox) checkbox.checked = true;
+    });
+    
+    updateSelectedThemesDisplay();
+    updateProblemCount();
+}
+
+function clearThemeFilter() {
+    selectedThemes.clear();
+    
+    // Décocher tous les checkboxes
+    Object.keys(themeStats).forEach(theme => {
+        const safeThemeId = theme.replace(/[^a-zA-Z0-9]/g, '_');
+        const checkbox = document.getElementById(`theme_${safeThemeId}`);
+        if (checkbox) checkbox.checked = false;
+    });
+    
+    updateSelectedThemesDisplay();
+    updateProblemCount();
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    return result;
+}

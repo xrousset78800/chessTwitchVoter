@@ -101,11 +101,11 @@ function toggleTimeModeElements() {
         $('div[data-time-mode]').toggle(300);
     }
 }
+
 $(document).ready(function() {
     // Appel initial pour définir l'état correct au chargement
     toggleGameModeElements();
     toggleTimeModeElements();
-
     // Écouter les changements de radio button
     $('input[name="gameMode"]').on('change', function() {
         toggleGameModeElements();
