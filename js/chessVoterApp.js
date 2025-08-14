@@ -140,7 +140,9 @@ function preloadThemesForMenu() {
 }
 
 $(document).ready(function() {
-		addPhantomBridgeControls();
+		//addPhantomBridgeControls();
+        
+
         preloadThemesForMenu();
         updatePageTitle();
         createStatusBadge();
@@ -365,7 +367,7 @@ function generateTitle() {
     if (specialOptions.length > 0) {
         titleParts.push(`🎨 ${specialOptions.join(', ')}`);
     }
-    
+
     return titleParts.join(' | ');
 }
 function updatePageTitle() {
@@ -552,7 +554,7 @@ function selectAndLoadProblem() {
 
     $("[data-opening-tags]").text(prob[9] || '');
     $("[data-tags]").text(prob[7] || '');
-    $("[data-rating]").text("ELO : " + (prob[3] || 'N/A'));
+    $("#configBadge").append("<br>ELO : " + (prob[3] || 'N/A'));
     
     $("[data-omgSolution]").text(prob[2]);
     $("[data-attempt]").attr("data-attempt", 0);
