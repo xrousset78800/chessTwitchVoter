@@ -25,16 +25,16 @@ const modViewersvViewers = (gameMode === 'viewersVviewers');
 const modStreamerChatvStreamerChat = (gameMode === 'streamerVstreamer');
 
 // PARAMÈTRES SPÉCIFIQUES AUX MODES
-const mod1vViewersPlayer = $.urlParam('mod1vViewersPlayer') ? $.urlParam('mod1vViewersPlayer') : defaultChannel;
+const mod1vViewersPlayer = $.urlParam('mod1vViewersPlayer') ? $.urlParam('mod1vViewersPlayer') : "TWITCH_USER";
 $("#configForm #mod1vViewersPlayer").val(mod1vViewersPlayer);
 
-const oneVsOneModeList0 = $.urlParam('oneVsOneModeList0') ? $.urlParam('oneVsOneModeList0') : defaultChannel;
-const oneVsOneModeList1 = $.urlParam('oneVsOneModeList1') ? $.urlParam('oneVsOneModeList1') : defaultChannel;
+const oneVsOneModeList0 = $.urlParam('oneVsOneModeList0') ? $.urlParam('oneVsOneModeList0') : "TWITCH_USER1";
+const oneVsOneModeList1 = $.urlParam('oneVsOneModeList1') ? $.urlParam('oneVsOneModeList1') : "TWITCH_USER2";
 $("#configForm #oneVsOneModeList0").val(oneVsOneModeList0);
 $("#configForm #oneVsOneModeList1").val(oneVsOneModeList1);
 
-const streamerChatvStreamerChat0 = $.urlParam('streamerChatvStreamerChat0') ? $.urlParam('streamerChatvStreamerChat0') : defaultChannel;
-const streamerChatvStreamerChat1 = $.urlParam('streamerChatvStreamerChat1') ? $.urlParam('streamerChatvStreamerChat1') : defaultChannel;
+const streamerChatvStreamerChat0 = $.urlParam('streamerChatvStreamerChat0') ? $.urlParam('streamerChatvStreamerChat0') : "TWITCH_STREAMER1";
+const streamerChatvStreamerChat1 = $.urlParam('streamerChatvStreamerChat1') ? $.urlParam('streamerChatvStreamerChat1') : "TWITCH_STREAMER2";
 $("#configForm #streamerChatvStreamerChat0").val(streamerChatvStreamerChat0);
 $("#configForm #streamerChatvStreamerChat1").val(streamerChatvStreamerChat1);
 

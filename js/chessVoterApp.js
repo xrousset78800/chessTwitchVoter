@@ -266,7 +266,7 @@ function generateTitle() {
     // ========== MODE DE JEU ==========
     switch(gameMode) {
         case 'normal':
-            titleParts.push('🎯 Mode Tous contre tous');
+            titleParts.push('🎯 Mode Sandbox');
             break;
         case 'probMode':
             titleParts.push('🧩 Mode Problèmes');
@@ -332,11 +332,13 @@ function generateTitle() {
     }
     
     // ========== CHANNELS CONNECTÉS ==========
-    if (linkedChannels && linkedChannels.length > 0) {
+    if (linkedChannels && linkedChannels.length > 1) {
         const channelInfo = linkedChannels.length === 1 
             ? `📺 ${linkedChannels[0]}` 
             : `📺 ${linkedChannels.length} channels`;
         titleParts.push(channelInfo);
+    } else {
+        titleParts.push(defaultChannel);
     }
     
     // ========== OPTIONS SPÉCIALES ==========
