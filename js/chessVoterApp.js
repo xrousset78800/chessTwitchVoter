@@ -12,7 +12,7 @@ function getLinkedChannels() {
             linkedChannels = [mod1vViewersPlayer];
             break;
             
-        case 'streamerVstreamer':
+        case 'modStreamerChatvStreamerChat':
             // Mode Chat vs Chat - on connecte aux deux streamers
             linkedChannels = [streamerChatvStreamerChat0, streamerChatvStreamerChat1];
             break;
