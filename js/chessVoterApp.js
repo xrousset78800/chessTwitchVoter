@@ -1,13 +1,42 @@
 const appToken = configTwitch.TWITCH_TOKEN;
 
+function getLinkedChannels() {
+    let linkedChannels = [];
+    
+    switch(gameMode) {
+        case 'normal':
+        case '1vViewers':
+        case '1v1':
+        case 'viewersVviewers':
+            // Pour ces modes, on utilise seulement le premier streamer
+            linkedChannels = [mod1vViewersPlayer];
+            break;
+            
+        case 'streamerVstreamer':
+            // Mode Chat vs Chat - on connecte aux deux streamers
+            linkedChannels = [streamerChatvStreamerChat0, streamerChatvStreamerChat1];
+            break;
+            
+        default:
+            // Fallback sur le joueur principal
+            linkedChannels = [mod1vViewersPlayer];
+    }
+    
+    // Filtrer les valeurs vides ou nulles
+    linkedChannels = linkedChannels.filter(channel => channel && channel.trim() !== '');
+    
+    console.log('📺 Channels configurés:', linkedChannels, 'pour le mode:', gameMode);
+    return linkedChannels;
+}
+
+const linkedChannels = getLinkedChannels();
+
 const opts = {
   identity: {
     username: 'chessbot',
     password: 'oauth:'+appToken
   },
-  channels: [
-    'xou____'//, 'luxchess'
-  ]
+  channels: linkedChannels
 };
 
 const clickOpts = {
@@ -98,6 +127,9 @@ function preloadThemesForMenu() {
 $(document).ready(function() {
 		addPhantomBridgeControls();
         preloadThemesForMenu();
+        updatePageTitle();
+        createStatusBadge();
+
     console.log('🐍 Phantom Bridge Client initialisé');
 });
 
@@ -228,30 +260,143 @@ const pollChart = new Chart(ctx, {
     }
   }
 });
-
-if (gameMode !== "probMode") {
-	$("h1[data-lang=fr-FR]").append(" - Partie classique");
-	$("h1[data-lang=en-EN]").append(" - Classic");  
-} else {
-	$("h1[data-lang=fr-FR]").append(" - Mode problèmes");
-	$("h1[data-lang=en-EN]").append(" - Problems");  
+function generateTitle() {
+    let titleParts = [];
+    
+    // ========== MODE DE JEU ==========
+    switch(gameMode) {
+        case 'normal':
+            titleParts.push('🎯 Mode Tous contre tous');
+            break;
+        case 'probMode':
+            titleParts.push('🧩 Mode Problèmes');
+            // Ajouter les thèmes sélectionnés si on est en mode problème
+            if (selectedThemes && selectedThemes.size > 0) {
+                const themesArray = Array.from(selectedThemes);
+                if (themesArray.length <= 3) {
+                    titleParts.push(`(${themesArray.join(', ')})`);
+                } else {
+                    titleParts.push(`(${themesArray.slice(0, 2).join(', ')} +${themesArray.length - 2})`);
+                }
+            }
+            break;
+        case 'mod1vViewers':
+            titleParts.push(`👤 Seul contre tous (${mod1vViewersPlayer})`);
+            break;
+        case 'mod1v1':
+            titleParts.push(`⚔️ Duel (${oneVsOneModeList0} vs ${oneVsOneModeList1})`);
+            break;
+        case 'modViewersvViewers':
+            titleParts.push('👥 Viewers vs Viewers (ID pair/impair)');
+            break;
+        case 'modStreamerChatvStreamerChat':
+            titleParts.push(`🎭 Chat vs Chat (${streamerChatvStreamerChat0} vs ${streamerChatvStreamerChat1})`);
+            break;
+        default:
+            titleParts.push('🎯 Mode par défaut');
+    }
+    
+    // ========== MODE TIMER ==========
+    if (timerMode) {
+        titleParts.push(`⏱️ Timer ${InitialvoterTimer}s`);
+        
+        // Sous-options du timer
+        let timerOptions = [];
+        if (limitToOneVote) {
+            timerOptions.push('Vote unique');
+        }
+        if (majorityMode) {
+            timerOptions.push('Majorité');
+        } else {
+            timerOptions.push('Roue');
+        }
+        
+        if (timerOptions.length > 0) {
+            titleParts.push(`(${timerOptions.join(', ')})`);
+        }
+    } else {
+        titleParts.push('🎲 Mode vote libre');
+    }
+    
+    // ========== RESTRICTIONS D'ACCÈS ==========
+    let accessRestrictions = [];
+    if (followMode) {
+        accessRestrictions.push('Followers only');
+    }
+    if (subMode) {
+        accessRestrictions.push('Subs only');
+    }
+    
+    if (accessRestrictions.length > 0) {
+        titleParts.push(`🔒 ${accessRestrictions.join(' + ')}`);
+    }
+    
+    // ========== CHANNELS CONNECTÉS ==========
+    if (linkedChannels && linkedChannels.length > 0) {
+        const channelInfo = linkedChannels.length === 1 
+            ? `📺 ${linkedChannels[0]}` 
+            : `📺 ${linkedChannels.length} channels`;
+        titleParts.push(channelInfo);
+    }
+    
+    // ========== OPTIONS SPÉCIALES ==========
+    let specialOptions = [];
+    if (noBg) {
+        specialOptions.push('No BG');
+    }
+    
+    if (specialOptions.length > 0) {
+        titleParts.push(`🎨 ${specialOptions.join(', ')}`);
+    }
+    
+    return titleParts.join(' | ');
 }
-
-if(timerMode == true){
-	//startTimer(InitialvoterTimer, true);
-	$("h1[data-lang=fr-FR]").append(" - ModeVote ("+InitialvoterTimer+"s)");
-	$("h1[data-lang=en-EN]").append(" - modeVote ("+InitialvoterTimer+"s)");
-	if(majorityMode == true) {
-			$("h1[data-lang=fr-FR]").append(" - majorité");
-			$("h1[data-lang=en-EN]").append(" - majority");
-	} else {
-			$("h1[data-lang=en-EN]").append(" - tirage au sort");
-			$("h1[data-lang=fr-FR]").append(" - random ");
-	}
-} else {
-	$("body").addClass("no-timer");
-	$("h1[data-lang=fr-FR]").append(" - sans timer");
-	$("h1[data-lang=en-EN]").append(" - no timer");	
+function updatePageTitle() {
+    const title = generateTitle();
+    
+    // Mettre à jour le titre de la page
+    document.title = `ChessBot - ${title}`;
+    
+    // Mettre à jour un élément de titre si il existe
+    const titleElement = document.getElementById('gameTitle');
+    if (titleElement) {
+        titleElement.textContent = title;
+    }
+    
+    // Mettre à jour un élément de statut si il existe
+    const statusElement = document.getElementById('gameStatus');
+    if (statusElement) {
+        statusElement.innerHTML = `<strong>Configuration actuelle:</strong> ${title}`;
+    }
+    
+    console.log('📋 Titre généré:', title);
+    return title;
+}
+function createStatusBadge() {
+    // Créer ou mettre à jour un badge de statut
+    let badge = document.getElementById('configBadge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'configBadge';
+        badge.style.cssText = `
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
+        document.body.appendChild(badge);
+    }
+    
+    badge.textContent = generateTitle();
+    return badge;
 }
 
 //Start new game
@@ -1116,8 +1261,20 @@ function play(target, context, args) {
 }
 
 function getTeamByChannel(target, context) {
-    if(target === '#'+streamerChatvStreamerChat0) return 0; // Blancs
-    if(target === '#'+streamerChatvStreamerChat1) return 1; // Noirs
+    if (gameMode !== 'streamerVstreamer') {
+        return 0; // Par défaut, équipe 0
+    }
+    
+    // Récupérer le nom du channel sans le #
+    const channelName = target.replace('#', '').toLowerCase();
+    
+    if (channelName === streamerChatvStreamerChat0.toLowerCase()) {
+        return 0; // Équipe des blancs
+    } else if (channelName === streamerChatvStreamerChat1.toLowerCase()) {
+        return 1; // Équipe des noirs
+    }
+    
+    return 0; // Fallback
 }
 
 function refreshBoard(chess, context=null) {
@@ -1157,7 +1314,7 @@ function refreshBoard(chess, context=null) {
 	});
 	
 	$("#availableList ul li").on("click", function(){
-			play("Xou____", clickOpts.identity, [$(this).text()]);
+		play("Xou____", clickOpts.identity, [$(this).text()]);
 	});
 	
 }

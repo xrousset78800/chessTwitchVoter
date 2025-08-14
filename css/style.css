@@ -37,6 +37,7 @@ h5 {
 }
 h1 {
 	text-align: center;
+  height: 60px;
 }
 body {
 	transition: background-color 2s ease;
