@@ -1126,12 +1126,14 @@ function play(target, context, args) {
 								return false;
 							}		
 			        break;
-			    case 'modStreamerChatvStreamerChat':
-			    		let playerTeam = getTeamByChannel(target, context);
-			        if(playerTeam !== teamToPlay) {
-			            return false; // Pas le bon chat
-			        }
-			        break;
+                case 'modStreamerChatvStreamerChat':
+                    let playerTeam = getTeamByChannel(target, context);
+                    if(playerTeam !== teamToPlay) {
+                        console.log(`Vote rejeté: ${context.username} vote depuis le mauvais chat. Équipe ${playerTeam} vs équipe attendue ${teamToPlay}`);
+                        return false; // Pas le bon chat pour cette équipe
+                    }
+                    console.log(`Vote accepté: ${context.username} vote pour l'équipe ${playerTeam} depuis ${target}`);
+                    break;
 			    default:
 			}
 
@@ -1261,20 +1263,18 @@ function play(target, context, args) {
 }
 
 function getTeamByChannel(target, context) {
-    if (gameMode !== 'streamerVstreamer') {
-        return 0; // Par défaut, équipe 0
-    }
+    // Récupérer le nom du canal sans le #
+    let channelName = target.replace('#', '').toLowerCase();
     
-    // Récupérer le nom du channel sans le #
-    const channelName = target.replace('#', '').toLowerCase();
-    
-    if (channelName === streamerChatvStreamerChat0.toLowerCase()) {
+    // Déterminer l'équipe en fonction du canal
+    if(channelName === streamerChatvStreamerChat0.toLowerCase()) {
         return 0; // Équipe des blancs
-    } else if (channelName === streamerChatvStreamerChat1.toLowerCase()) {
+    } else if(channelName === streamerChatvStreamerChat1.toLowerCase()) {
         return 1; // Équipe des noirs
     }
     
-    return 0; // Fallback
+    console.log(`Canal non reconnu: ${channelName}`);
+    return -1; // Canal non reconnu
 }
 
 function refreshBoard(chess, context=null) {
