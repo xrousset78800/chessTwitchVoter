@@ -1045,7 +1045,7 @@ function moveAction(move) {
 		(teamToPlay == 1) ? 0 : 1;
 		chess.move(move);
 		board.position(chess.fen());
-
+        setTimeout(refreshPlayerDisplay, 100);
     playSoundForMove(chess)
 
 		if(chess.turn() == 'b') {
@@ -1262,6 +1262,139 @@ function play(target, context, args) {
 	}
 }
 
+function refreshPlayerDisplay() {
+    updatePlayerDisplay();
+}
+
+function updatePlayerDisplay() {
+    const whiteHeader = $('h3[data-team="w"]');
+    const blackHeader = $('h3[data-team="b"]');
+    
+    // Réinitialiser les headers
+    whiteHeader.find('.player-info').remove();
+    blackHeader.find('.player-info').remove();
+    
+    let whitePlayerInfo = '';
+    let blackPlayerInfo = '';
+    
+    switch(gameMode) {
+        case 'modStreamerChatvStreamerChat':
+            // Chat vs Chat - afficher les pseudos des streamers
+            whitePlayerInfo = `
+                <span class="player-info">
+                    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/${streamerChatvStreamerChat0}-profile_image-70x70.png" 
+                         class="streamer-avatar" 
+                         onerror="this.style.display='none'"
+                         alt="${streamerChatvStreamerChat0}">
+                    <span class="streamer-name">@${streamerChatvStreamerChat0}</span>
+                </span>`;
+            
+            blackPlayerInfo = `
+                <span class="player-info">
+                    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/${streamerChatvStreamerChat1}-profile_image-70x70.png" 
+                         class="streamer-avatar" 
+                         onerror="this.style.display='none'"
+                         alt="${streamerChatvStreamerChat1}">
+                    <span class="streamer-name">@${streamerChatvStreamerChat1}</span>
+                </span>`;
+            break;
+            
+        case 'mod1v1':
+            // Duel 1v1
+            whitePlayerInfo = `
+                <span class="player-info">
+                    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/${oneVsOneModeList0}-profile_image-70x70.png" 
+                         class="streamer-avatar" 
+                         onerror="this.style.display='none'"
+                         alt="${oneVsOneModeList0}">
+                    <span class="streamer-name">@${oneVsOneModeList0}</span>
+                </span>`;
+            
+            blackPlayerInfo = `
+                <span class="player-info">
+                    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/${oneVsOneModeList1}-profile_image-70x70.png" 
+                         class="streamer-avatar" 
+                         onerror="this.style.display='none'"
+                         alt="${oneVsOneModeList1}">
+                    <span class="streamer-name">@${oneVsOneModeList1}</span>
+                </span>`;
+            break;
+            
+        case 'mod1vViewers':
+            // Seul contre tous
+            if(teamToPlay === 0) {
+                whitePlayerInfo = `
+                    <span class="player-info">
+                        <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/${mod1vViewersPlayer}-profile_image-70x70.png" 
+                             class="streamer-avatar" 
+                             onerror="this.style.display='none'"
+                             alt="${mod1vViewersPlayer}">
+                        <span class="streamer-name">@${mod1vViewersPlayer}</span>
+                    </span>`;
+                blackPlayerInfo = `
+                    <span class="player-info">
+                        <i class="fas fa-users team-icon"></i>
+                        <span class="team-name">Chat</span>
+                    </span>`;
+            } else {
+                whitePlayerInfo = `
+                    <span class="player-info">
+                        <i class="fas fa-users team-icon"></i>
+                        <span class="team-name">Chat</span>
+                    </span>`;
+                blackPlayerInfo = `
+                    <span class="player-info">
+                        <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/${mod1vViewersPlayer}-profile_image-70x70.png" 
+                             class="streamer-avatar" 
+                             onerror="this.style.display='none'"
+                             alt="${mod1vViewersPlayer}">
+                        <span class="streamer-name">@${mod1vViewersPlayer}</span>
+                    </span>`;
+            }
+            break;
+            
+        case 'modViewersvViewers':
+            // Viewers vs Viewers (ID pair/impair)
+            whitePlayerInfo = `
+                <span class="player-info">
+                    <i class="fas fa-users team-icon"></i>
+                    <span class="team-name">ID Pairs</span>
+                </span>`;
+            blackPlayerInfo = `
+                <span class="player-info">
+                    <i class="fas fa-users team-icon"></i>
+                    <span class="team-name">ID Impairs</span>
+                </span>`;
+            break;
+            
+        default:
+            // Mode normal - tous contre tous
+            whitePlayerInfo = `
+                <span class="player-info">
+                    <i class="fas fa-users team-icon"></i>
+                    <span class="team-name">Chat</span>
+                </span>`;
+            blackPlayerInfo = `
+                <span class="player-info">
+                    <i class="fas fa-users team-icon"></i>
+                    <span class="team-name">Chat</span>
+                </span>`;
+            break;
+    }
+    
+    // Ajouter les infos aux headers
+    whiteHeader.append(whitePlayerInfo);
+    blackHeader.append(blackPlayerInfo);
+    
+    // Mettre en évidence le joueur actuel
+    $('.player-info').removeClass('current-player');
+    if(chess.turn() === 'w') {
+        whiteHeader.find('.player-info').addClass('current-player');
+    } else {
+        blackHeader.find('.player-info').addClass('current-player');
+    }
+}
+
 function getTeamByChannel(target, context) {
     // Récupérer le nom du canal sans le #
     let channelName = target.replace('#', '').toLowerCase();
@@ -1280,15 +1413,9 @@ function getTeamByChannel(target, context) {
 function refreshBoard(chess, context=null) {
 	if(chess.turn() == 'w') {
 		teamToPlay = 0;
-		if(p1 !== null) {
-			$('h3 b').text(" ( "+p1+" )");
-		}
 	}
 	else {
 		teamToPlay = 1
-		if(p2 !== null) {
-			$('h3 b').text(" ( "+p2+" )");
-		}
 	}
 
 	$('body').attr('data-team', chess.turn());

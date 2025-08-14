@@ -932,3 +932,79 @@ input[type="number"] {
     top: 0;
     right: 10px;    
 }
+
+
+
+.player-info {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 15px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.player-info.current-player {
+    background: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    transform: scale(1.05);
+}
+
+.streamer-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.streamer-name, .team-name {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.team-icon {
+    margin-right: 8px;
+    font-size: 18px;
+    opacity: 0.8;
+}
+
+/* Animation pour les changements de tour */
+@keyframes playerPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.player-info.current-player {
+    animation: playerPulse 2s infinite;
+}
+
+/* Couleurs spécifiques pour chaque équipe */
+h3[data-team="w"] .player-info.current-player {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+h3[data-team="b"] .player-info.current-player {
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+}
+
+/* Style responsive */
+@media (max-width: 768px) {
+    .streamer-avatar {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .player-info {
+        margin-left: 10px;
+        padding: 6px 10px;
+    }
+    
+    .streamer-name, .team-name {
+        font-size: 12px;
+    }
+}
