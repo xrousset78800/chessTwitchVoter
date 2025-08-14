@@ -753,6 +753,8 @@ input[type="number"] {
     z-index: 1000; /* Assure que le formulaire apparaît au-dessus du reste du contenu */
     display: none; /* Par défaut, le formulaire est caché */
     color: #dfdfdf;
+    overflow-y: auto;
+    max-height: 90%;    
 }
 
 /* Style pour le fond semi-transparent */

@@ -89,7 +89,31 @@ if (selectedThemesParam) {
         console.warn('⚠️ Erreur lors du parsing des thèmes URL:', error);
     }
 }
-
+document.addEventListener('DOMContentLoaded', function() {
+    const configForm = document.getElementById('configForm');
+    
+    if (configForm) {
+        configForm.addEventListener('submit', function(event) {
+            // Ajouter les thèmes sélectionnés juste avant la soumission
+            if (typeof selectedThemes !== 'undefined' && selectedThemes.size > 0) {
+                const themesString = Array.from(selectedThemes).join(',');
+                
+                // Créer un champ hidden temporaire pour les thèmes
+                let themesInput = document.getElementById('hiddenSelectedThemes');
+                if (!themesInput) {
+                    themesInput = document.createElement('input');
+                    themesInput.type = 'hidden';
+                    themesInput.id = 'hiddenSelectedThemes';
+                    themesInput.name = 'selectedThemes';
+                    configForm.appendChild(themesInput);
+                }
+                themesInput.value = themesString;
+                
+                console.log('🎯 Thèmes ajoutés au formulaire:', themesString);
+            }
+        });
+    }
+});
 function toggleGameModeElements() {
     // Masquer toutes les divs de mode de jeu
     $('div[data-game-mode]').hide();

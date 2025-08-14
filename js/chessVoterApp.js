@@ -1558,7 +1558,6 @@ function analyzeAndRenderThemes() {
     renderThemeList();
     updateProblemCount();
 }
-
 function loadSelectedThemesFromUrl() {
     // Utiliser la variable globale définie dans config.js
     if (typeof selectedThemesFromUrl !== 'undefined' && selectedThemesFromUrl.size > 0) {
