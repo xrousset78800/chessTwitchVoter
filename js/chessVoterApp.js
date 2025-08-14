@@ -1,15 +1,25 @@
 const appToken = configTwitch.TWITCH_TOKEN;
 
+
 function getLinkedChannels() {
     let linkedChannels = [];
     
     switch(gameMode) {
         case 'normal':
+            // En mode normal (sandbox), utiliser le defaultChannel
+            linkedChannels = [defaultChannel];
+            break;
+            
         case '1vViewers':
-        case '1v1':
-        case 'viewersVviewers':
-            // Pour ces modes, on utilise seulement le premier streamer
             linkedChannels = [mod1vViewersPlayer];
+            break;
+            
+        case '1v1':
+            linkedChannels = [oneVsOneModeList0, oneVsOneModeList1].filter(channel => channel && channel.trim() !== '');
+            break;
+            
+        case 'viewersVviewers':
+            linkedChannels = [defaultChannel]; // ou la logique appropriée pour ce mode
             break;
             
         case 'modStreamerChatvStreamerChat':
@@ -18,12 +28,17 @@ function getLinkedChannels() {
             break;
             
         default:
-            // Fallback sur le joueur principal
-            linkedChannels = [mod1vViewersPlayer];
+            // Fallback sur le defaultChannel
+            linkedChannels = [defaultChannel];
     }
     
     // Filtrer les valeurs vides ou nulles
-    linkedChannels = linkedChannels.filter(channel => channel && channel.trim() !== '');
+    linkedChannels = linkedChannels.filter(channel => channel && channel.trim() !== '' && channel !== 'PLEASE FILL THIS');
+    
+    // Si aucun canal valide n'est trouvé, utiliser le defaultChannel comme fallback
+    if (linkedChannels.length === 0 && defaultChannel && defaultChannel !== 'PLEASE FILL THIS') {
+        linkedChannels = [defaultChannel];
+    }
     
     console.log('📺 Channels configurés:', linkedChannels, 'pour le mode:', gameMode);
     return linkedChannels;
