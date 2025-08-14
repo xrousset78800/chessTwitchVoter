@@ -76,6 +76,19 @@ const subMode = $.urlParam('subMode') == 'on' ? true : false;
 if(subMode)
 	$("#configForm #subMode").attr("checked", "checked");
 
+const selectedThemesParam = $.urlParam('selectedThemes');
+let selectedThemesFromUrl = new Set();
+
+if (selectedThemesParam) {
+    try {
+        // Les thèmes sont séparés par des virgules dans l'URL
+        const themesArray = decodeURIComponent(selectedThemesParam).split(',').filter(t => t.trim());
+        selectedThemesFromUrl = new Set(themesArray);
+        console.log('🎯 Thèmes récupérés depuis l\'URL:', Array.from(selectedThemesFromUrl));
+    } catch (error) {
+        console.warn('⚠️ Erreur lors du parsing des thèmes URL:', error);
+    }
+}
 
 function toggleGameModeElements() {
     // Masquer toutes les divs de mode de jeu

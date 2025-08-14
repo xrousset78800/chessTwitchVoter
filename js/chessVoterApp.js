@@ -57,8 +57,47 @@ var filteredProblems = [];
 var selectedThemes = new Set();
 var themeStats = {};
 
+function preloadThemesForMenu() {
+    console.log('🔄 Préchargement des thèmes pour le menu...');
+    
+    fetch('js/problemsV2.csv')
+        .then(response => response.text())
+        .then(data => {
+            const lines = data.split("\n").filter(line => line.trim());
+            console.log('📁 CSV chargé pour les thèmes:', lines.length, 'lignes');
+            
+            // Parser le CSV
+            const array = lines.map(line => parseCSVLine(line));
+            
+            // Stocker tous les problèmes (pour le menu)
+            allProblems = array.slice(1).filter(row => row.length > 7);
+            console.log('✅ Problèmes préchargés pour thèmes:', allProblems.length);
+            
+            // Charger les thèmes depuis l'URL AVANT d'analyser
+            loadSelectedThemesFromUrl();
+            
+            // Analyser et rendre les thèmes disponibles dans le menu
+            analyzeAndRenderThemes();
+            
+            // Mettre à jour l'affichage
+            updateSelectedThemesDisplay();
+            updateProblemCount();
+            
+            console.log('🎨 Thèmes disponibles dans le menu:', Object.keys(themeStats).length);
+        })
+        .catch(error => {
+            console.error("❌ Erreur lors du préchargement des thèmes:", error);
+            // En cas d'erreur, afficher un message dans le menu
+            const themeListElement = document.getElementById('themeList');
+            if (themeListElement) {
+                themeListElement.innerHTML = '<div style="text-align: center; color: #ff6b6b;">Erreur de chargement des thèmes</div>';
+            }
+        });
+}
+
 $(document).ready(function() {
 		addPhantomBridgeControls();
+        preloadThemesForMenu();
     console.log('🐍 Phantom Bridge Client initialisé');
 });
 
@@ -119,132 +158,6 @@ function preloadPieceImages() {
 
 // Appeler au chargement
 preloadPieceImages();
-
-// NOUVELLE FONCTION : Obtenir la pièce d'un coup
-function getPieceFromMove(move) {
-    let piece = 'P'; // Pion par défaut
-    
-    if (move.slice(0, 1) === "Q" || 
-        move.slice(0, 1) === "K" || 
-        move.slice(0, 1) === "R" || 
-        move.slice(0, 1) === "B" ||
-        move.slice(0, 1) === "N") {
-        piece = move.slice(0, 1);
-    }
-    
-    return piece;
-}
-
-function drawLabelsOnChart() {
-    const chart = pollChart;
-    const ctx = chart.ctx;
-    
-    ctx.save();
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.font = 'bold 14px Arial';
-    
-    // Ombre pour le texte
-    ctx.shadowColor = 'black';
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
-    ctx.fillStyle = 'white';
-    
-    const meta = chart.getDatasetMeta(0);
-    
-    meta.data.forEach((bar, index) => {
-        const label = chart.data.labels[index];
-        
-        if (label && bar.height > 0) {
-            const piece = getPieceFromMove(label);
-            const color = (teamToPlay == 0) ? "w" : "b";
-            const pieceKey = `${color}${piece}`;
-            const pieceImage = pieceImages[pieceKey];
-            
-            const centerY = bar.y + (bar.height / 2);
-            
-            // Image à gauche du centre
-            const imageX = bar.x - 25;
-            const imageY = centerY - 10;
-            
-            // Texte à droite du centre
-            const textX = bar.x - 2;
-            
-            // Dessiner l'image
-            if (pieceImage && pieceImage.complete) {
-                ctx.shadowColor = 'transparent';
-                ctx.drawImage(pieceImage, imageX, imageY, 20, 20);
-                ctx.shadowColor = 'black';
-            }
-            
-            // Dessiner le texte
-            ctx.fillText(label, textX, centerY);
-        }
-    });
-    
-    ctx.restore();
-}
-function updateChartIncremental(move, color) {
-    const currentLabels = pollChart.data.labels;
-    const currentData = pollChart.data.datasets[0].data;
-    const currentColors = pollChart.data.datasets[0].backgroundColor;
-    
-    // Chercher si le coup existe déjà
-    const existingIndex = currentLabels.indexOf(move);
-    
-    if (existingIndex !== -1) {
-        // LE COUP EXISTE → Incrémenter la valeur
-        currentData[existingIndex]++;
-    } else {
-        // NOUVEAU COUP → Ajouter à la fin
-        currentLabels.push(move);
-        currentData.push(1);
-        currentColors.push(color);
-    }
-    
-    // Mettre à jour sans recréer
-    pollChart.data.datasets[0] = {
-        label: 'Votes',
-        data: currentData,
-        backgroundColor: currentColors,
-        borderWidth: 0,
-        categoryPercentage: 1.0,
-        barPercentage: 0.9
-    };
-    
-    pollChart.update('none'); // ← 'none' = pas d'animation pour être plus rapide
-    setTimeout(() => {
-        drawLabelsOnChart();
-    }, 100);
-}
-
-function updateChartData() {
-    // Compter les votes par coup
-    var result = poll.reduce((acc, o) => (acc[o.move] = (acc[o.move] || 0) + 1, acc), {});
-    
-    // Extraire les labels et données
-    const labels = Object.keys(result);
-    const data = Object.values(result);
-    const colors = labels.map(move => {
-        const pollItem = poll.find(p => p.move === move);
-        return pollItem ? pollItem.color : colorArray[0];
-    });
-    
-    // CORRECTION - Structure correcte
-    pollChart.data.labels = labels;
-    pollChart.data.datasets = [{  // ← UN SEUL dataset
-        label: 'Votes',
-        data: data,
-        backgroundColor: colors,
-        borderWidth: 0,
-        categoryPercentage: 1.0,  // ← AJOUTER ICI
-        barPercentage: 0.95   
-    }];
-    
-    pollChart.update();
-}
-
 
 var intervalId = null;
 
@@ -413,81 +326,90 @@ function loadNewProblem() {
     console.log('🔄 Chargement d\'un nouveau problème...');
     console.log('🎯 Thèmes sélectionnés:', Array.from(selectedThemes));
     
-    fetch('js/problemsV2.csv')
-        .then(response => response.text())
-        .then(data => {
-            $('.poll ol').empty();
-            poll = [];
-            
-            const lines = data.split("\n").filter(line => line.trim());
-            console.log('📁 Lignes lues du CSV:', lines.length);
-            
-            // Parser chaque ligne correctement (en gérant les guillemets)
-            const array = lines.map(line => parseCSVLine(line));
-            
-            // Stocker tous les problèmes pour le filtrage (ignorer la première ligne qui contient les headers)
-            allProblems = array.slice(1).filter(row => row.length > 7);
-            console.log('✅ Problèmes chargés:', allProblems.length);
-            
-            // Analyser les thèmes si c'est la première fois
-            if (Object.keys(themeStats).length === 0) {
-                console.log('🔍 Première analyse des thèmes...');
-                analyzeAndRenderThemes();
-            }
-            
-            // LOGIC DE FILTRAGE
-            let problemsToUse = getFilteredProblems();
-            console.log('🎲 Problèmes après filtrage:', problemsToUse.length);
-            
-            if (problemsToUse.length === 0) {
-                console.warn('⚠️ Aucun problème ne correspond aux filtres, utilisation de tous les problèmes');
-                problemsToUse = allProblems;
-            }
-            
-            let firstMove = "";
-            
-            // SÉLECTION ALÉATOIRE DANS LES PROBLÈMES FILTRÉS
-            prob = problemsToUse[Math.floor(Math.random() * problemsToUse.length)];
-            
-            console.log('🎯 Problème sélectionné:', prob[0], 'avec thèmes:', prob[7]);
-            
-            currentProbPgn = prob[1];
-            chess = new Chess(prob[1]);
-            defaultConfig.position = prob[1];
-            teamToPlay = 0;
-
-            if(chess.turn() == 'b') {
-                defaultConfig.orientation='white';
-            } else {
-                defaultConfig.orientation='black';
-            }
-
-            $("[data-opening-tags]").text(prob[9] || '');
-            $("[data-tags]").text(prob[7] || '');
-            $("[data-rating]").text("ELO : " + (prob[3] || 'N/A'));
-            
-            $("[data-omgSolution]").text(prob[2]);
-            $("[data-attempt]").attr("data-attempt", 0);
-            $("[data-length]").attr('data-length', prob[2].split(" ").length);
-            $("[data-length]").text(prob[2].split(" ").length/2);
-            board = Chessboard('myBoard', defaultConfig);
-            
-            firstMove = playPbm();
-            console.log("first move");
-            moveAction(firstMove);
-            var moves = chess.moves();
-            refreshBoard(chess);
-
-            if(timerMode) {
-                startTimer(InitialvoterTimer, true);
-            }
-
-            (teamToPlay == 1) ? 0 : 1;
-        })
-        .catch(error => console.error("❌ Erreur lors du chargement:", error));
+    // Si les problèmes ne sont pas encore chargés, les charger
+    if (allProblems.length === 0) {
+        console.log('📁 Problèmes pas encore chargés, chargement...');
+        
+        fetch('js/problemsV2.csv')
+            .then(response => response.text())
+            .then(data => {
+                const lines = data.split("\n").filter(line => line.trim());
+                const array = lines.map(line => parseCSVLine(line));
+                allProblems = array.slice(1).filter(row => row.length > 7);
+                console.log('✅ Problèmes chargés:', allProblems.length);
+                
+                // Analyser les thèmes si ce n'est pas déjà fait
+                if (Object.keys(themeStats).length === 0) {
+                    loadSelectedThemesFromUrl();
+                    analyzeAndRenderThemes();
+                    updateSelectedThemesDisplay();
+                    updateProblemCount();
+                }
+                
+                // Continuer avec la sélection du problème
+                selectAndLoadProblem();
+            })
+            .catch(error => console.error("❌ Erreur lors du chargement:", error));
+    } else {
+        // Les problèmes sont déjà chargés, directement sélectionner
+        console.log('✅ Problèmes déjà en mémoire, sélection directe');
+        selectAndLoadProblem();
+    }
 }
 
+function selectAndLoadProblem() {
+    $('.poll ol').empty();
+    poll = [];
+    
+    // LOGIC DE FILTRAGE
+    let problemsToUse = getFilteredProblems();
+    console.log('🎲 Problèmes après filtrage:', problemsToUse.length);
+    
+    if (problemsToUse.length === 0) {
+        console.warn('⚠️ Aucun problème ne correspond aux filtres, utilisation de tous les problèmes');
+        problemsToUse = allProblems;
+    }
+    
+    let firstMove = "";
+    
+    // SÉLECTION ALÉATOIRE DANS LES PROBLÈMES FILTRÉS
+    prob = problemsToUse[Math.floor(Math.random() * problemsToUse.length)];
+    
+    console.log('🎯 Problème sélectionné:', prob[0], 'avec thèmes:', prob[7]);
+    
+    currentProbPgn = prob[1];
+    chess = new Chess(prob[1]);
+    defaultConfig.position = prob[1];
+    teamToPlay = 0;
 
+    if(chess.turn() == 'b') {
+        defaultConfig.orientation='white';
+    } else {
+        defaultConfig.orientation='black';
+    }
+
+    $("[data-opening-tags]").text(prob[9] || '');
+    $("[data-tags]").text(prob[7] || '');
+    $("[data-rating]").text("ELO : " + (prob[3] || 'N/A'));
+    
+    $("[data-omgSolution]").text(prob[2]);
+    $("[data-attempt]").attr("data-attempt", 0);
+    $("[data-length]").attr('data-length', prob[2].split(" ").length);
+    $("[data-length]").text(prob[2].split(" ").length/2);
+    board = Chessboard('myBoard', defaultConfig);
+    
+    firstMove = playPbm();
+    console.log("first move");
+    moveAction(firstMove);
+    var moves = chess.moves();
+    refreshBoard(chess);
+
+    if(timerMode) {
+        startTimer(InitialvoterTimer, true);
+    }
+
+    (teamToPlay == 1) ? 0 : 1;
+}
 /***********************************************************************************************/
 /***************************************      voter     ****************************************/
 /***********************************************************************************************/
@@ -1444,6 +1366,134 @@ $('#chart').html('');
         spin(data);
         return data[picked].value;
 }
+
+
+// NOUVELLE FONCTION : Obtenir la pièce d'un coup
+function getPieceFromMove(move) {
+    let piece = 'P'; // Pion par défaut
+    
+    if (move.slice(0, 1) === "Q" || 
+        move.slice(0, 1) === "K" || 
+        move.slice(0, 1) === "R" || 
+        move.slice(0, 1) === "B" ||
+        move.slice(0, 1) === "N") {
+        piece = move.slice(0, 1);
+    }
+    
+    return piece;
+}
+
+function drawLabelsOnChart() {
+    const chart = pollChart;
+    const ctx = chart.ctx;
+    
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 14px Arial';
+    
+    // Ombre pour le texte
+    ctx.shadowColor = 'black';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+    ctx.fillStyle = 'white';
+    
+    const meta = chart.getDatasetMeta(0);
+    
+    meta.data.forEach((bar, index) => {
+        const label = chart.data.labels[index];
+        
+        if (label && bar.height > 0) {
+            const piece = getPieceFromMove(label);
+            const color = (teamToPlay == 0) ? "w" : "b";
+            const pieceKey = `${color}${piece}`;
+            const pieceImage = pieceImages[pieceKey];
+            
+            const centerY = bar.y + (bar.height / 2);
+            
+            // Image à gauche du centre
+            const imageX = bar.x - 25;
+            const imageY = centerY - 10;
+            
+            // Texte à droite du centre
+            const textX = bar.x - 2;
+            
+            // Dessiner l'image
+            if (pieceImage && pieceImage.complete) {
+                ctx.shadowColor = 'transparent';
+                ctx.drawImage(pieceImage, imageX, imageY, 20, 20);
+                ctx.shadowColor = 'black';
+            }
+            
+            // Dessiner le texte
+            ctx.fillText(label, textX, centerY);
+        }
+    });
+    
+    ctx.restore();
+}
+function updateChartIncremental(move, color) {
+    const currentLabels = pollChart.data.labels;
+    const currentData = pollChart.data.datasets[0].data;
+    const currentColors = pollChart.data.datasets[0].backgroundColor;
+    
+    // Chercher si le coup existe déjà
+    const existingIndex = currentLabels.indexOf(move);
+    
+    if (existingIndex !== -1) {
+        // LE COUP EXISTE → Incrémenter la valeur
+        currentData[existingIndex]++;
+    } else {
+        // NOUVEAU COUP → Ajouter à la fin
+        currentLabels.push(move);
+        currentData.push(1);
+        currentColors.push(color);
+    }
+    
+    // Mettre à jour sans recréer
+    pollChart.data.datasets[0] = {
+        label: 'Votes',
+        data: currentData,
+        backgroundColor: currentColors,
+        borderWidth: 0,
+        categoryPercentage: 1.0,
+        barPercentage: 0.9
+    };
+    
+    pollChart.update('none'); // ← 'none' = pas d'animation pour être plus rapide
+    setTimeout(() => {
+        drawLabelsOnChart();
+    }, 100);
+}
+
+function updateChartData() {
+    // Compter les votes par coup
+    var result = poll.reduce((acc, o) => (acc[o.move] = (acc[o.move] || 0) + 1, acc), {});
+    
+    // Extraire les labels et données
+    const labels = Object.keys(result);
+    const data = Object.values(result);
+    const colors = labels.map(move => {
+        const pollItem = poll.find(p => p.move === move);
+        return pollItem ? pollItem.color : colorArray[0];
+    });
+    
+    // CORRECTION - Structure correcte
+    pollChart.data.labels = labels;
+    pollChart.data.datasets = [{  // ← UN SEUL dataset
+        label: 'Votes',
+        data: data,
+        backgroundColor: colors,
+        borderWidth: 0,
+        categoryPercentage: 1.0,  // ← AJOUTER ICI
+        barPercentage: 0.95   
+    }];
+    
+    pollChart.update();
+}
+
+
 /***********************************************************************************************/
 /***************************************   Wheel  ****************************************/
 /***********************************************************************************************/
@@ -1452,9 +1502,19 @@ $('#chart').html('');
 // ========== FONCTIONS DE FILTRAGE PAR THÈMES ==========
 
 function analyzeAndRenderThemes() {
+    // Vérifier si les problèmes sont chargés
+    if (allProblems.length === 0) {
+        console.log('⚠️ Aucun problème chargé pour analyser les thèmes');
+        const themeListElement = document.getElementById('themeList');
+        if (themeListElement) {
+            themeListElement.innerHTML = '<div style="text-align: center; color: #aaa;">Chargement des thèmes...</div>';
+        }
+        return;
+    }
+    
     themeStats = {};
     
-    console.log('Analyse des thèmes pour', allProblems.length, 'problèmes');
+    console.log('🔍 Analyse des thèmes pour', allProblems.length, 'problèmes');
     
     // Analyser tous les thèmes disponibles
     allProblems.forEach((problem, index) => {
@@ -1483,13 +1543,13 @@ function analyzeAndRenderThemes() {
             
             // Debug pour les premiers problèmes
             if (index < 3) {
-                console.log(`Problème ${index}:`, problem[0], 'Thèmes bruts:', problem[7], 'Thèmes parsés:', themes);
+                console.log(`  Problème ${index}:`, problem[0], 'Thèmes bruts:', problem[7], 'Thèmes parsés:', themes);
             }
         }
     });
     
-    console.log('Thèmes trouvés:', Object.keys(themeStats).length);
-    console.log('Statistiques des thèmes:', themeStats);
+    console.log('📊 Thèmes trouvés:', Object.keys(themeStats).length);
+    console.log('📈 Statistiques des thèmes:', themeStats);
     
     // Trier par fréquence décroissante
     const sortedThemes = Object.keys(themeStats).sort((a, b) => themeStats[b] - themeStats[a]);
@@ -1499,17 +1559,27 @@ function analyzeAndRenderThemes() {
     updateProblemCount();
 }
 
+function loadSelectedThemesFromUrl() {
+    // Utiliser la variable globale définie dans config.js
+    if (typeof selectedThemesFromUrl !== 'undefined' && selectedThemesFromUrl.size > 0) {
+        selectedThemes = new Set(selectedThemesFromUrl);
+        console.log('📁 Thèmes chargés depuis l\'URL:', Array.from(selectedThemes));
+        return true;
+    }
+    return false;
+}
+
 function renderThemeList() {
     const themeListElement = document.getElementById('themeList');
     if (!themeListElement) {
-        console.warn('Élément themeList non trouvé');
+        console.warn('⚠️ Élément themeList non trouvé');
         return;
     }
     
     themeListElement.innerHTML = '';
     
     if (Object.keys(themeStats).length === 0) {
-        themeListElement.innerHTML = '<div style="text-align: center; color: #aaa;">Aucun thème trouvé</div>';
+        themeListElement.innerHTML = '<div style="text-align: center; color: #aaa;">Chargement des thèmes...</div>';
         return;
     }
     
@@ -1517,17 +1587,29 @@ function renderThemeList() {
         const themeItem = document.createElement('div');
         themeItem.className = 'theme-item';
         
-        // Échapper les caractères spéciaux pour l'ID
         const safeThemeId = theme.replace(/[^a-zA-Z0-9]/g, '_');
         
+        // Vérifier si ce thème était sélectionné dans l'URL
+        const isChecked = selectedThemes.has(theme) ? 'checked' : '';
+        
         themeItem.innerHTML = `
-            <input type="checkbox" id="theme_${safeThemeId}" value="${theme}" onchange="toggleTheme('${theme}')">
+            <input type="checkbox" id="theme_${safeThemeId}" name="theme_${safeThemeId}" value="${theme}" ${isChecked} onchange="toggleTheme('${theme}')">
             <label for="theme_${safeThemeId}">${theme}</label>
             <span class="theme-count">(${count})</span>
         `;
         
         themeListElement.appendChild(themeItem);
     });
+    
+    console.log('🎨 Liste des thèmes rendue avec', selectedThemes.size, 'thèmes pré-sélectionnés');
+    
+    // Ajouter un indicateur visuel si on n'est pas en mode problème
+    if (gameMode !== "probMode") {
+        const infoElement = document.createElement('div');
+        infoElement.style.cssText = 'text-align: center; color: #ffa500; font-size: 12px; margin-top: 10px; padding: 5px; background-color: #2a2a2a; border-radius: 3px;';
+        infoElement.innerHTML = '💡 Activez le mode problème pour utiliser ces filtres';
+        themeListElement.appendChild(infoElement);
+    }
 }
 
 function toggleTheme(theme) {
