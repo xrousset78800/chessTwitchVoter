@@ -41,7 +41,7 @@ const opts = {
 
 const clickOpts = {
   identity: {
-    username: 'xou____',
+    username: defaultChannel,
   },
   id: 1
 };
@@ -182,7 +182,7 @@ function preloadPieceImages() {
     pieces.forEach(piece => {
         colors.forEach(color => {
             const img = new Image();
-            img.src = `img/chesspieces/wikipedia/${color}${piece}.png`;
+            img.src = `./img/chesspieces/wikipedia/${color}${piece}.png`;
             pieceImages[`${color}${piece}`] = img;
         });
     });
@@ -1441,7 +1441,7 @@ function refreshBoard(chess, context=null) {
 	});
 	
 	$("#availableList ul li").on("click", function(){
-		play("Xou____", clickOpts.identity, [$(this).text()]);
+		play(clickOpts.identity, clickOpts.identity, [$(this).text()]);
 	});
 	
 }
@@ -1560,7 +1560,7 @@ $('#chart').html('');
 				        	 d.data.label.slice(0, 1) == "N" ) {
 				        	piece = d.data.label.slice(0, 1);
 				        }
-                return "../img/chesspieces/wikipedia/"+colorImage+piece+".png";
+                return "./img/chesspieces/wikipedia/"+colorImage+piece+".png";
              },
 					    width: 20,
 					    height: 20

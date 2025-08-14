@@ -7,6 +7,9 @@ $.urlParam = function (name) {
     return (results !== null) ? results[1] || 0 : false;
 }
 
+const defaultChannel = $.urlParam('defaultChannel') ? $.urlParam('defaultChannel') : "PLEASE FILL THIS";
+$("#configForm #defaultChannel").val(defaultChannel);
+
 const probMode = $.urlParam('probMode') == 'on' ? true : false;
 if(probMode)
     $("#configForm #probMode:checkbox").attr("checked", "checked");
@@ -22,16 +25,16 @@ const modViewersvViewers = (gameMode === 'viewersVviewers');
 const modStreamerChatvStreamerChat = (gameMode === 'streamerVstreamer');
 
 // PARAMÈTRES SPÉCIFIQUES AUX MODES
-const mod1vViewersPlayer = $.urlParam('mod1vViewersPlayer') ? $.urlParam('mod1vViewersPlayer') : "Xou____";
+const mod1vViewersPlayer = $.urlParam('mod1vViewersPlayer') ? $.urlParam('mod1vViewersPlayer') : defaultChannel;
 $("#configForm #mod1vViewersPlayer").val(mod1vViewersPlayer);
 
-const oneVsOneModeList0 = $.urlParam('oneVsOneModeList0') ? $.urlParam('oneVsOneModeList0') : "Xou____";
-const oneVsOneModeList1 = $.urlParam('oneVsOneModeList1') ? $.urlParam('oneVsOneModeList1') : "Xou____";
+const oneVsOneModeList0 = $.urlParam('oneVsOneModeList0') ? $.urlParam('oneVsOneModeList0') : defaultChannel;
+const oneVsOneModeList1 = $.urlParam('oneVsOneModeList1') ? $.urlParam('oneVsOneModeList1') : defaultChannel;
 $("#configForm #oneVsOneModeList0").val(oneVsOneModeList0);
 $("#configForm #oneVsOneModeList1").val(oneVsOneModeList1);
 
-const streamerChatvStreamerChat0 = $.urlParam('streamerChatvStreamerChat0') ? $.urlParam('streamerChatvStreamerChat0') : "Xou____";
-const streamerChatvStreamerChat1 = $.urlParam('streamerChatvStreamerChat1') ? $.urlParam('streamerChatvStreamerChat1') : "Xou____";
+const streamerChatvStreamerChat0 = $.urlParam('streamerChatvStreamerChat0') ? $.urlParam('streamerChatvStreamerChat0') : defaultChannel;
+const streamerChatvStreamerChat1 = $.urlParam('streamerChatvStreamerChat1') ? $.urlParam('streamerChatvStreamerChat1') : defaultChannel;
 $("#configForm #streamerChatvStreamerChat0").val(streamerChatvStreamerChat0);
 $("#configForm #streamerChatvStreamerChat1").val(streamerChatvStreamerChat1);
 
