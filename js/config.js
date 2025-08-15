@@ -71,6 +71,10 @@ const noBg = $.urlParam('noBg') == 'on' ? true : false;
 if(noBg)
     $("#configForm #noBg").attr("checked", "checked");
 
+const noEpilepsy = $.urlParam('noEpilepsy') == 'on' ? true : false;
+if(noEpilepsy)
+    $("#configForm #noEpilepsy").attr("checked", "checked");
+
 const followMode = $.urlParam('followMode') == 'on' ? true : false;
 if(followMode)
 	$("#configForm #followMode").attr("checked", "checked");

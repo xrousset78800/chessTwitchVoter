@@ -374,7 +374,7 @@ function updatePageTitle() {
     const title = generateTitle();
     
     // Mettre à jour le titre de la page
-    document.title = `ChessBot - ${title}`;
+    document.title = `Twitchess - ${title}`;
     
     // Mettre à jour un élément de titre si il existe
     const titleElement = document.getElementById('gameTitle');
@@ -396,6 +396,7 @@ function createStatusBadge() {
     let badge = document.getElementById('configBadge');
     if (!badge) {
         badge = document.createElement('div');
+        elo = document.createElement('b');
         badge.id = 'configBadge';
         badge.style.cssText = `
             position: fixed;
@@ -413,7 +414,8 @@ function createStatusBadge() {
         `;
         document.body.appendChild(badge);
     }
-    
+
+    badge.appendChild(elo);
     badge.textContent = generateTitle();
     return badge;
 }
@@ -421,6 +423,10 @@ function createStatusBadge() {
 //Start new game
 if(noBg) {
 	$("body").addClass("noBg");
+}
+
+if(noEpilepsy) {
+    $("body").addClass("noEpilepsy");
 }
 
 var overlay = new ChessboardArrows('board_wrapper');
@@ -554,7 +560,7 @@ function selectAndLoadProblem() {
 
     $("[data-opening-tags]").text(prob[9] || '');
     $("[data-tags]").text(prob[7] || '');
-    $("#configBadge").append("<br>ELO : " + (prob[3] || 'N/A'));
+    $("#configBadge b").text("ELO : " + (prob[3] || 'N/A'));
     
     $("[data-omgSolution]").text(prob[2]);
     $("[data-attempt]").attr("data-attempt", 0);

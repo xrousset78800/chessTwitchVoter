@@ -94,7 +94,9 @@ body:before {
   background-image: url(../img/bg.jpg);
   z-index: -1;
 }
-
+body.noEpilepsy:before {
+  animation: none !important;
+}
 body[data-team="w"]:before {
 	content:'';
 	animation: 0.3s invertionwb;
