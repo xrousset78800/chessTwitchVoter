@@ -265,13 +265,13 @@ h3, h4 {
    * https://css-tricks.com/using-absolute-value-sign-rounding-and-modulo-in-css-today/ */
   --s: calc(var(--t) / 1);
   display: none;
-  width: 400px;
-  height: 400px;
-  animation: t 10s linear infinite;
+    width: 130px;
+    height: 130px;
+    animation: t 10s linear infinite;
     position: absolute;
-    right: 35px;
+    right: 55px;
     z-index: 1;
-    bottom: 30px;
+    top: -30px;
 }
 .showTimer .countdown {
 	display: grid;
