@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Voter - Configuration Multiplayer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .setup-container {
+            background: #34495e;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #ecf0f1;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .btn-group {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-create {
+            background: #27ae60;
+        }
+
+        .btn-create:hover {
+            background: #229954;
+        }
+
+        .btn-join {
+            background: #e74c3c;
+        }
+
+        .btn-join:hover {
+            background: #c0392b;
+        }
+
+        .btn-solo {
+            background: #95a5a6;
+        }
+
+        .btn-solo:hover {
+            background: #7f8c8d;
+        }
+
+        .setup-form {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .setup-form.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            color: #ecf0f1;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #7f8c8d;
+            border-radius: 5px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .game-info {
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #7f8c8d;
+        }
+
+        .game-info h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            color: #ecf0f1;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .game-code {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #3498db;
+            text-align: center;
+            padding: 10px;
+            background: #2c3e50;
+            border-radius: 5px;
+            margin: 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .url-box {
+            background: #2c3e50;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            color: #95a5a6;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .copy-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .copy-btn:hover {
+            background: #229954;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .status-waiting {
+            background: #f39c12;
+            color: #2c3e50;
+        }
+
+        .status-connected {
+            background: #27ae60;
+            color: white;
+        }
+
+        .back-link {
+            color: #95a5a6;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .back-link:hover {
+            color: #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <h1>🎮 Chess Voter Multiplayer</h1>
+        
+        <!-- Menu principal -->
+        <div id="mainMenu">
+            <div class="btn-group">
+                <button class="btn btn-create" onclick="showCreateForm()">
+                    👑 Créer une partie
+                </button>
+                <button class="btn btn-join" onclick="showJoinForm()">
+                    🎯 Rejoindre une partie
+                </button>
+                <a href="index.html" class="btn btn-solo">
+                    🎮 Mode Solo/Local
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulaire de création -->
+        <div id="createForm" class="setup-form">
+            <h2 style="color: #ecf0f1; margin-bottom: 20px;">Créer une partie</h2>
+            
+            <div class="form-group">
+                <label for="hostStreamer">Votre nom Twitch</label>
+                <input type="text" id="hostStreamer" placeholder="VotreNomTwitch">
+            </div>
+            
+            <div class="form-group">
+                <label for="voteTime">Temps de vote (secondes)</label>
+                <input type="number" id="voteTime" value="30" min="10" max="120">
+            </div>
+            
+            <button class="btn btn-create" onclick="createGame()">Créer la partie</button>
+            <a href="#" class="back-link" onclick="backToMenu(); return false;">← Retour</a>
+            
+            <div id="gameCreatedInfo" style="display: none;">
+                <div class="game-info">
+                    <h3>✅ Partie créée !</h3>
+                    <div class="game-code" id="gameCode">XXXX</div>
+                    <div class="info-row">
+                        <span>Statut:</span>
+                        <span class="status status-waiting">En attente...</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label style="color: #95a5a6; font-size: 0.9em;">Votre URL (Blancs) :</label>
+                        <div class="url-box" id="hostUrl">URL à générer...</div>
+                        <button class="copy-btn" onclick="copyUrl('hostUrl')">📋 Copier</button>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label style="color: #95a5a6; font-size: 0.9em;">URL pour l'adversaire (Noirs) :</label>
+                        <div class="url-box" id="guestUrl">URL à générer...</div>
+                        <button class="copy-btn" onclick="copyUrl('guestUrl')">📋 Copier</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire pour rejoindre -->
+        <div id="joinForm" class="setup-form">
+            <h2 style="color: #ecf0f1; margin-bottom: 20px;">Rejoindre une partie</h2>
+            
+            <div class="form-group">
+                <label for="guestStreamer">Votre nom Twitch</label>
+                <input type="text" id="guestStreamer" placeholder="VotreNomTwitch">
+            </div>
+            
+            <div class="form-group">
+                <label for="gameCodeInput">Code de la partie</label>
+                <input type="text" id="gameCodeInput" placeholder="XXXX" maxlength="4" style="text-transform: uppercase; text-align: center; font-size: 1.5em; letter-spacing: 5px;">
+            </div>
+            
+            <button class="btn btn-join" onclick="joinGame()">Rejoindre</button>
+            <a href="#" class="back-link" onclick="backToMenu(); return false;">← Retour</a>
+            
+            <div id="gameJoinedInfo" style="display: none;">
+                <div class="game-info">
+                    <h3>✅ Connecté !</h3>
+                    <div class="info-row">
+                        <span>Statut:</span>
+                        <span class="status status-connected">Prêt</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label style="color: #95a5a6; font-size: 0.9em;">Votre URL (Noirs) :</label>
+                        <div class="url-box" id="playerUrl">URL à générer...</div>
+                        <button class="copy-btn" onclick="copyUrl('playerUrl')">📋 Copier</button>
+                    </div>
+                    <button class="btn" onclick="startGame()" style="margin-top: 20px; width: 100%;">
+                        🚀 Lancer la partie
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        let currentGameId = null;
+        let playerRole = null;
+
+        function showCreateForm() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('createForm').classList.add('active');
+        }
+
+        function showJoinForm() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('joinForm').classList.add('active');
+        }
+
+        function backToMenu() {
+            document.getElementById('mainMenu').style.display = 'block';
+            document.getElementById('createForm').classList.remove('active');
+            document.getElementById('joinForm').classList.remove('active');
+            document.getElementById('gameCreatedInfo').style.display = 'none';
+            document.getElementById('gameJoinedInfo').style.display = 'none';
+        }
+
+        function generateGameId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 4; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function createGame() {
+            const streamerName = document.getElementById('hostStreamer').value.trim();
+            const voteTime = document.getElementById('voteTime').value;
+            
+            if (!streamerName) {
+                alert('Veuillez entrer votre nom Twitch');
+                return;
+            }
+            
+            currentGameId = generateGameId();
+            playerRole = 'host';
+            
+            // Générer les URLs
+            const baseUrl = window.location.origin;
+            const hostUrl = `${baseUrl}/index.html?game=${currentGameId}&role=host`;
+            const guestUrl = `${baseUrl}/index.html?game=${currentGameId}&role=guest`;
+            
+            // Afficher les infos
+            document.getElementById('gameCode').textContent = currentGameId;
+            document.getElementById('hostUrl').textContent = hostUrl;
+            document.getElementById('guestUrl').textContent = guestUrl;
+            document.getElementById('gameCreatedInfo').style.display = 'block';
+            
+            // Initialiser Socket.io (si vous avez un serveur)
+            initSocket(streamerName);
+        }
+
+        function joinGame() {
+            const streamerName = document.getElementById('guestStreamer').value.trim();
+            const gameCode = document.getElementById('gameCodeInput').value.trim().toUpperCase();
+            
+            if (!streamerName || !gameCode) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            currentGameId = gameCode;
+            playerRole = 'guest';
+            
+            // Générer l'URL
+            const playerUrl = `${window.location.origin}/index.html?game=${currentGameId}&role=guest`;
+            
+            document.getElementById('playerUrl').textContent = playerUrl;
+            document.getElementById('gameJoinedInfo').style.display = 'block';
+            
+            // Initialiser Socket.io
+            initSocket(streamerName);
+        }
+
+        function initSocket(streamerName) {
+            // Si vous avez un serveur Socket.io
+            /*
+            socket = io('http://localhost:3000');
+            
+            socket.on('connect', () => {
+                console.log('Connecté au serveur');
+                
+                if (playerRole === 'host') {
+                    socket.emit('createGame', {
+                        gameId: currentGameId,
+                        hostName: streamerName,
+                        voteTime: document.getElementById('voteTime').value
+                    });
+                } else {
+                    socket.emit('joinGame', {
+                        gameId: currentGameId,
+                        guestName: streamerName
+                    });
+                }
+            });
+            
+            socket.on('playerJoined', (data) => {
+                if (playerRole === 'host') {
+                    document.querySelector('.status-waiting').textContent = 'Joueur connecté !';
+                    document.querySelector('.status-waiting').className = 'status status-connected';
+                }
+            });
+            */
+            
+            // Pour l'instant, simulation sans serveur
+            console.log(`Mode: ${playerRole}, Game: ${currentGameId}, Streamer: ${streamerName}`);
+        }
+
+        function startGame() {
+            const url = document.getElementById('playerUrl').textContent;
+            if (url && url !== 'URL à générer...') {
+                window.location.href = url;
+            }
+        }
+
+        function copyUrl(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('URL copiée !');
+            });
+        }
+
+        // Auto-format du code
+        document.getElementById('gameCodeInput')?.addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>

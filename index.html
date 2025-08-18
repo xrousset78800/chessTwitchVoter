@@ -225,6 +225,267 @@
 	<script src="js/chessboard-arrows.js"></script>
 	<script src="js/config.js"></script>
 	<script src="js/client.js"></script>
+
+
+	<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+	<!-- Script d'initialisation multiplayer -->
+	<script>
+	// Variables globales pour le multiplayer
+	window.multiplayerMode = false;
+	window.gameSocket = null;
+	window.currentGameId = null;
+	window.playerColor = null;
+
+	// Fonction pour vérifier si Socket.io est chargé
+	if (typeof io === 'undefined') {
+	    console.warn('Socket.io non chargé - Mode multiplayer désactivé');
+	} else {
+	    console.log('Socket.io chargé avec succès');
+	    
+	    // Détecter si on est en mode multiplayer via l'URL
+	    const urlParams = new URLSearchParams(window.location.search);
+	    const gameId = urlParams.get('game');
+	    const role = urlParams.get('role');
+	    
+	    if (gameId && role) {
+	        window.multiplayerMode = true;
+	        window.currentGameId = gameId;
+	        window.playerColor = (role === 'host') ? 'white' : 'black';
+	        
+	        console.log(`🎮 Mode Multiplayer activé`);
+	        console.log(`📝 Game ID: ${gameId}`);
+	        console.log(`🎨 Couleur: ${playerColor}`);
+	        console.log(`👤 Rôle: ${role}`);
+	        
+	        // Créer l'indicateur visuel
+	        document.addEventListener('DOMContentLoaded', function() {
+	            // Masquer le formulaire de configuration si en multiplayer
+	            const configForm = document.getElementById('configForm');
+	            if (configForm) {
+	                configForm.style.display = 'none';
+	            }
+	            
+	            // Ajouter un indicateur de statut multiplayer
+	            const indicator = document.createElement('div');
+	            indicator.id = 'multiplayerIndicator';
+	            indicator.style.cssText = `
+	                position: fixed;
+	                top: 60px;
+	                right: 10px;
+	                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	                color: white;
+	                padding: 12px 20px;
+	                border-radius: 8px;
+	                z-index: 10000;
+	                font-family: 'Segoe UI', sans-serif;
+	                font-weight: 600;
+	                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+	                display: flex;
+	                align-items: center;
+	                gap: 10px;
+	            `;
+	            
+	            indicator.innerHTML = `
+	                <span style="font-size: 20px;">🎮</span>
+	                <div>
+	                    <div style="font-size: 14px;">Mode Multiplayer</div>
+	                    <div style="font-size: 12px; opacity: 0.9;">
+	                        ${playerColor === 'white' ? '♔ Blancs' : '♚ Noirs'} | Code: ${gameId}
+	                    </div>
+	                </div>
+	                <div id="connectionStatus" style="width: 10px; height: 10px; background: yellow; border-radius: 50%; margin-left: 10px;" title="Connexion..."></div>
+	            `;
+	            
+	            document.body.appendChild(indicator);
+	            
+	            // Ajuster l'orientation du plateau selon la couleur
+	            if (typeof defaultConfig !== 'undefined' && playerColor === 'black') {
+	                defaultConfig.orientation = 'black';
+	                console.log('🔄 Orientation du plateau ajustée pour les noirs');
+	            }
+	            
+	            // Initialiser la connexion Socket.io
+	            initMultiplayerConnection();
+	        });
+	    }
+	}
+
+	// Fonction d'initialisation de la connexion multiplayer
+	function initMultiplayerConnection() {
+	    if (!window.multiplayerMode) return;
+	    
+	    console.log('🔌 Tentative de connexion au serveur...');
+	    
+	    // Connexion au serveur
+	    // Si le serveur est sur la même machine, io() suffit
+	    // Sinon, spécifiez l'URL : io('http://votre-serveur.com:3000')
+	    window.gameSocket = io();
+	    
+	    window.gameSocket.on('connect', () => {
+	        console.log('✅ Connecté au serveur multiplayer');
+	        
+	        // Mettre à jour l'indicateur de connexion
+	        const statusDot = document.getElementById('connectionStatus');
+	        if (statusDot) {
+	            statusDot.style.background = '#4CAF50';
+	            statusDot.title = 'Connecté';
+	        }
+	        
+	        // Rejoindre la partie
+	        window.gameSocket.emit('reconnectGame', { 
+	            gameId: window.currentGameId, 
+	            role: window.playerColor 
+	        });
+	    });
+	    
+	    window.gameSocket.on('disconnect', () => {
+	        console.log('❌ Déconnecté du serveur');
+	        
+	        // Mettre à jour l'indicateur
+	        const statusDot = document.getElementById('connectionStatus');
+	        if (statusDot) {
+	            statusDot.style.background = '#f44336';
+	            statusDot.title = 'Déconnecté';
+	        }
+	    });
+	    
+	    // Écouter les votes du partenaire
+	    window.gameSocket.on('partnerVotes', (votes) => {
+	        console.log('📊 Votes reçus du partenaire:', votes);
+	        
+	        // Vérifier si c'est le tour de l'adversaire
+	        if (typeof chess !== 'undefined' && chess.turn() !== window.playerColor[0]) {
+	            displayPartnerVotes(votes);
+	        }
+	    });
+	    
+	    // Synchroniser les mouvements
+	    window.gameSocket.on('movePlayed', (data) => {
+	        console.log('♟️ Coup joué:', data);
+	        
+	        if (data.player !== window.playerColor) {
+	            // Le partenaire a joué, appliquer le coup
+	            if (typeof chess !== 'undefined' && typeof board !== 'undefined') {
+	                chess.move(data.move);
+	                board.position(chess.fen());
+	                
+	                if (typeof refreshBoard === 'function') {
+	                    refreshBoard(chess);
+	                }
+	            }
+	        }
+	    });
+	    
+	    // Notification quand les deux joueurs sont connectés
+	    window.gameSocket.on('gameReady', (data) => {
+	        console.log('🎯 Partie prête !', data);
+	        
+	        // Afficher une notification
+	        const notification = document.createElement('div');
+	        notification.style.cssText = `
+	            position: fixed;
+	            top: 80px;
+	            right: 10px;
+	            background: #4CAF50;
+	            color: white;
+	            padding: 15px 25px;
+	            border-radius: 8px;
+	            z-index: 10001;
+	            animation: slideIn 0.3s ease;
+	        `;
+	        notification.innerHTML = `
+	            ✅ Les deux joueurs sont connectés !<br>
+	            ⚪ ${data.players.white} vs ⚫ ${data.players.black}
+	        `;
+	        document.body.appendChild(notification);
+	        
+	        setTimeout(() => {
+	            notification.remove();
+	        }, 5000);
+	    });
+	}
+
+	// Fonction pour afficher les votes du partenaire
+	function displayPartnerVotes(votes) {
+	    console.log('Affichage des votes du partenaire...');
+	    
+	    // Créer ou mettre à jour une zone d'affichage des votes
+	    let votesDisplay = document.getElementById('partnerVotesDisplay');
+	    
+	    if (!votesDisplay) {
+	        votesDisplay = document.createElement('div');
+	        votesDisplay.id = 'partnerVotesDisplay';
+	        votesDisplay.style.cssText = `
+	            position: fixed;
+	            bottom: 20px;
+	            right: 20px;
+	            background: rgba(0, 0, 0, 0.8);
+	            color: white;
+	            padding: 15px;
+	            border-radius: 8px;
+	            max-width: 300px;
+	            z-index: 1000;
+	        `;
+	        document.body.appendChild(votesDisplay);
+	    }
+	    
+	    // Compter les votes par coup
+	    const voteCounts = {};
+	    votes.forEach(vote => {
+	        voteCounts[vote.move] = (voteCounts[vote.move] || 0) + 1;
+	    });
+	    
+	    // Trier par nombre de votes
+	    const sortedVotes = Object.entries(voteCounts)
+	        .sort((a, b) => b[1] - a[1])
+	        .slice(0, 5); // Top 5
+	    
+	    // Afficher
+	    votesDisplay.innerHTML = `
+	        <div style="font-weight: bold; margin-bottom: 10px;">
+	            📊 Votes du chat adverse :
+	        </div>
+	        ${sortedVotes.map(([move, count]) => `
+	            <div style="margin: 5px 0;">
+	                ${move}: ${count} vote${count > 1 ? 's' : ''}
+	            </div>
+	        `).join('')}
+	    `;
+	}
+
+	// Fonction helper pour émettre un mouvement en multiplayer
+	window.emitMove = function(move) {
+	    if (window.multiplayerMode && window.gameSocket) {
+	        window.gameSocket.emit('moveSelected', {
+	            gameId: window.currentGameId,
+	            player: window.playerColor,
+	            move: move
+	        });
+	    }
+	};
+
+	// Animation CSS pour les notifications
+	const style = document.createElement('style');
+	style.textContent = `
+	    @keyframes slideIn {
+	        from {
+	            transform: translateX(100%);
+	            opacity: 0;
+	        }
+	        to {
+	            transform: translateX(0);
+	            opacity: 1;
+	        }
+	    }
+	`;
+	document.head.appendChild(style);
+
+	console.log('✅ Script multiplayer initialisé');
+	</script>
+
+
+
 	<script src="js/chessVoterApp.js"></script>
 </body>
 </html>

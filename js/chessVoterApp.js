@@ -83,6 +83,46 @@ mateAudio.volume = globalVolume*0.8;
 
 //http-server C:\Users\gnole\Documents\GitHub\chessTwitchVoter
 
+let multiplayerMode = false;
+let gameSocket = null;
+let currentGameId = null;
+let playerColor = null;
+
+// Détecter si on est en mode multiplayer via l'URL
+const urlParams = new URLSearchParams(window.location.search);
+const gameId = urlParams.get('game');
+const role = urlParams.get('role');
+
+if (gameId && role) {
+    multiplayerMode = true;
+    currentGameId = gameId;
+    playerColor = (role === 'host') ? 'white' : 'black';
+    
+    // Connexion au serveur Socket.io
+    gameSocket = io();
+    
+    gameSocket.emit('reconnectGame', { gameId, role });
+    
+    // Écouter les votes du partenaire
+    gameSocket.on('partnerVotes', (votes) => {
+        if (chess.turn() !== playerColor[0]) {
+            // C'est le tour du partenaire, afficher ses votes
+            updatePartnerVotesDisplay(votes);
+        }
+    });
+    
+    // Synchroniser les mouvements
+    gameSocket.on('movePlayed', (data) => {
+        if (data.player !== playerColor) {
+            // Le partenaire a joué, appliquer le coup
+            chess.move(data.move);
+            board.position(chess.fen());
+        }
+    });
+}
+
+
+
 var allProblems = [];
 var filteredProblems = [];
 var selectedThemes = new Set();
@@ -638,6 +678,14 @@ function addMoveToPoll(player, move){
     updateChartIncremental(move, color);
 
     showCurrentmax(poll);
+
+    if (multiplayerMode && chess.turn() === playerColor[0]) {
+        gameSocket.emit('votesUpdate', {
+            gameId: currentGameId,
+            votes: poll,
+            turn: chess.turn()
+        });
+    }
 }
 
 function showCurrentmax(poll) {
@@ -1059,6 +1107,18 @@ function moveAction(move) {
 		board.position(chess.fen());
         setTimeout(refreshPlayerDisplay, 100);
     playSoundForMove(chess)
+
+
+    if (window.multiplayerMode && window.gameSocket) {
+        console.log('🎯 Émission du coup vers le serveur:', move);
+        window.gameSocket.emit('moveSelected', {
+            gameId: window.currentGameId,
+            player: window.playerColor,
+            move: move,
+            fen: chess.fen() // Envoyer aussi la position pour synchronisation
+        });
+    }
+
 
 		if(chess.turn() == 'b') {
 			$(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
