@@ -82,19 +82,6 @@ moveAudio.volume = globalVolume*0.8;
 mateAudio.volume = globalVolume*0.8;
 
 //http-server C:\Users\gnole\Documents\GitHub\chessTwitchVoter
-/*
-
-- selecteur de theme de problème
-- vérifier échec et mat (mauvaise détection)
-- bug sur le timer entre les problèmes
-- Possibilité de créer des "teams" (1 ou 2 poll d'inscriptions ?)
-- Améliorer le design un peu dégueu
-- Réflexion sur la connexion (siteweb ? Extension ? Local pour le moment ?)
-- Vérifier certains bugs (notation complexe (Deux pièces concurrentes, sous promotion))
-- Trouver le moyen de connecter 2 streameurs (Ou 2 chats de streameurs) ok ?
-- Meilleurs gestion du temps (pause, affichage, transitions)
-
-*/
 
 var allProblems = [];
 var filteredProblems = [];

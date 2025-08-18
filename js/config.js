@@ -164,13 +164,22 @@ $(document).ready(function() {
 REFAIRE LA TODO
 */
 
-//Mode streamer vs viewers - Mode viewers vs viewers ( A tester )
-//Prévisualiser un coup
-//P'tit stockfish pour la barre ?
-//Rejouer le problème (stop restart auto)
-//OMG CommuStreamerVsCommuStreamer
-// Css piece d'échec pour le coup
-// Jouer le problème en entier quand erreur
+//- Prévisualiser un coup ?
+//- P'tit stockfish pour la barre ?
+//- Rejouer le problème (stop restart auto)
+//- Css piece d'échec pour le coup (transition + blink)
+//- Jouer le problème en entier quand erreur ?
+//- vérifier échec et mat (mauvaise détection)
+//- bug sur le timer entre les problèmes
+//- Possibilité de créer des "teams" (1 ou 2 poll d'inscriptions ?)
+//- Améliorer le design un peu dégueu
+//- Réflexion sur la connexion (siteweb ? Extension ? Local pour le moment ? WIP)
+//- Vérifier certains bugs (notation complexe (Deux pièces concurrentes, sous promotion))
+//- Trouver le moyen de connecter 2 streameurs (Ou 2 chats de streameurs) ok ?
+//- Meilleurs gestion du temps (pause, affichage, transitions)
+
+//- Faire un mode avec des coups spéciaux. (fou prend sa propre tour = dame)
+
 
 /***********************************************************************************************************************/
 /**********************************     OMG CONFIG     *****************************************************************/
