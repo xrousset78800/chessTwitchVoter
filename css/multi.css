@@ -1,0 +1,212 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .setup-container {
+            background: #34495e;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #ecf0f1;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .btn-group {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-create {
+            background: #27ae60;
+        }
+
+        .btn-create:hover {
+            background: #229954;
+        }
+
+        .btn-join {
+            background: #e74c3c;
+        }
+
+        .btn-join:hover {
+            background: #c0392b;
+        }
+
+        .btn-solo {
+            background: #95a5a6;
+        }
+
+        .btn-solo:hover {
+            background: #7f8c8d;
+        }
+
+        .setup-form {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .setup-form.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            color: #ecf0f1;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #7f8c8d;
+            border-radius: 5px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .game-info {
+            background: #2c3e50;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #7f8c8d;
+        }
+
+        .game-info h3 {
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            color: #ecf0f1;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .game-code {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #3498db;
+            text-align: center;
+            padding: 10px;
+            background: #2c3e50;
+            border-radius: 5px;
+            margin: 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .url-box {
+            background: #2c3e50;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            color: #95a5a6;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .copy-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .copy-btn:hover {
+            background: #229954;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .status-waiting {
+            background: #f39c12;
+            color: #2c3e50;
+        }
+
+        .status-connected {
+            background: #27ae60;
+            color: white;
+        }
+
+        .back-link {
+            color: #95a5a6;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .back-link:hover {
+            color: #ecf0f1;
+        }
