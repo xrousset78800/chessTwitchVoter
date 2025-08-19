@@ -1,212 +1,476 @@
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+/* css/multi.css - Styles principaux pour l'interface unifiée */
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #2c3e50;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+/* ========== Variables CSS ========== */
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #48bb78;
+    --warning-color: #f6ad55;
+    --danger-color: #fc8181;
+    --dark-bg: #1a1a2e;
+    --dark-card: #16213e;
+    --dark-border: #0f3460;
+    --accent-color: #e94560;
+    --text-light: #f7fafc;
+    --text-muted: #a0aec0;
+    --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.15);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.2);
+    --shadow-xl: 0 20px 60px rgba(0,0,0,0.3);
+    --transition-speed: 0.3s;
+}
 
-        .setup-container {
-            background: #34495e;
-            border-radius: 15px;
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
+/* ========== Reset et Base ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        h1 {
-            color: #ecf0f1;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2em;
-        }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--dark-bg);
+    color: var(--text-light);
+    min-height: 100vh;
+    line-height: 1.6;
+}
 
-        .btn-group {
-            display: grid;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
-        .btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            text-align: center;
-            display: block;
-        }
+/* ========== Header ========== */
+.main-header {
+    background: var(--gradient-primary);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 40px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+}
 
-        .btn:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-        }
+.logo-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
 
-        .btn-create {
-            background: #27ae60;
-        }
+.logo-icon {
+    font-size: 3em;
+    animation: float 3s ease-in-out infinite;
+}
 
-        .btn-create:hover {
-            background: #229954;
-        }
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
 
-        .btn-join {
-            background: #e74c3c;
-        }
+.main-header h1 {
+    font-size: 2.5em;
+    font-weight: 700;
+    margin: 0;
+}
 
-        .btn-join:hover {
-            background: #c0392b;
-        }
+.subtitle {
+    font-size: 1.2em;
+    opacity: 0.9;
+}
 
-        .btn-solo {
-            background: #95a5a6;
-        }
+/* ========== Configuration Steps ========== */
+.config-step {
+    display: none;
+    animation: fadeIn var(--transition-speed) ease;
+}
 
-        .btn-solo:hover {
-            background: #7f8c8d;
-        }
+.config-step.active {
+    display: block;
+}
 
-        .setup-form {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
 
-        .setup-form.active {
-            display: block;
-        }
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+    color: var(--text-light);
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1.2em;
+}
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+/* ========== Mode Grid ========== */
+.mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
 
-        .form-group label {
-            color: #ecf0f1;
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+.mode-card {
+    background: var(--dark-card);
+    border: 2px solid var(--dark-border);
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    position: relative;
+    overflow: hidden;
+}
 
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #7f8c8d;
-            border-radius: 5px;
-            background: #2c3e50;
-            color: #ecf0f1;
-            font-size: 1em;
-        }
+.mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity var(--transition-speed);
+    pointer-events: none;
+}
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #3498db;
-        }
+.mode-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
 
-        .game-info {
-            background: #2c3e50;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 2px solid #7f8c8d;
-        }
+.mode-card.selected {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2);
+}
 
-        .game-info h3 {
-            color: #3498db;
-            margin-bottom: 15px;
-        }
+.mode-card.selected::before {
+    opacity: 0.1;
+}
 
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            color: #ecf0f1;
-            border-bottom: 1px solid #34495e;
-        }
+.mode-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
-        .info-row:last-child {
-            border-bottom: none;
-        }
+.mode-card.disabled:hover {
+    transform: none;
+}
 
-        .game-code {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #3498db;
-            text-align: center;
-            padding: 10px;
-            background: #2c3e50;
-            border-radius: 5px;
-            margin: 10px 0;
-            letter-spacing: 2px;
-        }
+.mode-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
 
-        .url-box {
-            background: #2c3e50;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            word-break: break-all;
-            color: #95a5a6;
-            font-family: monospace;
-            font-size: 0.9em;
-        }
+.mode-card h3 {
+    color: var(--accent-color);
+    margin-bottom: 10px;
+    font-size: 1.4em;
+    position: relative;
+}
 
-        .copy-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
+.mode-card p {
+    color: var(--text-muted);
+    font-size: 0.95em;
+    margin-bottom: 15px;
+}
 
-        .copy-btn:hover {
-            background: #229954;
-        }
+/* ========== Badges ========== */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-        .status {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
+.badge-local {
+    background: var(--primary-color);
+    color: white;
+}
 
-        .status-waiting {
-            background: #f39c12;
-            color: #2c3e50;
-        }
+.badge-online {
+    background: var(--success-color);
+    color: white;
+}
 
-        .status-connected {
-            background: #27ae60;
-            color: white;
-        }
+.badge-soon {
+    background: var(--warning-color);
+    color: var(--dark-bg);
+}
 
-        .back-link {
-            color: #95a5a6;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 20px;
-        }
+/* ========== Mode Configuration Panels ========== */
+.mode-config-panel {
+    display: none;
+    background: var(--dark-card);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    animation: slideIn var(--transition-speed) ease;
+}
 
-        .back-link:hover {
-            color: #ecf0f1;
-        }
+.mode-config-panel.active {
+    display: block;
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translateX(-20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateX(0); 
+    }
+}
+
+/* ========== Info Box ========== */
+.info-box {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid var(--primary-color);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.info-box i {
+    color: var(--primary-color);
+    margin-right: 10px;
+    font-size: 1.2em;
+}
+
+.info-box ul {
+    margin-top: 10px;
+    margin-left: 30px;
+}
+
+.info-box li {
+    margin: 5px 0;
+}
+
+/* ========== Option Groups ========== */
+.option-group {
+    background: var(--dark-card);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+.option-group h3 {
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.option-group h3 i {
+    color: var(--primary-color);
+}
+
+.sub-options {
+    margin-top: 15px;
+    padding-left: 20px;
+    border-left: 3px solid var(--dark-border);
+    display: none;
+}
+
+.sub-options.active {
+    display: block;
+}
+
+/* ========== Multiplayer Role Selection ========== */
+.multiplayer-role-selection {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.role-card {
+    background: var(--dark-bg);
+    border: 2px solid var(--dark-border);
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.role-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+.role-card.selected {
+    background: var(--gradient-primary);
+    border-color: var(--secondary-color);
+}
+
+.role-card i {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.role-card h4 {
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.role-card p {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.role-panel {
+    display: none;
+    animation: fadeIn var(--transition-speed);
+}
+
+.role-panel.active {
+    display: block;
+}
+
+/* ========== Game Info Panel ========== */
+.game-info-panel {
+    background: rgba(72, 187, 120, 0.1);
+    border: 1px solid var(--success-color);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.game-info-panel h4 {
+    color: var(--success-color);
+    margin-bottom: 15px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.game-code {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--accent-color);
+    letter-spacing: 2px;
+}
+
+.game-code-input {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 1.5em;
+    letter-spacing: 5px;
+    font-weight: bold;
+}
+
+/* ========== Status Indicators ========== */
+.status {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.status-waiting {
+    background: var(--warning-color);
+    color: var(--dark-bg);
+}
+
+.status-connected {
+    background: var(--success-color);
+    color: white;
+}
+
+/* ========== URL Section ========== */
+.url-section {
+    margin: 15px 0;
+}
+
+.url-section label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.url-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--dark-bg);
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+.url-box span {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95em;
+    word-break: break-all;
+    color: var(--primary-color);
+}
+
+.btn-copy {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background var(--transition-speed);
+}
+
+.btn-copy:hover {
+    background: var(--secondary-color);
+}
+
+/* ========== Action Buttons ========== */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--dark-border);
+}
+
+/* ========== Toast Notifications ========== */
+#toast-container {
