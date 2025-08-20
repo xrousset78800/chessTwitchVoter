@@ -251,79 +251,144 @@
 	window.currentGameId = null;
 	window.playerColor = null;
 
-	// Fonction pour vérifier si Socket.io est chargé
-	if (typeof io === 'undefined') {
-	    console.warn('Socket.io non chargé - Mode multiplayer désactivé');
-	} else {
-	    console.log('Socket.io chargé avec succès');
-	    
-	    // Détecter si on est en mode multiplayer via l'URL
-	    const urlParams = new URLSearchParams(window.location.search);
-	    const gameId = urlParams.get('game');
-	    const role = urlParams.get('role');
-	    
-	    if (gameId && role) {
-	        window.multiplayerMode = true;
-	        window.currentGameId = gameId;
-	        window.playerColor = (role === 'host') ? 'white' : 'black';
-	        
-	        console.log(`🎮 Mode Multiplayer activé`);
-	        console.log(`📝 Game ID: ${gameId}`);
-	        console.log(`🎨 Couleur: ${playerColor}`);
-	        console.log(`👤 Rôle: ${role}`);
-	        
-	        // Créer l'indicateur visuel
-	        document.addEventListener('DOMContentLoaded', function() {
-	            // Masquer le formulaire de configuration si en multiplayer
-	            const configForm = document.getElementById('configForm');
-	            if (configForm) {
-	                configForm.style.display = 'none';
-	            }
-	            
-	            // Ajouter un indicateur de statut multiplayer
-	            const indicator = document.createElement('div');
-	            indicator.id = 'multiplayerIndicator';
-	            indicator.style.cssText = `
-	                position: fixed;
-	                top: 60px;
-	                right: 10px;
-	                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	                color: white;
-	                padding: 12px 20px;
-	                border-radius: 8px;
-	                z-index: 10000;
-	                font-family: 'Segoe UI', sans-serif;
-	                font-weight: 600;
-	                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-	                display: flex;
-	                align-items: center;
-	                gap: 10px;
-	            `;
-	            
-	            indicator.innerHTML = `
-	                <span style="font-size: 20px;">🎮</span>
-	                <div>
-	                    <div style="font-size: 14px;">Mode Multiplayer</div>
-	                    <div style="font-size: 12px; opacity: 0.9;">
-	                        ${playerColor === 'white' ? '♔ Blancs' : '♚ Noirs'} | Code: ${gameId}
-	                    </div>
-	                </div>
-	                <div id="connectionStatus" style="width: 10px; height: 10px; background: yellow; border-radius: 50%; margin-left: 10px;" title="Connexion..."></div>
-	            `;
-	            
-	            document.body.appendChild(indicator);
-	            
-	            // Ajuster l'orientation du plateau selon la couleur
-	            if (typeof defaultConfig !== 'undefined' && playerColor === 'black') {
-	                defaultConfig.orientation = 'black';
-	                console.log('🔄 Orientation du plateau ajustée pour les noirs');
-	            }
-	            
-	            // Initialiser la connexion Socket.io
-	            initMultiplayerConnection();
-	        });
-	    }
-	}
+
+if (typeof io === 'undefined') {
+    console.warn('Socket.io non chargé - Mode multiplayer désactivé');
+} else {
+    console.log('Socket.io chargé avec succès');
+    
+    // Détecter si on est en mode multiplayer via l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('game');
+    const role = urlParams.get('role');
+    
+    if (gameId && role) {
+        window.multiplayerMode = true;
+        window.currentGameId = gameId;
+        window.playerColor = (role === 'host') ? 'white' : 'black';
+        
+        console.log(`🎮 Mode Multiplayer activé`);
+        console.log(`📝 Game ID: ${gameId}`);
+        console.log(`🎨 Couleur: ${playerColor}`);
+        console.log(`👤 Rôle: ${role}`);
+        
+        // IMPORTANT : Attendre que le DOM soit chargé
+        document.addEventListener('DOMContentLoaded', function() {
+            // Masquer le formulaire de configuration si en multiplayer
+            const configForm = document.getElementById('configForm');
+            if (configForm) {
+                configForm.style.display = 'none';
+            }
+            
+            // Ajouter un indicateur de statut multiplayer
+            const indicator = document.createElement('div');
+            indicator.id = 'multiplayerIndicator';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 10000;
+                font-family: 'Segoe UI', sans-serif;
+                font-weight: 600;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            
+            indicator.innerHTML = `
+                <span style="font-size: 20px;">🎮</span>
+                <div>
+                    <div style="font-size: 14px;">Mode Multiplayer</div>
+                    <div style="font-size: 12px; opacity: 0.9;">
+                        ${playerColor === 'white' ? '♔ Blancs' : '♚ Noirs'} | Code: ${gameId}
+                    </div>
+                </div>
+                <div id="connectionStatus" style="width: 10px; height: 10px; background: yellow; border-radius: 50%; margin-left: 10px;" title="Connexion..."></div>
+            `;
+            
+            document.body.appendChild(indicator);
+            
+            // SOLUTION 1 : Attendre que le board existe et le retourner
+            // Utiliser un observateur pour détecter quand le board est créé
+            const boardObserver = new MutationObserver(function(mutations, observer) {
+                const boardElement = document.getElementById('myBoard');
+                if (boardElement && typeof board !== 'undefined') {
+                    console.log('🎯 Board détecté, application de l\'orientation');
+                    
+                    // Appliquer l'orientation selon la couleur
+                    if (window.playerColor === 'black') {
+                        console.log('🔄 Rotation du plateau pour les NOIRS');
+                        
+                        // Méthode 1 : Utiliser la méthode flip() ou orientation()
+                        if (typeof board.flip === 'function') {
+                            board.flip();
+                        } else if (typeof board.orientation === 'function') {
+                            board.orientation('black');
+                        }
+                        
+                        // Vérifier que l'orientation a bien été appliquée
+                        setTimeout(() => {
+                            const currentOrientation = board.orientation();
+                            console.log('✓ Orientation actuelle:', currentOrientation);
+                            
+                            // Si toujours en white, forcer à nouveau
+                            if (currentOrientation === 'white') {
+                                board.orientation('black');
+                                console.log('⚠️ Deuxième tentative de rotation');
+                            }
+                        }, 100);
+                    } else {
+                        console.log('⚪ Orientation standard pour les BLANCS');
+                    }
+                    
+                    // Arrêter l'observation une fois le board trouvé
+                    observer.disconnect();
+                }
+            });
+            
+            // Commencer l'observation
+            boardObserver.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            // SOLUTION 2 : Modifier defaultConfig AVANT la création du board
+            // Intercepter la création du board
+            const originalChessboard = window.Chessboard;
+            if (originalChessboard) {
+                window.Chessboard = function(elementId, config) {
+                    // Si on est en mode multiplayer et qu'on joue les noirs
+                    if (window.multiplayerMode && window.playerColor === 'black') {
+                        console.log('🎯 Interception de la création du board - Forçage orientation NOIRE');
+                        config = config || {};
+                        config.orientation = 'black';
+                    }
+                    
+                    // Créer le board avec la config modifiée
+                    const boardInstance = originalChessboard(elementId, config);
+                    
+                    // Sauvegarder l'instance globalement
+                    window.board = boardInstance;
+                    
+                    return boardInstance;
+                };
+                
+                // Copier les propriétés statiques
+                Object.keys(originalChessboard).forEach(key => {
+                    window.Chessboard[key] = originalChessboard[key];
+                });
+            }
+            
+            // Initialiser la connexion Socket.io
+            initMultiplayerConnection();
+        });
+    }
+}
 
 	// Fonction d'initialisation de la connexion multiplayer
 	function initMultiplayerConnection() {
@@ -573,7 +638,7 @@ function testServerConnection() {
 
 // Testez au chargement
 document.addEventListener('DOMContentLoaded', testServerConnection);
-	
+
 	</script>
 
 
