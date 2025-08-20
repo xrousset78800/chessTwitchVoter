@@ -1101,7 +1101,7 @@ function playSoundForMove(chess) {
 var poll = [];
 var moves = [];
 
-function moveAction(move) {
+function moveAction(move, isFromNetwork = false) {
 		(teamToPlay == 1) ? 0 : 1;
 		chess.move(move);
 		board.position(chess.fen());
@@ -1109,13 +1109,13 @@ function moveAction(move) {
     playSoundForMove(chess)
 
 
-    if (window.multiplayerMode && window.gameSocket) {
+    if (window.multiplayerMode && window.gameSocket && !isFromNetwork) {
         console.log('🎯 Émission du coup vers le serveur:', move);
         window.gameSocket.emit('moveSelected', {
             gameId: window.currentGameId,
             player: window.playerColor,
             move: move,
-            fen: chess.fen() // Envoyer aussi la position pour synchronisation
+            fen: chess.fen()
         });
     }
 

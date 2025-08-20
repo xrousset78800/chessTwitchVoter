@@ -215,7 +215,21 @@
         <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>
     </form>
     <button id="openFormButton"><i class="fas fa-cog"></i></button>
-
+	<script>
+	    // Configuration pour la production
+	    window.CHESS_VOTER_CONFIG = {
+	        basePath: '/chessTwitchVoter/',
+	        serverUrl: null, // Mettez l'URL de votre serveur si vous en avez un
+	        isProduction: window.location.hostname !== 'localhost'
+	    };
+	    
+	    // Charger Socket.io seulement si un serveur est configuré
+	    if (window.CHESS_VOTER_CONFIG.serverUrl) {
+	        const script = document.createElement('script');
+	        script.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
+	        document.head.appendChild(script);
+	    }
+	</script>
 	<script
 	  src="https://code.jquery.com/jquery-3.7.1.min.js"
 	  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
@@ -362,21 +376,76 @@
 	    
 	    // Synchroniser les mouvements
 	    window.gameSocket.on('movePlayed', (data) => {
-	        console.log('♟️ Coup joué:', data);
-	        
-	        if (data.player !== window.playerColor) {
-	            // Le partenaire a joué, appliquer le coup
-	            if (typeof chess !== 'undefined' && typeof board !== 'undefined') {
-	                chess.move(data.move);
-	                board.position(chess.fen());
-	                
-	                if (typeof refreshBoard === 'function') {
-	                    refreshBoard(chess);
-	                }
-	            }
-	        }
+		    console.log('♟️ Coup reçu:', data);
+		    
+		    // Appliquer le coup de TOUS les joueurs (y compris nous-même pour confirmation)
+		    // mais éviter de le renvoyer si c'est notre propre coup
+		    if (data.player === window.playerColor) {
+		        // C'est notre propre coup qui revient du serveur (confirmation)
+		        console.log('✓ Confirmation de notre coup');
+		        // On ne fait rien car on l'a déjà appliqué localement
+		    } else {
+		        // C'est le coup de l'adversaire
+		        console.log('Application du coup adverse:', data.move);
+		        
+		        // Appliquer le coup avec le flag isFromNetwork = true
+		        if (typeof moveAction === 'function') {
+		            moveAction(data.move, true); // true = coup venant du réseau
+		        } else {
+		            // Fallback si moveAction n'est pas disponible
+		            chess.move(data.move);
+		            board.position(chess.fen());
+		            
+		            // Mise à jour manuelle de l'historique
+		            if(chess.turn() == 'b') {
+		                $(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+data.move+"</span></li>");
+		            } else {
+		                if($(".poll ol li").length == 0) {
+		                    $(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+data.move+"</span></li>");
+		                } else {
+		                    $(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+data.move+"</span>");
+		                }
+		            }
+		            
+		            if (typeof refreshBoard === 'function') {
+		                refreshBoard(chess);
+		            }
+		        }
+		        
+		        // Mettre à jour l'affichage des joueurs
+		        if (typeof refreshPlayerDisplay === 'function') {
+		            refreshPlayerDisplay();
+		        }
+		    }
 	    });
-	    
+	    window.debugMultiplayer = {
+		    checkHistory: function() {
+		        console.log('=== État de l\'historique ===');
+		        console.log('Coups dans chess.js:', chess.history());
+		        console.log('Coups dans l\'interface:');
+		        $(".poll ol li").each(function(i) {
+		            const white = $(this).find('.w').text();
+		            const black = $(this).find('.b').text();
+		            console.log(`Ligne ${i+1}: Blanc=${white}, Noir=${black}`);
+		        });
+		        console.log('Tour actuel:', chess.turn());
+		        console.log('FEN actuel:', chess.fen());
+		    },
+		    
+		    checkSync: function() {
+		        if (window.gameSocket) {
+		            window.gameSocket.emit('requestGameState', {
+		                gameId: window.currentGameId
+		            });
+		        }
+		    },
+		    
+		    clearHistory: function() {
+		        $(".poll ol").empty();
+		        console.log('Historique visuel effacé');
+		    }
+		};
+
 	    // Notification quand les deux joueurs sont connectés
 	    window.gameSocket.on('gameReady', (data) => {
 	        console.log('🎯 Partie prête !', data);
@@ -482,6 +551,29 @@
 	document.head.appendChild(style);
 
 	console.log('✅ Script multiplayer initialisé');
+
+
+function testServerConnection() {
+    const serverUrl = window.CHESS_VOTER_CONFIG.serverUrl;
+    
+    if (!serverUrl) {
+        console.log('❌ Pas de serveur configuré');
+        return;
+    }
+    
+    fetch(`${serverUrl}/health`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('✅ Serveur accessible:', data);
+        })
+        .catch(error => {
+            console.error('❌ Serveur inaccessible:', error);
+        });
+}
+
+// Testez au chargement
+document.addEventListener('DOMContentLoaded', testServerConnection);
+	
 	</script>
 
 

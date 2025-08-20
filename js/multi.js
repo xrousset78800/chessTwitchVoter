@@ -28,18 +28,67 @@ class MultiplayerManager {
                 defaultChannel: ''
             }
         };
-        
+        this.config = {
+            // CHANGEZ CECI selon votre configuration
+            serverUrl: this.getServerUrl(),
+            basePath: '/chessTwitchVoter/',
+            hasMultiplayerServer: true // Mettez à true si vous avez un serveur
+        };        
         this.socket = null;
         this.gameId = null;
         
         this.init();
     }
-    
+    getServerUrl() {
+        // Détection automatique de l'environnement
+        if (window.location.hostname === 'localhost') {
+            return 'http://localhost:3000';
+        } else if (window.location.hostname === 'xouindaplace.fr') {
+            // Si vous avez un serveur, mettez son URL ici
+            // Exemples :
+            // return 'https://chess-voter-server.glitch.me';
+            // return 'https://your-server.railway.app';
+            // return 'wss://your-vps.com:3000';
+            return null; // Pas de serveur pour l'instant
+        }
+        return null;
+    }
     init() {
         this.setupEventListeners();
         this.loadSavedConfig();
         this.showStep(1);
     }
+
+    initializeSocket(streamerName) {
+        if (!this.config.serverUrl) {
+            console.warn('Pas de serveur configuré - Mode local uniquement');
+            this.showToast('Mode local uniquement (pas de serveur multijoueur)', 'warning');
+            return;
+        }
+        
+        try {
+            this.socket = io(this.config.serverUrl, {
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
+            
+            this.socket.on('connect', () => {
+                console.log('✅ Connecté au serveur multijoueur');
+                // ... reste du code
+            });
+            
+            this.socket.on('connect_error', (error) => {
+                console.error('❌ Erreur de connexion:', error);
+                this.showToast('Impossible de se connecter au serveur multijoueur', 'error');
+            });
+            
+        } catch (error) {
+            console.error('Erreur lors de l\'initialisation du socket:', error);
+            this.showToast('Serveur multijoueur non disponible', 'error');
+        }
+    }    
     
     setupEventListeners() {
         // Mode selection
