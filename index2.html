@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitchess</title>
+     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+    <!-- CSS : Un seul point d'entrée -->
+    <link rel="stylesheet" href="css2/main.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> <!-- Inclure Font Awesome -->
+      <script src="js/tmi.min.js"></script>
+      <script src="twitchToken.js"></script>
+      <script src="js/client.js"></script>
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.1.0/chartjs-plugin-datalabels.min.js"></script>
+</head>
+<body>
+    
+    <!--div id="app">
+    </div-->
+
+<body data-team="w"> 
+    <h1 data-lang="fr-FR">Twitchess</h1>
+
+    <!--- Begin Example HTML ------------------------------------------------------>
+    <div id="board_wrapper">
+        <canvas id="primary_canvas" width="630" height="630" ></canvas>
+        <canvas id="drawing_canvas"  width="630" height="630" ></canvas>
+        <div id="myBoard" style="width: 630px;"></div>
+        <ul class="c-rainbow">
+             <li class="c-rainbow__layer c-rainbow__layer--white"></li>
+             <li class="c-rainbow__layer c-rainbow__layer--orange"></li>
+             <li class="c-rainbow__layer c-rainbow__layer--red"></li>
+             <li class="c-rainbow__layer c-rainbow__layer--violet"></li>
+             <li class="c-rainbow__layer c-rainbow__layer--blue"></li>
+             <li class="c-rainbow__layer c-rainbow__layer--green"></li>
+             <li class="c-rainbow__layer c-rainbow__layer--yellow"></li>
+        </ul>
+    </div>
+
+    <!--- End Example HTML -------------------------------------------------------->
+    <div class="bloc-available">
+        <div class="available">
+            <ul id="availableList">
+                <ul id="availableListP">
+                </ul>
+                <ul id="availableListB">
+                </ul>
+                <ul id="availableListN">
+                </ul>
+                <ul id="availableListR">
+                </ul>
+                <ul id="availableListQ">
+                </ul>
+                <ul id="availableListK">
+                </ul>
+            </ul>
+        </div>
+    </div>
+    <div class="poll prefixed styled">
+        <ol>
+
+        </ol>
+    </div>
+
+    <div class="votes">
+        <!--h5 style="position: absolute;">(ex: e5, Qxa3)</h5-->
+        <h3 data-lang="fr-FR" data-team="w">Trait aux blancs</h3>
+        <h3 data-lang="fr-FR" data-team="b">Trait aux noirs</h3>
+        <h4 data-lang="en-EN" class="status"></h4>
+        <ol class="prefixed styled"></ol>
+        <div id="chart"></div>
+        <div class="chart-container">
+        <canvas id="chartPoll" width="600" height="150"></canvas>
+        </div>
+    </div>
+    <div id="probleminfo">
+        <div>
+            <span>Ouverture : </span>
+            <span data-opening-tags></span>
+        </div>
+        <div>
+            <span>Tags : </span>
+            <span data-tags></span>
+        </div>      
+        <div>
+            <span>Solution : </span>
+            <b><p data-solution></p></b>
+        </div>
+        <div>
+            <span>Nb de coups : </span>
+            <h2 data-length></h2>
+        </div>                  
+        <span data-attempt="0"></span>
+        <p style="display: none;" data-omgSolution></p>
+    </div>
+    <div id="countdown" class="countdown">
+      <svg viewBox="-50 -50 100 100" stroke-width="10">
+        <circle r="20"></circle>
+        <circle r="20" pathLength="1"></circle>
+      </svg>
+    </div>
+
+    <form id="configForm">
+        <span id="openFormButton2" style="position: absolute;right: 10px;top: 10px;cursor: pointer;"><i class="fas fa-cog"></i></span>
+                <label for="defaultChannel">Enter twitch channel</label>
+            <input type="text" id="defaultChannel" name="defaultChannel" >
+            <label for="probMode">Jouer en mode YOLO (sandbox)</label><i class="fas fa-users"></i><i class="fas fa-users"></i><i class="fas fa-users"></i>
+            <input type="radio" id="yoloMode" name="gameMode" value="normal">
+            <br>
+            <label for="probMode">Jouer en mode problèmes (ok but fix vote/reload issues)</label><i class="fas fa-cogs"></i>
+            <input type="radio" id="probMode" name="gameMode" value="probMode">
+            <div data-game-mode="probMode">
+                <fieldset class="theme-filter-section">
+                        <legend>Filtrage par thèmes</legend>
+                        
+                        <div class="filter-controls">
+                            <button type="button" class="btn btn-secondary" onclick="selectAllThemes()">
+                                Tout sélectionner
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="clearThemeFilter()">
+                                Effacer la sélection
+                            </button>
+                        </div>
+                        
+                        <div class="problem-count" id="problemCount">
+                            <span id="availableProblems">-</span>
+                        </div>
+                        
+                        <div class="theme-list" id="themeList">
+                            <!-- Les thèmes seront générés dynamiquement -->
+                        </div>
+                        
+                        <div class="selected-themes" id="selectedThemes" style="display: none;">
+                            <div id="selectedThemesTags"></div>
+                        </div>
+                        </fieldset>
+                    </div>
+            <br>
+                <label for="mod1vViewers">Seul contre tous (wip)</label><i class="fas fa-user"></i><i class="fas fa-users"></i>
+            <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">
+            <div data-game-mode="mod1vViewers">
+                <label for="mod1vViewersPlayer">Pseudo du joueur</label>
+                <input type="text" id="mod1vViewersPlayer" name="mod1vViewersPlayer" >
+                </div>
+                <br>
+                <label for="mod1v1">Un contre un (ok?)</label><i class="fas fa-user"></i><i class="fas fa-user"></i>
+            <input type="radio" id="mod1v1" name="gameMode" value="mod1v1">
+            <div data-game-mode="mod1v1">
+                <label for="oneVsOneModeList0">Pseudo du Joueur1</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
+                <label for="oneVsOneModeList1">Pseudo du Joueur2</label><input type="text" id="oneVsOneModeList1" name="oneVsOneModeList1">
+              </div>
+              <br>
+                <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label><i class="fas fa-users"></i><i class="fas fa-users"></i>
+            <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
+            <div data-game-mode="modStreamerChatvStreamerChat">
+                <label for="streamerChatvStreamerChat0">Pseudo du Streamer1</label><input type="text" id="streamerChatvStreamerChat0" name="streamerChatvStreamerChat0">
+                <label for="streamerChatvStreamerChat1">Pseudo du Streamer2</label><input type="text" id="streamerChatvStreamerChat1" name="streamerChatvStreamerChat1">
+              </div>
+            <label for="modViewersvViewers">Tous contre tous (id pair/impair)(ok but cringe)</label><i class="fas fa-users"></i><i class="fas fa-users"></i>
+            <input type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
+
+
+            <fieldset>
+                <legend>Mode Vote !</legend> 
+            <label for="timerMode">Activer le mode vote</label><i class="fas fa-clock"></i>
+            <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
+            <div data-time-mode>
+                <label for="InitialvoterTimer">Temps d'un tour</label><i class="fas fa-hourglass-half"></i>
+                <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
+                <br>                
+                <label for="timerWheelAnimation">Animation de la roue </label><i class="fas fa-circle-notch"></i>
+                <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
+                <br>
+                <label for="limitToOneVote">Vote unique</label><i class="fas fa-ban"></i>
+                <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
+                <br>
+                <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label><i class="fas fa-balance-scale"></i>
+                <input type="checkbox" id="majorityMode" name="majorityMode">               
+            </div>
+        </fieldset>         
+            <fieldset>
+                <legend>Options de timer</legend> 
+                <label for="pauseAfterWinLose">Durée de la pause</label><i class="fas fa-hourglass-end"></i>
+                <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
+                <label for="timerMoveBot">Animation du bot</label><i class="fas fa-robot"></i>
+                <input type="number" id="timerMoveBot" name="timerMoveBot" min="0"> s
+                <br>
+                <label for="timerMoveText">Animation du coup joué</label><i class="fas fa-file-alt"></i>
+                <input type="number" id="timerMoveText" name="timerMoveText" min="0"> s
+        </fieldset>
+                <fieldset>
+                    <legend>Restrictions d'accès</legend>
+                    <label for="followMode">Mode followers uniquement</label><i class="fas fa-heart"></i>
+                    <input type="checkbox" id="followMode" name="followMode">
+                    <br>
+                    <label for="subMode">Mode abonnés uniquement</label><i class="fas fa-crown"></i>
+                    <input type="checkbox" id="subMode" name="subMode">
+                    <br>
+                    <small style="color: #aaa; font-size: 12px;">
+                        Note: Les modérateurs, VIPs et le broadcaster peuvent toujours jouer
+                    </small>
+                </fieldset>
+            <fieldset>
+                <legend>Autres options</legend> 
+            <label for="noBg">Supprimer le background (test sur OBS ?)</label><i class="fas fa-image"></i>
+            <input type="checkbox" id="noBg" name="noBg">
+            <label for="noEpilepsy">Mode anti epilepsie (supprime le switch de background)</label><i class="fas fa-image"></i>
+            <input type="checkbox" id="noEpilepsy" name="noEpilepsy">    
+        </fieldset>
+
+        <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>
+    </form>
+    <button id="openFormButton"><i class="fas fa-cog"></i></button>
+
+    
+    <!-- JavaScript : Un seul point d'entrée -->
+        <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+      crossorigin="anonymous"></script>
+    <script src="js/chessboard-arrows.js"></script>
+    <script src="js/chessboard-1.0.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js" integrity="sha384-s3XgLpvmHyscVpijnseAmye819Ee3yaGa8NxstkJVyA6nuDFjt59u1QvuEl/mecz" crossorigin="anonymous"></script>
+    <script src="js/config.js"></script>
+    <script src="js/chessVoterApp.js"></script>
+    <!--script src="js/tmi.js"></script-->
+
+    
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <!-- Nouveau système modulaire -->
+    <script type="module">
+        // Charger l'application principale
+        /*
+        import { TwitchessApp } from './js2/app.js';
+        
+        // Pour la compatibilité avec l'ancien code, exposer certains objets globalement
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Créer l'instance de l'application
+            window.twitchess = new TwitchessApp();
+            
+            // Initialiser
+            try {
+                await window.twitchess.init();
+                console.log('✅ Application Twitchess chargée avec succès!');
+                
+                // Pour la compatibilité avec l'ancien code
+                window.board = window.twitchess.modules.board;
+                window.game = window.twitchess.modules.chess?.engine?.chess;
+                window.config = window.twitchess.config;
+                
+                // Si le graphique existe, le rendre disponible globalement
+                if (document.getElementById('pollChart')) {
+                    const ctx = document.getElementById('pollChart').getContext('2d');
+                    window.pollChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Votes',
+                                data: [],
+                                backgroundColor: [],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'end',
+                                    formatter: (value) => value > 0 ? value : ''
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    display: false
+                                },
+                                y: {
+                                    ticks: {
+                                        color: 'white',
+                                        font: { size: 14 }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur lors du chargement:', error);
+            }
+        });*/
+    </script>
+</body>
+</html>

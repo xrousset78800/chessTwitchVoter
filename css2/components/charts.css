@@ -1,0 +1,335 @@
+/* ==========================================================================
+   CHARTS.CSS - Styles pour les graphiques et visualisations
+   ========================================================================== */
+
+/* ========== Conteneur de Graphique ========== */
+.chart-container {
+  position: relative;
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* ========== Graphique de Votes ========== */
+#pollChart {
+  max-width: 100%;
+  height: auto !important;
+}
+
+.poll-container {
+  background: linear-gradient(135deg, var(--dark-card) 0%, rgba(22, 33, 62, 0.8) 100%);
+  border: 1px solid var(--dark-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+  box-shadow: var(--shadow-lg);
+}
+
+.poll-header {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.poll-title {
+  font-size: var(--font-xl);
+  font-weight: var(--font-bold);
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ========== Barres de Progression ========== */
+.progress-bar-container {
+  width: 100%;
+  height: 30px;
+  background: var(--dark-bg);
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+  margin: var(--spacing-sm) 0;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: var(--border-radius-full);
+  transition: width var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: var(--spacing-sm);
+  color: white;
+  font-weight: var(--font-bold);
+  font-size: var(--font-sm);
+}
+
+.progress-bar-striped {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 40px 40px;
+  animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+  from {
+    background-position: 40px 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* ========== Graphique Circulaire (Pie Chart) ========== */
+.pie-chart {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  position: relative;
+  background: conic-gradient(
+    var(--vote-color-1) 0deg 60deg,
+    var(--vote-color-2) 60deg 120deg,
+    var(--vote-color-3) 120deg 180deg,
+    var(--vote-color-4) 180deg 240deg,
+    var(--vote-color-5) 240deg 300deg,
+    var(--vote-color-6) 300deg 360deg
+  );
+  box-shadow: var(--shadow-lg);
+}
+
+.pie-chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: 60%;
+  background: var(--dark-card);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.pie-chart-value {
+  font-size: var(--font-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+}
+
+.pie-chart-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+/* ========== Statistiques ========== */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.stat-card {
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  text-align: center;
+  border: 1px solid var(--dark-border);
+  transition: all var(--transition-base);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.stat-icon {
+  font-size: var(--font-3xl);
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.stat-value {
+  font-size: var(--font-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-xs);
+}
+
+.stat-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-change {
+  display: inline-block;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-xs);
+  font-weight: var(--font-semibold);
+}
+
+.stat-change-positive {
+  background: rgba(72, 187, 120, 0.2);
+  color: var(--success-color);
+}
+
+.stat-change-negative {
+  background: rgba(252, 129, 129, 0.2);
+  color: var(--danger-color);
+}
+
+/* ========== Graphique en Lignes ========== */
+.line-chart-point {
+  fill: var(--primary-color);
+  stroke: white;
+  stroke-width: 2;
+  r: 4;
+  transition: all var(--transition-fast);
+}
+
+.line-chart-point:hover {
+  r: 6;
+  fill: var(--secondary-color);
+}
+
+.line-chart-line {
+  fill: none;
+  stroke: var(--primary-color);
+  stroke-width: 2;
+}
+
+.line-chart-area {
+  fill: url(#gradient);
+  opacity: 0.3;
+}
+
+/* ========== Légende de Graphique ========== */
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--dark-border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--border-radius-sm);
+  flex-shrink: 0;
+}
+
+/* ========== Graphique de Performance ========== */
+.performance-meter {
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(
+    to right,
+    var(--danger-color) 0%,
+    var(--warning-color) 50%,
+    var(--success-color) 100%
+  );
+  border-radius: var(--border-radius-full);
+  position: relative;
+  margin: var(--spacing-md) 0;
+  box-shadow: var(--shadow-md);
+}
+
+.performance-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  transition: left var(--transition-base);
+}
+
+/* ========== Graphique Sparkline ========== */
+.sparkline {
+  height: 40px;
+  width: 100%;
+  display: inline-block;
+  position: relative;
+}
+
+.sparkline svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sparkline path {
+  stroke: var(--primary-color);
+  stroke-width: 2;
+  fill: none;
+}
+
+.sparkline circle {
+  fill: var(--primary-color);
+  r: 2;
+}
+
+/* ========== Animations de Graphique ========== */
+@keyframes chartGrow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.chart-animated {
+  animation: chartGrow 0.8s ease-out;
+  transform-origin: bottom;
+}
+
+@keyframes chartPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.chart-pulse {
+  animation: chartPulse 2s ease-in-out infinite;
+}

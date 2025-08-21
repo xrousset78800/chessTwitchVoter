@@ -1,0 +1,330 @@
+/* ==========================================================================
+   CARDS.CSS - Styles pour les cartes et conteneurs d'information
+   ========================================================================== */
+
+/* ========== Carte de Base ========== */
+.card {
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ========== Header de Carte ========== */
+.card-header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--gradient-primary);
+  border-bottom: 1px solid var(--dark-border);
+}
+
+.card-title {
+  font-size: var(--font-xl);
+  font-weight: var(--font-bold);
+  color: white;
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: var(--font-sm);
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: var(--spacing-xs);
+}
+
+/* ========== Body de Carte ========== */
+.card-body {
+  padding: var(--spacing-lg);
+}
+
+/* ========== Footer de Carte ========== */
+.card-footer {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--dark-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ========== Carte d'Information ========== */
+.info-card {
+  background: var(--dark-card);
+  border-left: 4px solid var(--primary-color);
+  padding: var(--spacing-md);
+  margin: var(--spacing-md) 0;
+}
+
+.info-card-icon {
+  font-size: var(--font-2xl);
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.info-card-title {
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--spacing-xs);
+}
+
+.info-card-content {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+/* ========== Carte de Joueur ========== */
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--dark-border);
+  transition: all var(--transition-base);
+}
+
+.player-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+}
+
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-2xl);
+  color: white;
+  font-weight: var(--font-bold);
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-xs);
+}
+
+.player-rating {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+.player-status {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+}
+
+.player-status-online {
+  background: var(--success-color);
+  color: white;
+}
+
+.player-status-offline {
+  background: var(--text-muted);
+  color: white;
+}
+
+/* ========== Carte de Partie ========== */
+.game-card {
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.game-card-thumbnail {
+  width: 100%;
+  height: 200px;
+  background: var(--dark-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.game-card-players {
+  position: absolute;
+  top: var(--spacing-sm);
+  left: var(--spacing-sm);
+  right: var(--spacing-sm);
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.game-card-player {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  color: white;
+  font-size: var(--font-sm);
+}
+
+.game-card-details {
+  padding: var(--spacing-md);
+}
+
+.game-card-title {
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--spacing-xs);
+}
+
+.game-card-meta {
+  display: flex;
+  gap: var(--spacing-md);
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+/* ========== Carte de Problème ========== */
+.problem-card {
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  text-align: center;
+  border: 2px solid var(--dark-border);
+  transition: all var(--transition-base);
+}
+
+.problem-card:hover {
+  border-color: var(--primary-color);
+  transform: scale(1.02);
+}
+
+.problem-difficulty {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-sm);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--spacing-md);
+}
+
+.difficulty-easy {
+  background: var(--success-color);
+  color: white;
+}
+
+.difficulty-medium {
+  background: var(--warning-color);
+  color: var(--text-dark);
+}
+
+.difficulty-hard {
+  background: var(--danger-color);
+  color: white;
+}
+
+.problem-fen {
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  word-break: break-all;
+  margin: var(--spacing-sm) 0;
+}
+
+.problem-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  justify-content: center;
+  margin-top: var(--spacing-md);
+}
+
+.theme-tag {
+  background: var(--primary-color);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-xs);
+  text-transform: uppercase;
+}
+
+/* ========== Carte de Configuration Multijoueur ========== */
+.setup-card {
+  background: var(--dark-card);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-xl);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.setup-card-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.setup-card-icon {
+  font-size: 4em;
+  margin-bottom: var(--spacing-md);
+}
+
+.setup-card-title {
+  font-size: var(--font-2xl);
+  font-weight: var(--font-bold);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.game-code {
+  font-size: 1.5em;
+  font-weight: var(--font-bold);
+  color: var(--accent-color);
+  letter-spacing: 2px;
+}
+
+/* ========== Carte Vide ========== */
+.empty-card {
+  background: var(--dark-card);
+  border: 2px dashed var(--dark-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: var(--font-4xl);
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.empty-message {
+  font-size: var(--font-lg);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-description {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}

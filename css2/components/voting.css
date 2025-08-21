@@ -1,0 +1,290 @@
+/* ==========================================================================
+   VOTING.CSS - Styles pour le système de vote
+   ========================================================================== */
+
+/* ========== Conteneur de Vote ========== */
+.voting-container {
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+  box-shadow: var(--shadow-lg);
+}
+
+.voting-header {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.voting-title {
+  font-size: var(--font-2xl);
+  font-weight: var(--font-bold);
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ========== Liste des Options de Vote ========== */
+.voting-options {
+  display: grid;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.vote-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  background: var(--dark-bg);
+  border: 2px solid var(--dark-border);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.vote-option:hover {
+  border-color: var(--primary-color);
+  transform: translateX(5px);
+  box-shadow: var(--shadow-md);
+}
+
+.vote-option.selected {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+/* ========== Notation des Coups ========== */
+.vote-move {
+  font-family: var(--font-mono);
+  font-size: var(--font-xl);
+  font-weight: var(--font-bold);
+  letter-spacing: 1px;
+}
+
+.vote-move-number {
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  margin-right: var(--spacing-sm);
+}
+
+/* ========== Compteur de Votes ========== */
+.vote-count {
+  background: var(--primary-color);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-full);
+  font-weight: var(--font-bold);
+  min-width: 40px;
+  text-align: center;
+  transition: all var(--transition-base);
+}
+
+.vote-option:hover .vote-count {
+  transform: scale(1.1);
+}
+
+/* ========== Barre de Progression des Votes ========== */
+.vote-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--gradient-primary);
+  opacity: 0.1;
+  transition: width var(--transition-base);
+  z-index: 0;
+}
+
+.vote-option-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* ========== Option la Plus Votée ========== */
+.most-voted {
+  --angle: 0deg;
+  border-image: conic-gradient(
+    from var(--angle),
+    red, yellow, lime, aqua, blue, magenta, red
+  ) 1 !important;
+  animation: borderGradient 10s linear infinite;
+  transform: scale(1.05);
+  font-weight: var(--font-bold);
+}
+
+.most-voted::before {
+  content: '👑';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: var(--font-xl);
+  animation: float 2s ease-in-out infinite;
+}
+
+/* ========== Votants Actifs ========== */
+.active-voters {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--dark-bg);
+  border-radius: var(--border-radius-md);
+}
+
+.voters-label {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.voters-count {
+  font-size: var(--font-xl);
+  font-weight: var(--font-bold);
+  color: var(--primary-color);
+}
+
+.voters-avatars {
+  display: flex;
+  margin-left: auto;
+}
+
+.voter-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  border: 2px solid var(--dark-card);
+  margin-left: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-xs);
+  font-weight: var(--font-bold);
+  color: white;
+}
+
+.voter-avatar:first-child {
+  margin-left: 0;
+}
+
+/* ========== Historique des Votes ========== */
+.vote-history {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--dark-border);
+}
+
+.vote-history-title {
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-md);
+}
+
+.vote-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  background: var(--dark-bg);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-sm);
+}
+
+.vote-history-move {
+  font-family: var(--font-mono);
+  font-weight: var(--font-medium);
+  color: var(--text-light);
+}
+
+.vote-history-result {
+  color: var(--text-muted);
+}
+
+.vote-history-winner {
+  color: var(--success-color);
+  font-weight: var(--font-semibold);
+}
+
+/* ========== Animation de Vote ========== */
+@keyframes voteIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.vote-animation {
+  animation: voteIn 0.3s ease-out;
+}
+
+/* ========== Vote en Direct ========== */
+.live-vote-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--danger-color);
+  color: white;
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-sm);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ========== Mode Vote Twitch ========== */
+.twitch-vote-mode {
+  background: #9146ff;
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.twitch-icon {
+  font-size: var(--font-xl);
+}
+
+/* ========== Vote Countdown ========== */
+.vote-countdown {
+  text-align: center;
+  margin: var(--spacing-md) 0;
+  font-size: var(--font-3xl);
+  font-weight: var(--font-bold);
+  color: var(--warning-color);
+  font-family: var(--font-mono);
+}
+
+.vote-countdown.urgent {
+  color: var(--danger-color);
+  animation: pulse 0.5s ease-in-out infinite;
+}

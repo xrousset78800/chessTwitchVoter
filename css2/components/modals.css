@@ -1,0 +1,355 @@
+/* ==========================================================================
+   MODALS.CSS - Styles des modales et overlays
+   ========================================================================== */
+
+/* ========== Overlay de Base ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-base);
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ========== Conteneur Modal ========== */
+.modal {
+  background-color: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  transform: scale(0.9);
+  transition: transform var(--transition-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-overlay.active .modal {
+  transform: scale(1);
+}
+
+/* ========== Header Modal ========== */
+.modal-header {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--dark-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--gradient-primary);
+}
+
+.modal-title {
+  font-size: var(--font-2xl);
+  font-weight: var(--font-bold);
+  color: white;
+  margin: 0;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: var(--border-radius-md);
+  color: white;
+  font-size: var(--font-xl);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* ========== Body Modal ========== */
+.modal-body {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ========== Footer Modal ========== */
+.modal-footer {
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--dark-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ========== Tailles de Modal ========== */
+.modal-sm {
+  max-width: 400px;
+}
+
+.modal-lg {
+  max-width: 800px;
+}
+
+.modal-xl {
+  max-width: 1200px;
+}
+
+.modal-fullscreen {
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 0;
+}
+
+/* ========== Modal d'Information sur les Problèmes ========== */
+#probleminfo {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.95);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-modal);
+  display: none;
+  color: var(--text-light);
+  max-height: 90%;
+  overflow-y: auto;
+  min-width: 400px;
+}
+
+#probleminfo.active {
+  display: block;
+}
+
+#probleminfo h3 {
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: var(--spacing-sm);
+}
+
+#probleminfo .info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--dark-border);
+}
+
+#probleminfo .info-label {
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+
+#probleminfo .info-value {
+  color: var(--text-light);
+  text-align: right;
+}
+
+/* ========== Modal de Confirmation ========== */
+.modal-confirm {
+  text-align: center;
+}
+
+.modal-confirm .modal-icon {
+  font-size: 4em;
+  margin-bottom: var(--spacing-md);
+}
+
+.modal-confirm.modal-confirm-success .modal-icon {
+  color: var(--success-color);
+}
+
+.modal-confirm.modal-confirm-warning .modal-icon {
+  color: var(--warning-color);
+}
+
+.modal-confirm.modal-confirm-danger .modal-icon {
+  color: var(--danger-color);
+}
+
+.modal-confirm .modal-message {
+  font-size: var(--font-lg);
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-light);
+}
+
+/* ========== Modal de Chargement ========== */
+.modal-loading {
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+}
+
+.modal-loading .spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto var(--spacing-md);
+}
+
+.modal-loading .loading-text {
+  color: var(--text-light);
+  font-size: var(--font-lg);
+}
+
+/* ========== Animations de Modal ========== */
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalZoomIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-slide-in {
+  animation: modalSlideIn var(--transition-base);
+}
+
+.modal-fade-in {
+  animation: modalFadeIn var(--transition-base);
+}
+
+.modal-zoom-in {
+  animation: modalZoomIn var(--transition-base);
+}
+
+/* ========== Popover ========== */
+.popover {
+  position: absolute;
+  background: var(--dark-card);
+  border: 1px solid var(--dark-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-popover);
+  display: none;
+  min-width: 200px;
+}
+
+.popover.active {
+  display: block;
+}
+
+.popover-arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--dark-card);
+  border: 1px solid var(--dark-border);
+  transform: rotate(45deg);
+}
+
+.popover-top .popover-arrow {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-top: none;
+  border-left: none;
+}
+
+.popover-bottom .popover-arrow {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-bottom: none;
+  border-right: none;
+}
+
+.popover-left .popover-arrow {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-bottom: none;
+}
+
+.popover-right .popover-arrow {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: none;
+  border-top: none;
+}
+
+/* ========== Tooltip ========== */
+.tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-sm);
+  white-space: nowrap;
+  z-index: var(--z-tooltip);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.tooltip.active {
+  opacity: 1;
+}
+
+/* ========== Dialog Natif HTML5 ========== */
+dialog {
+  background: var(--dark-card);
+  color: var(--text-light);
+  border: none;
+  border-radius: var(--border-radius-lg);
+  padding: 0;
+  box-shadow: var(--shadow-xl);
+  max-width: 600px;
+  width: 90%;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+}

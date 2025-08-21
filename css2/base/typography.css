@@ -1,0 +1,292 @@
+/* ==========================================================================
+   TYPOGRAPHY.CSS - Styles typographiques globaux
+   ========================================================================== */
+
+/* ========== Import des Polices ========== */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fjalla+One&display=swap');
+
+/* ========== Titres ========== */
+h1 {
+  font-family: var(--font-heading);
+  font-size: var(--font-4xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-lg);
+  letter-spacing: 1px;
+}
+
+h2 {
+  font-family: var(--font-heading);
+  font-size: var(--font-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-md);
+}
+
+h3 {
+  font-family: var(--font-display);
+  font-size: var(--font-2xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-md);
+}
+
+h4 {
+  font-family: var(--font-display);
+  font-size: var(--font-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-sm);
+}
+
+h5 {
+  font-family: var(--font-primary);
+  font-size: var(--font-lg);
+  font-weight: var(--font-medium);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-sm);
+}
+
+h6 {
+  font-family: var(--font-primary);
+  font-size: var(--font-base);
+  font-weight: var(--font-medium);
+  color: var(--text-light);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* ========== Paragraphes ========== */
+p {
+  font-size: var(--font-base);
+  line-height: 1.6;
+  color: var(--text-light);
+  margin-bottom: var(--spacing-md);
+}
+
+.lead {
+  font-size: var(--font-lg);
+  font-weight: var(--font-light);
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.small {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+.tiny {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+/* ========== Styles de Texte ========== */
+.text-primary {
+  color: var(--primary-color);
+}
+
+.text-secondary {
+  color: var(--secondary-color);
+}
+
+.text-success {
+  color: var(--success-color);
+}
+
+.text-warning {
+  color: var(--warning-color);
+}
+
+.text-danger {
+  color: var(--danger-color);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+.text-dark {
+  color: var(--text-dark);
+}
+
+/* ========== Alignement du Texte ========== */
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
+/* ========== Transformations du Texte ========== */
+.text-uppercase {
+  text-transform: uppercase;
+}
+
+.text-lowercase {
+  text-transform: lowercase;
+}
+
+.text-capitalize {
+  text-transform: capitalize;
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========== Poids de Police ========== */
+.font-light {
+  font-weight: var(--font-light);
+}
+
+.font-normal {
+  font-weight: var(--font-normal);
+}
+
+.font-medium {
+  font-weight: var(--font-medium);
+}
+
+.font-semibold {
+  font-weight: var(--font-semibold);
+}
+
+.font-bold {
+  font-weight: var(--font-bold);
+}
+
+.font-extrabold {
+  font-weight: var(--font-extrabold);
+}
+
+/* ========== Styles de Liste ========== */
+.list-disc {
+  list-style-type: disc;
+  padding-left: var(--spacing-lg);
+}
+
+.list-decimal {
+  list-style-type: decimal;
+  padding-left: var(--spacing-lg);
+}
+
+.list-none {
+  list-style-type: none;
+}
+
+/* ========== Citations ========== */
+blockquote {
+  font-size: var(--font-lg);
+  font-style: italic;
+  color: var(--text-muted);
+  border-left: 4px solid var(--primary-color);
+  padding-left: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+/* ========== Code ========== */
+code {
+  font-family: var(--font-mono);
+  font-size: var(--font-sm);
+  background-color: var(--dark-card);
+  color: var(--accent-color);
+  padding: 2px 6px;
+  border-radius: var(--border-radius-sm);
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--font-sm);
+  background-color: var(--dark-card);
+  color: var(--text-light);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  overflow-x: auto;
+  margin: var(--spacing-md) 0;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* ========== Liens ========== */
+.link {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-base);
+  position: relative;
+}
+
+.link:hover {
+  color: var(--secondary-color);
+}
+
+.link-underline {
+  text-decoration: underline;
+}
+
+.link-hover-underline:hover {
+  text-decoration: underline;
+}
+
+/* ========== Notation d'Échecs ========== */
+.chess-notation {
+  font-family: var(--font-mono);
+  font-size: var(--font-lg);
+  font-weight: var(--font-bold);
+  color: var(--accent-color);
+  letter-spacing: 1px;
+}
+
+.move-notation {
+  font-family: var(--font-mono);
+  font-size: var(--font-base);
+  font-weight: var(--font-medium);
+  color: var(--text-light);
+  background-color: var(--dark-card);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  display: inline-block;
+  margin: var(--spacing-xs);
+}
+
+/* ========== Badges et Labels ========== */
+.badge {
+  font-size: var(--font-xs);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-full);
+  display: inline-block;
+}
+
+.label {
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-xs);
+  display: block;
+}

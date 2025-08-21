@@ -1,6 +1,5 @@
 const appToken = configTwitch.TWITCH_TOKEN;
 
-
 function getLinkedChannels() {
     let linkedChannels = [];
     

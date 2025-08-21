@@ -1,0 +1,209 @@
+/* ==========================================================================
+   RESET.CSS - Reset navigateur et styles de base
+   ========================================================================== */
+
+/* ========== Reset Box Model ========== */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ========== Document de Base ========== */
+html {
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--font-base);
+  font-weight: var(--font-normal);
+  color: var(--text-light);
+  background-color: var(--dark-bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== Reset des Éléments HTML ========== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-bold);
+  line-height: 1.2;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+a:hover {
+  color: var(--secondary-color);
+}
+
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border: 0;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+button:focus {
+  outline: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm);
+  width: 100%;
+  transition: border-color var(--transition-base);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  margin-right: var(--spacing-xs);
+}
+
+label {
+  display: inline-block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-light);
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: var(--spacing-sm);
+}
+
+/* ========== Classes Utilitaires de Base ========== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* ========== Focus Visible ========== */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* ========== Selection ========== */
+::selection {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* ========== Scrollbar Custom ========== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-card);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: var(--border-radius-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color);
+}
+
+/* ========== Print Styles ========== */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+}

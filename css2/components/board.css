@@ -1,0 +1,194 @@
+/* ==========================================================================
+   BOARD.CSS - Styles de l'échiquier et des pièces
+   ========================================================================== */
+
+/* ========== Conteneur Principal ========== */
+#board_wrapper {
+  position: relative;
+  width: var(--board-size);
+  height: var(--board-size);
+  margin: var(--spacing-xl) auto;
+  background: var(--dark-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-md);
+}
+
+/* ========== Canvas de Dessin ========== */
+#primary_canvas,
+#drawing_canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--board-size);
+  height: var(--board-size);
+  pointer-events: none;
+  z-index: var(--z-overlay);
+}
+
+#drawing_canvas {
+  z-index: calc(var(--z-overlay) + 1);
+}
+
+/* ========== Échiquier Principal ========== */
+#myBoard {
+  position: relative;
+  width: var(--board-size);
+  height: var(--board-size);
+  margin: 0 auto;
+}
+
+/* ========== Cases de l'Échiquier ========== */
+.board-b72b1 {
+  border: 2px solid var(--dark-border);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.square-55d63 {
+  position: relative;
+  transition: background-color var(--transition-fast);
+}
+
+/* Cases claires */
+.white-1e1d7 {
+  background-color: var(--board-light);
+  color: var(--board-dark);
+}
+
+/* Cases sombres */
+.black-3c85d {
+  background-color: var(--board-dark);
+  color: var(--board-light);
+}
+
+/* ========== Surlignage des Cases ========== */
+.highlight-white {
+  box-shadow: inset 0 0 3px 3px yellow;
+}
+
+.highlight-black {
+  box-shadow: inset 0 0 3px 3px blue;
+}
+
+.highlight-move {
+  background-color: var(--board-highlight) !important;
+}
+
+.highlight-check {
+  background-color: #ff6b6b !important;
+}
+
+/* Dernier coup joué */
+.move-from {
+  background-color: var(--board-move-from) !important;
+}
+
+.move-to {
+  background-color: var(--board-move-to) !important;
+}
+
+/* ========== Notation des Coordonnées ========== */
+.notation-322f9 {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  font-weight: var(--font-bold);
+  color: var(--text-muted);
+  z-index: var(--z-base);
+}
+
+.alpha-d2270 {
+  bottom: 1px;
+  right: 3px;
+}
+
+.numeric-fc462 {
+  top: 2px;
+  left: 2px;
+}
+
+/* Inverser les couleurs selon la case */
+.white-1e1d7 .notation-322f9 {
+  color: var(--board-dark);
+  opacity: 0.6;
+}
+
+.black-3c85d .notation-322f9 {
+  color: var(--board-light);
+  opacity: 0.6;
+}
+
+/* ========== Pièces ========== */
+.piece-417db {
+  cursor: grab;
+  transition: transform var(--transition-fast);
+  z-index: var(--z-dropdown);
+}
+
+.piece-417db:hover {
+  transform: scale(1.05);
+}
+
+.piece-417db:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+  z-index: var(--z-modal);
+}
+
+/* Animation de déplacement */
+.piece-moving {
+  animation: piece-slide var(--animation-duration) var(--animation-timing);
+}
+
+@keyframes piece-slide {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ========== Promotion de Pion ========== */
+.promotion-dialog {
+  position: absolute;
+  background: var(--dark-card);
+  border: 2px solid var(--primary-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm);
+  display: flex;
+  gap: var(--spacing-xs);
+  z-index: var(--z-popover);
+  box-shadow: var(--shadow-xl);
+}
+
+.promotion-piece {
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+  border-radius: var(--border-radius-sm);
+}
+
+.promotion-piece:hover {
+  transform: scale(1.1);
+  background-color: var(--primary-color);
+}
+
+/* ========== Indicateurs de Coup Légal ========== */
+.legal-move-hint {
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  background-color: rgba(102, 126, 234, 0.3);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: var(--z-base);
+}

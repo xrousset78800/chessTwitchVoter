@@ -1,0 +1,482 @@
+/* ==========================================================================
+   RESPONSIVE.CSS - Media queries pour le design responsive
+   ========================================================================== */
+
+/* ========== Breakpoint XL (1280px et plus) ========== */
+@media (min-width: 1280px) {
+  .container-xl {
+    max-width: 1280px;
+  }
+  
+  .hide-xl {
+    display: none !important;
+  }
+}
+
+/* ========== Breakpoint LG (1024px et plus) ========== */
+@media (min-width: 1024px) {
+  .container-lg {
+    max-width: 1024px;
+  }
+  
+  .hide-lg {
+    display: none !important;
+  }
+}
+
+/* ========== Breakpoint MD (768px et plus) ========== */
+@media (min-width: 768px) {
+  .container-md {
+    max-width: 768px;
+  }
+  
+  .hide-md {
+    display: none !important;
+  }
+}
+
+/* ========== Breakpoint SM (640px et plus) ========== */
+@media (min-width: 640px) {
+  .container-sm {
+    max-width: 640px;
+  }
+  
+  .hide-sm {
+    display: none !important;
+  }
+}
+
+/* ========== Tablette et Mobile (max 1024px) ========== */
+@media (max-width: 1024px) {
+  /* Layout avec Sidebar */
+  .layout-with-sidebar {
+    grid-template-columns: 1fr;
+  }
+  
+  .layout-with-dual-sidebar {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    width: 100%;
+    position: static;
+    max-height: none;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  /* Zone de jeu */
+  .game-area {
+    flex-direction: column;
+  }
+  
+  .game-sidebar {
+    width: 100%;
+  }
+  
+  /* Grilles */
+  .content-grid-2,
+  .content-grid-3,
+  .content-grid-4 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+/* ========== Tablette (max 768px) ========== */
+@media (max-width: 768px) {
+  /* Typographie */
+  h1 {
+    font-size: var(--font-3xl);
+  }
+  
+  h2 {
+    font-size: var(--font-2xl);
+  }
+  
+  h3 {
+    font-size: var(--font-xl);
+  }
+  
+  /* Header */
+  .header-nav {
+    display: none;
+  }
+  
+  .menu-toggle {
+    display: flex;
+  }
+  
+  .header-container {
+    padding: 0 var(--spacing-md);
+  }
+  
+  /* Échiquier */
+  #board_wrapper {
+    --board-size: min(500px, 90vw);
+    margin: var(--spacing-md) auto;
+  }
+  
+  #myBoard {
+    width: var(--board-size);
+    height: var(--board-size);
+  }
+  
+  #primary_canvas,
+  #drawing_canvas {
+    width: var(--board-size);
+    height: var(--board-size);
+  }
+  
+  /* Formulaires */
+  #configForm {
+    width: 95%;
+    padding: var(--spacing-lg);
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  /* Cartes */
+  .card {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .stats-container {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  
+  /* Modal */
+  .modal {
+    width: 95%;
+    margin: var(--spacing-md);
+  }
+  
+  /* Boutons */
+  .btn-group {
+    flex-wrap: wrap;
+  }
+  
+  .game-control-btn {
+    font-size: var(--font-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+/* ========== Mobile (max 640px) ========== */
+@media (max-width: 640px) {
+  /* Conteneur principal */
+  .content-container {
+    padding: 0 var(--spacing-sm);
+  }
+  
+  /* Typographie */
+  body {
+    font-size: var(--font-sm);
+  }
+  
+  h1 {
+    font-size: var(--font-2xl);
+  }
+  
+  h2 {
+    font-size: var(--font-xl);
+  }
+  
+  h3 {
+    font-size: var(--font-lg);
+  }
+  
+  /* Header */
+  .logo-text {
+    font-size: var(--font-xl);
+  }
+  
+  .logo-icon {
+    font-size: 2em;
+  }
+  
+  .header-actions {
+    gap: var(--spacing-xs);
+  }
+  
+  /* Échiquier */
+  #board_wrapper {
+    --board-size: min(350px, 95vw);
+    padding: var(--spacing-sm);
+  }
+  
+  .notation-322f9 {
+    font-size: 10px;
+  }
+  
+  /* Timer */
+  .countdown {
+    --timer-size: 100px;
+    right: 10px;
+    top: -20px;
+  }
+  
+  .countdown::after {
+    font-size: 1.8em;
+  }
+  
+  /* Votes */
+  .vote-option {
+    padding: var(--spacing-sm);
+  }
+  
+  .vote-move {
+    font-size: var(--font-lg);
+  }
+  
+  .voting-container {
+    padding: var(--spacing-md);
+  }
+  
+  /* Graphiques */
+  .chart-wrapper {
+    height: 200px;
+  }
+  
+  .poll-container {
+    padding: var(--spacing-md);
+  }
+  
+  /* Formulaires */
+  #configForm {
+    padding: var(--spacing-md);
+    max-height: 95vh;
+  }
+  
+  .form-input[type="number"] {
+    width: 60px;
+  }
+  
+  /* Boutons */
+  .btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-sm);
+  }
+  
+  .btn-floating {
+    width: 50px;
+    height: 50px;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+  }
+  
+  /* Cartes */
+  .setup-card {
+    padding: var(--spacing-lg);
+  }
+  
+  .player-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  /* Grilles */
+  .content-grid,
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Sidebar mobile */
+  .sidebar-mobile {
+    width: 85%;
+  }
+  
+  /* Tables */
+  table {
+    font-size: var(--font-xs);
+  }
+  
+  th, td {
+    padding: var(--spacing-xs);
+  }
+}
+
+/* ========== Très petit mobile (max 480px) ========== */
+@media (max-width: 480px) {
+  /* Échiquier encore plus petit */
+  #board_wrapper {
+    --board-size: min(300px, 98vw);
+  }
+  
+  /* Header minimal */
+  .subtitle {
+    display: none;
+  }
+  
+  .logo-section {
+    gap: var(--spacing-xs);
+  }
+  
+  /* Formulaire compact */
+  #configForm label {
+    font-size: var(--font-xs);
+  }
+  
+  /* Modal plein écran */
+  .modal {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+  
+  /* Phantom ajusté */
+  .phantom-text {
+    font-size: var(--font-xl);
+    padding: var(--spacing-sm);
+  }
+  
+  .phantom-notation {
+    font-size: var(--font-2xl);
+  }
+}
+
+/* ========== Mode Paysage Mobile ========== */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Header réduit */
+  .main-header {
+    padding: var(--spacing-sm) 0;
+  }
+  
+  /* Échiquier adapté */
+  #board_wrapper {
+    --board-size: min(400px, 80vh);
+    margin: var(--spacing-sm) auto;
+  }
+  
+  /* Modal horizontal */
+  .modal {
+    max-height: 95vh;
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .modal-body {
+    overflow-y: auto;
+  }
+}
+
+/* ========== Impression ========== */
+@media print {
+  /* Masquer les éléments non essentiels */
+  .header-actions,
+  .menu-toggle,
+  .sidebar,
+  .btn-floating,
+  .modal-overlay,
+  .phantom,
+  .countdown,
+  .chat-area,
+  .form-btn,
+  #openFormButton {
+    display: none !important;
+  }
+  
+  /* Optimiser pour l'impression */
+  body {
+    background: white;
+    color: black;
+  }
+  
+  .main-header {
+    background: none;
+    color: black;
+    box-shadow: none;
+    border-bottom: 2px solid black;
+  }
+  
+  #board_wrapper {
+    box-shadow: none;
+    border: 2px solid black;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid black;
+    break-inside: avoid;
+  }
+}
+
+/* ========== Classes Utilitaires Responsive ========== */
+/* Affichage */
+@media (max-width: 639px) {
+  .show-sm { display: block !important; }
+  .hide-sm-down { display: none !important; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .show-md { display: block !important; }
+  .hide-md-only { display: none !important; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .show-lg { display: block !important; }
+  .hide-lg-only { display: none !important; }
+}
+
+@media (min-width: 1024px) {
+  .show-xl { display: block !important; }
+  .hide-xl-up { display: none !important; }
+}
+
+/* Colonnes responsive */
+@media (min-width: 640px) {
+  .sm\:col-span-2 { grid-column: span 2; }
+  .sm\:col-span-3 { grid-column: span 3; }
+  .sm\:col-span-4 { grid-column: span 4; }
+}
+
+@media (min-width: 768px) {
+  .md\:col-span-2 { grid-column: span 2; }
+  .md\:col-span-3 { grid-column: span 3; }
+  .md\:col-span-4 { grid-column: span 4; }
+}
+
+@media (min-width: 1024px) {
+  .lg\:col-span-2 { grid-column: span 2; }
+  .lg\:col-span-3 { grid-column: span 3; }
+  .lg\:col-span-4 { grid-column: span 4; }
+}
+
+/* ========== Support des Préférences Utilisateur ========== */
+/* Mode sombre préféré */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Les variables sont déjà en mode sombre par défaut */
+  }
+}
+
+/* Animations réduites */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Contraste élevé */
+@media (prefers-contrast: high) {
+  :root {
+    --dark-border: #ffffff;
+    --text-muted: #e0e0e0;
+  }
+  
+  .btn {
+    border-width: 2px;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-select {
+    border-width: 2px;
+  }
+}
