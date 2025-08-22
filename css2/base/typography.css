@@ -46,6 +46,7 @@ h5 {
   font-weight: var(--font-medium);
   color: var(--text-light);
   margin-bottom: var(--spacing-sm);
+  white-space: pre-line;
 }
 
 h6 {

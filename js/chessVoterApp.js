@@ -167,11 +167,9 @@ function preloadThemesForMenu() {
 
 $(document).ready(function() {
 		//addPhantomBridgeControls();
-        
 
         preloadThemesForMenu();
         updatePageTitle();
-        createStatusBadge();
 
     console.log('🐍 Phantom Bridge Client initialisé');
 });
@@ -394,7 +392,7 @@ function generateTitle() {
         titleParts.push(`🎨 ${specialOptions.join(', ')}`);
     }
 
-    return titleParts.join(' | ');
+    return titleParts.join('\n');
 }
 function updatePageTitle() {
     const title = generateTitle();
@@ -416,36 +414,6 @@ function updatePageTitle() {
     
     console.log('📋 Titre généré:', title);
     return title;
-}
-function createStatusBadge() {
-    // Créer ou mettre à jour un badge de statut
-    let badge = document.getElementById('configBadge');
-    if (!badge) {
-        badge = document.createElement('div');
-        elo = document.createElement('b');
-        badge.id = 'configBadge';
-        badge.style.cssText = `
-            position: absolute;
-            top: 10px;
-            left: 0;
-            right: 0;
-            margin: 0 auto;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            z-index: 1000;
-            max-width: 300px;
-            word-wrap: break-word;
-        `;
-        document.body.appendChild(badge);
-    }
-
-    badge.appendChild(elo);
-    badge.textContent = generateTitle();
-    return badge;
 }
 
 //Start new game
@@ -905,7 +873,7 @@ function voteResult(poll) {
 						refreshBoard(chess);
 
 
-				}, timerMoveBot*1000);
+				}, 2000);
 		  }
 		}
 	} else {
@@ -1328,7 +1296,7 @@ function play(target, context, args) {
 									moveAction(move);
 									var moves = chess.moves();
 									refreshBoard(chess);
-							}, timerMoveBot*1000);
+							}, 2000);
 					  }
 					}
 				}

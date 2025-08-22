@@ -23,6 +23,7 @@
     <header class="main-header">
         <h1 data-lang="fr-FR">Twitchess</h1>
         <!-- Statuts du jeu -->
+        <h5 id="gameTitle"></h5>
         <h3 data-lang="fr-FR" data-team="w">Trait aux blancs</h3>
         <h3 data-lang="fr-FR" data-team="b">Trait aux noirs</h3>
         <h4 data-lang="en-EN" class="status"></h4>
@@ -120,78 +121,82 @@
         <form id="configForm">
             <span class="close">&times;</span>
             <h2>Configuration</h2>
-            <input type="text" id="defaultChannel" name="defaultChannel" >
-            <label for="defaultChannel">Enter twitch channel</label>
-            <br>
-            <input type="radio" id="yoloMode" name="gameMode" value="normal">
-            <label for="probMode">Jouer en mode YOLO (sandbox)</label>
-            <br>
-            <input type="radio" id="probMode" name="gameMode" value="probMode">
-            <label for="probMode">Jouer en mode problèmes (ok but fix vote/reload issues)</label>
-            <div data-game-mode="probMode">
-                <fieldset class="theme-filter-section">
-                        <legend>Filtrage par thèmes</legend>
-                        
-                        <div class="filter-controls">
-                            <button type="button" class="btn btn-secondary" onclick="selectAllThemes()">
-                                Tout sélectionner
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="clearThemeFilter()">
-                                Effacer la sélection
-                            </button>
+            <fieldset class="twitch">
+                <legend>Connexion avec la chaine Twitch</legend>
+                <label for="defaultChannel">Enter twitch channel&nbsp;</label>
+                <input type="text" id="defaultChannel" name="defaultChannel" >
+            </fieldset>
+            <fieldset class="gameMode">
+                <legend>Mode de jeu</legend>            
+                <input type="radio" id="yoloMode" name="gameMode" value="normal">
+                <label for="yoloMode">Jouer en mode YOLO (sandbox)</label>
+                <br>
+                <input type="radio" id="probMode" name="gameMode" value="probMode">
+                <label for="probMode">Jouer en mode problèmes (ok but fix vote/reload issues)</label>
+                <div data-game-mode="probMode">
+                    <fieldset class="theme-filter-section">
+                            <legend>Filtrage par thèmes</legend>
+                            
+                            <div class="filter-controls">
+                                <button type="button" class="btn btn-secondary" onclick="selectAllThemes()">
+                                    Tout sélectionner
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="clearThemeFilter()">
+                                    Effacer la sélection
+                                </button>
+                            </div>
+                            
+                            <div class="problem-count" id="problemCount">
+                                <span id="availableProblems">-</span>
+                            </div>
+                            
+                            <div class="theme-list" id="themeList">
+                                <!-- Les thèmes seront générés dynamiquement -->
+                            </div>
+                            
+                            <div class="selected-themes" id="selectedThemes" style="display: none;">
+                                <div id="selectedThemesTags"></div>
+                            </div>
+                            </fieldset>
                         </div>
-                        
-                        <div class="problem-count" id="problemCount">
-                            <span id="availableProblems">-</span>
-                        </div>
-                        
-                        <div class="theme-list" id="themeList">
-                            <!-- Les thèmes seront générés dynamiquement -->
-                        </div>
-                        
-                        <div class="selected-themes" id="selectedThemes" style="display: none;">
-                            <div id="selectedThemesTags"></div>
-                        </div>
-                        </fieldset>
+                <br>
+                <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">
+                    <label for="mod1vViewers">Seul contre tous (wip)</label>
+                <div data-game-mode="mod1vViewers">
+                    <label for="mod1vViewersPlayer">Pseudo du joueur&nbsp;</label>
+                    <input type="text" id="mod1vViewersPlayer" name="mod1vViewersPlayer" >
                     </div>
-            <br>
-            <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">
-                <label for="mod1vViewers">Seul contre tous (wip)</label>
-            <div data-game-mode="mod1vViewers">
-                <label for="mod1vViewersPlayer">Pseudo du joueur&nbsp;</label>
-                <input type="text" id="mod1vViewersPlayer" name="mod1vViewersPlayer" >
-                </div>
-                <br>
-            <input type="radio" id="mod1v1" name="gameMode" value="mod1v1">
-                <label for="mod1v1">Un contre un (ok?)</label>
-            <div data-game-mode="mod1v1">
-                <label for="oneVsOneModeList0">Pseudo du Joueur1&nbsp;</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
-                <br>
-                <label for="oneVsOneModeList1">Pseudo du Joueur2&nbsp;</label><input type="text" id="oneVsOneModeList1" name="oneVsOneModeList1">
-              </div>
-              <br>
-            <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
-                <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label>
-            <div data-game-mode="modStreamerChatvStreamerChat">
-                <label for="streamerChatvStreamerChat0">Pseudo du Streamer1&nbsp;</label><input type="text" id="streamerChatvStreamerChat0" name="streamerChatvStreamerChat0">
-                <br>
-                <label for="streamerChatvStreamerChat1">Pseudo du Streamer2&nbsp;</label><input type="text" id="streamerChatvStreamerChat1" name="streamerChatvStreamerChat1">
-              </div>
-              <br>
-            <input type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
-            <label for="modViewersvViewers">Tous contre tous (id pair/impair)(ok but cringe)</label>
-
+                    <br>
+                <input type="radio" id="mod1v1" name="gameMode" value="mod1v1">
+                    <label for="mod1v1">Un contre un (ok?)</label>
+                <div data-game-mode="mod1v1">
+                    <label for="oneVsOneModeList0">Pseudo du Joueur1&nbsp;</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
+                    <br>
+                    <label for="oneVsOneModeList1">Pseudo du Joueur2&nbsp;</label><input type="text" id="oneVsOneModeList1" name="oneVsOneModeList1">
+                  </div>
+                  <br>
+                <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
+                    <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label>
+                <div data-game-mode="modStreamerChatvStreamerChat">
+                    <label for="streamerChatvStreamerChat0">Pseudo du Streamer1&nbsp;</label><input type="text" id="streamerChatvStreamerChat0" name="streamerChatvStreamerChat0">
+                    <br>
+                    <label for="streamerChatvStreamerChat1">Pseudo du Streamer2&nbsp;</label><input type="text" id="streamerChatvStreamerChat1" name="streamerChatvStreamerChat1">
+                  </div>
+                  <br>
+                <input type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
+                <label for="modViewersvViewers">Tous contre tous (id pair/impair)(ok but cringe)</label>
+            </fieldset>
 
             <fieldset>
                 <legend>Mode Vote !</legend> 
             <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
             <label for="timerMode">Activer le mode vote</label>
             <div data-time-mode>
-                <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
                 <label for="InitialvoterTimer">Temps d'un tour</label>
+                <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
                 <br>                
-                <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
                 <label for="timerWheelAnimation">Animation de la roue </label>
+                <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
                 <br>
                 <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
                 <label for="limitToOneVote">Vote unique</label>
@@ -202,14 +207,8 @@
         </fieldset>         
             <fieldset>
                 <legend>Options de timer</legend> 
-                <label for="pauseAfterWinLose">Durée de la pause</label>
+                <label for="pauseAfterWinLose">Durée de la pause (entre les parties/problèmes)</label>
                 <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
-                <br>
-                <label for="timerMoveBot">Animation du bot</label>
-                <input type="number" id="timerMoveBot" name="timerMoveBot" min="0"> s
-                <br>
-                <label for="timerMoveText">Animation du coup joué</label>
-                <input type="number" id="timerMoveText" name="timerMoveText" min="0"> s
         </fieldset>
                 <fieldset>
                     <legend>Restrictions d'accès</legend>

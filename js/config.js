@@ -7,7 +7,7 @@ $.urlParam = function (name) {
     return (results !== null) ? results[1] || 0 : false;
 }
 
-const defaultChannel = $.urlParam('defaultChannel') ? $.urlParam('defaultChannel') : "PLEASE FILL THIS";
+const defaultChannel = $.urlParam('defaultChannel') ? $.urlParam('defaultChannel') : "";
 $("#configForm #defaultChannel").val(defaultChannel);
 
 const probMode = $.urlParam('probMode') == 'on' ? true : false;
@@ -29,12 +29,12 @@ const mod1vViewersPlayer = $.urlParam('mod1vViewersPlayer') ? $.urlParam('mod1vV
 $("#configForm #mod1vViewersPlayer").val(mod1vViewersPlayer);
 
 const oneVsOneModeList0 = $.urlParam('oneVsOneModeList0') ? $.urlParam('oneVsOneModeList0') : defaultChannel;
-const oneVsOneModeList1 = $.urlParam('oneVsOneModeList1') ? $.urlParam('oneVsOneModeList1') : "TWITCH_USER2";
+const oneVsOneModeList1 = $.urlParam('oneVsOneModeList1') ? $.urlParam('oneVsOneModeList1') : "";
 $("#configForm #oneVsOneModeList0").val(oneVsOneModeList0);
 $("#configForm #oneVsOneModeList1").val(oneVsOneModeList1);
 
 const streamerChatvStreamerChat0 = $.urlParam('streamerChatvStreamerChat0') ? $.urlParam('streamerChatvStreamerChat0') : defaultChannel;
-const streamerChatvStreamerChat1 = $.urlParam('streamerChatvStreamerChat1') ? $.urlParam('streamerChatvStreamerChat1') : "TWITCH_STREAMER2";
+const streamerChatvStreamerChat1 = $.urlParam('streamerChatvStreamerChat1') ? $.urlParam('streamerChatvStreamerChat1') : "";
 $("#configForm #streamerChatvStreamerChat0").val(streamerChatvStreamerChat0);
 $("#configForm #streamerChatvStreamerChat1").val(streamerChatvStreamerChat1);
 
@@ -48,12 +48,6 @@ $("#configForm #InitialvoterTimer").val(InitialvoterTimer);
 
 const pauseAfterWinLose = $.urlParam('pauseAfterWinLose') ? $.urlParam('pauseAfterWinLose') : 15;
 $("#configForm #pauseAfterWinLose").val(pauseAfterWinLose);
-
-const timerMoveBot = $.urlParam('timerMoveBot') ? $.urlParam('timerMoveBot') : 2;
-$("#configForm #timerMoveBot").val(timerMoveBot);
-
-const timerMoveText = $.urlParam('timerMoveText') ? $.urlParam('timerMoveText') : 3;
-$("#configForm #timerMoveText").val(timerMoveText);
 
 const timerWheelAnimation = $.urlParam('timerWheelAnimation') ? $.urlParam('timerWheelAnimation') : 5;
 $("#configForm #timerWheelAnimation").val(timerWheelAnimation);

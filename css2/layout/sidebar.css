@@ -81,7 +81,8 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+  margin-bottom: 0;
 }
 
 /* ========== Sidebar Collapsible ========== */
