@@ -22,6 +22,8 @@
 @import './components/animations.css';
 @import './components/timer.css';
 @import './components/voting.css';
+@import './components/fixes.css';
+@import './components/modal-fix.css';
 /*@import './components/phantom.css';*/
 
 /* Pages - Styles spécifiques aux pages */
