@@ -620,44 +620,112 @@ function startPauseTimer(duration, callback) {
 function bip(boolTimerVote) {
     voterTimer--;
 
+    // Mettre à jour l'affichage unifié
+    updateTimerDisplay(voterTimer);
+
     if(voterTimer == 0){
         $("body").removeClass('showTimer');
+        
+        // Cacher l'affichage textuel
+        const timerDisplay = document.getElementById('timer-display');
+        if (timerDisplay) {
+            timerDisplay.style.display = 'none';
+        }
+        
         if(boolTimerVote == true) {
             voteResult(poll);
             
-            // CORRECTION : Réinitialiser correctement le graphique
-            pollChart.data.labels = [];
-            pollChart.data.datasets = [{
-                label: 'Votes',
-                data: [],
-                backgroundColor: [],
-                borderWidth: 0,
-                categoryPercentage: 0.3,
-                barPercentage: 0.5
-            }];
-            pollChart.update();
+            // Réinitialiser le graphique
+            if (typeof pollChart !== 'undefined') {
+                pollChart.data.labels = [];
+                pollChart.data.datasets = [{
+                    label: 'Votes',
+                    data: [],
+                    backgroundColor: [],
+                    borderWidth: 0,
+                    categoryPercentage: 0.3,
+                    barPercentage: 0.5
+                }];
+                pollChart.update();
+            }
 
             poll = [];
         }
         stopTimer();
     }
-    else {	
+    else {    
         console.log(voterTimer + " secondes restantes");
     }
 }
 
-function startTimer(timer, boolTimerVote){
-	voterTimer = timer;
-	console.log("start timer "+timer);
+function updateTimerDisplay(seconds) {
+    // Affichage textuel moderne
+    const timerValue = document.getElementById('timer-value');
+    if (timerValue) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        // Ajouter classe urgence
+        const timerDisplay = document.getElementById('timer-display');
+        if (timerDisplay) {
+            if (seconds <= 10) {
+                timerDisplay.classList.add('timer-urgent');
+            } else {
+                timerDisplay.classList.remove('timer-urgent');
+            }
+        }
+    }
+    
+    // Affichage circulaire classique (rétrocompatibilité)
+    const countdownElements = document.querySelectorAll('.countdown, #countdown');
+    countdownElements.forEach(element => {
+        if (element) {
+            // Mettre à jour les variables CSS pour l'animation
+            
+            // Animation critique pour les dernières secondes
+            if (seconds <= 5) {
+                element.classList.add('timer-critical');
+            } else {
+                element.classList.remove('timer-critical');
+            }
+        }
+    });
+}
 
-	intervalId = setInterval(bip.bind(null, boolTimerVote),1000);
-	
-	//+ css + animate * 2 
-	var element = document.getElementById("countdown");
-	element.style.setProperty("--q", timer);
-	element.style.setProperty("--t", timer);
-	$(".countdown").css("animation-duration", timer+"s");
-	$("body").addClass('showTimer');
+function startTimer(timer, boolTimerVote){
+    voterTimer = timer;
+    console.log("start timer "+timer);
+
+    intervalId = setInterval(bip.bind(null, boolTimerVote), 1000);
+    
+    // CORRECTION : Vérifier l'existence de l'élément avant de l'utiliser
+    var element = document.getElementById("countdown");
+    if (element) {
+        // Ancienne logique pour l'élément avec ID
+        element.style.setProperty("--q", timer);
+        element.style.setProperty("--t", timer);
+    } else {
+        // Nouvelle logique pour l'élément avec classe
+        const countdownElement = document.querySelector('.countdown');
+        if (countdownElement) {
+            countdownElement.style.setProperty("--q", timer);
+            countdownElement.style.setProperty("--t", timer);
+        }
+    }
+    
+    $(".countdown").css("animation-duration", timer+"s");
+    
+    // Affichage initial du timer unifié
+    updateTimerDisplay(timer);
+    
+    $("body").addClass('showTimer');
+    
+    // Afficher l'affichage textuel moderne
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        timerDisplay.style.display = 'block';
+    }
 }
 
 

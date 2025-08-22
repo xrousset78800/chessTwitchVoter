@@ -190,7 +190,7 @@ body {
   position: fixed;
   width: 350px;
   height: 350px;
-  bottom: 2rem;
+  top: 2rem;
   right: 2rem;
   background: rgba(22, 33, 62, 0.98);
   border-radius: 50%;
@@ -534,7 +534,6 @@ body.omg-lose #probleminfo {
           position: fixed;
           top: 720px;
           left: 0;
-          background: rgba(0, 0, 0, 0.8);
           color: white;
           padding: 10px 20px;
           border-radius: 25px;
