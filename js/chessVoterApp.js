@@ -585,6 +585,68 @@ function startPauseTimer(duration, callback) {
 	setTimeout(callback, duration * 1000);
 }
 
+function updateTimerDisplay(seconds) {
+    // Mettre à jour l'affichage textuel formaté
+    const timerValue = document.getElementById('timer-value');
+    if (timerValue) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        // Ajouter classe urgence
+        const timerDisplay = document.getElementById('timer-display');
+        if (timerDisplay) {
+            if (seconds <= 10) {
+                timerDisplay.classList.add('timer-urgent');
+            } else {
+                timerDisplay.classList.remove('timer-urgent');
+            }
+        }
+    }
+    
+    // Mettre à jour le countdown circulaire
+    const countdownElement = document.querySelector('.countdown');
+    if (countdownElement) {
+        // IMPORTANT: Mettre à jour les variables CSS pour que l'affichage circulaire fonctionne
+        countdownElement.style.setProperty("--t", seconds);
+        countdownElement.style.setProperty("--s", seconds);
+        
+        // Animation critique pour les dernières secondes
+        if (seconds <= 5) {
+            countdownElement.classList.add('timer-critical');
+        } else {
+            countdownElement.classList.remove('timer-critical');
+        }
+    }
+}
+
+function startTimer(timer, boolTimerVote){
+    voterTimer = timer;
+    console.log("start timer "+timer);
+
+    intervalId = setInterval(bip.bind(null, boolTimerVote), 1000);
+    
+    // Configuration du countdown circulaire
+    const countdownElement = document.querySelector('.countdown');
+    if (countdownElement) {
+        countdownElement.style.setProperty("--q", timer);
+        countdownElement.style.setProperty("--t", timer);
+        countdownElement.style.setProperty("--s", timer);
+        $(".countdown").css("animation-duration", timer+"s");
+    }
+    
+    // Configuration de l'affichage textuel
+    updateTimerDisplay(timer);
+    
+    // Afficher les timers
+    $("body").addClass('showTimer');
+    
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        timerDisplay.style.display = 'block';
+    }
+}
+
 function bip(boolTimerVote) {
     voterTimer--;
 
@@ -625,77 +687,6 @@ function bip(boolTimerVote) {
         console.log(voterTimer + " secondes restantes");
     }
 }
-
-function updateTimerDisplay(seconds) {
-    // Affichage textuel moderne
-    const timerValue = document.getElementById('timer-value');
-    if (timerValue) {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        
-        // Ajouter classe urgence
-        const timerDisplay = document.getElementById('timer-display');
-        if (timerDisplay) {
-            if (seconds <= 10) {
-                timerDisplay.classList.add('timer-urgent');
-            } else {
-                timerDisplay.classList.remove('timer-urgent');
-            }
-        }
-    }
-    
-    // Affichage circulaire classique (rétrocompatibilité)
-    const countdownElements = document.querySelectorAll('.countdown, #countdown');
-    countdownElements.forEach(element => {
-        if (element) {
-            // Mettre à jour les variables CSS pour l'animation
-            
-            // Animation critique pour les dernières secondes
-            if (seconds <= 5) {
-                element.classList.add('timer-critical');
-            } else {
-                element.classList.remove('timer-critical');
-            }
-        }
-    });
-}
-
-function startTimer(timer, boolTimerVote){
-    voterTimer = timer;
-    console.log("start timer "+timer);
-
-    intervalId = setInterval(bip.bind(null, boolTimerVote), 1000);
-    
-    // CORRECTION : Vérifier l'existence de l'élément avant de l'utiliser
-    var element = document.getElementById("countdown");
-    if (element) {
-        // Ancienne logique pour l'élément avec ID
-        element.style.setProperty("--q", timer);
-        element.style.setProperty("--t", timer);
-    } else {
-        // Nouvelle logique pour l'élément avec classe
-        const countdownElement = document.querySelector('.countdown');
-        if (countdownElement) {
-            countdownElement.style.setProperty("--q", timer);
-            countdownElement.style.setProperty("--t", timer);
-        }
-    }
-    
-    $(".countdown").css("animation-duration", timer+"s");
-    
-    // Affichage initial du timer unifié
-    updateTimerDisplay(timer);
-    
-    $("body").addClass('showTimer');
-    
-    // Afficher l'affichage textuel moderne
-    const timerDisplay = document.getElementById('timer-display');
-    if (timerDisplay) {
-        timerDisplay.style.display = 'block';
-    }
-}
-
 
 function addMoveToPoll(player, move){
     // Vérifier si le joueur a déjà voté

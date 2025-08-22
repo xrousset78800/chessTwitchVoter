@@ -188,15 +188,12 @@ body {
 /* ========== Roue (Wheel) ========== */
 #chart {
   position: fixed;
-  width: 350px;
-  height: 350px;
-  top: 2rem;
+  width: 400px;
+  height: 400px;
+  bottom: 2rem;
   right: 2rem;
   background: rgba(22, 33, 62, 0.98);
   border-radius: 50%;
-  padding: 1rem;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-  border: 3px solid #667eea;
   opacity: 0;
   transition: all 0.5s ease-in-out;
   z-index: 100;
@@ -245,10 +242,12 @@ body.randomWheel #chart {
 
 /* Flèche de sélection de la roue */
 #chart::before {
+
+  display: none;
   content: '▼';
   position: absolute;
-  top: -20px;
-  left: 50%;
+  top: 50%;
+  right: 0%;
   transform: translateX(-50%);
   font-size: 30px;
   color: #e94560;
@@ -511,7 +510,7 @@ body.omg-lose #probleminfo {
         }
         
         .game-info {
-            flex: 0 0 370px;
+            flex: 0 0 400px;
         }
         
         .config-button {
@@ -531,9 +530,8 @@ body.omg-lose #probleminfo {
         }
         
         .timer-display {
-          position: fixed;
-          top: 720px;
-          left: 0;
+          position: absolute;
+          top: 750px;
           color: white;
           padding: 10px 20px;
           border-radius: 25px;
@@ -542,7 +540,7 @@ body.omg-lose #probleminfo {
           font-weight: bold;
           z-index: 1000;
           display: block;
-          right: 0;
+          right: 140px;
           width: 90px;
           margin: 0 auto;
         }

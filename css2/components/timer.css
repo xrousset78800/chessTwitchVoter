@@ -1,259 +1,137 @@
-/* ==========================================================================
-   TIMER.CSS - Styles pour le timer et le compte à rebours
-   ========================================================================== */
+/* ======== TIMER UNIFIÉ - CSS CORRIGÉ ======== */
 
-/* ========== Conteneur du Timer ========== */
-.countdown {
-  --s: calc(var(--t) / 1);
-  display: none;
-  width: var(--timer-size);
-  height: var(--timer-size);
-  animation: t 10s linear infinite;
-  position: absolute;
-  right: 55px;
-  z-index: var(--z-sticky);
-  top: -30px;
+/* Timer textuel formaté */
+.timer-display #timer-value {
+    font-family: 'Courier New', monospace;
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+    letter-spacing: 1px;
+    position: absolute;
 }
 
-.showTimer .countdown {
-  display: grid;
-}
-
-/* ========== Affichage du Temps ========== */
-.countdown::after {
-  grid-column: 1;
-  grid-row: 1;
-  place-self: center;
-  font-family: var(--font-heading);
-  font-size: 2.3em;
-  font-weight: var(--font-bold);
-  line-height: 2;
-  counter-reset: s var(--s);
-  content: counter(s, decimal-leading-zero);
-  color: var(--text-light);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-/* ========== Animation du Timer ========== */
-@keyframes t {
-  to {
-    --t: 0;
-  }
-}
-
-/* ========== SVG du Timer Circulaire ========== */
-.countdown svg {
-  grid-column: 1;
-  grid-row: 1;
-  width: 100%;
-  height: 100%;
-}
-
-/* Cercle de fond */
-.countdown [r] {
-  fill: none;
-  stroke: silver;
-  stroke-width: var(--timer-stroke-width);
-  opacity: 0.3;
-}
-
-/* Cercle de progression */
-.countdown [r] + [r] {
-  --k: calc(var(--t) / var(--q));
-  transform: rotate(-90deg);
-  transform-origin: center;
-  stroke-linecap: round;
-  stroke: color-mix(in hsl shorter hue, #8a9b0f calc(var(--k) * 100%), #940a3d);
-  stroke-dasharray: var(--k) 1;
-  stroke-width: var(--timer-stroke-width);
-  transition: stroke-dasharray 0.3s linear;
-}
-
-/* ========== Timer Digital ========== */
-.timer-digital {
-  background: var(--dark-card);
-  border: 2px solid var(--dark-border);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  font-family: var(--font-mono);
-  font-size: var(--font-2xl);
-  font-weight: var(--font-bold);
-  color: var(--text-light);
-  box-shadow: var(--shadow-md);
-}
-
-.timer-digit {
-  background: var(--dark-bg);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  min-width: 40px;
-  text-align: center;
-}
-
-.timer-separator {
-  color: var(--primary-color);
-  animation: blink 1s infinite;
-}
-
-/* ========== Timer Minimaliste ========== */
-.timer-minimal {
-  font-family: var(--font-mono);
-  font-size: var(--font-4xl);
-  font-weight: var(--font-light);
-  color: var(--text-light);
-  letter-spacing: 2px;
-}
-
-/* ========== Timer avec Barre de Progression ========== */
-.timer-progress {
-  position: relative;
-  width: 100%;
-  height: 8px;
-  background: var(--dark-bg);
-  border-radius: var(--border-radius-full);
-  overflow: hidden;
-  margin: var(--spacing-md) 0;
-}
-
-.timer-progress-bar {
-  position: absolute;
-  height: 100%;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius-full);
-  transition: width 0.1s linear;
-  box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
-}
-
-/* ========== Timer d'Urgence ========== */
+/* Animation d'urgence pour l'affichage textuel */
 .timer-urgent {
-  animation: timerPulse 0.5s ease-in-out infinite;
+    animation: timerPulse 0.5s ease-in-out infinite;
 }
 
 @keyframes timerPulse {
-  0%, 100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  50% {
-    transform: scale(1.05);
-    filter: brightness(1.2);
-  }
+    0%, 100% {
+        transform: scale(1);
+        border-color: #667eea;
+    }
+    50% {
+        transform: scale(1.05);
+        border-color: #e94560;
+    }
 }
 
-.timer-critical {
-  animation: timerShake 0.3s ease-in-out infinite;
-  color: var(--danger-color) !important;
+/* Timer circulaire - CORRIGÉ */
+.countdown {
+    --s: calc(var(--t) / 1);
+    display: none;
+    width: 120px;
+    height: 120px;
+    animation: t linear;
+    position: absolute;
+    right: 20px;
+    z-index: 999;
+    top: -40px;
+}
+
+.showTimer .countdown {
+    display: grid;
+    place-items: center;
+}
+
+/* MASQUER le texte du countdown circulaire pour éviter la duplication */
+.countdown::after {
+    display: none !important;
+}
+
+/* Cercles du countdown */
+.countdown svg {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.countdown circle:first-child {
+    fill: none;
+    stroke: #333;
+    stroke-width: 4;
+    opacity: 0.3;
+}
+
+.countdown circle:last-child {
+    --k: calc(var(--t) / var(--q));
+    fill: none;
+    stroke: color-mix(in hsl shorter hue, #8a9b0f calc(var(--k) * 100%), #940a3d);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: calc(var(--k) * 283) 283;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dasharray 0.1s linear;
+}
+
+/* Animation critique pour le countdown */
+.timer-critical .countdown {
+    animation: timerShake 0.3s ease-in-out infinite;
 }
 
 @keyframes timerShake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-2px);
-  }
-  75% {
-    transform: translateX(2px);
-  }
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
 }
 
-/* ========== Timer Flottant ========== */
-.timer-floating {
-  position: fixed;
-  top: var(--spacing-lg);
-  right: var(--spacing-lg);
-  background: var(--dark-card);
-  border: 2px solid var(--primary-color);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-md);
-  box-shadow: var(--shadow-xl);
-  z-index: var(--z-sticky);
+/* Animation principale du timer */
+@keyframes t {
+    to {
+        --t: 0;
+    }
 }
 
-/* ========== Indicateur de Temps par Joueur ========== */
-.player-timer {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm);
-  background: var(--dark-card);
-  border-radius: var(--border-radius-md);
-  margin: var(--spacing-sm) 0;
+/* Variables CSS nécessaires */
+@property --q {
+    syntax: "<number>";
+    initial-value: 30;
+    inherits: true;
 }
 
-.player-timer-white {
-  border-left: 4px solid white;
+@property --t {
+    syntax: "<number>";
+    initial-value: 30;
+    inherits: true;
 }
 
-.player-timer-black {
-  border-left: 4px solid black;
+@property --s {
+    syntax: "<integer>";
+    initial-value: 30;
+    inherits: true;
 }
 
-.player-timer.active {
-  background: var(--primary-color);
-  animation: timerGlow 2s ease-in-out infinite;
+/* ======== OVERRIDE POUR CORRIGER LES CONFLITS ======== */
+
+/* S'assurer que le timer textuel s'affiche quand nécessaire */
+.showTimer #timer-display {
+    display: block !important;
 }
 
-@keyframes timerGlow {
-  0%, 100% {
-    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
-  }
-}
-
-/* ========== Contrôles du Timer ========== */
-.timer-controls {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
-}
-
-.timer-control-btn {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--dark-bg);
-  border: 1px solid var(--dark-border);
-  border-radius: var(--border-radius-sm);
-  color: var(--text-light);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.timer-control-btn:hover {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-}
-
-.timer-control-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ========== États du Timer ========== */
-.timer-paused {
-  opacity: 0.6;
-}
-
-.timer-paused::after {
-  content: ' (Pause)';
-  font-size: 0.5em;
-  color: var(--warning-color);
-  display: block;
-}
-
-.timer-expired {
-  color: var(--danger-color);
-  font-weight: var(--font-bold);
-}
-
-.timer-expired::after {
-  content: 'Temps écoulé!';
-  display: block;
-  font-size: 0.6em;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+/* Responsive - sur petits écrans, empiler les timers */
+@media (max-width: 768px) {
+    .timer-display {
+        top: 20px;
+        right: 20px;
+        transform: scale(0.8);
+    }
+    
+    .countdown {
+        top: 80px;
+        right: 20px;
+        transform: scale(0.8);
+    }
 }
