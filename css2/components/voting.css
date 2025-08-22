@@ -288,3 +288,225 @@
   color: var(--danger-color);
   animation: pulse 0.5s ease-in-out infinite;
 }
+
+.poll,
+.move-history {
+  background: var(--dark-card);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm);
+  font-family: var(--font-primary);
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+/* Liste des coups */
+.poll ol,
+.move-history ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Ligne de coups (contient numéro + coup blanc + coup noir) */
+.poll li,
+.move-list-row {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-sm);
+  transition: background-color var(--transition-fast);
+  min-height: 32px;
+}
+
+/* Alternance des couleurs de lignes */
+.poll li:nth-child(odd),
+.light-row {
+  background: rgba(240, 217, 181, 0.1); /* Couleur claire échiquier */
+}
+
+.poll li:nth-child(even),
+.dark-row {
+  background: rgba(181, 136, 99, 0.1); /* Couleur sombre échiquier */
+}
+
+/* Hover effet */
+.poll li:hover,
+.move-list-row:hover {
+  background: rgba(102, 126, 234, 0.2);
+  cursor: pointer;
+}
+
+/* Numéro du coup */
+.poll li::before,
+.move-number {
+  content: counter(move-counter) ". ";
+  counter-increment: move-counter;
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  min-width: 30px;
+  margin-right: var(--spacing-sm);
+}
+
+/* Reset du compteur */
+.poll ol {
+  counter-reset: move-counter;
+}
+
+/* Conteneur pour les coups individuels */
+.move-pair {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+/* Styles pour chaque coup */
+.poll li span,
+.white-move,
+.black-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-medium);
+  font-size: 14px;
+  min-width: 60px;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+/* Coups des blancs */
+.poll li span.w,
+.white-move {
+  background: #f0d9b5;
+  color: #2d3748;
+  border: 1px solid #b58863;
+}
+
+.poll li span.w:hover,
+.white-move:hover {
+  background: #e8d1a5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Coups des noirs */
+.poll li span.b,
+.black-move {
+  background: #b58863;
+  color: #f7fafc;
+  border: 1px solid #8b6734;
+}
+
+.poll li span.b:hover,
+.black-move:hover {
+  background: #a07850;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Icônes des pièces (style Chess.com) */
+.piece-icon {
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 2px;
+}
+
+/* Icônes Unicode pour les pièces */
+.piece-icon.white-king::before { content: "♔"; }
+.piece-icon.white-queen::before { content: "♕"; }
+.piece-icon.white-rook::before { content: "♖"; }
+.piece-icon.white-bishop::before { content: "♗"; }
+.piece-icon.white-knight::before { content: "♘"; }
+.piece-icon.white-pawn::before { content: "♙"; }
+
+.piece-icon.black-king::before { content: "♚"; }
+.piece-icon.black-queen::before { content: "♛"; }
+.piece-icon.black-rook::before { content: "♜"; }
+.piece-icon.black-bishop::before { content: "♝"; }
+.piece-icon.black-knight::before { content: "♞"; }
+.piece-icon.black-pawn::before { content: "♟"; }
+
+/* Notation spéciale (échec, mat, roque) */
+.check-notation {
+  color: #e94560;
+  font-weight: var(--font-bold);
+}
+
+.mate-notation {
+  color: #dc2626;
+  font-weight: var(--font-bold);
+}
+
+.castle-notation {
+  font-style: italic;
+}
+
+/* Coup sélectionné/actuel */
+.selected,
+.current-move {
+  background: var(--primary-color) !important;
+  color: white !important;
+  border-color: var(--secondary-color) !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+/* Animation pour nouveau coup */
+@keyframes newMove {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.new-move {
+  animation: newMove 0.3s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .poll li span,
+  .white-move,
+  .black-move {
+    font-size: 12px;
+    padding: 3px 6px;
+    min-width: 50px;
+  }
+  
+  .piece-icon {
+    font-size: 14px;
+  }
+}
+
+/* Scrollbar personnalisée pour l'historique */
+.poll::-webkit-scrollbar,
+.move-history::-webkit-scrollbar {
+  width: 6px;
+}
+
+.poll::-webkit-scrollbar-track,
+.move-history::-webkit-scrollbar-track {
+  background: rgba(26, 26, 46, 0.3);
+  border-radius: 3px;
+}
+
+.poll::-webkit-scrollbar-thumb,
+.move-history::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 3px;
+}
+
+.poll::-webkit-scrollbar-thumb:hover,
+.move-history::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color);
+}

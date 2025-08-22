@@ -864,19 +864,6 @@ function voteResult(poll) {
 
 
 
-let formOpen = false;
-
-document.getElementById('openFormButton').addEventListener('click', function() {
-    if (formOpen) {
-        document.getElementById('configForm').style.display = 'none';
-    } else {
-        document.getElementById('configForm').style.display = 'block';
-    }
-    formOpen = !formOpen; // Inversion de l'état du formulaire
-});
-
-
-
 
 /***********************************************************************************************/
 /**************************************      Problems     **************************************/

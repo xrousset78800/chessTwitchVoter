@@ -531,17 +531,21 @@ body.omg-lose #probleminfo {
         }
         
         .timer-display {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-family: 'Monaco', monospace;
-            font-size: 18px;
-            font-weight: bold;
-            z-index: 1000;
+          position: fixed;
+          top: 720px;
+          left: 0;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 10px 20px;
+          border-radius: 25px;
+          font-family: 'Monaco', monospace;
+          font-size: 18px;
+          font-weight: bold;
+          z-index: 1000;
+          display: block;
+          right: 0;
+          width: 90px;
+          margin: 0 auto;
         }
         
         /* Styles pour la modal */
@@ -572,6 +576,8 @@ body.omg-lose #probleminfo {
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
+            z-index: 10001 !important;
+            position: relative;
         }
         
         .close:hover {
