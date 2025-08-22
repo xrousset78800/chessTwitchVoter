@@ -7,7 +7,7 @@
   position: relative;
   width: var(--board-size);
   height: var(--board-size);
-  margin: var(--spacing-xl) auto;
+  margin: 0 auto;
   background: var(--dark-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-xl);

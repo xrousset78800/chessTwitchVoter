@@ -10,7 +10,6 @@
   background: var(--dark-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
-  margin-bottom: var(--spacing-lg);
 }
 
 .chart-wrapper {
