@@ -92,9 +92,9 @@
 .notation-322f9 {
   position: absolute;
   font-family: var(--font-mono);
-  font-size: var(--font-xs);
+  font-size: var(--font-base);
   font-weight: var(--font-bold);
-  color: var(--text-muted);
+  color: var(--dark-surface);
   z-index: var(--z-base);
 }
 
@@ -110,12 +110,12 @@
 
 /* Inverser les couleurs selon la case */
 .white-1e1d7 .notation-322f9 {
-  color: var(--board-dark);
+  color: var(--dark-surface);
   opacity: 0.6;
 }
 
 .black-3c85d .notation-322f9 {
-  color: var(--board-light);
+  color: var(--dark-surface);
   opacity: 0.6;
 }
 

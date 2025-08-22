@@ -570,7 +570,8 @@ function selectAndLoadProblem() {
     prob = problemsToUse[Math.floor(Math.random() * problemsToUse.length)];
     
     console.log('🎯 Problème sélectionné:', prob[0], 'avec thèmes:', prob[7]);
-    
+    console.log('🎯 Problème sélectionné:', prob);
+
     currentProbPgn = prob[1];
     chess = new Chess(prob[1]);
     defaultConfig.position = prob[1];
