@@ -3,287 +3,313 @@
    ========================================================================== */
 
 /* ========== Formulaire de Configuration ========== */
-#configForm {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  background: linear-gradient(135deg, rgba(22, 33, 62, 0.98) 0%, rgba(15, 15, 31, 0.98) 100%) !important;
-  backdrop-filter: blur(20px);
-  padding: 2rem !important;
-  border-radius: 15px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
-  z-index: 10000 !important; /* Très élevé pour être au-dessus de tout */
-  color: #f7fafc !important;
-  max-width: 600px;
-  width: 90%;
-  max-height: 85vh;
-  overflow-y: auto;
-  border: 2px solid rgba(102, 126, 234, 0.5);
+/* Modal de base */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
 }
 
-/* Quand le formulaire est actif/visible */
-#configForm.active,
-#configForm:target {
-  display: block !important;
+.modal.show {
+    display: block;
 }
 
-/* Overlay de fond quand le formulaire est ouvert */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-  z-index: 9999;
-  display: none;
+.modal-content {
+    background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+    margin: 3% auto;
+    padding: 25px;
+    border-radius: 15px;
+    width: 85%;
+    max-width: 500px;
+    color: #f7fafc;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 2px solid #667eea;
+    animation: slideIn 0.3s ease-out;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-.modal-backdrop.active {
-  display: block;
-}
-
-/* ========== Style du formulaire ========== */
-#configForm h2 {
-  color: #667eea;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: 1.8rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-#configForm fieldset {
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  background: rgba(0, 0, 0, 0.3);
-}
-
-#configForm legend {
-  color: #667eea;
-  padding: 0 0.5rem;
-  font-weight: bold;
-  font-size: 1.1rem;
-}
-
-#configForm label {
-  color: #cbd5e0;
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-#configForm label:hover {
-  color: #f7fafc;
-}
-
-#configForm label i {
-  width: 30px;
-  color: #667eea;
-  margin-right: 0.5rem;
-}
-
-#configForm input[type="text"],
-#configForm input[type="number"],
-#configForm select {
-  background: rgba(26, 26, 46, 0.8);
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  border-radius: 5px;
-  color: #f7fafc;
-  padding: 0.5rem;
-  transition: all 0.3s;
-}
-
-#configForm input[type="text"]:focus,
-#configForm input[type="number"]:focus,
-#configForm select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-  background: rgba(26, 26, 46, 1);
-}
-
-#configForm input[type="checkbox"],
-#configForm input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  margin-right: 0.5rem;
-  cursor: pointer;
-}
-
-/* Boutons du formulaire */
-#configForm .form-btn,
-#configForm button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s;
-  margin: 0.5rem;
-}
-
-#configForm .form-btn:hover,
-#configForm button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Bouton de fermeture */
-.close-config {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(233, 69, 96, 0.9);
-  color: white;
-  border: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
+.close {
+    color: #a0aec0;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+    margin-top: -5px;
 }
 
-.close-config:hover {
-  background: #e94560;
-  transform: rotate(90deg);
+.close:hover {
+    color: #f7fafc;
+    transform: rotate(90deg);
 }
 
-/* ========== Bouton de configuration amélioré ========== */
-#openFormButton {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 100;
-  font-weight: bold;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+/* Titre de la modal */
+.modal-content h2 {
+    color: #667eea;
+    margin: 0 0 20px 0;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 600;
 }
 
-#openFormButton:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+/* Fieldsets */
+fieldset {
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
 }
 
-/* ========== Contrôles de jeu simplifiés ========== */
-.game-controls {
-  position: fixed;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 1rem;
-  background: rgba(22, 33, 62, 0.98);
-  padding: 1rem 2rem;
-  border-radius: 50px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  z-index: 50;
-}
-
-/* Cacher les boutons play/pause si non nécessaires */
-.game-controls #startBtn,
-.game-controls #pauseBtn {
-  display: none; /* Caché par défaut, vous pouvez les réactiver si besoin */
-}
-
-/* Si vous voulez garder seulement Reset et Config */
-.game-controls-minimal {
-  gap: 1.5rem;
-}
-
-.game-control-btn {
-  padding: 0.75rem 1.5rem;
-  background: rgba(102, 126, 234, 0.2);
-  color: white;
-  border: 1px solid rgba(102, 126, 234, 0.5);
-  border-radius: 25px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.game-control-btn:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-  border-color: transparent;
-}
-
-.game-control-btn i {
-  font-size: 1rem;
-}
-
-/* ========== Scrollbar personnalisée pour le formulaire ========== */
-#configForm::-webkit-scrollbar {
-  width: 8px;
-}
-
-#configForm::-webkit-scrollbar-track {
-  background: rgba(26, 26, 46, 0.5);
-  border-radius: 4px;
-}
-
-#configForm::-webkit-scrollbar-thumb {
-  background: #667eea;
-  border-radius: 4px;
-}
-
-#configForm::-webkit-scrollbar-thumb:hover {
-  background: #764ba2;
-}
-
-/* ========== Responsive ========== */
-@media (max-width: 768px) {
-  #configForm {
-    width: 95%;
-    padding: 1.5rem !important;
-    max-height: 90vh;
-  }
-  
-  #openFormButton {
-    top: 0.5rem;
-    right: 0.5rem;
-    padding: 0.5rem 1rem;
+legend {
+    color: #667eea;
+    padding: 0 8px;
+    font-weight: 600;
     font-size: 0.9rem;
-  }
-  
-  .game-controls {
-    bottom: 1rem;
-    padding: 0.75rem 1rem;
-  }
-  
-  .game-control-btn {
-    padding: 0.5rem 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Groupes de formulaire */
+.form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 10px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Labels */
+.form-group label {
+    color: #cbd5e0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group label:hover {
+    color: #f7fafc;
+}
+
+/* Icônes */
+.form-group label i {
+    color: #667eea;
+    width: 16px;
     font-size: 0.8rem;
-  }
+    text-align: center;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="number"],
+select {
+    background: rgba(26, 26, 46, 0.8);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 4px;
+    color: #f7fafc;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    transition: all 0.3s;
+    width: 80px;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    background: rgba(26, 26, 46, 1);
+}
+
+/* Checkboxes et radios */
+input[type="checkbox"],
+input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+/* Boutons */
+.form-btn,
+button[type="submit"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px auto 0;
+}
+
+.form-btn:hover,
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.form-btn i {
+    font-size: 0.9rem;
+}
+
+/* Sections spécifiques */
+.config-section {
+    margin-bottom: 20px;
+}
+
+.config-section-title {
+    color: #a0aec0;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+/* Filtrage par thèmes */
+.theme-section {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.theme-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.theme-controls button {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.theme-controls button:hover {
+    background: #667eea;
+    color: white;
+}
+
+.theme-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 4px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.theme-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.8rem;
+}
+
+.theme-item input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+}
+
+/* Statistiques */
+.theme-stats {
+    color: #a0aec0;
+    font-size: 0.75rem;
+    text-align: center;
+    margin: 10px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 2% auto;
+        padding: 20px;
+        max-height: 95vh;
+    }
+    
+    .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .form-group label {
+        font-size: 0.8rem;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    select {
+        width: 100%;
+    }
+}
+
+/* Scrollbar personnalisée */
+.modal-content::-webkit-scrollbar,
+.theme-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.theme-list::-webkit-scrollbar-track {
+    background: rgba(26, 26, 46, 0.3);
+    border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.theme-list::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.theme-list::-webkit-scrollbar-thumb:hover {
+    background: #764ba2;
 }

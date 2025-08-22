@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <base href="./">
 </head>
 
 <body data-team="w">
@@ -116,13 +117,14 @@
         <form id="configForm">
             <span class="close">&times;</span>
             <h2>Configuration</h2>
-            <label for="defaultChannel">Enter twitch channel</label>
             <input type="text" id="defaultChannel" name="defaultChannel" >
-            <label for="probMode">Jouer en mode YOLO (sandbox)</label><i class="fas fa-users"></i><i class="fas fa-users"></i><i class="fas fa-users"></i>
-            <input type="radio" id="yoloMode" name="gameMode" value="normal">
+            <label for="defaultChannel">Enter twitch channel</label>
             <br>
-            <label for="probMode">Jouer en mode problèmes (ok but fix vote/reload issues)</label><i class="fas fa-cogs"></i>
+            <input type="radio" id="yoloMode" name="gameMode" value="normal">
+            <label for="probMode">Jouer en mode YOLO (sandbox)</label>
+            <br>
             <input type="radio" id="probMode" name="gameMode" value="probMode">
+            <label for="probMode">Jouer en mode problèmes (ok but fix vote/reload issues)</label>
             <div data-game-mode="probMode">
                 <fieldset class="theme-filter-section">
                         <legend>Filtrage par thèmes</legend>
@@ -150,65 +152,67 @@
                         </fieldset>
                     </div>
             <br>
-                <label for="mod1vViewers">Seul contre tous (wip)</label><i class="fas fa-user"></i><i class="fas fa-users"></i>
             <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">
+                <label for="mod1vViewers">Seul contre tous (wip)</label>
             <div data-game-mode="mod1vViewers">
-                <label for="mod1vViewersPlayer">Pseudo du joueur</label>
                 <input type="text" id="mod1vViewersPlayer" name="mod1vViewersPlayer" >
+                <label for="mod1vViewersPlayer">Pseudo du joueur</label>
                 </div>
                 <br>
-                <label for="mod1v1">Un contre un (ok?)</label><i class="fas fa-user"></i><i class="fas fa-user"></i>
             <input type="radio" id="mod1v1" name="gameMode" value="mod1v1">
+                <label for="mod1v1">Un contre un (ok?)</label>
             <div data-game-mode="mod1v1">
                 <label for="oneVsOneModeList0">Pseudo du Joueur1</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
                 <label for="oneVsOneModeList1">Pseudo du Joueur2</label><input type="text" id="oneVsOneModeList1" name="oneVsOneModeList1">
               </div>
               <br>
-                <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label><i class="fas fa-users"></i><i class="fas fa-users"></i>
             <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
+                <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label>
             <div data-game-mode="modStreamerChatvStreamerChat">
                 <label for="streamerChatvStreamerChat0">Pseudo du Streamer1</label><input type="text" id="streamerChatvStreamerChat0" name="streamerChatvStreamerChat0">
                 <label for="streamerChatvStreamerChat1">Pseudo du Streamer2</label><input type="text" id="streamerChatvStreamerChat1" name="streamerChatvStreamerChat1">
               </div>
-            <label for="modViewersvViewers">Tous contre tous (id pair/impair)(ok but cringe)</label><i class="fas fa-users"></i><i class="fas fa-users"></i>
+              <br>
             <input type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
+            <label for="modViewersvViewers">Tous contre tous (id pair/impair)(ok but cringe)</label>
 
 
             <fieldset>
                 <legend>Mode Vote !</legend> 
-            <label for="timerMode">Activer le mode vote</label><i class="fas fa-clock"></i>
             <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
+            <label for="timerMode">Activer le mode vote</label>
             <div data-time-mode>
-                <label for="InitialvoterTimer">Temps d'un tour</label><i class="fas fa-hourglass-half"></i>
                 <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
+                <label for="InitialvoterTimer">Temps d'un tour</label>
                 <br>                
-                <label for="timerWheelAnimation">Animation de la roue </label><i class="fas fa-circle-notch"></i>
                 <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
+                <label for="timerWheelAnimation">Animation de la roue </label>
                 <br>
-                <label for="limitToOneVote">Vote unique</label><i class="fas fa-ban"></i>
                 <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
+                <label for="limitToOneVote">Vote unique</label>
                 <br>
-                <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label><i class="fas fa-balance-scale"></i>
                 <input type="checkbox" id="majorityMode" name="majorityMode">               
+                <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label>
             </div>
         </fieldset>         
             <fieldset>
                 <legend>Options de timer</legend> 
-                <label for="pauseAfterWinLose">Durée de la pause</label><i class="fas fa-hourglass-end"></i>
+                <label for="pauseAfterWinLose">Durée de la pause</label>
                 <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
-                <label for="timerMoveBot">Animation du bot</label><i class="fas fa-robot"></i>
+                <br>
+                <label for="timerMoveBot">Animation du bot</label>
                 <input type="number" id="timerMoveBot" name="timerMoveBot" min="0"> s
                 <br>
-                <label for="timerMoveText">Animation du coup joué</label><i class="fas fa-file-alt"></i>
+                <label for="timerMoveText">Animation du coup joué</label>
                 <input type="number" id="timerMoveText" name="timerMoveText" min="0"> s
         </fieldset>
                 <fieldset>
                     <legend>Restrictions d'accès</legend>
-                    <label for="followMode">Mode followers uniquement</label><i class="fas fa-heart"></i>
                     <input type="checkbox" id="followMode" name="followMode">
+                    <label for="followMode">Mode followers uniquement</label>
                     <br>
-                    <label for="subMode">Mode abonnés uniquement</label><i class="fas fa-crown"></i>
                     <input type="checkbox" id="subMode" name="subMode">
+                    <label for="subMode">Mode abonnés uniquement</label>
                     <br>
                     <small style="color: #aaa; font-size: 12px;">
                         Note: Les modérateurs, VIPs et le broadcaster peuvent toujours jouer
@@ -216,10 +220,11 @@
                 </fieldset>
             <fieldset>
                 <legend>Autres options</legend> 
-            <label for="noBg">Supprimer le background (test sur OBS ?)</label><i class="fas fa-image"></i>
             <input type="checkbox" id="noBg" name="noBg">
-            <label for="noEpilepsy">Mode anti epilepsie (supprime le switch de background)</label><i class="fas fa-image"></i>
+            <label for="noBg">Supprimer le background (test sur OBS ?)</label>
+            <br>
             <input type="checkbox" id="noEpilepsy" name="noEpilepsy">    
+            <label for="noEpilepsy">Mode anti epilepsie (supprime le switch de background)</label>
         </fieldset>
 
         <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>

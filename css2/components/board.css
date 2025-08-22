@@ -228,40 +228,40 @@
 }
 /* Pièces noires par défaut */
 #availableListP::before {
-  background-image: url("/img/chesspieces/wikipedia/bP.png");
+  background-image: url("../../img/chesspieces/wikipedia/bP.png");
 }
 #availableListB::before {
-  background-image: url("/img/chesspieces/wikipedia/bB.png");
+  background-image: url("../../img/chesspieces/wikipedia/bB.png");
 }
 #availableListN::before {
-  background-image: url("/img/chesspieces/wikipedia/bN.png");
+  background-image: url("../../img/chesspieces/wikipedia/bN.png");
 }
 #availableListR::before {
-  background-image: url("/img/chesspieces/wikipedia/bR.png");
+  background-image: url("../../img/chesspieces/wikipedia/bR.png");
 }
 #availableListQ::before {
-  background-image: url("/img/chesspieces/wikipedia/bQ.png");
+  background-image: url("../../img/chesspieces/wikipedia/bQ.png");
 }
 #availableListK::before {
-  background-image: url("/img/chesspieces/wikipedia/bK.png");
+  background-image: url("../../img/chesspieces/wikipedia/bK.png");
 }
 
 /* Pièces blanches quand c'est le tour des blancs */
 body[data-team="w"] #availableListP::before {
-  background-image: url("/img/chesspieces/wikipedia/wP.png");
+  background-image: url("../../img/chesspieces/wikipedia/wP.png");
 }
 body[data-team="w"] #availableListB::before {
-  background-image: url("/img/chesspieces/wikipedia/wB.png");
+  background-image: url("../../img/chesspieces/wikipedia/wB.png");
 }
 body[data-team="w"] #availableListN::before {
-  background-image: url("/img/chesspieces/wikipedia/wN.png");
+  background-image: url("../../img/chesspieces/wikipedia/wN.png");
 }
 body[data-team="w"] #availableListR::before {
-  background-image: url("/img/chesspieces/wikipedia/wR.png");
+  background-image: url("../../img/chesspieces/wikipedia/wR.png");
 }
 body[data-team="w"] #availableListQ::before {
-  background-image: url("/img/chesspieces/wikipedia/wQ.png");
+  background-image: url("../../img/chesspieces/wikipedia/wQ.png");
 }
 body[data-team="w"] #availableListK::before {
-  background-image: url("/img/chesspieces/wikipedia/wK.png");
+  background-image: url("../../img/chesspieces/wikipedia/wK.png");
 }
