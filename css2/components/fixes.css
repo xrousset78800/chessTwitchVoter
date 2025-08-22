@@ -560,16 +560,6 @@ body.omg-lose #probleminfo {
             background-color: rgba(0,0,0,0.8);
         }
         
-        .modal-content {
-            background-color: #16213e;
-            margin: 5% auto;
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 500px;
-            color: white;
-        }
-        
         .close {
             color: #aaa;
             float: right;

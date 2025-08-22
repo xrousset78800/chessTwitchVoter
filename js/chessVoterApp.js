@@ -1354,14 +1354,12 @@ function updatePlayerDisplay() {
                     </span>`;
                 blackPlayerInfo = `
                     <span class="player-info">
-                        <i class="fas fa-users team-icon"></i>
-                        <span class="team-name">Chat</span>
+                        <span class="team-name">(Chat)</span>
                     </span>`;
             } else {
                 whitePlayerInfo = `
                     <span class="player-info">
-                        <i class="fas fa-users team-icon"></i>
-                        <span class="team-name">Chat</span>
+                        <span class="team-name">(Chat)</span>
                     </span>`;
                 blackPlayerInfo = `
                     <span class="player-info">
@@ -1378,13 +1376,11 @@ function updatePlayerDisplay() {
             // Viewers vs Viewers (ID pair/impair)
             whitePlayerInfo = `
                 <span class="player-info">
-                    <i class="fas fa-users team-icon"></i>
-                    <span class="team-name">ID Pairs</span>
+                    <span class="team-name">(ID Pairs)</span>
                 </span>`;
             blackPlayerInfo = `
                 <span class="player-info">
-                    <i class="fas fa-users team-icon"></i>
-                    <span class="team-name">ID Impairs</span>
+                    <span class="team-name">(ID Impairs)</span>
                 </span>`;
             break;
             
@@ -1392,13 +1388,11 @@ function updatePlayerDisplay() {
             // Mode normal - tous contre tous
             whitePlayerInfo = `
                 <span class="player-info">
-                    <i class="fas fa-users team-icon"></i>
-                    <span class="team-name">Chat</span>
+                    <span class="team-name">(Chat)</span>
                 </span>`;
             blackPlayerInfo = `
                 <span class="player-info">
-                    <i class="fas fa-users team-icon"></i>
-                    <span class="team-name">Chat</span>
+                    <span class="team-name">(Chat)</span>
                 </span>`;
             break;
     }

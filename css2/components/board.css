@@ -265,3 +265,7 @@ body[data-team="w"] #availableListQ::before {
 body[data-team="w"] #availableListK::before {
   background-image: url("../../img/chesspieces/wikipedia/wK.png");
 }
+
+body[data-team="b"] [data-team="w"], body[data-team="w"] [data-team="b"]{
+  display: none !important;
+}

@@ -20,22 +20,6 @@
     display: block;
 }
 
-.modal-content {
-    background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
-    margin: 3% auto;
-    padding: 25px;
-    border-radius: 15px;
-    width: 85%;
-    max-width: 500px;
-    color: #f7fafc;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    border: 2px solid #667eea;
-    animation: slideIn 0.3s ease-out;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
 @keyframes slideIn {
     from {
         opacity: 0;
