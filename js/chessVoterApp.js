@@ -453,10 +453,6 @@ if(noBg) {
 	$("body").addClass("noBg");
 }
 
-if(noEpilepsy) {
-    $("body").addClass("noEpilepsy");
-}
-
 var overlay = new ChessboardArrows('board_wrapper');
 if (gameMode !== "probMode") {
 	loadNewgame();

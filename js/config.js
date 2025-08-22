@@ -71,10 +71,6 @@ const noBg = $.urlParam('noBg') == 'on' ? true : false;
 if(noBg)
     $("#configForm #noBg").attr("checked", "checked");
 
-const noEpilepsy = $.urlParam('noEpilepsy') == 'on' ? true : false;
-if(noEpilepsy)
-    $("#configForm #noEpilepsy").attr("checked", "checked");
-
 const followMode = $.urlParam('followMode') == 'on' ? true : false;
 if(followMode)
 	$("#configForm #followMode").attr("checked", "checked");
@@ -177,7 +173,7 @@ REFAIRE LA TODO
 //- Vérifier certains bugs (notation complexe (Deux pièces concurrentes, sous promotion))
 //- Trouver le moyen de connecter 2 streameurs (Ou 2 chats de streameurs) ok ?
 //- Meilleurs gestion du temps (pause, affichage, transitions)
-
+//- OMG PHANTOMCHESS !!
 //- Faire un mode avec des coups spéciaux. (fou prend sa propre tour = dame)
 
 
