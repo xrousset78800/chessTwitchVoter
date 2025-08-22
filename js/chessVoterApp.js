@@ -425,9 +425,11 @@ function createStatusBadge() {
         elo = document.createElement('b');
         badge.id = 'configBadge';
         badge.style.cssText = `
-            position: fixed;
+            position: absolute;
             top: 10px;
-            left: 10px;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
             background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 8px 12px;
@@ -812,7 +814,6 @@ function voteResult(poll) {
 		if(verif == false) {
 			//Nope, erreur
 			status = 'Erreur !';
-			$(".c-rainbow li").text(status);
 			console.log("faute dans le pb mode timer");
 			
 			var tmp = $("[data-solution]").text();
@@ -873,14 +874,7 @@ document.getElementById('openFormButton').addEventListener('click', function() {
     }
     formOpen = !formOpen; // Inversion de l'état du formulaire
 });
-document.getElementById('openFormButton2').addEventListener('click', function() {
-    if (formOpen) {
-        document.getElementById('configForm').style.display = 'none';
-    } else {
-        document.getElementById('configForm').style.display = 'block';
-    }
-    formOpen = !formOpen; // Inversion de l'état du formulaire
-});
+
 
 
 
@@ -906,20 +900,9 @@ function verifPbm(){
 	concat = undo[idx-1].from+""+undo[idx-1].to+promotion;
 	$("[data-solution]").text(arrMoves[idx-1]);
 
-	if(concat !== arrMoves[idx-1]) {/*
-			// ANIMATION DU MOVE
-			$(".c-rainbow li").text("Nope, right move was : " + arrMoves[idx-1]);
-			setTimeout(function() {
-				$(".c-rainbow li").text("");
-			}, timerMoveText * 1000);*/
-		//localStorage.setItem("Erreur:"+arrMoves[idx-1], concat);
+	if(concat !== arrMoves[idx-1]) {
 		return false;
 	}
-	/*$(".c-rainbow li").text("Nice !");
-	setTimeout(function() {
-		$(".c-rainbow li").text("");
-	}, timerMoveText * 1000);*/
-	//window.location.reload();
 
 	return true;
 }
@@ -1035,21 +1018,11 @@ function globalReloadProblem(isWinner = true){
 		$("body").addClass('omg-win');
 
     let status = 'Probleme résolu';
-		$(".c-rainbow li").text(status);
-
-		setTimeout(function() {
-			$(".c-rainbow li").text("");
-		}, timerMoveText * 1000);
 
 	}
 	else {
 		$("body").addClass('omg-lose');
     let status = 'Erreur';
-		$(".c-rainbow li").text(status);
-
-		setTimeout(function() {
-			$(".c-rainbow li").text("");
-		}, timerMoveText * 1000);		
 		board.position(chess.fen(chess.undo()), false)
 	}
 	
@@ -1129,12 +1102,6 @@ function moveAction(move, isFromNetwork = false) {
 			}
 		}
 		// ANIMATION DU MOVE
-		if(timerMoveText > 0) {
-			$(".c-rainbow li").text(move);
-			setTimeout(function() {
-				$(".c-rainbow li").text("");
-			}, timerMoveText * 1000);
-		}
 		// ANIMATION DU MOVE
 		console.log("move action")
 	  $("[data-attempt]").attr("data-attempt", parseInt($("[data-attempt]").attr("data-attempt"))+1 );
@@ -1284,7 +1251,6 @@ function play(target, context, args) {
 					if(verif == false) {
 						//Nope, erreur
 						let status = 'Erreur !';
-						$(".c-rainbow li").text(status);
 						console.log("faute dans le pb mode pas timer");
 						
 						var tmp = $("[data-solution]").text();

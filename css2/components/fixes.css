@@ -486,6 +486,7 @@ body.omg-lose #probleminfo {
             text-align: center;
             padding: 20px 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            max-width: 250px;
         }
         
         .main-header h1 {
@@ -510,10 +511,7 @@ body.omg-lose #probleminfo {
         }
         
         .game-info {
-            flex: 0 0 350px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            flex: 0 0 370px;
         }
         
         .config-button {
