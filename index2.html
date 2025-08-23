@@ -169,22 +169,123 @@
                     <label for="oneVsOneModeList0">Pseudo du Joueur1&nbsp;</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
                     <br>
                     <label for="oneVsOneModeList1">Pseudo du Joueur2&nbsp;</label><input type="text" id="oneVsOneModeList1" name="oneVsOneModeList1">
-                  </div>
-                  <br>
+                </div>
+                <br>
                 <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
-                    <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label>
-                <div data-game-mode="modStreamerChatvStreamerChat">
-                    <label for="streamerChatvStreamerChat0">Pseudo du Streamer1&nbsp;</label><input type="text" id="streamerChatvStreamerChat0" name="streamerChatvStreamerChat0">
-                    <br>
-                    <label for="streamerChatvStreamerChat1">Pseudo du Streamer2&nbsp;</label><input type="text" id="streamerChatvStreamerChat1" name="streamerChatvStreamerChat1">
-                  </div>
-                  <br>
+                <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label>
+                <div data-game-mode="modStreamerChatvStreamerChat" class="multiplayer-setup">
+                    <div class="multiplayer-tabs">
+                        <div class="multiplayer-tab create active" data-tab="create">
+                            <i class="fas fa-crown"></i>
+                            <h3>Créer une partie</h3>
+                            <p>Hébergez et invitez un autre streameur</p>
+                        </div>
+                        <div class="multiplayer-tab join" data-tab="join">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <h3>Rejoindre une partie</h3>
+                            <p>Connectez-vous avec un code</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenu -->
+                    <div class="multiplayer-content">
+                        <!-- Panneau Créer -->
+                        <div id="create-panel" class="multiplayer-panel active">
+                            <div class="form-group">
+                                <label for="hostStreamerName">
+                                    <i class="fab fa-twitch"></i> Votre nom de streameur
+                                </label>
+                                <input type="text" id="hostStreamerName" name="streamerChatvStreamerChat0" class="form-control" placeholder="VotreNomTwitch">
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary" id="createGameBtn">
+                                <i class="fas fa-plus"></i> Créer la partie
+                            </button>
+                            
+                            <!-- Panneau de partie créée -->
+                            <div id="gameCreatedInfo" class="game-created" style="display: none;">
+                                <h4>✅ Partie créée !</h4>
+                                
+                                <div style="margin: 15px 0;">
+                                    <span>Code de partie :</span>
+                                    <div class="game-code" id="gameCode">XXXX</div>
+                                </div>
+                                
+                                <div style="margin: 15px 0;">
+                                    <span>Statut :</span>
+                                    <span class="status status-waiting" id="gameStatus">En attente...</span>
+                                </div>
+                                
+                                <div class="url-section">
+                                    <label>Votre URL (Blancs) :</label>
+                                    <div class="url-box">
+                                        <span id="hostUrl">-</span>
+                                        <button class="btn-copy" data-target="hostUrl">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="url-section">
+                                    <label>URL pour l'adversaire (Noirs) :</label>
+                                    <div class="url-box">
+                                        <span id="guestUrl">-</span>
+                                        <button class="btn-copy" data-target="guestUrl">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panneau Rejoindre -->
+                        <div id="join-panel" class="multiplayer-panel">
+                            <div class="form-group">
+                                <label for="guestStreamerName">
+                                    <i class="fab fa-twitch"></i> Votre nom de streameur
+                                </label>
+                                <input type="text" id="guestStreamerName" name="streamerChatvStreamerChat1" class="form-control" placeholder="VotreNomTwitch">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="gameCodeInput">
+                                    <i class="fas fa-key"></i> Code de la partie
+                                </label>
+                                <input type="text" id="gameCodeInput" class="form-control game-code-input" placeholder="XXXX" maxlength="4">
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary" id="joinGameBtn">
+                                <i class="fas fa-sign-in-alt"></i> Rejoindre
+                            </button>
+                            
+                            <!-- Panneau de partie rejointe -->
+                            <div id="gameJoinedInfo" class="game-joined" style="display: none;">
+                                <h4>✅ Connecté !</h4>
+                                
+                                <div style="margin: 15px 0;">
+                                    <span>Statut :</span>
+                                    <span class="status status-connected">Prêt</span>
+                                </div>
+                                
+                                <div class="url-section">
+                                    <label>Votre URL (Noirs) :</label>
+                                    <div class="url-box">
+                                        <span id="playerUrl">-</span>
+                                        <button class="btn-copy" data-target="playerUrl">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <input type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
                 <label for="modViewersvViewers">Tous contre tous (id pair/impair)(ok but cringe)</label>
             </fieldset>
 
             <fieldset>
-                <legend>Mode Vote !</legend> 
+            <legend>Mode Vote !</legend> 
             <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
             <label for="timerMode">Activer le mode vote</label>
             <div data-time-mode>
@@ -251,6 +352,91 @@
         window.currentGameId = null;
         window.playerColor = null;
     </script>
+
+<script>
+// JavaScript pour gérer l'interface multiplayer
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des onglets
+    document.querySelectorAll('.multiplayer-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            
+            // Activer l'onglet
+            document.querySelectorAll('.multiplayer-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Afficher le panneau correspondant
+            document.querySelectorAll('.multiplayer-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(tabName + '-panel').classList.add('active');
+        });
+    });
+    
+    // Bouton créer partie
+    document.getElementById('createGameBtn')?.addEventListener('click', function(e) {
+        e.preventDefault(); // Empêcher le submit du formulaire
+        
+        const streamerName = document.getElementById('hostStreamerName').value;
+        if (!streamerName) {
+            alert('Veuillez entrer votre nom de streameur');
+            return;
+        }
+        
+        // Simuler la création de partie
+        const gameCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+        document.getElementById('gameCode').textContent = gameCode;
+        
+        // Générer les URLs
+        const baseUrl = window.location.origin + window.location.pathname;
+        const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}`;
+        const guestUrl = `${baseUrl}?game=${gameCode}&role=guest`;
+        
+        document.getElementById('hostUrl').textContent = hostUrl;
+        document.getElementById('guestUrl').textContent = guestUrl;
+        
+        // Afficher le panneau de partie créée
+        document.getElementById('gameCreatedInfo').style.display = 'block';
+        this.style.display = 'none';
+    });
+    
+    // Bouton rejoindre partie
+    document.getElementById('joinGameBtn')?.addEventListener('click', function(e) {
+        e.preventDefault(); // Empêcher le submit du formulaire
+        
+        const streamerName = document.getElementById('guestStreamerName').value;
+        const gameCode = document.getElementById('gameCodeInput').value;
+        
+        if (!streamerName || !gameCode) {
+            alert('Veuillez remplir tous les champs');
+            return;
+        }
+        
+        // Simuler la connexion
+        const baseUrl = window.location.origin + window.location.pathname;
+        const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}`;
+        
+        document.getElementById('playerUrl').textContent = playerUrl;
+        
+        // Afficher le panneau de partie rejointe
+        document.getElementById('gameJoinedInfo').style.display = 'block';
+        this.style.display = 'none';
+    });
+    
+    // Boutons de copie
+    document.querySelectorAll('.btn-copy').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const text = document.getElementById(targetId).textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                this.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 2000);
+            });
+        });
+    });
+});
+</script>
 
     <!-- Librairies principales -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" 
@@ -377,6 +563,252 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+
+
+
+/**
+ * Simule des votes aléatoires de viewers fictifs
+ * @param {number} voteCount - Nombre de votes à simuler (défaut: 10)
+ * @param {boolean} showLogs - Afficher les logs des votes (défaut: true)
+ * @returns {Array} - Liste des votes générés
+ */
+function simulateRandomVotes(voteCount = 10, showLogs = true) {
+    if (!voteOpen) {
+        console.warn("❌ Le vote n'est pas ouvert actuellement !");
+        return [];
+    }
+
+    if (!chess || typeof chess.moves !== 'function') {
+        console.warn("❌ Le jeu d'échecs n'est pas initialisé !");
+        return [];
+    }
+
+    const availableMoves = chess.moves();
+    if (availableMoves.length === 0) {
+        console.warn("❌ Aucun coup disponible !");
+        return [];
+    }
+
+    const simulatedVotes = [];
+    const viewerNames = [
+        'TestViewer1', 'TestViewer2', 'TestViewer3', 'TestViewer4', 'TestViewer5',
+        'BotSimulator1', 'BotSimulator2', 'BotSimulator3', 'BotSimulator4', 'BotSimulator5',
+        'FakeUser1', 'FakeUser2', 'FakeUser3', 'FakeUser4', 'FakeUser5',
+        'SimUser1', 'SimUser2', 'SimUser3', 'SimUser4', 'SimUser5'
+    ];
+
+    console.log(`🎯 Simulation de ${voteCount} votes aléatoires...`);
+    console.log(`📋 Coups disponibles: ${availableMoves.join(', ')}`);
+
+    for (let i = 0; i < voteCount; i++) {
+        // Sélectionner un coup aléatoire
+        const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        
+        // Sélectionner un nom de viewer aléatoire ou en générer un unique
+        const viewerName = Math.random() > 0.7 ? 
+            `RandomBot${Math.floor(Math.random() * 1000)}` : 
+            viewerNames[Math.floor(Math.random() * viewerNames.length)];
+        
+        // Ajouter le vote (en respectant la limitation limitToOneVote si activée)
+        const voteSuccess = addMoveToPoll(viewerName, randomMove);
+        
+        if (voteSuccess !== false) {
+            simulatedVotes.push({ player: viewerName, move: randomMove });
+            
+            if (showLogs) {
+                console.log(`✅ Vote ${i + 1}: ${viewerName} vote pour ${randomMove}`);
+            }
+        } else {
+            if (showLogs) {
+                console.log(`⚠️ Vote ${i + 1}: ${viewerName} a déjà voté (limitToOneVote activé)`);
+            }
+            
+            // Si limitToOneVote est activé, essayer avec un nouveau nom
+            if (limitToOneVote) {
+                const uniqueName = `UniqueBot${Date.now()}_${i}`;
+                const retrySuccess = addMoveToPoll(uniqueName, randomMove);
+                if (retrySuccess !== false) {
+                    simulatedVotes.push({ player: uniqueName, move: randomMove });
+                    if (showLogs) {
+                        console.log(`✅ Retry ${i + 1}: ${uniqueName} vote pour ${randomMove}`);
+                    }
+                }
+            }
+        }
+        
+        // Petit délai pour simuler le timing réel (optionnel)
+        if (i < voteCount - 1) {
+            // Utiliser setTimeout pour un délai non-bloquant si souhaité
+            // await new Promise(resolve => setTimeout(resolve, 50));
+        }
+    }
+
+    console.log(`🎉 Simulation terminée ! ${simulatedVotes.length} votes ajoutés.`);
+    console.log(`📊 État actuel du poll:`, poll);
+    
+    // Afficher un résumé des votes
+    const votesSummary = poll.reduce((acc, vote) => {
+        acc[vote.move] = (acc[vote.move] || 0) + 1;
+        return acc;
+    }, {});
+    
+    console.log(`📈 Résumé des votes:`, votesSummary);
+    
+    return simulatedVotes;
+}
+
+/**
+ * Simule des votes avec distribution pondérée (certains coups plus populaires)
+ * @param {number} voteCount - Nombre de votes à simuler
+ * @param {Array} popularMoves - Coups populaires (optionnel)
+ * @returns {Array} - Liste des votes générés
+ */
+function simulateWeightedVotes(voteCount = 10, popularMoves = []) {
+    if (!voteOpen || !chess) {
+        console.warn("❌ Le vote n'est pas ouvert ou le jeu n'est pas initialisé !");
+        return [];
+    }
+
+    const availableMoves = chess.moves();
+    if (availableMoves.length === 0) {
+        console.warn("❌ Aucun coup disponible !");
+        return [];
+    }
+
+    // Si aucun coup populaire spécifié, prendre les 2-3 premiers coups
+    if (popularMoves.length === 0) {
+        popularMoves = availableMoves.slice(0, Math.min(3, availableMoves.length));
+    }
+
+    const simulatedVotes = [];
+    
+    console.log(`🎯 Simulation de ${voteCount} votes pondérés...`);
+    console.log(`⭐ Coups populaires: ${popularMoves.join(', ')}`);
+
+    for (let i = 0; i < voteCount; i++) {
+        let selectedMove;
+        
+        // 70% de chance de voter pour un coup populaire
+        if (Math.random() < 0.7 && popularMoves.length > 0) {
+            selectedMove = popularMoves[Math.floor(Math.random() * popularMoves.length)];
+        } else {
+            selectedMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        }
+        
+        const viewerName = `WeightedBot${Date.now()}_${i}`;
+        const voteSuccess = addMoveToPoll(viewerName, selectedMove);
+        
+        if (voteSuccess !== false) {
+            simulatedVotes.push({ player: viewerName, move: selectedMove });
+            console.log(`✅ Vote ${i + 1}: ${viewerName} vote pour ${selectedMove}`);
+        }
+    }
+
+    console.log(`🎉 Simulation pondérée terminée !`);
+    return simulatedVotes;
+}
+
+/**
+ * Simule une situation de vote serré entre 2 coups
+ * @param {string} move1 - Premier coup
+ * @param {string} move2 - Deuxième coup
+ * @param {number} totalVotes - Nombre total de votes
+ */
+function simulateCloseVote(move1, move2, totalVotes = 20) {
+    if (!voteOpen || !chess) {
+        console.warn("❌ Le vote n'est pas ouvert ou le jeu n'est pas initialisé !");
+        return [];
+    }
+
+    const availableMoves = chess.moves();
+    
+    // Vérifier que les coups sont valides
+    if (!availableMoves.includes(move1) || !availableMoves.includes(move2)) {
+        console.warn(`❌ Coups invalides ! Disponibles: ${availableMoves.join(', ')}`);
+        return [];
+    }
+
+    console.log(`⚔️ Simulation d'un vote serré entre ${move1} et ${move2}...`);
+
+    const simulatedVotes = [];
+    
+    for (let i = 0; i < totalVotes; i++) {
+        // Alterner entre les deux coups avec un léger aléatoire
+        const selectedMove = (i % 2 === 0) ? move1 : move2;
+        const viewerName = `CloseVoteBot${Date.now()}_${i}`;
+        
+        const voteSuccess = addMoveToPoll(viewerName, selectedMove);
+        if (voteSuccess !== false) {
+            simulatedVotes.push({ player: viewerName, move: selectedMove });
+            console.log(`✅ Vote ${i + 1}: ${viewerName} vote pour ${selectedMove}`);
+        }
+    }
+
+    console.log(`🎉 Vote serré simulé ! Résultat final à voir...`);
+    return simulatedVotes;
+}
+
+/**
+ * Fonction rapide pour 10 votes aléatoires (raccourci)
+ */
+function quickVotes() {
+    return simulateRandomVotes(10, true);
+}
+
+/**
+ * Fonction pour vider les votes de test (utile pour nettoyer)
+ */
+function clearTestVotes() {
+    // Garder seulement les votes qui ne sont pas des bots de test
+    const originalPollLength = poll.length;
+    poll = poll.filter(vote => 
+        !vote.player.includes('TestViewer') && 
+        !vote.player.includes('BotSimulator') && 
+        !vote.player.includes('FakeUser') && 
+        !vote.player.includes('SimUser') && 
+        !vote.player.includes('RandomBot') && 
+        !vote.player.includes('WeightedBot') && 
+        !vote.player.includes('CloseVoteBot') && 
+        !vote.player.includes('UniqueBot')
+    );
+    
+    console.log(`🧹 Nettoyage effectué ! ${originalPollLength - poll.length} votes de test supprimés.`);
+    
+    // Mettre à jour l'affichage
+    if (typeof updateChartIncremental === 'function') {
+        // Reconstruire le graphique
+        if (typeof pollChart !== 'undefined') {
+            pollChart.data.labels = [];
+            pollChart.data.datasets[0].data = [];
+            pollChart.data.datasets[0].backgroundColor = [];
+            pollChart.update();
+            
+            // Re-ajouter les votes restants
+            poll.forEach(vote => {
+                updateChartIncremental(vote.move, vote.color);
+            });
+        }
+    }
+}
+
+// ======== INSTRUCTIONS D'UTILISATION ========
+console.log(`
+🎮 SIMULATEUR DE VOTES CHARGÉ !
+
+Fonctions disponibles dans la console :
+
+🎯 simulateRandomVotes(10)     - 10 votes aléatoires
+⚡ quickVotes()                - Raccourci pour 10 votes rapides  
+📊 simulateWeightedVotes(15)   - 15 votes pondérés vers coups populaires
+⚔️ simulateCloseVote('e4','d4',20) - Vote serré entre 2 coups
+🧹 clearTestVotes()            - Nettoyer les votes de test
+
+Exemple d'utilisation :
+> quickVotes()
+> simulateCloseVote('Nf3', 'e4', 16)
+> clearTestVotes()
+`);
 </script>
 </body>
 </html>

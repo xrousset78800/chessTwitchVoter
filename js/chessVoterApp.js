@@ -1252,11 +1252,15 @@ function play(target, context, args) {
 			//client.say(target, `@${context.username} vote for ${move}`);
 			
 			// Move = resetTimeOut  + nouveau coup		
-			if(timerMode && ((!mod1v1) || (mod1vViewers && context.username !== mod1vViewersPlayer))) {
+            if(timerMode && gameMode === 'normal') {
 				addMoveToPoll(context.username, move);
 			} else {
 				moveAction(move);
-
+                if(timerMode && (gameMode === 'mod1v1' || gameMode === 'mod1vViewers')) {
+                    $("body").addClass("showTimer");
+                    startTimer(InitialvoterTimer, true);
+                    voteOpen = true;
+                }
 				if(gameMode == "probMode") {
 					let verif = verifPbm();
 					if(verif == false) {

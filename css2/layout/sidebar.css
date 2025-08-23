@@ -4,7 +4,7 @@
 
 /* ========== Sidebar de Base ========== */
 .sidebar {
-  width: 280px;
+  width: 400px;
   background: var(--dark-card);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);

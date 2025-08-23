@@ -42,7 +42,7 @@ h4 {
 
 h5 {
   font-family: var(--font-primary);
-  font-size: var(--font-lg);
+  font-size: var(--font-xs);
   font-weight: var(--font-medium);
   color: var(--text-light);
   margin-bottom: var(--spacing-sm);
