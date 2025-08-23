@@ -30,7 +30,6 @@
   background-color: var(--dark-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-xl);
-  max-width: 600px;
   width: 90%;
   max-height: 90vh;
   overflow: hidden;

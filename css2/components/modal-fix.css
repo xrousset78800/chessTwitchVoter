@@ -8,12 +8,13 @@
     display: none;
     position: fixed;
     z-index: 2000;
-    left: 0;
+    right: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.8);
+    background-color: rgba(0,0,0,0.95);
     backdrop-filter: blur(5px);
+    left: inherit;
 }
 
 .modal.show {
@@ -162,7 +163,10 @@ button[type="submit"] {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin: 20px auto 0;
+    position: sticky;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .form-btn:hover,

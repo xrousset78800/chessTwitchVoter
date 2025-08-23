@@ -321,7 +321,6 @@ form {
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-xl);
   z-index: var(--z-modal);
-  max-width: 500px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
