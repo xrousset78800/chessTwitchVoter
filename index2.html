@@ -121,14 +121,17 @@
                 <legend>Connexion avec la chaine Twitch</legend>
                 <label for="defaultChannel">Enter twitch channel&nbsp;</label>
                 <input type="text" id="defaultChannel" name="defaultChannel" >
+                <span class="tooltip-icon" data-tooltip="Chaine twitch avec laquelle se connecter">?</span>
             </fieldset>
             <fieldset class="gameMode">
                 <legend>Mode de jeu</legend>            
                 <input type="radio" id="yoloMode" name="gameMode" value="normal">
                 <label for="yoloMode">Jouer en mode YOLO (sandbox)</label>
+                <span class="tooltip-icon" data-tooltip="Gros bordel, tout le monde peut voter pour tout le monde au sein d'une chaine. Utile pour tester">?</span>
                 <br>
                 <input type="radio" id="probMode" name="gameMode" value="probMode">
                 <label for="probMode">Jouer en mode problèmes (ok but fix vote/reload issues)</label>
+                <span class="tooltip-icon" data-tooltip="Jouer en mode probèmes !">?</span>
                 <div data-game-mode="probMode">
                     <fieldset class="theme-filter-section">
                             <legend>Filtrage par thèmes</legend>
@@ -157,14 +160,16 @@
                         </div>
                 <br>
                 <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">
-                    <label for="mod1vViewers">Seul contre tous (wip)</label>
+                <label for="mod1vViewers">Seul contre tous (wip)</label>
+                <span class="tooltip-icon" data-tooltip="Sur une chaine, une personne séléctionnée contre tout les autres">?</span>
                 <div data-game-mode="mod1vViewers">
                     <label for="mod1vViewersPlayer">Pseudo du joueur&nbsp;</label>
                     <input type="text" id="mod1vViewersPlayer" name="mod1vViewersPlayer" >
                     </div>
                     <br>
                 <input type="radio" id="mod1v1" name="gameMode" value="mod1v1">
-                    <label for="mod1v1">Un contre un (ok?)</label>
+                <label for="mod1v1">Un contre un (ok?)</label>
+                <span class="tooltip-icon" data-tooltip="Chaque viewer ne peut voter qu'une seule fois par tour">?</span>
                 <div data-game-mode="mod1v1">
                     <label for="oneVsOneModeList0">Pseudo du Joueur1&nbsp;</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
                     <br>
@@ -173,6 +178,7 @@
                 <br>
                 <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
                 <label for="modStreamerChatvStreamerChat">Chat contre Chat (ok?)</label>
+                <span class="tooltip-icon" data-tooltip="Les chats des 2 streams s'affrontent en votant (penser à activer le vote)">?</span>
                 <div data-game-mode="modStreamerChatvStreamerChat" class="multiplayer-setup">
                     <div class="multiplayer-tabs">
                         <div class="multiplayer-tab create active" data-tab="create">
@@ -280,40 +286,55 @@
                         </div>
                     </div>
                 </div>
+                <br>
                 <input type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
                 <label for="modViewersvViewers">Tous contre tous (id pair/impair)(ok but cringe)</label>
+                <span class="tooltip-icon" data-tooltip="Sur une même chaine, les ID pairs/impairs s'affrontent">?</span>
+                <br>
+                <input disabled="disabled" type="radio" id="modPuzzleRush" name="gameMode" value="modPuzzleRush">
+                <label for="modPuzzleRush"><s>Puzzle rush ?</s></label>
+                <span class="tooltip-icon" data-tooltip="Puzzle rush en double chaine twitch ?">?</span>
             </fieldset>
 
             <fieldset>
             <legend>Mode Vote !</legend> 
             <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
             <label for="timerMode">Activer le mode vote</label>
+            <span class="tooltip-icon" data-tooltip="Active le timer et la fonction de vote">?</span>
             <div data-time-mode>
                 <label for="InitialvoterTimer">Temps d'un tour</label>
                 <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
+                <span class="tooltip-icon" data-tooltip="Durée d'un tour de vote pour une partie">?</span>
                 <br>                
                 <label for="timerWheelAnimation">Animation de la roue </label>
                 <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
+                <span class="tooltip-icon" data-tooltip="Durée de l'animation de la roue">?</span>
                 <br>
                 <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
                 <label for="limitToOneVote">Vote unique</label>
+                <span class="tooltip-icon" data-tooltip="Chaque viewer ne peut voter qu'une seule fois par tour">?</span>
                 <br>
                 <input type="checkbox" id="majorityMode" name="majorityMode">               
                 <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label>
+                <span class="tooltip-icon" data-tooltip="Si coché, la majorité sur le vote est joué automatiquement. Sinon il y aura toujours un tirage au sort">?</span>
+
             </div>
         </fieldset>         
             <fieldset>
                 <legend>Options de timer</legend> 
-                <label for="pauseAfterWinLose">Durée de la pause (entre les parties/problèmes)</label>
+                <label for="pauseAfterWinLose">Durée de la pause</label>
                 <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
+                <span class="tooltip-icon" data-tooltip="Durée de la pause entre les parties ou les problèmes avant de relancer automatiquement">?</span>
         </fieldset>
                 <fieldset>
                     <legend>Restrictions d'accès</legend>
                     <input type="checkbox" id="followMode" name="followMode">
                     <label for="followMode">Mode followers uniquement</label>
+                    <span class="tooltip-icon" data-tooltip="Seuls les followers de la chaine peuvent voter">?</span>
                     <br>
                     <input type="checkbox" id="subMode" name="subMode">
                     <label for="subMode">Mode abonnés uniquement</label>
+                    <span class="tooltip-icon" data-tooltip="Seuls les abonnés de la chaine peuvent voter">?</span>
                     <br>
                     <small style="color: #aaa; font-size: 12px;">
                         Note: Les modérateurs, VIPs et le broadcaster peuvent toujours jouer
@@ -321,8 +342,13 @@
                 </fieldset>
             <fieldset>
                 <legend>Autres options</legend> 
-            <input type="checkbox" id="noBg" name="noBg">
-            <label for="noBg">Supprimer le background (test sur OBS ?)</label>
+            <input disabled="disabled" type="checkbox" id="noBg" name="noBg">
+            <label for="noBg"><s>Supprimer le background (test sur OBS ?)</s></label>
+            <span class="tooltip-icon" data-tooltip="Fond vert en option pour intégration OBS (WIP)">?</span>
+            <br>
+            <input disabled="disabled" type="checkbox" id="phantomChess" name="gameMode" value="phantomChess">
+            <label for="phantomChess"><s>Phantom chess integration ?</s></label>
+            <span class="tooltip-icon" data-tooltip="Intégration de l'échiquier automatique phantomChess (WIP)">?</span>
         </fieldset>
 
         <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>
@@ -564,250 +590,256 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-
-
-
-/**
- * Simule des votes aléatoires de viewers fictifs
- * @param {number} voteCount - Nombre de votes à simuler (défaut: 10)
- * @param {boolean} showLogs - Afficher les logs des votes (défaut: true)
- * @returns {Array} - Liste des votes générés
- */
-function simulateRandomVotes(voteCount = 10, showLogs = true) {
+function simulateSmartVotes(voteCount = 10, showLogs = true) {
     if (!voteOpen) {
         console.warn("❌ Le vote n'est pas ouvert actuellement !");
-        return [];
+        return { success: 0, rejected: 0, errors: ['Vote fermé'] };
     }
 
     if (!chess || typeof chess.moves !== 'function') {
         console.warn("❌ Le jeu d'échecs n'est pas initialisé !");
-        return [];
+        return { success: 0, rejected: 0, errors: ['Jeu non initialisé'] };
     }
 
     const availableMoves = chess.moves();
     if (availableMoves.length === 0) {
         console.warn("❌ Aucun coup disponible !");
-        return [];
+        return { success: 0, rejected: 0, errors: ['Aucun coup disponible'] };
     }
 
-    const simulatedVotes = [];
-    const viewerNames = [
-        'TestViewer1', 'TestViewer2', 'TestViewer3', 'TestViewer4', 'TestViewer5',
-        'BotSimulator1', 'BotSimulator2', 'BotSimulator3', 'BotSimulator4', 'BotSimulator5',
-        'FakeUser1', 'FakeUser2', 'FakeUser3', 'FakeUser4', 'FakeUser5',
-        'SimUser1', 'SimUser2', 'SimUser3', 'SimUser4', 'SimUser5'
-    ];
+    let successfulVotes = 0;
+    let rejectedVotes = 0;
+    const errors = [];
+    const results = [];
 
-    console.log(`🎯 Simulation de ${voteCount} votes aléatoires...`);
+    console.log(`🎯 Simulation intelligente de ${voteCount} votes...`);
+    console.log(`🎮 Mode de jeu: ${gameMode}`);
+    console.log(`⚪⚫ Tour actuel: ${teamToPlay === 0 ? 'Blancs' : 'Noirs'}`);
     console.log(`📋 Coups disponibles: ${availableMoves.join(', ')}`);
 
     for (let i = 0; i < voteCount; i++) {
-        // Sélectionner un coup aléatoire
-        const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        const voter = generateSmartVoter(i);
+        const move = availableMoves[Math.floor(Math.random() * availableMoves.length)];
         
-        // Sélectionner un nom de viewer aléatoire ou en générer un unique
-        const viewerName = Math.random() > 0.7 ? 
-            `RandomBot${Math.floor(Math.random() * 1000)}` : 
-            viewerNames[Math.floor(Math.random() * viewerNames.length)];
+        // Simuler un contexte Twitch réaliste
+        const context = createMockContext(voter, i);
         
-        // Ajouter le vote (en respectant la limitation limitToOneVote si activée)
-        const voteSuccess = addMoveToPoll(viewerName, randomMove);
+        // Tester si le vote serait accepté selon les règles
+        const voteResult = testVotePermissions(voter, move, context, showLogs);
         
-        if (voteSuccess !== false) {
-            simulatedVotes.push({ player: viewerName, move: randomMove });
-            
-            if (showLogs) {
-                console.log(`✅ Vote ${i + 1}: ${viewerName} vote pour ${randomMove}`);
-            }
-        } else {
-            if (showLogs) {
-                console.log(`⚠️ Vote ${i + 1}: ${viewerName} a déjà voté (limitToOneVote activé)`);
-            }
-            
-            // Si limitToOneVote est activé, essayer avec un nouveau nom
-            if (limitToOneVote) {
-                const uniqueName = `UniqueBot${Date.now()}_${i}`;
-                const retrySuccess = addMoveToPoll(uniqueName, randomMove);
-                if (retrySuccess !== false) {
-                    simulatedVotes.push({ player: uniqueName, move: randomMove });
-                    if (showLogs) {
-                        console.log(`✅ Retry ${i + 1}: ${uniqueName} vote pour ${randomMove}`);
-                    }
+        if (voteResult.allowed) {
+            const voteSuccess = addMoveToPoll(voter.username, move);
+            if (voteSuccess !== false) {
+                successfulVotes++;
+                results.push({ voter: voter.username, move, result: 'success' });
+                if (showLogs) {
+                    console.log(`✅ Vote ${i + 1}: ${voter.username} vote pour ${move} - ACCEPTÉ`);
+                }
+            } else {
+                rejectedVotes++;
+                results.push({ voter: voter.username, move, result: 'duplicate' });
+                if (showLogs) {
+                    console.log(`⚠️ Vote ${i + 1}: ${voter.username} - Vote en double`);
                 }
             }
-        }
-        
-        // Petit délai pour simuler le timing réel (optionnel)
-        if (i < voteCount - 1) {
-            // Utiliser setTimeout pour un délai non-bloquant si souhaité
-            // await new Promise(resolve => setTimeout(resolve, 50));
-        }
-    }
-
-    console.log(`🎉 Simulation terminée ! ${simulatedVotes.length} votes ajoutés.`);
-    console.log(`📊 État actuel du poll:`, poll);
-    
-    // Afficher un résumé des votes
-    const votesSummary = poll.reduce((acc, vote) => {
-        acc[vote.move] = (acc[vote.move] || 0) + 1;
-        return acc;
-    }, {});
-    
-    console.log(`📈 Résumé des votes:`, votesSummary);
-    
-    return simulatedVotes;
-}
-
-/**
- * Simule des votes avec distribution pondérée (certains coups plus populaires)
- * @param {number} voteCount - Nombre de votes à simuler
- * @param {Array} popularMoves - Coups populaires (optionnel)
- * @returns {Array} - Liste des votes générés
- */
-function simulateWeightedVotes(voteCount = 10, popularMoves = []) {
-    if (!voteOpen || !chess) {
-        console.warn("❌ Le vote n'est pas ouvert ou le jeu n'est pas initialisé !");
-        return [];
-    }
-
-    const availableMoves = chess.moves();
-    if (availableMoves.length === 0) {
-        console.warn("❌ Aucun coup disponible !");
-        return [];
-    }
-
-    // Si aucun coup populaire spécifié, prendre les 2-3 premiers coups
-    if (popularMoves.length === 0) {
-        popularMoves = availableMoves.slice(0, Math.min(3, availableMoves.length));
-    }
-
-    const simulatedVotes = [];
-    
-    console.log(`🎯 Simulation de ${voteCount} votes pondérés...`);
-    console.log(`⭐ Coups populaires: ${popularMoves.join(', ')}`);
-
-    for (let i = 0; i < voteCount; i++) {
-        let selectedMove;
-        
-        // 70% de chance de voter pour un coup populaire
-        if (Math.random() < 0.7 && popularMoves.length > 0) {
-            selectedMove = popularMoves[Math.floor(Math.random() * popularMoves.length)];
         } else {
-            selectedMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
-        }
-        
-        const viewerName = `WeightedBot${Date.now()}_${i}`;
-        const voteSuccess = addMoveToPoll(viewerName, selectedMove);
-        
-        if (voteSuccess !== false) {
-            simulatedVotes.push({ player: viewerName, move: selectedMove });
-            console.log(`✅ Vote ${i + 1}: ${viewerName} vote pour ${selectedMove}`);
+            rejectedVotes++;
+            errors.push(voteResult.reason);
+            results.push({ voter: voter.username, move, result: 'rejected', reason: voteResult.reason });
+            if (showLogs) {
+                console.log(`❌ Vote ${i + 1}: ${voter.username} - REJETÉ (${voteResult.reason})`);
+            }
         }
     }
 
-    console.log(`🎉 Simulation pondérée terminée !`);
-    return simulatedVotes;
+    const summary = {
+        success: successfulVotes,
+        rejected: rejectedVotes,
+        total: voteCount,
+        errors: [...new Set(errors)], // Erreurs uniques
+        results: results
+    };
+
+    console.log(`📊 RÉSUMÉ:`);
+    console.log(`✅ Votes acceptés: ${successfulVotes}/${voteCount}`);
+    console.log(`❌ Votes rejetés: ${rejectedVotes}/${voteCount}`);
+    console.log(`🔍 Types d'erreurs:`, summary.errors);
+
+    return summary;
 }
 
 /**
- * Simule une situation de vote serré entre 2 coups
- * @param {string} move1 - Premier coup
- * @param {string} move2 - Deuxième coup
- * @param {number} totalVotes - Nombre total de votes
+ * Génère un voter intelligent selon le mode de jeu
  */
-function simulateCloseVote(move1, move2, totalVotes = 20) {
-    if (!voteOpen || !chess) {
-        console.warn("❌ Le vote n'est pas ouvert ou le jeu n'est pas initialisé !");
-        return [];
-    }
-
-    const availableMoves = chess.moves();
-    
-    // Vérifier que les coups sont valides
-    if (!availableMoves.includes(move1) || !availableMoves.includes(move2)) {
-        console.warn(`❌ Coups invalides ! Disponibles: ${availableMoves.join(', ')}`);
-        return [];
-    }
-
-    console.log(`⚔️ Simulation d'un vote serré entre ${move1} et ${move2}...`);
-
-    const simulatedVotes = [];
-    
-    for (let i = 0; i < totalVotes; i++) {
-        // Alterner entre les deux coups avec un léger aléatoire
-        const selectedMove = (i % 2 === 0) ? move1 : move2;
-        const viewerName = `CloseVoteBot${Date.now()}_${i}`;
+function generateSmartVoter(index) {
+    const voterTypes = {
+        normal: () => ({ username: `Viewer${Date.now()}_${index}`, type: 'viewer' }),
         
-        const voteSuccess = addMoveToPoll(viewerName, selectedMove);
-        if (voteSuccess !== false) {
-            simulatedVotes.push({ player: viewerName, move: selectedMove });
-            console.log(`✅ Vote ${i + 1}: ${viewerName} vote pour ${selectedMove}`);
+        mod1v1: () => {
+            // Alterner entre les deux joueurs 1v1
+            const players = [oneVsOneModeList0, oneVsOneModeList1];
+            return { 
+                username: players[index % 2], 
+                type: '1v1_player',
+                expectedTurn: index % 2
+            };
+        },
+        
+        mod1vViewers: () => {
+            // Mélanger entre le joueur solo et des viewers
+            if (Math.random() < 0.3) {
+                return { username: mod1vViewersPlayer, type: 'solo_player' };
+            } else {
+                return { username: `Viewer${Date.now()}_${index}`, type: 'viewer' };
+            }
+        },
+        
+        modViewersvViewers: () => ({
+            username: `Viewer${Date.now()}_${index}`,
+            type: 'viewer',
+            userId: Math.floor(Math.random() * 1000) // ID aléatoire pour test pair/impair
+        }),
+        
+        modStreamerChatvStreamerChat: () => {
+            const streamers = [streamerChatvStreamerChat0, streamerChatvStreamerChat1];
+            return {
+                username: `${streamers[index % 2]}_viewer_${index}`,
+                type: 'streamer_viewer',
+                channel: streamers[index % 2]
+            };
         }
+    };
+
+    return voterTypes[gameMode] ? voterTypes[gameMode]() : voterTypes.normal();
+}
+
+/**
+ * Crée un contexte Twitch simulé
+ */
+function createMockContext(voter, index) {
+    return {
+        username: voter.username,
+        'user-id': voter.userId || index,
+        subscriber: Math.random() < 0.3,
+        follower: Math.random() < 0.7,
+        mod: Math.random() < 0.05
+    };
+}
+
+/**
+ * Teste les permissions de vote selon les règles du mode de jeu
+ */
+function testVotePermissions(voter, move, context, showLogs) {
+    // Vérifications générales
+    if (!voteOpen) {
+        return { allowed: false, reason: 'Vote fermé' };
     }
 
-    console.log(`🎉 Vote serré simulé ! Résultat final à voir...`);
-    return simulatedVotes;
-}
-
-/**
- * Fonction rapide pour 10 votes aléatoires (raccourci)
- */
-function quickVotes() {
-    return simulateRandomVotes(10, true);
-}
-
-/**
- * Fonction pour vider les votes de test (utile pour nettoyer)
- */
-function clearTestVotes() {
-    // Garder seulement les votes qui ne sont pas des bots de test
-    const originalPollLength = poll.length;
-    poll = poll.filter(vote => 
-        !vote.player.includes('TestViewer') && 
-        !vote.player.includes('BotSimulator') && 
-        !vote.player.includes('FakeUser') && 
-        !vote.player.includes('SimUser') && 
-        !vote.player.includes('RandomBot') && 
-        !vote.player.includes('WeightedBot') && 
-        !vote.player.includes('CloseVoteBot') && 
-        !vote.player.includes('UniqueBot')
-    );
+    // Restrictions par abonnement/follow
+    if (typeof subMode !== 'undefined' && subMode && !context.subscriber) {
+        return { allowed: false, reason: 'Subs seulement' };
+    }
     
-    console.log(`🧹 Nettoyage effectué ! ${originalPollLength - poll.length} votes de test supprimés.`);
-    
-    // Mettre à jour l'affichage
-    if (typeof updateChartIncremental === 'function') {
-        // Reconstruire le graphique
-        if (typeof pollChart !== 'undefined') {
-            pollChart.data.labels = [];
-            pollChart.data.datasets[0].data = [];
-            pollChart.data.datasets[0].backgroundColor = [];
-            pollChart.update();
+    if (typeof followMode !== 'undefined' && followMode && !context.follower) {
+        return { allowed: false, reason: 'Followers seulement' };
+    }
+
+    // Vérifications spécifiques par mode de jeu
+    switch(gameMode) {
+        case 'mod1v1':
+            if (context.username === oneVsOneModeList0 && teamToPlay === 1) {
+                return { allowed: false, reason: `Tour des Noirs (${oneVsOneModeList1})` };
+            }
+            if (context.username === oneVsOneModeList1 && teamToPlay === 0) {
+                return { allowed: false, reason: `Tour des Blancs (${oneVsOneModeList0})` };
+            }
+            if (context.username !== oneVsOneModeList0 && context.username !== oneVsOneModeList1) {
+                return { allowed: false, reason: 'Pas un joueur du 1v1' };
+            }
+            break;
+
+        case 'mod1vViewers':
+            if (context.username === mod1vViewersPlayer && teamToPlay === 1) {
+                return { allowed: false, reason: 'Tour des viewers' };
+            }
+            if (context.username !== mod1vViewersPlayer && teamToPlay === 0) {
+                return { allowed: false, reason: `Tour de ${mod1vViewersPlayer}` };
+            }
+            break;
+
+        case 'modViewersvViewers':
+            const userId = context['user-id'] || 0;
+            if (userId % 2 === 0 && teamToPlay === 1) {
+                return { allowed: false, reason: 'Tour des Noirs (ID impairs)' };
+            }
+            if (userId % 2 === 1 && teamToPlay === 0) {
+                return { allowed: false, reason: 'Tour des Blancs (ID pairs)' };
+            }
+            break;
+
+        case 'modStreamerChatvStreamerChat':
+            // Logique simplifiée pour le test - normalement il faudrait vérifier le channel
+            const isStreamer1Viewer = voter.channel === streamerChatvStreamerChat0;
+            const isStreamer2Viewer = voter.channel === streamerChatvStreamerChat1;
             
-            // Re-ajouter les votes restants
-            poll.forEach(vote => {
-                updateChartIncremental(vote.move, vote.color);
-            });
-        }
+            if (isStreamer1Viewer && teamToPlay === 1) {
+                return { allowed: false, reason: `Tour de ${streamerChatvStreamerChat1}` };
+            }
+            if (isStreamer2Viewer && teamToPlay === 0) {
+                return { allowed: false, reason: `Tour de ${streamerChatvStreamerChat0}` };
+            }
+            break;
     }
+
+    return { allowed: true, reason: 'Autorisé' };
 }
 
-// ======== INSTRUCTIONS D'UTILISATION ========
+/**
+ * Fonction pour tester spécifiquement un mode de jeu
+ */
+function testGameModeVoting(mode, voteCount = 20) {
+    console.log(`🧪 TEST SPÉCIFIQUE DU MODE: ${mode}`);
+    
+    // Sauvegarder le mode actuel
+    const originalMode = gameMode;
+    
+    // Changer temporairement le mode (attention: peut avoir des effets de bord)
+    console.warn('⚠️ Changement temporaire de mode pour test');
+    window.gameMode = mode;
+    
+    const result = simulateSmartVotes(voteCount, true);
+    
+    // Restaurer le mode original
+    window.gameMode = originalMode;
+    console.log('✅ Mode restauré');
+    
+    return result;
+}
+
+/**
+ * Fonction de test rapide avec permissions
+ */
+function quickSmartVotes() {
+    return simulateSmartVotes(10, true);
+}
+
+// Export des nouvelles fonctions
+window.simulateSmartVotes = simulateSmartVotes;
+window.testGameModeVoting = testGameModeVoting;
+window.quickSmartVotes = quickSmartVotes;
+
 console.log(`
-🎮 SIMULATEUR DE VOTES CHARGÉ !
+🧠 SIMULATEUR INTELLIGENT CHARGÉ !
 
-Fonctions disponibles dans la console :
+Nouvelles fonctions :
+🎯 simulateSmartVotes(10)     - Votes intelligents respectant les règles
+🧪 testGameModeVoting('mod1v1', 20) - Test d'un mode spécifique  
+⚡ quickSmartVotes()          - Test rapide intelligent
 
-🎯 simulateRandomVotes(10)     - 10 votes aléatoires
-⚡ quickVotes()                - Raccourci pour 10 votes rapides  
-📊 simulateWeightedVotes(15)   - 15 votes pondérés vers coups populaires
-⚔️ simulateCloseVote('e4','d4',20) - Vote serré entre 2 coups
-🧹 clearTestVotes()            - Nettoyer les votes de test
-
-Exemple d'utilisation :
-> quickVotes()
-> simulateCloseVote('Nf3', 'e4', 16)
-> clearTestVotes()
+Exemples :
+> quickSmartVotes()           // Test rapide du mode actuel
+> testGameModeVoting('mod1v1') // Test spécifique du mode 1v1
+> simulateSmartVotes(15)      // Test personnalisé
 `);
 </script>
 </body>
