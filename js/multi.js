@@ -1,501 +1,196 @@
-// js/multi.js - Gestionnaire principal de la configuration
+/**
+ * MULTI.JS - Gestion du mode multiplayer StreamerChat vs StreamerChat
+ * Intégré directement dans index.html sans page intermédiaire
+ */
 
 class MultiplayerManager {
     constructor() {
-        this.currentStep = 1;
-        this.selectedMode = null;
-        this.configuration = {
-            mode: null,
-            modeConfig: {},
-            timer: {
-                enabled: false,
-                voteTime: 30,
-                wheelAnimationTime: 3,
-                uniqueVote: false,
-                majorityMode: true
-            },
-            restrictions: {
-                followersOnly: false,
-                subsOnly: false
-            },
-            visual: {
-                soundEnabled: true,
-                animationsEnabled: true,
-                showBackground: true,
-                epilepsyMode: false
-            },
-            twitch: {
-                defaultChannel: ''
-            }
-        };
-        this.config = {
-            // CHANGEZ CECI selon votre configuration
-            serverUrl: this.getServerUrl(),
-            basePath: '/chessTwitchVoter/',
-            hasMultiplayerServer: true // Mettez à true si vous avez un serveur
-        };        
         this.socket = null;
         this.gameId = null;
+        this.role = null;
+        this.streamerName = null;
+        this.partnerConnected = false;
         
-        this.init();
+        // Initialiser dès le chargement de la page
+        this.initializeFromURL();
+        this.bindEvents();
     }
-    getServerUrl() {
-        // Détection automatique de l'environnement
-        if (window.location.hostname === 'localhost') {
-            return 'http://localhost:3000';
-        } else if (window.location.hostname === 'xouindaplace.fr') {
-            // Si vous avez un serveur, mettez son URL ici
-            // Exemples :
-            // return 'https://chess-voter-server.glitch.me';
-            // return 'https://your-server.railway.app';
-            // return 'wss://your-vps.com:3000';
-            return null; // Pas de serveur pour l'instant
-        }
-        return null;
-    }
-    init() {
-        this.setupEventListeners();
-        this.loadSavedConfig();
-        this.showStep(1);
-    }
-
-    initializeSocket(streamerName) {
-        if (!this.config.serverUrl) {
-            console.warn('Pas de serveur configuré - Mode local uniquement');
-            this.showToast('Mode local uniquement (pas de serveur multijoueur)', 'warning');
-            return;
-        }
-        
-        try {
-            this.socket = io(this.config.serverUrl, {
-                transports: ['websocket', 'polling'],
-                reconnection: true,
-                reconnectionAttempts: 5,
-                reconnectionDelay: 1000
-            });
-            
-            this.socket.on('connect', () => {
-                console.log('✅ Connecté au serveur multijoueur');
-                // ... reste du code
-            });
-            
-            this.socket.on('connect_error', (error) => {
-                console.error('❌ Erreur de connexion:', error);
-                this.showToast('Impossible de se connecter au serveur multijoueur', 'error');
-            });
-            
-        } catch (error) {
-            console.error('Erreur lors de l\'initialisation du socket:', error);
-            this.showToast('Serveur multijoueur non disponible', 'error');
-        }
-    }    
     
-    setupEventListeners() {
-        // Mode selection
-        document.querySelectorAll('.mode-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                if (!card.classList.contains('disabled')) {
-                    this.selectMode(card.dataset.mode);
-                }
+    /**
+     * Initialise le mode multiplayer depuis les paramètres URL
+     */
+    initializeFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameId = urlParams.get('game');
+        const role = urlParams.get('role');
+        const streamer = urlParams.get('streamer');
+        
+        if (gameId && role && streamer) {
+            this.gameId = gameId;
+            this.role = role;
+            this.streamerName = streamer;
+            
+            // Activer le mode multiplayer global
+            window.multiplayerMode = true;
+            window.currentGameId = gameId;
+            window.playerColor = (role === 'host') ? 'white' : 'black';
+            
+            console.log(`🎮 Mode multiplayer activé: ${role} dans la partie ${gameId}`);
+            
+            // Initialiser la connexion Socket.IO
+            this.initializeSocket();
+            
+            // Configurer les variables pour le mode StreamerChat
+            this.configureStreamerChatMode();
+        }
+    }
+    
+    /**
+     * Configure les variables globales pour le mode StreamerChat
+     */
+    configureStreamerChatMode() {
+        // Forcer le mode StreamerChat vs StreamerChat
+        window.modStreamerChatvStreamerChat = true;
+        
+        // Configurer les streamers selon le rôle
+        if (this.role === 'host') {
+            window.streamer1Channel = this.streamerName;
+            window.streamerChatvStreamerChat0 = this.streamerName;
+            // Le streamer2 sera défini quand le guest se connecte
+        } else if (this.role === 'guest') {
+            window.streamer2Channel = this.streamerName;
+            window.streamerChatvStreamerChat1 = this.streamerName;
+        }
+        
+        console.log(`📺 Streamer configuré: ${this.streamerName} (${this.role})`);
+    }
+    
+    /**
+     * Lie les événements pour l'interface multiplayer dans index.html
+     */
+    bindEvents() {
+        // Gestion des onglets multiplayer
+        document.addEventListener('DOMContentLoaded', () => {
+            this.setupMultiplayerTabs();
+            this.setupMultiplayerButtons();
+            this.setupCopyButtons();
+        });
+    }
+    
+    setupMultiplayerTabs() {
+        document.querySelectorAll('.multiplayer-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Activer l'onglet
+                document.querySelectorAll('.multiplayer-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Afficher le panneau correspondant
+                document.querySelectorAll('.multiplayer-panel').forEach(panel => panel.classList.remove('active'));
+                document.getElementById(tabName + '-panel').classList.add('active');
             });
         });
+    }
+    
+    setupMultiplayerButtons() {
+        // Bouton créer partie
+        const createBtn = document.getElementById('createGameBtn');
+        if (createBtn) {
+            createBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.createGame();
+            });
+        }
         
-        // Navigation buttons
-        document.getElementById('prevBtn')?.addEventListener('click', () => this.previousStep());
-        document.getElementById('nextBtn')?.addEventListener('click', () => this.nextStep());
-        document.getElementById('launchBtn')?.addEventListener('click', () => this.launchGame());
-        
-        // Timer mode toggle
-        document.getElementById('timerMode')?.addEventListener('change', (e) => {
-            this.configuration.timer.enabled = e.target.checked;
-            this.toggleTimerOptions(e.target.checked);
-        });
-        
-        // Copy buttons
+        // Bouton rejoindre partie
+        const joinBtn = document.getElementById('joinGameBtn');
+        if (joinBtn) {
+            joinBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.joinGame();
+            });
+        }
+    }
+    
+    setupCopyButtons() {
+        // Boutons de copie
         document.querySelectorAll('.btn-copy').forEach(btn => {
-            btn.addEventListener('click', () => this.copyToClipboard(btn.dataset.target));
-        });
-        
-        // Multiplayer role selection
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.addEventListener('click', () => this.selectMultiplayerRole(card.dataset.role));
-        });
-        
-        // Create/Join game buttons
-        document.getElementById('createGameBtn')?.addEventListener('click', () => this.createGame());
-        document.getElementById('joinGameBtn')?.addEventListener('click', () => this.joinGame());
-        
-        // Theme selection for problems mode
-        document.getElementById('selectAllThemes')?.addEventListener('click', () => this.selectAllThemes());
-        document.getElementById('clearThemes')?.addEventListener('click', () => this.clearThemes());
-    }
-    
-    selectMode(mode) {
-        // Update UI
-        document.querySelectorAll('.mode-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-        document.querySelector(`.mode-card[data-mode="${mode}"]`).classList.add('selected');
-        
-        // Store selection
-        this.selectedMode = mode;
-        this.configuration.mode = mode;
-        
-        // Show next button
-        document.getElementById('nextBtn').style.display = 'inline-flex';
-    }
-    
-    showStep(step) {
-        this.currentStep = step;
-        
-        // Hide all steps
-        document.querySelectorAll('.config-step').forEach(s => {
-            s.classList.remove('active');
-        });
-        
-        // Show current step
-        if (step === 1) {
-            document.getElementById('modeSelection').classList.add('active');
-            document.getElementById('prevBtn').style.display = 'none';
-            document.getElementById('nextBtn').style.display = this.selectedMode ? 'inline-flex' : 'none';
-            document.getElementById('launchBtn').style.display = 'none';
-        } else if (step === 2) {
-            document.getElementById('modeConfig').classList.add('active');
-            this.showModeConfig(this.selectedMode);
-            document.getElementById('prevBtn').style.display = 'inline-flex';
-            document.getElementById('nextBtn').style.display = 'inline-flex';
-            document.getElementById('launchBtn').style.display = 'none';
-            
-            // Update title
-            const titles = {
-                'sandbox': 'Configuration Sandbox',
-                'problems': 'Configuration Problèmes',
-                '1vAll': 'Configuration Seul contre Tous',
-                '1v1': 'Configuration Duel',
-                'viewersVsViewers': 'Configuration Viewers vs Viewers',
-                'multiplayer': 'Configuration Multiplayer Online'
-            };
-            document.getElementById('modeConfigTitle').textContent = titles[this.selectedMode] || 'Configuration';
-        } else if (step === 3) {
-            document.getElementById('commonOptions').classList.add('active');
-            document.getElementById('prevBtn').style.display = 'inline-flex';
-            document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('launchBtn').style.display = 'inline-flex';
-        }
-    }
-    
-    showModeConfig(mode) {
-        // Hide all config panels
-        document.querySelectorAll('.mode-config-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-        
-        // Show specific config
-        const configPanel = document.getElementById(`config-${mode}`);
-        if (configPanel) {
-            configPanel.classList.add('active');
-        }
-        
-        // Load problems if needed
-        if (mode === 'problems') {
-            this.loadProblems();
-        }
-    }
-    
-    nextStep() {
-        if (this.currentStep < 3) {
-            // Validate current step
-            if (this.validateStep(this.currentStep)) {
-                this.saveStepConfig(this.currentStep);
-                this.showStep(this.currentStep + 1);
-            }
-        }
-    }
-    
-    previousStep() {
-        if (this.currentStep > 1) {
-            this.showStep(this.currentStep - 1);
-        }
-    }
-    
-    validateStep(step) {
-        if (step === 1) {
-            if (!this.selectedMode) {
-                this.showToast('Veuillez sélectionner un mode de jeu', 'error');
-                return false;
-            }
-        } else if (step === 2) {
-            // Validate mode-specific config
-            return this.validateModeConfig();
-        }
-        return true;
-    }
-    
-    validateModeConfig() {
-        const mode = this.selectedMode;
-        
-        if (mode === '1vAll') {
-            const playerName = document.getElementById('soloPlayerName').value.trim();
-            if (!playerName) {
-                this.showToast('Veuillez entrer le nom du joueur solo', 'error');
-                return false;
-            }
-            this.configuration.modeConfig.soloPlayer = playerName;
-        } else if (mode === '1v1') {
-            const player1 = document.getElementById('player1Name').value.trim();
-            const player2 = document.getElementById('player2Name').value.trim();
-            if (!player1 || !player2) {
-                this.showToast('Veuillez entrer les noms des deux joueurs', 'error');
-                return false;
-            }
-            this.configuration.modeConfig.player1 = player1;
-            this.configuration.modeConfig.player2 = player2;
-        } else if (mode === 'multiplayer') {
-            // Multiplayer validation handled separately
-            const role = document.querySelector('.role-card.selected')?.dataset.role;
-            if (!role) {
-                this.showToast('Veuillez choisir entre créer ou rejoindre une partie', 'error');
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    saveStepConfig(step) {
-        if (step === 2) {
-            // Save mode-specific configuration
-            this.saveModeConfig();
-        } else if (step === 3) {
-            // Save common options
-            this.saveCommonOptions();
-        }
-    }
-    
-    saveModeConfig() {
-        const mode = this.selectedMode;
-        
-        if (mode === 'problems') {
-            const selectedThemes = [];
-            document.querySelectorAll('.theme-item.selected').forEach(item => {
-                selectedThemes.push(item.dataset.theme);
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.target;
+                const text = document.getElementById(targetId).textContent;
+                
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalIcon = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        btn.innerHTML = originalIcon;
+                    }, 2000);
+                    
+                    this.showToast('URL copiée !', 'success');
+                });
             });
-            this.configuration.modeConfig.themes = selectedThemes;
-        }
-    }
-    
-    saveCommonOptions() {
-        // Timer options
-        this.configuration.timer.enabled = document.getElementById('timerMode').checked;
-        this.configuration.timer.voteTime = parseInt(document.getElementById('voteTime').value) || 30;
-        this.configuration.timer.wheelAnimationTime = parseInt(document.getElementById('wheelAnimationTime').value) || 3;
-        this.configuration.timer.uniqueVote = document.getElementById('uniqueVote').checked;
-        this.configuration.timer.majorityMode = document.getElementById('majorityMode').checked;
-        
-        // Restrictions
-        this.configuration.restrictions.followersOnly = document.getElementById('followersOnly').checked;
-        this.configuration.restrictions.subsOnly = document.getElementById('subsOnly').checked;
-        
-        // Visual
-        this.configuration.visual.soundEnabled = document.getElementById('soundEnabled').checked;
-        this.configuration.visual.animationsEnabled = document.getElementById('animationsEnabled').checked;
-        this.configuration.visual.showBackground = document.getElementById('showBackground').checked;
-        this.configuration.visual.epilepsyMode = document.getElementById('epilepsyMode').checked;
-        
-        // Twitch
-        this.configuration.twitch.defaultChannel = document.getElementById('defaultChannel').value.trim();
-        
-        // Save to localStorage
-        localStorage.setItem('chessVoterConfig', JSON.stringify(this.configuration));
-    }
-    
-    loadSavedConfig() {
-        const saved = localStorage.getItem('chessVoterConfig');
-        if (saved) {
-            try {
-                const config = JSON.parse(saved);
-                // Apply saved config to form
-                this.applySavedConfig(config);
-            } catch (e) {
-                console.error('Error loading saved config:', e);
-            }
-        }
-    }
-    
-    applySavedConfig(config) {
-        // Apply default channel
-        if (config.twitch?.defaultChannel) {
-            document.getElementById('defaultChannel').value = config.twitch.defaultChannel;
-        }
-        
-        // Apply timer settings
-        if (config.timer) {
-            document.getElementById('timerMode').checked = config.timer.enabled;
-            document.getElementById('voteTime').value = config.timer.voteTime;
-            document.getElementById('wheelAnimationTime').value = config.timer.wheelAnimationTime;
-            document.getElementById('uniqueVote').checked = config.timer.uniqueVote;
-            document.getElementById('majorityMode').checked = config.timer.majorityMode;
-            this.toggleTimerOptions(config.timer.enabled);
-        }
-        
-        // Apply restrictions
-        if (config.restrictions) {
-            document.getElementById('followersOnly').checked = config.restrictions.followersOnly;
-            document.getElementById('subsOnly').checked = config.restrictions.subsOnly;
-        }
-        
-        // Apply visual settings
-        if (config.visual) {
-            document.getElementById('soundEnabled').checked = config.visual.soundEnabled;
-            document.getElementById('animationsEnabled').checked = config.visual.animationsEnabled;
-            document.getElementById('showBackground').checked = config.visual.showBackground;
-            document.getElementById('epilepsyMode').checked = config.visual.epilepsyMode;
-        }
-    }
-    
-    toggleTimerOptions(enabled) {
-        const timerOptions = document.getElementById('timerOptions');
-        if (timerOptions) {
-            if (enabled) {
-                timerOptions.classList.add('active');
-            } else {
-                timerOptions.classList.remove('active');
-            }
-        }
-    }
-    
-    launchGame() {
-        // Save all configuration
-        this.saveCommonOptions();
-        
-        // Generate URL parameters
-        const params = this.generateUrlParams();
-        
-        // Redirect to game
-        const url = `index.html?${params.toString()}`;
-        
-        this.showToast('Lancement de la partie...', 'success');
-        
-        setTimeout(() => {
-            window.location.href = url;
-        }, 1000);
-    }
-    
-    generateUrlParams() {
-        const params = new URLSearchParams();
-        
-        // Add mode
-        params.append('gameMode', this.configuration.mode);
-        
-        // Add mode-specific params
-        const modeConfig = this.configuration.modeConfig;
-        if (this.configuration.mode === '1vAll') {
-            params.append('mod1vViewersPlayer', modeConfig.soloPlayer);
-        } else if (this.configuration.mode === '1v1') {
-            params.append('oneVsOneModeList0', modeConfig.player1);
-            params.append('oneVsOneModeList1', modeConfig.player2);
-        } else if (this.configuration.mode === 'problems') {
-            if (modeConfig.themes?.length > 0) {
-                params.append('themes', modeConfig.themes.join(','));
-            }
-        } else if (this.configuration.mode === 'multiplayer') {
-            if (this.gameId) {
-                params.append('game', this.gameId);
-                params.append('role', modeConfig.role);
-            }
-        }
-        
-        // Add timer settings
-        if (this.configuration.timer.enabled) {
-            params.append('timerMode', 'on');
-            params.append('InitialvoterTimer', this.configuration.timer.voteTime);
-            params.append('timerWheelAnimation', this.configuration.timer.wheelAnimationTime);
-            if (this.configuration.timer.uniqueVote) {
-                params.append('limitToOneVote', 'on');
-            }
-            if (this.configuration.timer.majorityMode) {
-                params.append('majorityMode', 'on');
-            }
-        }
-        
-        // Add restrictions
-        if (this.configuration.restrictions.followersOnly) {
-            params.append('followMode', 'on');
-        }
-        if (this.configuration.restrictions.subsOnly) {
-            params.append('subMode', 'on');
-        }
-        
-        // Add visual settings
-        if (!this.configuration.visual.showBackground) {
-            params.append('noBg', 'on');
-        }
-        if (this.configuration.visual.epilepsyMode) {
-            params.append('noEpilepsy', 'on');
-        }
-        
-        // Add default channel
-        if (this.configuration.twitch.defaultChannel) {
-            params.append('defaultChannel', this.configuration.twitch.defaultChannel);
-        }
-        
-        return params;
-    }
-    
-    // Multiplayer specific methods
-    selectMultiplayerRole(role) {
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-        document.querySelector(`.role-card[data-role="${role}"]`).classList.add('selected');
-        
-        // Show appropriate panel
-        document.querySelectorAll('.role-panel').forEach(panel => {
-            panel.classList.remove('active');
         });
         
-        if (role === 'host') {
-            document.getElementById('host-panel').classList.add('active');
-        } else {
-            document.getElementById('join-panel').classList.add('active');
-        }
-        
-        this.configuration.modeConfig.role = role;
+        // Boutons d'ouverture dans un nouvel onglet
+        document.querySelectorAll('.btn-blank').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = btn.dataset.target;
+                const url = document.getElementById(targetId).textContent;
+                window.open(url, '_blank');
+            });
+        });
     }
     
+    /**
+     * Créer une nouvelle partie multiplayer
+     */
     createGame() {
-        const streamerName = document.getElementById('hostStreamerName').value.trim();
+        const streamerInput = document.getElementById('hostStreamerName');
+        const streamerName = streamerInput ? streamerInput.value.trim() : '';
         
         if (!streamerName) {
             this.showToast('Veuillez entrer votre nom de streameur', 'error');
             return;
         }
         
-        // Generate game ID
+        // Générer un code de partie
         this.gameId = this.generateGameId();
-        this.configuration.modeConfig.streamerName = streamerName;
-        this.configuration.modeConfig.role = 'host';
+        this.role = 'host';
+        this.streamerName = streamerName;
         
-        // Generate URLs
-        const baseUrl = window.location.origin;
-        const hostUrl = `${baseUrl}/index.html?game=${this.gameId}&role=host`;
-        const guestUrl = `${baseUrl}/index.html?game=${this.gameId}&role=guest`;
+        // Générer les URLs avec tous les paramètres nécessaires
+        const baseUrl = window.location.origin + window.location.pathname;
+        const commonParams = this.getCommonUrlParams();
         
-        // Update UI
-        document.getElementById('gameCode').textContent = this.gameId;
-        document.getElementById('hostUrl').textContent = hostUrl;
-        document.getElementById('guestUrl').textContent = guestUrl;
-        document.getElementById('gameCreatedInfo').style.display = 'block';
+        const hostUrl = `${baseUrl}?game=${this.gameId}&role=host&streamer=${encodeURIComponent(streamerName)}&${commonParams}`;
+        const guestUrl = `${baseUrl}?game=${this.gameId}&role=guest&streamer=${encodeURIComponent(streamerName)}&${commonParams}`;
         
-        // Initialize socket connection if needed
-        this.initializeSocket(streamerName);
+        // Mettre à jour l'interface
+        this.updateGameCreatedUI(this.gameId, hostUrl, guestUrl);
+        
+        // Activer le mode multiplayer
+        window.multiplayerMode = true;
+        window.currentGameId = this.gameId;
+        window.playerColor = 'white';
+        
+        // Initialiser Socket.IO pour la partie créée
+        this.initializeSocket();
         
         this.showToast('Partie créée avec succès !', 'success');
+        console.log(`🎮 Partie créée: ${this.gameId} par ${streamerName}`);
     }
     
+    /**
+     * Rejoindre une partie existante
+     */
     joinGame() {
-        const streamerName = document.getElementById('guestStreamerName').value.trim();
-        const gameCode = document.getElementById('gameCodeInput').value.trim().toUpperCase();
+        const streamerInput = document.getElementById('guestStreamerName');
+        const codeInput = document.getElementById('gameCodeInput');
+        
+        const streamerName = streamerInput ? streamerInput.value.trim() : '';
+        const gameCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
         
         if (!streamerName || !gameCode) {
             this.showToast('Veuillez remplir tous les champs', 'error');
@@ -503,203 +198,242 @@ class MultiplayerManager {
         }
         
         this.gameId = gameCode;
-        this.configuration.modeConfig.streamerName = streamerName;
-        this.configuration.modeConfig.role = 'guest';
+        this.role = 'guest';
+        this.streamerName = streamerName;
         
-        // Generate player URL
-        const playerUrl = `${window.location.origin}/index.html?game=${this.gameId}&role=guest`;
+        // Générer l'URL du joueur
+        const baseUrl = window.location.origin + window.location.pathname;
+        const commonParams = this.getCommonUrlParams();
+        const playerUrl = `${baseUrl}?game=${this.gameId}&role=guest&streamer=${encodeURIComponent(streamerName)}&${commonParams}`;
         
-        // Update UI
-        document.getElementById('playerUrl').textContent = playerUrl;
-        document.getElementById('gameJoinedInfo').style.display = 'block';
+        // Mettre à jour l'interface
+        this.updateGameJoinedUI(playerUrl);
         
-        // Initialize socket connection
-        this.initializeSocket(streamerName);
+        // Activer le mode multiplayer
+        window.multiplayerMode = true;
+        window.currentGameId = this.gameId;
+        window.playerColor = 'black';
         
-        this.showToast('Connecté à la partie !', 'success');
+        // Initialiser Socket.IO pour rejoindre la partie
+        this.initializeSocket();
+        
+        this.showToast('Connexion à la partie !', 'success');
+        console.log(`🎮 Connexion à la partie: ${this.gameId} par ${streamerName}`);
     }
     
-    initializeSocket(streamerName) {
-        // Socket.io connection for multiplayer
-        if (typeof io !== 'undefined') {
-            this.socket = io();
+    /**
+     * Génère les paramètres communs pour les URLs
+     */
+    getCommonUrlParams() {
+        const params = new URLSearchParams();
+        
+        // Mode de jeu
+        params.append('gameMode', 'modStreamerChatvStreamerChat');
+        /*
+        // Paramètres par défaut
+        params.append('defaultChannel', 'Xou____');
+        params.append('timerMode', 'on');
+        params.append('InitialvoterTimer', '50');
+        params.append('timerWheelAnimation', '10');
+        params.append('pauseAfterWinLose', '15');*/
+        
+        return params.toString();
+    }
+    
+    /**
+     * Met à jour l'UI après création de partie
+     */
+    updateGameCreatedUI(gameCode, hostUrl, guestUrl) {
+        const gameCodeEl = document.getElementById('gameCode');
+        const hostUrlEl = document.getElementById('hostUrl');
+        const guestUrlEl = document.getElementById('guestUrl');
+        const gameInfoEl = document.getElementById('gameCreatedInfo');
+        const createBtn = document.getElementById('createGameBtn');
+        
+        if (gameCodeEl) gameCodeEl.textContent = gameCode;
+        if (hostUrlEl) hostUrlEl.textContent = hostUrl;
+        if (guestUrlEl) guestUrlEl.textContent = guestUrl;
+        if (gameInfoEl) gameInfoEl.style.display = 'block';
+        if (createBtn) createBtn.style.display = 'none';
+    }
+    
+    /**
+     * Met à jour l'UI après avoir rejoint une partie
+     */
+    updateGameJoinedUI(playerUrl) {
+        const playerUrlEl = document.getElementById('playerUrl');
+        const gameInfoEl = document.getElementById('gameJoinedInfo');
+        const joinBtn = document.getElementById('joinGameBtn');
+        
+        if (playerUrlEl) playerUrlEl.textContent = playerUrl;
+        if (gameInfoEl) gameInfoEl.style.display = 'block';
+        if (joinBtn) joinBtn.style.display = 'none';
+    }
+    
+    /**
+     * Initialise la connexion Socket.IO
+     */
+    initializeSocket() {
+        if (typeof io === 'undefined') {
+            console.warn('⚠️ Socket.IO non disponible');
+            return;
+        }
+        
+        this.socket = io();
+        
+        this.socket.on('connect', () => {
+            console.log('🔗 Connecté au serveur');
             
-            this.socket.on('connect', () => {
-                console.log('Connected to server');
-                
-                if (this.configuration.modeConfig.role === 'host') {
-                    this.socket.emit('createGame', {
-                        gameId: this.gameId,
-                        hostName: streamerName,
-                        settings: {
-                            timer: this.configuration.timer,
-                            restrictions: this.configuration.restrictions
-                        }
-                    });
-                } else {
-                    this.socket.emit('joinGame', {
-                        gameId: this.gameId,
-                        guestName: streamerName
-                    });
+            if (this.role === 'host') {
+                this.socket.emit('createGame', {
+                    gameId: this.gameId,
+                    hostName: this.streamerName,
+                    settings: {
+                        timer: true,
+                        restrictions: {}
+                    }
+                });
+            } else if (this.role === 'guest') {
+                this.socket.emit('joinGame', {
+                    gameId: this.gameId,
+                    guestName: this.streamerName
+                });
+            }
+        });
+        
+        this.socket.on('gameReady', (data) => {
+            console.log('🎮 Partie prête !', data);
+            
+            // Configurer les streamers des deux côtés
+            window.streamer1Channel = data.players.white;
+            window.streamer2Channel = data.players.black;
+            window.streamerChatvStreamerChat0 = data.players.white;
+            window.streamerChatvStreamerChat1 = data.players.black;
+            
+            this.partnerConnected = true;
+            this.updateConnectionStatus('Adversaire connecté !');
+            this.showToast('La partie peut commencer !', 'success');
+        });
+        
+        this.socket.on('partnerVotes', (votes) => {
+            // Afficher les votes du partenaire
+            this.displayPartnerVotes(votes);
+        });
+        
+        this.socket.on('movePlayed', (data) => {
+            // Synchroniser les coups
+            if (data.player !== window.playerColor && typeof window.chess !== 'undefined') {
+                window.chess.move(data.move);
+                if (typeof window.board !== 'undefined') {
+                    window.board.position(window.chess.fen());
                 }
-            });
-            
-            this.socket.on('playerJoined', (data) => {
-                if (this.configuration.modeConfig.role === 'host') {
-                    this.showToast(`${data.guestName} a rejoint la partie !`, 'success');
-                    document.querySelector('.status-waiting').textContent = 'Joueur connecté !';
-                    document.querySelector('.status-waiting').className = 'status status-connected';
-                }
-            });
-            
-            this.socket.on('error', (error) => {
-                this.showToast(`Erreur: ${error.message}`, 'error');
+                console.log(`🎯 Coup reçu de l'adversaire: ${data.move}`);
+            }
+        });
+        
+        this.socket.on('disconnect', () => {
+            console.log('🔌 Déconnecté du serveur');
+            this.updateConnectionStatus('Connexion perdue...');
+        });
+    }
+    
+    /**
+     * Affiche les votes du partenaire
+     */
+    displayPartnerVotes(votes) {
+        // Cette fonction peut être étendue pour afficher les votes en temps réel
+        console.log('👥 Votes du partenaire:', votes);
+    }
+    
+    /**
+     * Met à jour le statut de connexion
+     */
+    updateConnectionStatus(message) {
+        const statusEl = document.getElementById('gameStatus') || document.querySelector('.status-waiting');
+        if (statusEl) {
+            statusEl.textContent = message;
+        }
+    }
+    
+    /**
+     * Envoie les votes via Socket.IO
+     */
+    sendVotes(votes) {
+        if (this.socket && this.gameId) {
+            this.socket.emit('votesUpdate', {
+                gameId: this.gameId,
+                votes: votes
             });
         }
     }
     
+    /**
+     * Envoie un coup joué via Socket.IO
+     */
+    sendMove(move) {
+        if (this.socket && this.gameId) {
+            this.socket.emit('moveSelected', {
+                gameId: this.gameId,
+                player: window.playerColor,
+                move: move,
+                fen: window.chess ? window.chess.fen() : null
+            });
+        }
+    }
+    
+    /**
+     * Génère un ID de partie aléatoire
+     */
     generateGameId() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = '';
-        for (let i = 0; i < 4; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
+        return Math.random().toString(36).substring(2, 6).toUpperCase();
     }
     
-    // Problems mode methods
-    loadProblems() {
-        // This would load problems from CSV file
-        // For now, we'll create dummy themes
-        const themes = [
-            { name: 'middlegame', count: 1250 },
-            { name: 'endgame', count: 890 },
-            { name: 'opening', count: 650 },
-            { name: 'tactics', count: 2100 },
-            { name: 'mate', count: 450 },
-            { name: 'fork', count: 320 },
-            { name: 'pin', count: 280 },
-            { name: 'sacrifice', count: 195 },
-            { name: 'discoveredAttack', count: 175 },
-            { name: 'doubleAttack', count: 165 }
-        ];
-        
-        this.renderThemes(themes);
-    }
-    
-    renderThemes(themes) {
-        const themeList = document.getElementById('themeList');
-        if (!themeList) return;
-        
-        themeList.innerHTML = '';
-        
-        themes.forEach(theme => {
-            const themeItem = document.createElement('div');
-            themeItem.className = 'theme-item';
-            themeItem.dataset.theme = theme.name;
-            
-            themeItem.innerHTML = `
-                <input type="checkbox" id="theme-${theme.name}">
-                <label for="theme-${theme.name}">${this.formatThemeName(theme.name)}</label>
-                <span class="theme-count">${theme.count}</span>
-            `;
-            
-            themeItem.addEventListener('click', (e) => {
-                if (e.target.type !== 'checkbox') {
-                    const checkbox = themeItem.querySelector('input');
-                    checkbox.checked = !checkbox.checked;
-                }
-                themeItem.classList.toggle('selected');
-                this.updateProblemCount();
-            });
-            
-            themeList.appendChild(themeItem);
-        });
-    }
-    
-    formatThemeName(name) {
-        // Convert camelCase to readable format
-        return name.replace(/([A-Z])/g, ' $1').trim()
-                  .replace(/^./, str => str.toUpperCase());
-    }
-    
-    selectAllThemes() {
-        document.querySelectorAll('.theme-item').forEach(item => {
-            item.classList.add('selected');
-            item.querySelector('input').checked = true;
-        });
-        this.updateProblemCount();
-    }
-    
-    clearThemes() {
-        document.querySelectorAll('.theme-item').forEach(item => {
-            item.classList.remove('selected');
-            item.querySelector('input').checked = false;
-        });
-        this.updateProblemCount();
-    }
-    
-    updateProblemCount() {
-        const selected = document.querySelectorAll('.theme-item.selected');
-        let total = 0;
-        
-        selected.forEach(item => {
-            const count = parseInt(item.querySelector('.theme-count').textContent);
-            total += count;
-        });
-        
-        document.getElementById('availableProblems').textContent = total;
-    }
-    
-    // Utility methods
-    copyToClipboard(targetId) {
-        const element = document.getElementById(targetId);
-        if (!element) return;
-        
-        const text = element.textContent;
-        navigator.clipboard.writeText(text).then(() => {
-            this.showToast('Copié dans le presse-papiers !', 'success');
-        }).catch(() => {
-            this.showToast('Erreur lors de la copie', 'error');
-        });
-    }
-    
+    /**
+     * Affiche un toast de notification
+     */
     showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
+        // Utiliser l'alerte native en fallback
+        console.log(`${type.toUpperCase()}: ${message}`);
         
+        // Créer un toast personnalisé
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        
-        const icons = {
-            success: 'fa-check-circle',
-            error: 'fa-exclamation-circle',
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle'
-        };
-        
-        toast.innerHTML = `
-            <i class="fas ${icons[type]}"></i>
-            <span class="toast-message">${message}</span>
-            <button class="toast-close">&times;</button>
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
         `;
         
-        container.appendChild(toast);
+        document.body.appendChild(toast);
         
-        // Auto remove after 5 seconds
         setTimeout(() => {
-            toast.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
-        
-        // Manual close
-        toast.querySelector('.toast-close').addEventListener('click', () => {
-            toast.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        });
+            toast.remove();
+        }, 3000);
+    }
+    
+    /**
+     * Retourne les informations de la partie actuelle
+     */
+    getGameInfo() {
+        return {
+            gameId: this.gameId,
+            role: this.role,
+            streamerName: this.streamerName,
+            partnerConnected: this.partnerConnected,
+            isMultiplayer: !!this.gameId
+        };
     }
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.multiplayerManager = new MultiplayerManager();
-});
+// Initialiser le gestionnaire multiplayer
+const multiplayerManager = new MultiplayerManager();
+
+// Rendre le gestionnaire disponible globalement
+window.multiplayerManager = multiplayerManager;

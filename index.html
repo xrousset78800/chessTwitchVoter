@@ -82,14 +82,20 @@
     <!-- Section problèmes d'échecs -->
     <section id="probleminfo" class="problem-section">
         <div class="problem-details">
+            <div style="position: absolute;top: 5px; right: 10px; ">
+                <span data-attempt="">0</span> / <span data-length="">0</span>
+            </div>
             <div class="problem-meta">
-                <span>Ouverture : </span>
-                <span data-opening=""></span>
+                <h3>TAGS</h3>                
+                <span data-opening-tags=""></span>
             </div>
             <div class="problem-stats">
-                <span data-attempt="">0</span> / <span data-length="">0</span>
-                <span data-omgSolution="" style="display: none;"></span>
-                <span data-fen="" style="display: none;"></span>
+                <h3>SOLUTION</h3>
+                <span data-omgSolution=""></span>
+                <h3>FEN</h3>
+                <span data-fen=""></span>
+                <h3>ELO</h3>
+                <span data-prob-elo=""></span>
             </div>
         </div>
     </section>
@@ -107,7 +113,7 @@
     </div>
         
     </div>
-
+    <div id="toast-container"></div>
     <!-- Timer circulaire classique (existant, gardé pour compatibilité) -->
 
 
@@ -367,122 +373,6 @@
         <i class="fas fa-cog"></i>
     </button>
 
-    <!-- Scripts JavaScript -->
-    
-    <!-- Configuration globale -->
-    <script>
-        // Configuration pour la production
-        window.CHESS_VOTER_CONFIG = {
-            basePath: '/chessTwitchVoter/',
-            serverUrl: null, // Mettez l'URL de votre serveur si vous en avez un
-            isProduction: window.location.hostname !== 'localhost'
-        };
-        
-        // Variables globales pour le multiplayer
-        window.multiplayerMode = false;
-        window.gameSocket = null;
-        window.currentGameId = null;
-        window.playerColor = null;
-    </script>
-
-<script>
-// JavaScript pour gérer l'interface multiplayer
-document.addEventListener('DOMContentLoaded', function() {
-    // Gestion des onglets
-    document.querySelectorAll('.multiplayer-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.dataset.tab;
-            
-            // Activer l'onglet
-            document.querySelectorAll('.multiplayer-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Afficher le panneau correspondant
-            document.querySelectorAll('.multiplayer-panel').forEach(panel => panel.classList.remove('active'));
-            document.getElementById(tabName + '-panel').classList.add('active');
-        });
-    });
-    
-    // Bouton créer partie
-    document.getElementById('createGameBtn')?.addEventListener('click', function(e) {
-        e.preventDefault(); // Empêcher le submit du formulaire
-        
-        const streamerName = document.getElementById('hostStreamerName').value;
-        if (!streamerName) {
-            alert('Veuillez entrer votre nom de streameur');
-            return;
-        }
-        
-        // Simuler la création de partie
-        const gameCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-        document.getElementById('gameCode').textContent = gameCode;
-        
-        // Générer les URLs
-        const baseUrl = window.location.origin + window.location.pathname;
-//        const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
-//        const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
-
-        const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}`;
-        const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}`;
-        
-        document.getElementById('hostUrl').textContent = hostUrl;
-        document.getElementById('guestUrl').textContent = guestUrl;
-        
-        // Afficher le panneau de partie créée
-        document.getElementById('gameCreatedInfo').style.display = 'block';
-        this.style.display = 'none';
-    });
-    
-    // Bouton rejoindre partie
-    document.getElementById('joinGameBtn')?.addEventListener('click', function(e) {
-        e.preventDefault(); // Empêcher le submit du formulaire
-        
-        const streamerName = document.getElementById('guestStreamerName').value;
-        const gameCode = document.getElementById('gameCodeInput').value;
-        
-        if (!streamerName || !gameCode) {
-            alert('Veuillez remplir tous les champs');
-            return;
-        }
-        
-        // Simuler la connexion
-        const baseUrl = window.location.origin + window.location.pathname;
-        //const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
-        const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}`;
-        
-        document.getElementById('playerUrl').textContent = playerUrl;
-        
-        // Afficher le panneau de partie rejointe
-        document.getElementById('gameJoinedInfo').style.display = 'block';
-        this.style.display = 'none';
-    });
-    
-    // Boutons de copie
-    document.querySelectorAll('.btn-copy').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const targetId = this.dataset.target;
-            const text = document.getElementById(targetId).textContent;
-            
-            navigator.clipboard.writeText(text).then(() => {
-                this.innerHTML = '<i class="fas fa-check"></i>';
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-copy"></i>';
-                }, 2000);
-            });
-        });
-    });
-
-    document.querySelectorAll('.btn-blank').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.dataset.target;
-            const text = document.getElementById(targetId).textContent;
-            
-            window.open(text, "_blank");
-        });
-    });
-});
-</script>
 
     <!-- Librairies principales -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" 
@@ -501,155 +391,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Twitch -->
     <script src="js/tmi.min.js"></script>
     <script src="js/client.js"></script>
+    <script src="js/multi.js"></script>
     <script src="twitchToken.js"></script>
     
-    <!-- Notre application -->
     <script src="js/config.js"></script>
-    
-    <!-- ChessboardArrows (version simple intégrée) -->
-    <script>
-        // Version simple de ChessboardArrows pour éviter les erreurs
-        class ChessboardArrows {
-            constructor(containerId) {
-                this.container = document.getElementById(containerId);
-                if (!this.container) {
-                    console.warn(`Container ${containerId} not found for ChessboardArrows`);
-                    return;
-                }
-                
-                this.canvas = document.getElementById('drawing_canvas');
-                this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
-                this.arrows = [];
-                this.circles = [];
-            }
-            
-            clearArrows() {
-                if (this.ctx) {
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-                this.arrows = [];
-                this.circles = [];
-            }
-            
-            drawArrow(from, to, color = 'yellow', width = 8) {
-                // Implementation basique - peut être étendue plus tard
-                console.log(`Drawing arrow from ${from} to ${to}`);
-            }
-            
-            drawCircle(square, color = 'green', filled = false) {
-                // Implementation basique - peut être étendue plus tard  
-                console.log(`Drawing circle on ${square}`);
-            }
-        }
-        
-        // Rendre ChessboardArrows disponible globalement
-        window.ChessboardArrows = ChessboardArrows;
-    </script>
     
     <!-- Script principal -->
     <script src="js/chessVoterApp.js"></script>
     
-<script>
-// Variables globales pour le multiplayer
-let multiplayerMode = false;
-let gameSocket = null;
-let currentGameId = null;
-let playerColor = null;
-
-// Détecter si on est en mode multiplayer via l'URL
-const urlParams = new URLSearchParams(window.location.search);
-const gameId = urlParams.get('game');
-const role = urlParams.get('role');
-
-// Function to initialize Socket.IO connection
-function initializeSocketIO(gameId, role) {
-    console.log('🔗 Initialisation de Socket.IO...');
-    
-    // Connexion au serveur Socket.io
-    gameSocket = io();
-    
-    gameSocket.emit('reconnectGame', { gameId, role });
-    
-    // Écouter les votes du partenaire
-    gameSocket.on('partnerVotes', (votes) => {
-        if (typeof chess !== 'undefined' && chess.turn() !== playerColor[0]) {
-            // C'est le tour du partenaire, afficher ses votes
-            if (typeof updatePartnerVotesDisplay === 'function') {
-                updatePartnerVotesDisplay(votes);
-            }
-        }
-    });
-    
-    // Synchroniser les mouvements
-    gameSocket.on('movePlayed', (data) => {
-        if (data.player !== playerColor && typeof chess !== 'undefined' && typeof board !== 'undefined') {
-            // Le partenaire a joué, appliquer le coup
-            chess.move(data.move);
-            board.position(chess.fen());
-        }
-    });
-    
-    console.log('✅ Socket.IO initialisé pour le jeu:', gameId);
-}
-
-// Load Socket.IO if needed
-if (gameId && role) {
-    multiplayerMode = true;
-    currentGameId = gameId;
-    playerColor = (role === 'host') ? 'white' : 'black';
-    
-    console.log('🎮 Mode multiplayer détecté:', { gameId, role, playerColor });
-    
-    // Check if we have a server URL or if we should always load Socket.IO
-    if (window.CHESS_VOTER_CONFIG.serverUrl || true) { // Set to true to always load
-        const script = document.createElement('script');
-        script.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
-        script.onload = function() {
-            console.log('✅ Socket.io chargé avec succès');
-            initializeSocketIO(gameId, role);
-        };
-        script.onerror = function() {
-            console.error('❌ Erreur lors du chargement de Socket.io');
-        };
-        document.head.appendChild(script);
-    }
-} else {
-    console.log('🎯 Mode solo détecté - Socket.IO non chargé');
-}
-</script>
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const configForm = document.getElementById('configModal');
-    const openButton = document.getElementById('openFormButton');
-    const closeButton = document.querySelector('.close');
-    
-    // Ouvrir le formulaire
-    if (openButton) {
-        openButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (configForm) {
-                configForm.style.display = 'block';
-            }
-        });
-    }
-    
-    // Fermer le formulaire
-    if (closeButton) {
-        closeButton.addEventListener('click', function() {
-            if (configForm) {
-                configForm.style.display = 'none';
-            }
-        });
-    }
-    
-    // Fermer en cliquant à l'extérieur
-    window.addEventListener('click', function(event) {
-        if (event.target === configForm) {
-            configForm.style.display = 'none';
-        }
-    });
-});
-
 /**
  * Crée un contexte Twitch simulé
  */
