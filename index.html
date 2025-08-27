@@ -419,8 +419,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Générer les URLs
         const baseUrl = window.location.origin + window.location.pathname;
-        const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
-        const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+//        const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+//        const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+
+        const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}`;
+        const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}`;
         
         document.getElementById('hostUrl').textContent = hostUrl;
         document.getElementById('guestUrl').textContent = guestUrl;
@@ -444,7 +447,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Simuler la connexion
         const baseUrl = window.location.origin + window.location.pathname;
-        const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+        //const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+        const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}`;
         
         document.getElementById('playerUrl').textContent = playerUrl;
         
