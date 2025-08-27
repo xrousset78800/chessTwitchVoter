@@ -616,11 +616,13 @@ function selectAndLoadProblem() {
     $("[data-length]").text(prob[2].split(" ").length/2);
     board = Chessboard('myBoard', defaultConfig);
     
-    firstMove = playPbm();
-    console.log("first move");
-    moveAction(firstMove);
-    var moves = chess.moves();
-    refreshBoard(chess);
+    setTimeout(function() {
+        firstMove = playPbm();
+        console.log("first move");
+        moveAction(firstMove);
+        var moves = chess.moves();
+        refreshBoard(chess);
+    }, 1000);
 
     if(timerMode) {
         startTimer(InitialvoterTimer, true);
@@ -977,15 +979,14 @@ function verifPbm(){
 }
 
 function convertirNotationEchecs(c1, c2, promotion = '') {
-    // Récupérer la pièce à la position de départ
     const piece = chess.get(c1);
     if (!piece) return null;
 
+    // CORRECTIF : Vérifier la capture AVANT de faire le test move
+    const isCapture = chess.get(c2) !== null;
+    
     // Vérifier si c'est une promotion de pion
     const isPromotion = (piece.type === 'p' && (c2[1] === '8' || c2[1] === '1'));
-    
-    // Vérifier si c'est une capture
-    const isCapture = chess.get(c2) !== null;
 
     // Vérifier si c'est un roque
     const isKing = piece.type === 'k';
@@ -1025,6 +1026,10 @@ function convertirNotationEchecs(c1, c2, promotion = '') {
             notation += piece.type.toUpperCase();
         }
 
+        if (piece.type === 'p' && isCapture) {
+            notation += c1[0]; // Ajouter la colonne d'origine (h dans hxg6)
+        }
+        
         // Gérer l'ambiguïté
 				if (legalMoves.length > 1) {
 				    // Vérifier s'il y a des pièces sur différentes colonnes (même rangée)
@@ -1075,12 +1080,9 @@ function playPbm(){
     let c2 = arrMoves[idx].slice(2, 4);
     let promotion = arrMoves[idx].slice(4, 5) || '';  // Gestion de la promotion
 
-    var tmp = $("[data-solution]").text();
-    if (tmp && tmp.length >= 4) {
-        $("[data-square]").removeClass("highlight-black");
-        $("[data-square='"+tmp.slice(0,2)+"']").addClass("highlight-black");
-        $("[data-square='"+tmp.slice(2,4)+"']").addClass("highlight-black");
-    }
+    $("[data-square]").removeClass("highlight-white");
+    $("[data-square='"+c1+"']").addClass("highlight-white");
+    $("[data-square='"+c2+"']").addClass("highlight-white");
 
     return convertirNotationEchecs(c1, c2, promotion);
 }
