@@ -82,46 +82,6 @@ mateAudio.volume = globalVolume*0.8;
 
 //http-server C:\Users\gnole\Documents\GitHub\chessTwitchVoter
 
-let multiplayerMode = false;
-let gameSocket = null;
-let currentGameId = null;
-let playerColor = null;
-
-// Détecter si on est en mode multiplayer via l'URL
-const urlParams = new URLSearchParams(window.location.search);
-const gameId = urlParams.get('game');
-const role = urlParams.get('role');
-
-if (gameId && role) {
-    multiplayerMode = true;
-    currentGameId = gameId;
-    playerColor = (role === 'host') ? 'white' : 'black';
-    
-    // Connexion au serveur Socket.io
-    gameSocket = io();
-    
-    gameSocket.emit('reconnectGame', { gameId, role });
-    
-    // Écouter les votes du partenaire
-    gameSocket.on('partnerVotes', (votes) => {
-        if (chess.turn() !== playerColor[0]) {
-            // C'est le tour du partenaire, afficher ses votes
-            updatePartnerVotesDisplay(votes);
-        }
-    });
-    
-    // Synchroniser les mouvements
-    gameSocket.on('movePlayed', (data) => {
-        if (data.player !== playerColor) {
-            // Le partenaire a joué, appliquer le coup
-            chess.move(data.move);
-            board.position(chess.fen());
-        }
-    });
-}
-
-
-
 var allProblems = [];
 var filteredProblems = [];
 var selectedThemes = new Set();
@@ -576,9 +536,37 @@ function selectAndLoadProblem() {
 /***********************************************************************************************/
 /***************************************      voter     ****************************************/
 /***********************************************************************************************/
+function startTimer(timer, boolTimerVote){
+    // CORRECTION : Toujours nettoyer l'ancien timer avant d'en créer un nouveau
+    if (intervalId) {
+        console.log("Nettoyage de l'ancien timer");
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+    
+    voterTimer = timer;
+    console.log("start timer " + timer);
 
+    intervalId = setInterval(bip.bind(null, boolTimerVote), 1000);
+    
+    // CSS + animate * 2 
+    var element = document.getElementById("countdown");
+    if (element) {
+        element.style.setProperty("--q", timer);
+        element.style.setProperty("--t", timer);
+        $(".countdown").css("animation-duration", timer + "s");
+    }
+    $("body").addClass('showTimer');
+}
+
+// Améliorez aussi la fonction stopTimer :
 function stopTimer() {
-  clearInterval(intervalId);
+    if (intervalId) {
+        console.log("Arrêt du timer");
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+    $("body").removeClass('showTimer');
 }
 
 function startPauseTimer(duration, callback) {
@@ -617,33 +605,6 @@ function updateTimerDisplay(seconds) {
         } else {
             countdownElement.classList.remove('timer-critical');
         }
-    }
-}
-
-function startTimer(timer, boolTimerVote){
-    voterTimer = timer;
-    console.log("start timer "+timer);
-
-    intervalId = setInterval(bip.bind(null, boolTimerVote), 1000);
-    
-    // Configuration du countdown circulaire
-    const countdownElement = document.querySelector('.countdown');
-    if (countdownElement) {
-        countdownElement.style.setProperty("--q", timer);
-        countdownElement.style.setProperty("--t", timer);
-        countdownElement.style.setProperty("--s", timer);
-        $(".countdown").css("animation-duration", timer+"s");
-    }
-    
-    // Configuration de l'affichage textuel
-    updateTimerDisplay(timer);
-    
-    // Afficher les timers
-    $("body").addClass('showTimer');
-    
-    const timerDisplay = document.getElementById('timer-display');
-    if (timerDisplay) {
-        timerDisplay.style.display = 'block';
     }
 }
 
@@ -2053,3 +2014,4 @@ function parseCSVLine(line) {
     result.push(current);
     return result;
 }
+
