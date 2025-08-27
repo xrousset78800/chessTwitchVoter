@@ -1081,6 +1081,7 @@ function playPbm(){
         $("[data-square='"+tmp.slice(0,2)+"']").addClass("highlight-black");
         $("[data-square='"+tmp.slice(2,4)+"']").addClass("highlight-black");
     }
+
     return convertirNotationEchecs(c1, c2, promotion);
 }
 
@@ -1100,12 +1101,13 @@ function globalReloadProblem(isWinner = true){
 	$("[data-attempt]").attr("data-attempt", 0);
 	$("[data-square]").removeClass("highlight-white");
 	
-	startPauseTimer(pauseAfterWinLose, function() {
-		$("body").removeClass('omg-win');		
-		$("body").removeClass('omg-lose');
-		loadNewProblem();
-		$("[data-square]").removeClass("highlight-black");
-	});
+    startTimer(pauseAfterWinLose, false);
+    setTimeout(function() {
+        $("body").removeClass('omg-win');        
+        $("body").removeClass('omg-lose');
+        loadNewProblem();
+        $("[data-square]").removeClass("highlight-black");
+    }, pauseAfterWinLose*1000);
 }
 
 function ReloadPgn(pgn, target, chess, context) {
