@@ -578,6 +578,17 @@ function selectAndLoadProblem() {
     $('.poll ol').empty();
     poll = [];
     
+    // CORRECTIF : Détruire l'ancien échiquier s'il existe
+    if (typeof board !== 'undefined' && board && board.destroy) {
+        board.destroy();
+        board = null;
+    }
+    
+    // CORRECTIF : Détruire l'ancien objet chess s'il existe  
+    if (typeof chess !== 'undefined' && chess) {
+        chess = null;
+    }
+    
     // LOGIC DE FILTRAGE
     let problemsToUse = getFilteredProblems();
     console.log('🎲 Problèmes après filtrage:', problemsToUse.length);
@@ -593,10 +604,12 @@ function selectAndLoadProblem() {
     prob = problemsToUse[Math.floor(Math.random() * problemsToUse.length)];
     
     console.log('🎯 Problème sélectionné:', prob[0], 'avec thèmes:', prob[7]);
-    console.log('🎯 Problème sélectionné:', prob);
 
     currentProbPgn = prob[1];
+    
+    // CORRECTIF : Créer un nouvel objet chess propre
     chess = new Chess(prob[1]);
+    
     defaultConfig.position = prob[1];
     teamToPlay = 0;
 
@@ -614,6 +627,8 @@ function selectAndLoadProblem() {
     $("[data-attempt]").attr("data-attempt", 0);
     $("[data-length]").attr('data-length', prob[2].split(" ").length);
     $("[data-length]").text(prob[2].split(" ").length/2);
+    
+    // CORRECTIF : Créer un nouvel échiquier propre
     board = Chessboard('myBoard', defaultConfig);
     
     setTimeout(function() {
@@ -982,94 +997,83 @@ function convertirNotationEchecs(c1, c2, promotion = '') {
     const piece = chess.get(c1);
     if (!piece) return null;
 
-    // CORRECTIF : Vérifier la capture AVANT de faire le test move
-    const isCapture = chess.get(c2) !== null;
-    
-    // Vérifier si c'est une promotion de pion
-    const isPromotion = (piece.type === 'p' && (c2[1] === '8' || c2[1] === '1'));
+    // Construire l'objet moveAttempt
+    const moveAttempt = {
+        from: c1,
+        to: c2
+    };
 
-    // Vérifier si c'est un roque
-    const isKing = piece.type === 'k';
-    const isKingSideCastle = isKing && c1 === 'e1' && c2 === 'g1' || c1 === 'e8' && c2 === 'g8';
-    const isQueenSideCastle = isKing && c1 === 'e1' && c2 === 'c1' || c1 === 'e8' && c2 === 'c8';
+    // Ajouter la promotion si nécessaire
+    if (promotion) {
+        moveAttempt.promotion = promotion;
+    }
 
-    // Obtenir tous les coups possibles qui mènent à la case cible
-    const legalMoves = chess.moves({ verbose: true })
-        .filter(m => m.to === c2 && m.piece === piece.type);
-
-    // Tester le coup
+    // Tester le coup et obtenir toutes les informations
+    let move;
     try {
-        const moveAttempt = {
-            from: c1,
-            to: c2
-        };
-
-        // Ajouter la promotion si nécessaire
-        if (isPromotion && promotion) {
-            moveAttempt.promotion = promotion;
-        }
-
-        const move = chess.move(moveAttempt);
+        move = chess.move(moveAttempt);
         if (!move) return null;
-
-        // Annuler le coup pour permettre d'autres tests
-        chess.undo();
-
-        // Gérer les cas spéciaux
-        if (isKingSideCastle) return 'O-O';
-        if (isQueenSideCastle) return 'O-O-O';
-
-        let notation = '';
-
-        // Ajouter la pièce (sauf pour les pions)
-        if (piece.type !== 'p') {
-            notation += piece.type.toUpperCase();
-        }
-
-        if (piece.type === 'p' && isCapture) {
-            notation += c1[0]; // Ajouter la colonne d'origine (h dans hxg6)
-        }
         
-        // Gérer l'ambiguïté
-				if (legalMoves.length > 1) {
-				    // Vérifier s'il y a des pièces sur différentes colonnes (même rangée)
-				    const differentFiles = legalMoves.some(m => m.from[0] !== c1[0]);
-				    // Vérifier s'il y a des pièces sur différentes rangées (même colonne) 
-				    const differentRanks = legalMoves.some(m => m.from[1] !== c1[1]);
-				    
-				    if (differentFiles && !differentRanks) {
-				        // Pièces sur même rangée, colonnes différentes -> spécifier la colonne
-				        notation += c1[0];
-				    } else if (differentRanks && !differentFiles) {
-				        // Pièces sur même colonne, rangées différentes -> spécifier la rangée
-				        notation += c1[1];
-				    } else if (differentFiles && differentRanks) {
-				        // Pièces sur colonnes ET rangées différentes -> spécifier la colonne par défaut
-				        notation += c1[0];
-				    }
-				}
-
-        // Ajouter le 'x' pour les captures
-        if (isCapture) notation += 'x';
-
-        // Ajouter la destination
-        notation += c2;
-
-        // Ajouter la promotion
-        if (isPromotion && promotion) {
-            notation += '=' + promotion.toUpperCase();
-        }
-
-        // Ajouter le check/mate si présent
-        if (move.san.endsWith('+')) notation += '+';
-        if (move.san.endsWith('#')) notation += '#';
-
-        return notation;
-
+        // Annuler immédiatement pour restaurer l'état
+        chess.undo();
     } catch (error) {
-        console.error('Error converting move notation:', error);
+        console.error('Error testing move:', error);
         return null;
     }
+
+    // Utiliser les informations fournies par chess.js
+    const isCapture = move.captured !== undefined;
+    const isPromotion = move.promotion !== undefined;
+
+    // Gérer les cas spéciaux de roque
+    if (move.san === 'O-O') return 'O-O';
+    if (move.san === 'O-O-O') return 'O-O-O';
+
+    let notation = '';
+
+    // Ajouter la pièce (sauf pour les pions)
+    if (piece.type !== 'p') {
+        notation += piece.type.toUpperCase();
+        
+        // Gérer l'ambiguïté pour les pièces (pas les pions)
+        const legalMoves = chess.moves({ verbose: true })
+            .filter(m => m.to === c2 && m.piece === piece.type);
+            
+        if (legalMoves.length > 1) {
+            const differentFiles = legalMoves.some(m => m.from[0] !== c1[0]);
+            const differentRanks = legalMoves.some(m => m.from[1] !== c1[1]);
+            
+            if (differentFiles && !differentRanks) {
+                notation += c1[0]; // Spécifier la colonne
+            } else if (differentRanks && !differentFiles) {
+                notation += c1[1]; // Spécifier la rangée
+            } else if (differentFiles && differentRanks) {
+                notation += c1[0]; // Spécifier la colonne par défaut
+            }
+        }
+    }
+
+    // Pour les pions qui capturent, ajouter la colonne d'origine
+    if (piece.type === 'p' && isCapture) {
+        notation += c1[0];
+    }
+
+    // Ajouter le 'x' pour les captures
+    if (isCapture) notation += 'x';
+
+    // Ajouter la destination
+    notation += c2;
+
+    // Ajouter la promotion
+    if (isPromotion && move.promotion) {
+        notation += '=' + move.promotion.toUpperCase();
+    }
+
+    // Ajouter le check/mate
+    if (move.san.endsWith('+')) notation += '+';
+    if (move.san.endsWith('#')) notation += '#';
+
+    return notation;
 }
 
 function playPbm(){
