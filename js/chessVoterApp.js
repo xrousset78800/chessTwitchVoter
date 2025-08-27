@@ -1075,10 +1075,12 @@ function playPbm(){
     let c2 = arrMoves[idx].slice(2, 4);
     let promotion = arrMoves[idx].slice(4, 5) || '';  // Gestion de la promotion
 
-    $("[data-square]").removeClass("highlight-white");
-    $("[data-square="+c1+"]").addClass("highlight-white");
-    $("[data-square="+c2+"]").addClass("highlight-white");
-
+    var tmp = $("[data-solution]").text();
+    if (tmp && tmp.length >= 4) {
+        $("[data-square]").removeClass("highlight-black");
+        $("[data-square='"+tmp.slice(0,2)+"']").addClass("highlight-black");
+        $("[data-square='"+tmp.slice(2,4)+"']").addClass("highlight-black");
+    }
     return convertirNotationEchecs(c1, c2, promotion);
 }
 
