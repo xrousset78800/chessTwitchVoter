@@ -161,31 +161,13 @@ function preloadThemesForMenu() {
 }
 
 $(document).ready(function() {
-    // Si on est en mode multiplayer, configurer les handlers
-    if (window.multiplayerMode && window.multiplayerManager) {
-        // Attendre que le socket soit prêt
-        const checkSocket = setInterval(() => {
-            if (window.gameSocket && window.gameSocket.connected) {
-                clearInterval(checkSocket);
-                setupMultiplayerHandlers();
-                console.log('✅ Handlers multiplayer configurés');
-            }
-        }, 100);
-        
-        // Timeout de sécurité
-        setTimeout(() => clearInterval(checkSocket), 5000);
-    }
+		//addPhantomBridgeControls();
 
-    //addPhantomBridgeControls();
-
-    preloadThemesForMenu();
-    updatePageTitle();
+        preloadThemesForMenu();
+        updatePageTitle();
 
     console.log('🐍 Phantom Bridge Client initialisé');
-
 });
-
-
 
 var colorArray = [
 '#f2ff93','#dc90e8','#88e600','#e5c0ff','#01d04b','#ff9cc9','#37ff85','#ffaca6','#08c55c','#ffa837','#85f9ff','#e5c700','#a8d7ff','#84c600','#67b8c3','#fff55e','#01c2a0','#d5a517','#02dbae','#df9f4d','#89ff89','#ffe7dd','#7cbc5f','#ffdfa1','#97ffe0','#a9b174','#bbffa4','#79b8a3','#e6ffcf','#98b391'];
@@ -445,28 +427,7 @@ if (gameMode !== "probMode") {
 /***********************************************************************************************************************/
 /**********************************     OMG Voter     *****************************************************************/
 /***********************************************************************************************************************/
-function getCorrectOrientation() {
-    // Priorité au mode multiplayer
-    if (modStreamerChatvStreamerChat && window.multiplayerManager) {
-        const gameInfo = window.multiplayerManager.getGameInfo();
-        
-        if (gameInfo && gameInfo.isMultiplayer) {
-            if (gameInfo.role === 'host') {
-                console.log('🎮 ORIENTATION: Host → Blancs en bas');
-                return 'white';
-            } else if (gameInfo.role === 'guest') {
-                console.log('🎮 ORIENTATION: Guest → Noirs en bas');
-                return 'black';
-            }
-        }
-    }
-    
-    // Fallback: orientation basée sur le tour actuel
-    if (chess && chess.turn() === 'b') {
-        return 'black';
-    }
-    return 'white';
-}
+
 
 
 /***********************************************************************************************************************/
@@ -509,35 +470,34 @@ function loadNewgame() {
     }
     vs = " - "+p1+" vs "+p2;
 
-    if (modStreamerChatvStreamerChat) {
-        // Attendre que le MultiplayerManager soit prêt
-        setTimeout(() => {
-            const orientation = getCorrectOrientation();
-            defaultConfig.orientation = orientation;
-            
-            // Définir teamToPlay et playerColor
-            if (window.multiplayerManager) {
-                const gameInfo = window.multiplayerManager.getGameInfo();
-                if (gameInfo.role === 'host') {
-                    teamToPlay = 0;
-                    window.playerColor = 'white';
-                } else if (gameInfo.role === 'guest') {
-                    teamToPlay = 1;
-                    window.playerColor = 'black';
-                }
+    // CORRECTION: Orientation du plateau selon le rôle en mode multiplayer
+    if (modStreamerChatvStreamerChat && window.multiplayerMode && window.multiplayerManager) {
+        const gameInfo = window.multiplayerManager.getGameInfo();
+        
+        if (gameInfo.role === 'host') {
+            // Host joue toujours avec les blancs (orientation normale)
+            defaultConfig.orientation = 'white';
+            teamToPlay = 0;
+            window.playerColor = 'white';
+            console.log('🎮 Host: orientation WHITE (blancs en bas)');
+        } else if (gameInfo.role === 'guest') {
+            // Guest joue toujours avec les noirs (orientation inversée)
+            defaultConfig.orientation = 'black';
+            teamToPlay = 1;
+            window.playerColor = 'black';
+            console.log('🎮 Guest: orientation BLACK (noirs en bas)');
+        } else {
+            // Fallback: comportement par défaut
+            if(chess.turn() == 'b') {
+                defaultConfig.orientation = 'black';
+                teamToPlay = 1;
+            } else {
+                defaultConfig.orientation = 'white';
+                teamToPlay = 0;
             }
-            
-            // Recréer le plateau avec la bonne orientation
-            if (board) {
-                board.destroy();
-            }
-            board = Chessboard('myBoard', defaultConfig);
-            refreshBoard(chess);
-            
-            console.log(`📋 Orientation finale: ${defaultConfig.orientation}, Team: ${teamToPlay}`);
-        }, 100); // Petit délai pour laisser le multiplayerManager s'initialiser
+        }
     } else {
-        // Comportement normal pour les autres modes
+        // Comportement par défaut pour tous les autres modes
         if(chess.turn() == 'b') {
             defaultConfig.orientation = 'black';
             teamToPlay = 1;
@@ -545,7 +505,6 @@ function loadNewgame() {
             defaultConfig.orientation = 'white';
             teamToPlay = 0;
         }
-        board = Chessboard('myBoard', defaultConfig);
     }
 
     if(timerMode == true) {
@@ -1194,20 +1153,13 @@ var poll = [];
 var moves = [];
 
 function moveAction(move, isFromNetwork = false) {
-    // Jouer le coup
-    chess.move(move);
-    board.position(chess.fen());
-    
-    // Jouer le son
-    playSoundForMove(chess);
-    
-    // Mettre à jour l'affichage des joueurs
-    setTimeout(refreshPlayerDisplay, 100);
-    
-    // IMPORTANT: Toujours mettre à jour l'historique
-    updateMoveHistory(move);
-    
-    // Envoyer au serveur seulement si c'est un coup local
+		(teamToPlay == 1) ? 0 : 1;
+		chess.move(move);
+		board.position(chess.fen());
+        setTimeout(refreshPlayerDisplay, 100);
+    playSoundForMove(chess)
+
+
     if (window.multiplayerMode && window.gameSocket && !isFromNetwork) {
         console.log('🎯 Émission du coup vers le serveur:', move);
         window.gameSocket.emit('moveSelected', {
@@ -1217,136 +1169,217 @@ function moveAction(move, isFromNetwork = false) {
             fen: chess.fen()
         });
     }
-    
-    // IMPORTANT: Toujours rafraîchir le plateau après un coup
-    refreshBoard(chess);
-    
-    // Mettre à jour l'indicateur de tour si disponible
-    if (typeof updateTurnIndicator === 'function') {
-        updateTurnIndicator();
-    }
-    
-    // Animer le mouvement
-    $("[data-attempt]").attr("data-attempt", parseInt($("[data-attempt]").attr("data-attempt")) + 1);
-    $(".poll ol").animate({ scrollTop: $(".poll").offset().top }, 500);
-    
-    // Activer les clics sur l'historique
-    $("[data-fen]").click(function() {
-        board.position($(this).data("fen"));
-    });
-    
-    console.log(`✅ Coup joué: ${move}, isFromNetwork: ${isFromNetwork}, Tour suivant: ${chess.turn()}`);
-}
 
-function updateMoveHistory(move) {
-    if (chess.turn() == 'b') {
-        // Les blancs viennent de jouer
-        $(".poll ol").append("<li><span class='w' data-fen='" + chess.fen() + "'>" + move + "</span></li>");
-    } else {
-        // Les noirs viennent de jouer
-        if ($(".poll ol li").length == 0) {
-            $(".poll ol").append("<li><span class='b' data-fen='" + chess.fen() + "'>" + move + "</span></li>");
-        } else {
-            $(".poll ol li").last().append("<span class='b' data-fen='" + chess.fen() + "'>" + move + "</span>");
-        }
-    }
-}
+
+		if(chess.turn() == 'b') {
+			$(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+		} else {
+			if($(".poll ol li").length == 0) {
+				$(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+			} else {
+				$(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
+			}
+		}
+		// ANIMATION DU MOVE
+		// ANIMATION DU MOVE
+		console.log("move action")
+	  $("[data-attempt]").attr("data-attempt", parseInt($("[data-attempt]").attr("data-attempt"))+1 );
+
+		$(".poll ol").animate({ scrollTop: $(".poll").offset().top }, 500);
+		refreshBoard(chess);
+
+		$("[data-fen]").click(function(){
+			board.position($(this).data("fen"));
+		});
+	}
 
 function play(target, context, args) {
-    if(!voteOpen) { 
-        console.log("Vote fermé");
-        return;
-    }
-    
-    moves = chess.moves();
-    if (args.length == 1) {
-        let move = args[0];
-        
-        // Vérifications spécifiques selon le mode
-        switch(gameMode) {
-            case 'mod1vViewers':
-                if(context.username === mod1vViewersPlayer && teamToPlay == 1) {
-                    return false;
+	if(!voteOpen) { 
+		console.log("not vote open")
+	}else{
+		moves = chess.moves();
+		if (args.length == 1) {
+			let move = args[0];
+			
+
+			switch(gameMode) {
+			    case 'mod1vViewers':
+							if(context.username === mod1vViewersPlayer && teamToPlay == 1) {
+								//client.say(target, `Nope, it's viewers turn`);
+								return false;
+							}
+							if(context.username !== mod1vViewersPlayer && teamToPlay == 0) {
+								//client.say(target, `Nope, it's @${mod1vViewersPlayer} turn`);
+								return false;
+							}		
+							console.log(context.username+ "vote : "+ move);
+			        break;
+			    case 'mod1v1':
+							console.log("mod1v1");
+							if(context.username === oneVsOneModeList0 && teamToPlay == 1) {
+								//client.say(target, `Nope, it's @${oneVsOneModeList1} turn`);
+								return false;
+							}
+							if(context.username === oneVsOneModeList1 && teamToPlay == 0) {
+								//client.say(target, `Nope, it's @${oneVsOneModeList0} turn`);
+								return false;
+							}
+
+			        break;
+			    case 'modViewersvViewers':
+			    		//hack
+							if(!context['user-id']) {
+								context['user-id'] = 0;
+							}
+
+							if(context['user-id'] % 2 == 0 && teamToPlay == 1) {
+								//client.say(target, `Nope, Black to play`);
+								//console.log("nope");
+								return false;
+							}
+							if(context['user-id'] % 2 == 1 && teamToPlay == 0) {
+								//client.say(target, `Nope, White to play`);
+								//console.log("nope");
+								return false;
+							}		
+			        break;
+                case 'modStreamerChatvStreamerChat':
+                    let playerTeam = getTeamByChannel(target, context);
+                    if(playerTeam !== teamToPlay) {
+                        console.log(`Vote rejeté: ${context.username} vote depuis le mauvais chat. Équipe ${playerTeam} vs équipe attendue ${teamToPlay}`);
+                        return false; // Pas le bon chat pour cette équipe
+                    }
+                    console.log(`Vote accepté: ${context.username} vote pour l'équipe ${playerTeam} depuis ${target}`);
+                    break;
+			    default:
+			}
+
+			// Fonction pour vérifier si l'utilisateur est le propriétaire de la chaîne
+			function isChannelOwner(context, target) {
+				// Récupérer le nom du canal sans le #
+				let channelName = target.replace('#', '').toLowerCase();
+				return context.username.toLowerCase() === channelName;
+			}
+			
+			// Vérification du mode followers
+			if(followMode == true) {
+				// Le propriétaire de la chaîne peut toujours jouer
+				if(isChannelOwner(context, target)) {
+					console.log("Channel owner can always play:", context.username);
+				} else {
+					// Vérifier si l'utilisateur a le badge follower
+					let isFollower = context.badges && context.badges.follower;
+					// Vérifier si c'est un abonné, VIP, modérateur ou broadcaster (ils ont toujours accès)
+					let hasSpecialAccess = (context.badges && (
+						context.badges.subscriber || 
+						context.badges.vip || 
+						context.badges.moderator || 
+						context.badges.broadcaster
+					)) || context['user-type'] === 'mod' || context.mod;
+					
+					if(!isFollower && !hasSpecialAccess) {
+						console.log("User is not a follower:", context.username);
+						//client.say(target, `@${context.username} Seuls les followers peuvent jouer !`);
+						return false;
+					}
+				}
+			}
+
+			// Vérification du mode abonnés
+			if(subMode == true) {
+				// Le propriétaire de la chaîne peut toujours jouer
+				if(isChannelOwner(context, target)) {
+					console.log("Channel owner can always play:", context.username);
+				} else {
+					// Vérifier si l'utilisateur a le badge subscriber
+					let isSubscriber = context.badges && context.badges.subscriber;
+					// Vérifier si c'est un VIP, modérateur ou broadcaster (ils ont toujours accès)
+					let hasSpecialAccess = (context.badges && (
+						context.badges.vip || 
+						context.badges.moderator || 
+						context.badges.broadcaster
+					)) || context['user-type'] === 'mod' || context.mod;
+					
+					if(!isSubscriber && !hasSpecialAccess) {
+						console.log("User is not a subscriber:", context.username);
+						//client.say(target, `@${context.username} Seuls les abonnés peuvent jouer !`);
+						return false;
+					}
+				}
+			}
+
+			// Move invalide ?
+			if(moves.includes(move) !== true && moves.includes(move+"#") !== true && moves.includes(move+"+") !== true){
+				//client.say(target, `Invalid move`);
+				//console.log("Invalid move");
+				showAvailableMoves(target, chess, context);
+				return false;
+			}
+
+			// FUNCTION MOVE
+			//client.say(target, `@${context.username} vote for ${move}`);
+			
+			// Move = resetTimeOut  + nouveau coup		
+            if(timerMode && gameMode === 'normal') {
+				addMoveToPoll(context.username, move);
+			} else {
+				moveAction(move);
+                if(timerMode && (gameMode === 'mod1v1' || gameMode === 'mod1vViewers')) {
+                    $("body").addClass("showTimer");
+                    startTimer(InitialvoterTimer, true);
+                    voteOpen = true;
                 }
-                if(context.username !== mod1vViewersPlayer && teamToPlay == 0) {
-                    return false;
-                }        
-                console.log(context.username + " vote : " + move);
-                break;
-                
-            case 'mod1v1':
-                console.log("mod1v1");
-                if(context.username === oneVsOneModeList0 && teamToPlay == 1) {
-                    return false;
-                }
-                if(context.username === oneVsOneModeList1 && teamToPlay == 0) {
-                    return false;
-                }
-                break;
-                
-            case 'modViewersvViewers':
-                if(!context['user-id']) {
-                    context['user-id'] = 0;
-                }
-                if(context['user-id'] % 2 == 0 && teamToPlay == 1) {
-                    return false;
-                }
-                if(context['user-id'] % 2 == 1 && teamToPlay == 0) {
-                    return false;
-                }        
-                break;
-                
-            case 'modStreamerChatvStreamerChat':
-                // Utiliser getTeamByChannel avec gestion d'erreur
-                let playerTeam = getTeamByChannel(target, context);
-                
-                if(playerTeam !== teamToPlay) {
-                    console.log(`Vote rejeté: Équipe ${playerTeam} vs équipe attendue ${teamToPlay}`);
-                    return false;
-                }
-                console.log(`Vote accepté: ${context.username} vote pour l'équipe ${playerTeam}`);
-                break;
-                
-            default:
-                // Mode normal
-                break;
-        }
-        
-        // Vérifier si le coup est valide
-        if(moves.includes(move) !== true && 
-           moves.includes(move+"#") !== true && 
-           moves.includes(move+"+") !== true) {
-            console.log("Coup invalide:", move);
-            showAvailableMoves(target, chess, context);
-            return false;
-        }
-        
-        // Jouer le coup
-        console.log(`🎯 Coup joué: ${move} par ${context.username}`);
-        
-        if(timerMode && gameMode === 'normal') {
-            addMoveToPoll(context.username, move);
-        } else {
-            moveAction(move);
-            
-            // Gestion du timer pour certains modes
-            if(timerMode && (gameMode === 'mod1v1' || gameMode === 'mod1vViewers')) {
-                $("body").addClass("showTimer");
-                startTimer(InitialvoterTimer, true);
-                voteOpen = true;
-            }
-            
-            // Vérifier l'échec et mat
-            if(checkforChemate()) {
-                $("body").addClass('omg-win');
-                startTimer(pauseAfterWinLose, false);
-                setTimeout(function() {
-                    $("body").removeClass('omg-win');
-                    loadNewgame();
-                }, pauseAfterWinLose*1000);
-            }
-        }
-    }
+				if(gameMode == "probMode") {
+					let verif = verifPbm();
+					if(verif == false) {
+						//Nope, erreur
+						let status = 'Erreur !';
+						console.log("faute dans le pb mode pas timer");
+						
+						var tmp = $("[data-solution]").text();
+						$("[data-square]").removeClass("highlight-black");
+						$("[data-square="+tmp.slice(0,2)+"]").addClass("highlight-black");
+						$("[data-square="+tmp.slice(2,4)+"]").addClass("highlight-black");		
+						
+
+						chess.move({from:tmp.slice(0,2), to:tmp.slice(2,4)});
+						board.position(chess);
+
+						globalReloadProblem(false);
+					} else {
+						//On vérifie si c'est la fin du problème
+						console.log("Correct, on continue par le move du bot");
+
+						if ($("[data-attempt]").attr("data-attempt") == $("[data-length]").attr("data-length")) {
+
+							globalReloadProblem(true);
+					  } else {
+							setTimeout(function() {
+								let move = playPbm();
+									moveAction(move);
+									var moves = chess.moves();
+									refreshBoard(chess);
+							}, 2000);
+					  }
+					}
+				}
+
+				if(checkforChemate()) {
+					$("body").addClass('omg-win');
+				  startTimer(pauseAfterWinLose, false);
+					setTimeout(function() {
+						$("body").removeClass('omg-win');
+								loadNewgame();
+					}, pauseAfterWinLose*1000);
+				}
+
+
+			}
+		} else {
+			//client.say(target, `Syntaxe : !p XXXX `);
+			//console.log("Syntax error : !p _MOVE_");
+		}
+	}
 }
 
 function refreshPlayerDisplay() {
@@ -1476,145 +1509,55 @@ function updatePlayerDisplay() {
     }
 }
 
-function shouldAllowMoves() {
-    // En mode multiplayer StreamerChat
-    if (modStreamerChatvStreamerChat && window.multiplayerManager) {
-        const gameInfo = window.multiplayerManager.getGameInfo();
-        
-        if (gameInfo && gameInfo.isMultiplayer) {
-            // Host (blancs) peut jouer quand c'est le tour des blancs
-            if (gameInfo.role === 'host' && chess.turn() === 'w') {
-                return true;
-            }
-            // Guest (noirs) peut jouer quand c'est le tour des noirs
-            if (gameInfo.role === 'guest' && chess.turn() === 'b') {
-                return true;
-            }
-            return false; // Pas notre tour
-        }
-    }
-    
-    // Pour les autres modes, toujours autoriser
-    return true;
-}
-
-function updateTurnIndicator() {
-    const isMyTurn = shouldAllowMoves();
-    
-    // Supprimer l'ancien indicateur
-    $('.turn-indicator').remove();
-    
-    if (modStreamerChatvStreamerChat && window.multiplayerManager) {
-        const gameInfo = window.multiplayerManager.getGameInfo();
-        
-        if (gameInfo && gameInfo.isMultiplayer) {
-            let message = '';
-            if (isMyTurn) {
-                message = '<div class="turn-indicator" style="color: green;">🎯 C\'est votre tour !</div>';
-            } else {
-                message = '<div class="turn-indicator" style="color: orange;">⏳ En attente du coup adverse...</div>';
-            }
-            
-            // Ajouter le message au-dessus du plateau
-            $('#myBoard').before(message);
-        }
-    }
-}
-
 function getTeamByChannel(target, context) {
-    // Vérifier que target est une chaîne de caractères
-    if (typeof target !== 'string') {
-        console.warn('getTeamByChannel: target n\'est pas une chaîne', target);
-        
-        // En mode multiplayer, déterminer l'équipe selon le rôle
-        if (modStreamerChatvStreamerChat && window.multiplayerManager) {
-            const gameInfo = window.multiplayerManager.getGameInfo();
-            if (gameInfo.role === 'host') return 0;
-            if (gameInfo.role === 'guest') return 1;
-        }
-        
-        // Fallback sur teamToPlay
-        return teamToPlay;
-    }
-    
     // Récupérer le nom du canal sans le #
     let channelName = target.replace('#', '').toLowerCase();
     
     // Déterminer l'équipe en fonction du canal
-    if(streamerChatvStreamerChat0 && channelName === streamerChatvStreamerChat0.toLowerCase()) {
+    if(channelName === streamerChatvStreamerChat0.toLowerCase()) {
         return 0; // Équipe des blancs
-    } else if(streamerChatvStreamerChat1 && channelName === streamerChatvStreamerChat1.toLowerCase()) {
-        return 1; // Équipe des noirs  
+    } else if(channelName === streamerChatvStreamerChat1.toLowerCase()) {
+        return 1; // Équipe des noirs
     }
     
-    // En mode multiplayer, utiliser le rôle comme fallback
-    if (modStreamerChatvStreamerChat && window.multiplayerManager) {
-        const gameInfo = window.multiplayerManager.getGameInfo();
-        if (gameInfo.role === 'host') return 0;
-        if (gameInfo.role === 'guest') return 1;
-    }
-    
-    console.log(`Canal non reconnu: ${channelName}, utilisation de teamToPlay: ${teamToPlay}`);
-    return teamToPlay;
+    console.log(`Canal non reconnu: ${channelName}`);
+    return -1; // Canal non reconnu
 }
 
-function refreshBoard(chess, context = null) {
-    if (chess.turn() == 'w') {
-        teamToPlay = 0;
-    } else {
-        teamToPlay = 1;
-    }
+function refreshBoard(chess, context=null) {
+	if(chess.turn() == 'w') {
+		teamToPlay = 0;
+	}
+	else {
+		teamToPlay = 1
+	}
 
-    $('body').attr('data-team', chess.turn());
-    $("#availableList ul").empty();
+	$('body').attr('data-team', chess.turn());
+
+	$("#availableList ul").empty();
  
-    let moves = chess.moves().sort(function(a, b) {
-        if (a === b) return 0; 
-        return a > b ? 1 : -1;
-    });
-    
-    moves.forEach((item) => {    
-        let li = document.createElement("li");
-        let val = item.replaceAll('#', '').replaceAll('+', '');
-        
-        let list = document.getElementById("availableList" + val.slice(0, 1));
-        
-        if (list == null)
-            list = document.getElementById("availableListP");
-        
-        li.innerText = val;
-        list.appendChild(li);
-    });
-    
-    // Déterminer si les clics doivent être activés
-    let shouldActivateClicks = true;
-    
-    if (modStreamerChatvStreamerChat && window.multiplayerManager) {
-        const gameInfo = window.multiplayerManager.getGameInfo();
-        
-        if (gameInfo && gameInfo.isMultiplayer) {
-            // En mode multiplayer, activer seulement si c'est notre tour
-            if (gameInfo.role === 'host' && chess.turn() !== 'w') {
-                shouldActivateClicks = false;
-            } else if (gameInfo.role === 'guest' && chess.turn() !== 'b') {
-                shouldActivateClicks = false;
-            }
-        }
-    }
-    
-    // Appliquer ou non les clics
-    if (shouldActivateClicks) {
-        $("#availableList ul li").on("click", function() {
-            const clickData = createClickContext();
-            play(clickData.target, clickData.context, [$(this).text()]);
-        });
-        $("#availableList ul li").addClass('clickable').removeClass('disabled');
-    } else {
-        $("#availableList ul li").off("click");
-        $("#availableList ul li").addClass('disabled').removeClass('clickable');
-    }
-    
-    console.log(`📋 Board rafraîchi - Tour: ${chess.turn()}, Clics: ${shouldActivateClicks ? 'Activés' : 'Désactivés'}`);
+	let moves = chess.moves().sort(function(a, b) {
+		if(a === b) return 0; 
+		return a > b ? 1 : -1;
+	});
+	
+	moves.forEach((item) => {	
+		let li = document.createElement("li");
+		let val = item.replaceAll('#', '').replaceAll('+', '');
+		
+		let list = document.getElementById("availableList"+val.slice(0,1));
+		
+		if(list == null)
+			list = document.getElementById("availableListP");
+		
+		li.innerText = val
+		list.appendChild(li);
+	});
+	
+	$("#availableList ul li").on("click", function(){
+		play(clickOpts.identity, clickOpts.identity, [$(this).text()]);
+	});
+	
 }
 
 function checkforChemate() {
@@ -2276,11 +2219,8 @@ function setupMultiplayerButtons() {
             
             // Générer les URLs
             const baseUrl = window.location.origin + window.location.pathname;
-            const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&gameMode=modStreamerChatvStreamerChat&pauseAfterWinLose=15&streamerChatvStreamerChat0=Xou____&streamerChatvStreamerChat1=xoudev`;
-            const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&gameMode=modStreamerChatvStreamerChat&pauseAfterWinLose=15&streamerChatvStreamerChat0=Xou____&streamerChatvStreamerChat1=xoudev`;
-            
-            //const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
-            //const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+            const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+            const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
             
             const hostUrlEl = document.getElementById('hostUrl');
             const guestUrlEl = document.getElementById('guestUrl');
@@ -2312,8 +2252,7 @@ function setupMultiplayerButtons() {
             
             // Simuler la connexion
             const baseUrl = window.location.origin + window.location.pathname;
-            const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&gameMode=modStreamerChatvStreamerChat&pauseAfterWinLose=15&streamerChatvStreamerChat0=Xou____&streamerChatvStreamerChat1=xoudev`;
-            //const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}`;
+            const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
             
             const playerUrlEl = document.getElementById('playerUrl');
             if (playerUrlEl) {
@@ -2328,55 +2267,6 @@ function setupMultiplayerButtons() {
             this.style.display = 'none';
         });
     }
-}
-
-function setupMultiplayerHandlers() {
-    if (!window.gameSocket) return;
-    
-    // Nettoyer les anciens listeners
-    window.gameSocket.off('movePlayed');
-    
-    // Gestionnaire pour les coups reçus
-    window.gameSocket.on('movePlayed', (data) => {
-        console.log('📥 Coup reçu du réseau:', data);
-        
-        // Vérifier que ce n'est pas notre propre coup qui revient
-        if (data.player !== window.playerColor) {
-            // C'est un coup de l'adversaire
-            console.log(`🎮 Coup adverse reçu: ${data.move}`);
-            
-            // Jouer le coup avec le flag isFromNetwork
-            moveAction(data.move, true);
-            
-            // Vérifier l'échec et mat
-            if (checkforChemate()) {
-                $("body").addClass('omg-win');
-                startTimer(pauseAfterWinLose, false);
-                setTimeout(function() {
-                    $("body").removeClass('omg-win');
-                    loadNewgame();
-                }, pauseAfterWinLose * 1000);
-            }
-        }
-    });
-    
-    // Gestionnaire pour la synchronisation de l'état
-    window.gameSocket.on('gameStateUpdate', (data) => {
-        console.log('🔄 Mise à jour de l\'état du jeu:', data);
-        
-        // Synchroniser l'état si nécessaire
-        if (data.fen && data.fen !== chess.fen()) {
-            chess.load(data.fen);
-            board.position(chess.fen());
-            refreshBoard(chess);
-            
-            // Reconstruire l'historique si fourni
-            if (data.history) {
-                $(".poll ol").empty();
-                data.history.forEach(move => updateMoveHistory(move));
-            }
-        }
-    });
 }
 
 // ========== Gestion des boutons de copie ==========
@@ -2424,7 +2314,7 @@ function setupCopyButtons() {
             if (!targetElement) return;
             
             const text = targetElement.textContent;
-            window.open(text, "_blank", "noopener");
+            window.open(text, "_blank");
         });
     });
 }
@@ -2559,44 +2449,3 @@ window.DOMHandlers = {
     detectMultiplayerMode,
     initializeSocketIO
 };
-
-function createClickContext() {
-    // Créer un contexte simulé pour les clics
-    if (modStreamerChatvStreamerChat && window.multiplayerManager) {
-        const gameInfo = window.multiplayerManager.getGameInfo();
-        
-        // Déterminer le channel approprié selon le rôle
-        let channel;
-        if (gameInfo.role === 'host') {
-            channel = '#' + (streamerChatvStreamerChat0 || window.streamer1Channel || 'host');
-        } else if (gameInfo.role === 'guest') {
-            channel = '#' + (streamerChatvStreamerChat1 || window.streamer2Channel || 'guest');
-        }
-        
-        // Créer un contexte minimal mais valide
-        const context = {
-            username: gameInfo.streamerName || 'player',
-            'user-id': Date.now(), // ID unique
-            badges: {},
-            'user-type': '',
-            mod: false
-        };
-        
-        return {
-            target: channel,
-            context: context
-        };
-    }
-    
-    // Pour les autres modes, utiliser le defaultChannel
-    return {
-        target: '#' + defaultChannel,
-        context: {
-            username: defaultChannel || 'player',
-            'user-id': Date.now(),
-            badges: {},
-            'user-type': '',
-            mod: false
-        }
-    };
-}

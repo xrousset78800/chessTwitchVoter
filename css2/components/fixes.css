@@ -316,6 +316,16 @@ body.randomWheel #chart {
 }
 
 /* ========== Info Panel (Problème) ========== */
+#probleminfo {
+  background: linear-gradient(135deg, rgba(22, 33, 62, 0.98) 0%, rgba(15, 15, 31, 0.98) 100%);
+  border: 2px solid #667eea;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  max-width: 500px;
+}
+
 #probleminfo h3 {
   color: #667eea;
   font-size: 1.5rem;
@@ -445,21 +455,21 @@ body.voting-active .chart-container {
   animation: pulse 2s ease-in-out infinite;
 }
 
-@keyframes zoomInCentered {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
 body.omg-win #probleminfo,
 body.omg-lose #probleminfo {
   display: block;
-  animation: zoomInCentered 0.5s ease-out;
+  animation: zoomIn 0.5s ease-out;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
         body {
@@ -761,7 +771,6 @@ body.omg-lose #probleminfo {
             font-family: monospace;
             font-size: 12px;
             color: #bbb;
-            overflow-wrap: anywhere;
         }
         
         .btn-copy {
@@ -795,33 +804,3 @@ body.omg-lose #probleminfo {
         font-size: 14px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
-
-#availableList ul li.disabled {
-    opacity: 0.5;
-    cursor: not-allowed !important;
-    pointer-events: none;
-}
-
-#availableList ul li.clickable {
-    cursor: pointer;
-}
-
-/* Indicateur visuel du joueur actuel */
-.player-info.current-player {
-    background-color: #4CAF50;
-    color: white;
-    padding: 5px;
-    border-radius: 3px;
-}
-
-/* Message d'attente */
-.waiting-opponent {
-    text-align: center;
-    padding: 10px;
-    background: #f0f0f0;
-    border-radius: 5px;
-    margin: 10px 0;
-}
-#configModal {
-  max-width: 700px;
-}
