@@ -42,14 +42,6 @@ function getLinkedChannels() {
     console.log('📺 Channels configurés:', linkedChannels, 'pour le mode:', gameMode);
     return linkedChannels;
 }
-
-window.timerState = {
-    isRunning: false,
-    currentTime: 0,
-    startedBy: null,
-    lastSync: Date.now()
-};
-
 // ========== ChessboardArrows (version simple) ==========
 class ChessboardArrows {
     constructor(containerId) {
@@ -169,86 +161,31 @@ function preloadThemesForMenu() {
 }
 
 $(document).ready(function() {
+    // Si on est en mode multiplayer, configurer les handlers
+    if (window.multiplayerMode && window.multiplayerManager) {
+        // Attendre que le socket soit prêt
+        const checkSocket = setInterval(() => {
+            if (window.gameSocket && window.gameSocket.connected) {
+                clearInterval(checkSocket);
+                setupMultiplayerHandlers();
+                console.log('✅ Handlers multiplayer configurés');
+            }
+        }, 100);
+        
+        // Timeout de sécurité
+        setTimeout(() => clearInterval(checkSocket), 5000);
+    }
+
     //addPhantomBridgeControls();
 
-    // Préchargement des thèmes
     preloadThemesForMenu();
     updatePageTitle();
-    
+
     console.log('🐍 Phantom Bridge Client initialisé');
-    
-    // Si on est en mode multiplayer et que le manager existe
-    if (window.multiplayerMode && window.multiplayerManager) {
-        console.log('🎮 Utilisation du MultiplayerManager existant');
-        
-        // S'assurer que Socket.IO est prêt
-        window.multiplayerManager.waitForSocketIO();
-    }
+
 });
 
 
-function loadSocketIOOnce(callback) {
-    // Vérifier si Socket.IO est déjà chargé
-    if (typeof io !== 'undefined') {
-        console.log('✅ Socket.IO déjà disponible');
-        if (callback) callback();
-        return;
-    }
-    
-    // Vérifier si on est déjà en train de charger
-    if (window.socketIOLoading) {
-        console.log('⏳ Socket.IO déjà en cours de chargement');
-        // Ajouter le callback à la file d'attente
-        if (!window.socketIOCallbacks) window.socketIOCallbacks = [];
-        if (callback) window.socketIOCallbacks.push(callback);
-        return;
-    }
-    
-    // Marquer comme en cours de chargement
-    window.socketIOLoading = true;
-    window.socketIOCallbacks = callback ? [callback] : [];
-    
-    // Charger Socket.IO
-    const script = document.createElement('script');
-    script.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
-    script.onload = function() {
-        console.log('✅ Socket.IO chargé avec succès');
-        window.socketIOLoading = false;
-        
-        // Exécuter tous les callbacks en attente
-        if (window.socketIOCallbacks) {
-            window.socketIOCallbacks.forEach(cb => cb());
-            window.socketIOCallbacks = [];
-        }
-    };
-    script.onerror = function() {
-        console.error('❌ Erreur lors du chargement de Socket.IO');
-        window.socketIOLoading = false;
-    };
-    
-    document.head.appendChild(script);
-}
-
-// === DÉTECTION DU MODE MULTIPLAYER (VERSION CORRIGÉE) ===
-function detectMultiplayerMode() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameId = urlParams.get('game');
-    const role = urlParams.get('role');
-
-    if (gameId && role) {
-        console.log('🎮 Mode multiplayer détecté via URL');
-        
-        // Charger Socket.IO une seule fois
-        loadSocketIOOnce(() => {
-            // Socket.IO est prêt, le MultiplayerManager peut l'utiliser
-            if (window.multiplayerManager) {
-                window.multiplayerManager.waitForSocketIO();
-            }
-        });
-    } else {
-        console.log('🎯 Mode solo - Socket.IO non chargé');
-    }
-}
 
 var colorArray = [
 '#f2ff93','#dc90e8','#88e600','#e5c0ff','#01d04b','#ff9cc9','#37ff85','#ffaca6','#08c55c','#ffa837','#85f9ff','#e5c700','#a8d7ff','#84c600','#67b8c3','#fff55e','#01c2a0','#d5a517','#02dbae','#df9f4d','#89ff89','#ffe7dd','#7cbc5f','#ffdfa1','#97ffe0','#a9b174','#bbffa4','#79b8a3','#e6ffcf','#98b391'];
@@ -904,251 +841,168 @@ function showCurrentmax(poll) {
   });
 }
 
-// === SYSTÈME DE SYNCHRONISATION DES TIMERS MULTIPLAYER ===
-
-// Variables globales pour la gestion du timer synchronisé
-window.timerState = {
-    isRunning: false,
-    currentTime: 0,
-    startedBy: null,
-    lastSync: Date.now()
-};
-
-// === 1. MODIFICATION DE moveAction pour gérer le timer ===
-function moveAction(move, isFromNetwork = false) {
-    // Jouer le coup
-    chess.move(move);
-    board.position(chess.fen());
-    
-    // Jouer le son
-    playSoundForMove(chess);
-    
-    // Mettre à jour l'affichage des joueurs
-    setTimeout(refreshPlayerDisplay, 100);
-    
-    // Mettre à jour l'historique
-    updateMoveHistory(move);
-    
-    // En mode multiplayer avec timer
-    if (window.multiplayerMode && modStreamerChatvStreamerChat && timerMode) {
-        // Arrêter le timer actuel
-        stopTimer();
-        voteOpen = false;
-        
-        // Réinitialiser les votes
-        poll = [];
-        if (typeof pollChart !== 'undefined') {
-            pollChart.data.labels = [];
-            pollChart.data.datasets[0].data = [];
-            pollChart.update();
-        }
-        
-        // Le joueur qui vient de jouer arrête son timer
-        // L'autre joueur doit démarrer le sien
-        const nextPlayer = chess.turn() === 'w' ? 'white' : 'black';
-        const shouldStartTimer = (window.playerColor === nextPlayer);
-        
-        if (!isFromNetwork && window.gameSocket) {
-            // Envoyer le coup ET l'info du timer
-            console.log('🎯 Émission du coup avec info timer:', move);
-            window.gameSocket.emit('moveSelected', {
-                gameId: window.currentGameId,
-                player: window.playerColor,
-                move: move,
-                fen: chess.fen(),
-                nextTimer: {
-                    player: nextPlayer,
-                    duration: InitialvoterTimer
-                }
-            });
-        }
-        
-        // Démarrer le timer seulement si c'est notre tour
-        if (shouldStartTimer) {
-            console.log('⏰ C\'est notre tour, démarrage du timer');
-            setTimeout(() => {
-                startTimer(InitialvoterTimer, true);
-                voteOpen = true;
-                updateTurnIndicator();
-            }, 500);
-        } else {
-            console.log('⏸️ Ce n\'est pas notre tour, timer en attente');
-            updateTurnIndicator();
-        }
-        
-    } else if (!window.multiplayerMode) {
-        // Mode normal (non multiplayer)
-        if (window.gameSocket && !isFromNetwork) {
-            window.gameSocket.emit('moveSelected', {
-                gameId: window.currentGameId,
-                player: window.playerColor,
-                move: move,
-                fen: chess.fen()
-            });
-        }
-    }
-    
-    // Rafraîchir le plateau
-    refreshBoard(chess);
-    
-    // Mettre à jour l'indicateur de tour
-    if (typeof updateTurnIndicator === 'function') {
-        updateTurnIndicator();
-    }
-    
-    // Animer le mouvement
-    $("[data-attempt]").attr("data-attempt", parseInt($("[data-attempt]").attr("data-attempt")) + 1);
-    $(".poll ol").animate({ scrollTop: $(".poll").offset().top }, 500);
-    
-    // Activer les clics sur l'historique
-    $("[data-fen]").click(function() {
-        board.position($(this).data("fen"));
-    });
-    
-    console.log(`✅ Coup joué: ${move}, isFromNetwork: ${isFromNetwork}, Tour suivant: ${chess.turn()}`);
-}
-
-// === 2. GESTIONNAIRE POUR LA RÉCEPTION DES COUPS AVEC TIMER ===
-function setupMultiplayerTimerHandlers() {
-    if (!window.gameSocket) return;
-    
-    // Nettoyer les anciens listeners
-    window.gameSocket.off('movePlayed');
-    window.gameSocket.off('timerSync');
-    window.gameSocket.off('timerExpired');
-    
-    // Gestionnaire pour les coups reçus
-    window.gameSocket.on('movePlayed', (data) => {
-        console.log('📥 Coup reçu du réseau avec timer info:', data);
-        
-        // Vérifier que ce n'est pas notre propre coup
-        if (data.player !== window.playerColor) {
-            console.log(`🎮 Coup adverse reçu: ${data.move}`);
-            
-            // Jouer le coup
-            moveAction(data.move, true);
-            
-            // Si info timer présente et c'est notre tour
-            if (data.nextTimer && data.nextTimer.player === window.playerColor && timerMode) {
-                console.log('⏰ Timer info reçue, c\'est notre tour de jouer');
-                
-                // Petit délai pour laisser l'animation se faire
-                setTimeout(() => {
-                    startTimer(data.nextTimer.duration || InitialvoterTimer, true);
-                    voteOpen = true;
-                    updateTurnIndicator();
-                }, 500);
-            }
-            
-            // Vérifier l'échec et mat
-            if (checkforChemate()) {
-                handleGameEnd();
-            }
-        }
-    });
-    
-    // Synchronisation du timer entre les clients
-    window.gameSocket.on('timerSync', (data) => {
-        console.log('⏱️ Sync timer reçue:', data);
-        
-        if (data.player === window.playerColor) {
-            // Synchroniser notre timer local
-            window.timerState.currentTime = data.remaining;
-            updateTimerDisplay(data.remaining);
-        }
-    });
-    
-    // Gestion de l'expiration du timer
-    window.gameSocket.on('timerExpired', (data) => {
-        console.log('⏰ Timer expiré pour:', data.player);
-        
-        if (data.player === window.playerColor) {
-            // Notre timer a expiré, traiter le résultat du vote
-            handleTimerExpired();
-        }
-    });
-}
-
-// === 3. MODIFICATION DE voteResult pour le multiplayer ===
 function voteResult(poll) {
-    let vote = "";
-    var randomIdx = null;
-    console.log("Résultat du vote:", poll);
-    
-    if (Object.entries(poll).length > 0) {
-        // Déterminer le coup gagnant
-        if (majorityMode || probMode) {
-            var result = poll.reduce((acc, o) => (acc[o.move] = (acc[o.move] || 0) + 1, acc), {});
-            let max = Math.max.apply(null, Object.values(result));
-            
-            $.each(result, function(i, value) {
-                if (value === max) {
-                    vote = i;
-                }
-            });
-            
-            // En mode multiplayer, jouer le coup et passer le tour
-            if (modStreamerChatvStreamerChat && window.multiplayerMode) {
-                console.log('🗳️ Vote terminé, coup choisi:', vote);
-                moveAction(vote);
-                
-                // Le timer sera géré par moveAction
-            } else {
-                // Mode normal
-                moveAction(vote);
-                
-                if (!probMode && checkforChemate()) {
-                    handleGameEnd();
-                    return;
-                }
-                
-                $("body").addClass("showTimer");
-                startTimer(InitialvoterTimer, true);
-                voteOpen = true;
+	
+	let vote = "";
+	var randomIdx = null;
+	console.log(poll);
+	if(Object.entries(poll).length > 0) {
+		// FUNCTION Meilleur vote
+		console.log("on a des votes")
+		//console.log(poll)
+		//Pas de proportionnel en mode problème
+		if(majorityMode || probMode) {
+			var result = poll.reduce( (acc, o) => (acc[o.move] = (acc[o.move] || 0)+1, acc), {} );
+			let max = Math.max.apply(null, Object.values(result));
+
+			//console.log(result);
+			$.each(result, function(i, value) {
+			  if(value === max) {
+			  	vote = i;
+			  }
+			});
+			//console.log(vote);
+    	moveAction(vote)
+
+		  if(!probMode && checkforChemate()) {
+		      $("body").addClass('omg-win');
+		      startTimer(pauseAfterWinLose, false);
+		      setTimeout(function() {
+		          $("body").removeClass('omg-win');
+		          loadNewgame();
+		      }, pauseAfterWinLose*1000);
+		      return; // Important : arrêter l'exécution
+		  }
+
+
+
+			$("body").addClass("showTimer");
+			startTimer(InitialvoterTimer, true);
+			voteOpen = true;
+		} else {
+			console.log("Pas mode majorité, donc random sur les votes");
+
+			$(".votes ol").html("");
+			$("body").addClass("randomWheel");
+
+			$.each(moves, function(i, value) {
+			  poll.push({"player": moves.player, "move": moves.move});
+			});
+
+			let move = randomWheel(poll, chess.turn());
+			voteOpen = false;
+			setTimeout(function(){
+      	$("body").removeClass("randomWheel");
+				$(".votes ol").html("");
+      	moveAction(move)
+				$("body").addClass("showTimer");
+				startTimer(InitialvoterTimer, true);
+				voteOpen = true;
+    	}, timerWheelAnimation * 1000)
+		}
+	}	else{
+		if(probMode == true){
+			//GAME OVER
+			console.log("game over")
+			$("body").addClass('omg-lose');
+				if(timerMode) {
+					stopTimer();
+				}
+	
+			startPauseTimer(pauseAfterWinLose, function() {
+				$("body").removeClass('omg-lose');
+				if(probMode == true) {
+					globalReloadProblem(false);
+				}
+			});
+
+			//GAME OVER
+		} else {
+			// FUNCTION RANDOM MOVE QUAND PAS DE VOTE
+			var moves = chess.moves();
+			$.each(moves, function(i, value) {
+				let color = colorArray[Math.floor(Math.random() * colorArray.length)];
+			  poll.push({"player": 'random', "move": value, color: color });
+			});
+
+			$(".votes ol").html("");
+			console.log("pas de résultat, random sur les choix dispo");
+			$("body").addClass("randomWheel");
+
+			let move = randomWheel(poll, chess.turn());
+			//console.log(move);
+			voteOpen = false;
+			setTimeout(function(){
+				moveAction(move)
+      	$("body").removeClass("randomWheel");
+				$(".votes ol").html("");
+				$("body").addClass("showTimer");
+				startTimer(InitialvoterTimer, true);
+				voteOpen = true;
+    	}, timerWheelAnimation * 1000)
+
+			// FUNCTION RANDOM MOVE QUAND PAS DE VOTE
+		}
+
+	}
+
+	if(probMode == true) {
+		let verif = verifPbm();
+		let status;
+		if(verif == false) {
+			//Nope, erreur
+			status = 'Erreur !';
+			console.log("faute dans le pb mode timer");
+			
+            var tmp = $("[data-solution]").text();
+            if (tmp && tmp.length >= 4) {
+                $("[data-square]").removeClass("highlight-black");
+                $("[data-square='"+tmp.slice(0,2)+"']").addClass("highlight-black");
+                $("[data-square='"+tmp.slice(2,4)+"']").addClass("highlight-black");
             }
-        } else {
-            // Mode aléatoire
-            handleRandomMove(poll);
-        }
-    } else {
-        // Pas de votes
-        if (probMode == true) {
-            handleNoVotesInProblemMode();
-        } else {
-            // Coup aléatoire si pas de vote
-            var moves = chess.moves();
-            $.each(moves, function(i, value) {
-                let color = colorArray[Math.floor(Math.random() * colorArray.length)];
-                poll.push({"player": 'random', "move": value, color: color });
-            });
-            
-            handleRandomMove(poll);
-        }
-    }
-}
+			
+
+			chess.move({from:tmp.slice(0,2), to:tmp.slice(2,4)});
+			board.position(chess);
+
+			globalReloadProblem(false);
+		} else {
+			//On vérifie si c'est la fin du problème
+			console.log("Correct, on continue par le move du bot dans le timer");
+
+			if ($("[data-attempt]").attr("data-attempt") == $("[data-length]").attr("data-length")) {
+				globalReloadProblem(true);
+		  } else {
+				setTimeout(function() {
+					let move = playPbm();
+						moveAction(move);
+						var moves = chess.moves();
+						refreshBoard(chess);
+
+
+				}, 2000);
+		  }
+		}
+	} else {
+
+
+
+	  // checkmate?
+		if(checkforChemate()) {
+			$("body").addClass('omg-win');
+		  startTimer(pauseAfterWinLose, false);
+			setTimeout(function() {
+				$("body").removeClass('omg-win');
+						loadNewgame();
+			}, pauseAfterWinLose*1000);
+		}
+	}
+}	
 /***********************************************************************************************/
 /***************************************      voter     ****************************************/
 /***********************************************************************************************/
 
-function handleGameEnd() {
-    $("body").addClass('omg-win');
-    stopTimer();
-    voteOpen = false;
-    
-    // En multiplayer, informer l'autre joueur
-    if (window.multiplayerMode && window.gameSocket) {
-        window.gameSocket.emit('gameEnded', {
-            gameId: window.currentGameId,
-            winner: chess.turn() === 'w' ? 'black' : 'white'
-        });
-    }
-    
-    startTimer(pauseAfterWinLose, false);
-    setTimeout(function() {
-        $("body").removeClass('omg-win');
-        loadNewgame();
-    }, pauseAfterWinLose * 1000);
-}
+
 
 
 /***********************************************************************************************/
@@ -1350,72 +1204,24 @@ function moveAction(move, isFromNetwork = false) {
     // Mettre à jour l'affichage des joueurs
     setTimeout(refreshPlayerDisplay, 100);
     
-    // Mettre à jour l'historique
+    // IMPORTANT: Toujours mettre à jour l'historique
     updateMoveHistory(move);
     
-    // En mode multiplayer avec timer
-    if (window.multiplayerMode && modStreamerChatvStreamerChat && timerMode) {
-        // Arrêter le timer actuel
-        stopTimer();
-        voteOpen = false;
-        
-        // Réinitialiser les votes
-        poll = [];
-        if (typeof pollChart !== 'undefined') {
-            pollChart.data.labels = [];
-            pollChart.data.datasets[0].data = [];
-            pollChart.update();
-        }
-        
-        // Le joueur qui vient de jouer arrête son timer
-        // L'autre joueur doit démarrer le sien
-        const nextPlayer = chess.turn() === 'w' ? 'white' : 'black';
-        const shouldStartTimer = (window.playerColor === nextPlayer);
-        
-        if (!isFromNetwork && window.gameSocket) {
-            // Envoyer le coup ET l'info du timer
-            console.log('🎯 Émission du coup avec info timer:', move);
-            window.gameSocket.emit('moveSelected', {
-                gameId: window.currentGameId,
-                player: window.playerColor,
-                move: move,
-                fen: chess.fen(),
-                nextTimer: {
-                    player: nextPlayer,
-                    duration: InitialvoterTimer
-                }
-            });
-        }
-        
-        // Démarrer le timer seulement si c'est notre tour
-        if (shouldStartTimer) {
-            console.log('⏰ C\'est notre tour, démarrage du timer');
-            setTimeout(() => {
-                startTimer(InitialvoterTimer, true);
-                voteOpen = true;
-                updateTurnIndicator();
-            }, 500);
-        } else {
-            console.log('⏸️ Ce n\'est pas notre tour, timer en attente');
-            updateTurnIndicator();
-        }
-        
-    } else if (!window.multiplayerMode) {
-        // Mode normal (non multiplayer)
-        if (window.gameSocket && !isFromNetwork) {
-            window.gameSocket.emit('moveSelected', {
-                gameId: window.currentGameId,
-                player: window.playerColor,
-                move: move,
-                fen: chess.fen()
-            });
-        }
+    // Envoyer au serveur seulement si c'est un coup local
+    if (window.multiplayerMode && window.gameSocket && !isFromNetwork) {
+        console.log('🎯 Émission du coup vers le serveur:', move);
+        window.gameSocket.emit('moveSelected', {
+            gameId: window.currentGameId,
+            player: window.playerColor,
+            move: move,
+            fen: chess.fen()
+        });
     }
     
-    // Rafraîchir le plateau
+    // IMPORTANT: Toujours rafraîchir le plateau après un coup
     refreshBoard(chess);
     
-    // Mettre à jour l'indicateur de tour
+    // Mettre à jour l'indicateur de tour si disponible
     if (typeof updateTurnIndicator === 'function') {
         updateTurnIndicator();
     }
@@ -1430,66 +1236,6 @@ function moveAction(move, isFromNetwork = false) {
     });
     
     console.log(`✅ Coup joué: ${move}, isFromNetwork: ${isFromNetwork}, Tour suivant: ${chess.turn()}`);
-}
-
-function setupMultiplayerTimerHandlers() {
-    if (!window.gameSocket) return;
-    
-    // Nettoyer les anciens listeners
-    window.gameSocket.off('movePlayed');
-    window.gameSocket.off('timerSync');
-    window.gameSocket.off('timerExpired');
-    
-    // Gestionnaire pour les coups reçus
-    window.gameSocket.on('movePlayed', (data) => {
-        console.log('📥 Coup reçu du réseau avec timer info:', data);
-        
-        // Vérifier que ce n'est pas notre propre coup
-        if (data.player !== window.playerColor) {
-            console.log(`🎮 Coup adverse reçu: ${data.move}`);
-            
-            // Jouer le coup
-            moveAction(data.move, true);
-            
-            // Si info timer présente et c'est notre tour
-            if (data.nextTimer && data.nextTimer.player === window.playerColor && timerMode) {
-                console.log('⏰ Timer info reçue, c\'est notre tour de jouer');
-                
-                // Petit délai pour laisser l'animation se faire
-                setTimeout(() => {
-                    startTimer(data.nextTimer.duration || InitialvoterTimer, true);
-                    voteOpen = true;
-                    updateTurnIndicator();
-                }, 500);
-            }
-            
-            // Vérifier l'échec et mat
-            if (checkforChemate()) {
-                handleGameEnd();
-            }
-        }
-    });
-    
-    // Synchronisation du timer entre les clients
-    window.gameSocket.on('timerSync', (data) => {
-        console.log('⏱️ Sync timer reçue:', data);
-        
-        if (data.player === window.playerColor) {
-            // Synchroniser notre timer local
-            window.timerState.currentTime = data.remaining;
-            updateTimerDisplay(data.remaining);
-        }
-    });
-    
-    // Gestion de l'expiration du timer
-    window.gameSocket.on('timerExpired', (data) => {
-        console.log('⏰ Timer expiré pour:', data.player);
-        
-        if (data.player === window.playerColor) {
-            // Notre timer a expiré, traiter le résultat du vote
-            handleTimerExpired();
-        }
-    });
 }
 
 function updateMoveHistory(move) {
@@ -1763,44 +1509,15 @@ function updateTurnIndicator() {
         
         if (gameInfo && gameInfo.isMultiplayer) {
             let message = '';
-            
             if (isMyTurn) {
-                if (timerMode && voteOpen) {
-                    message = `
-                        <div class="turn-indicator active-turn">
-                            <span class="indicator-icon">🎯</span>
-                            <span class="indicator-text">C'est votre tour - Votez maintenant!</span>
-                            <span class="timer-badge" id="turn-timer">${voterTimer}s</span>
-                        </div>
-                    `;
-                } else {
-                    message = '<div class="turn-indicator active-turn">🎯 C\'est votre tour!</div>';
-                }
+                message = '<div class="turn-indicator" style="color: green;">🎯 C\'est votre tour !</div>';
             } else {
-                message = `
-                    <div class="turn-indicator waiting-turn">
-                        <span class="indicator-icon">⏳</span>
-                        <span class="indicator-text">Tour de l'adversaire...</span>
-                    </div>
-                `;
+                message = '<div class="turn-indicator" style="color: orange;">⏳ En attente du coup adverse...</div>';
             }
             
             // Ajouter le message au-dessus du plateau
             $('#myBoard').before(message);
         }
-    }
-}
-
-function syncTimerWithServer() {
-    if (!window.multiplayerMode || !window.gameSocket || !timerMode) return;
-    
-    // Envoyer l'état du timer toutes les 5 secondes si actif
-    if (voteOpen && voterTimer > 0) {
-        window.gameSocket.emit('timerUpdate', {
-            gameId: window.currentGameId,
-            player: window.playerColor,
-            remaining: voterTimer
-        });
     }
 }
 
