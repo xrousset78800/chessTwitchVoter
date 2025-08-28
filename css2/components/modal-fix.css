@@ -42,6 +42,9 @@
     transition: all 0.2s;
     line-height: 1;
     margin-top: -5px;
+    position: sticky;
+    right: 0px;
+    top: 0;       
 }
 
 .close:hover {
