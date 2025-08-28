@@ -22,7 +22,7 @@ $("#configForm input[name='gameMode'][value='" + gameMode + "']").attr("checked"
 const mod1vViewers = (gameMode === '1vViewers');
 const mod1v1 = (gameMode === '1v1');
 const modViewersvViewers = (gameMode === 'viewersVviewers');
-const modStreamerChatvStreamerChat = (gameMode === 'streamerVstreamer');
+const modStreamerChatvStreamerChat = (gameMode === 'modStreamerChatvStreamerChat');
 
 // PARAMÈTRES SPÉCIFIQUES AUX MODES
 const mod1vViewersPlayer = $.urlParam('mod1vViewersPlayer') ? $.urlParam('mod1vViewersPlayer') : defaultChannel;
@@ -150,6 +150,25 @@ $(document).ready(function() {
     });
 });
 
+
+function debugMultiplayerState() {
+    console.group('🔍 État Multiplayer');
+    console.log('modStreamerChatvStreamerChat:', modStreamerChatvStreamerChat);
+    console.log('window.multiplayerMode:', window.multiplayerMode);
+    console.log('window.multiplayerManager existe:', !!window.multiplayerManager);
+    
+    if (window.multiplayerManager) {
+        const gameInfo = window.multiplayerManager.getGameInfo();
+        console.log('GameInfo:', gameInfo);
+        console.log('Role:', gameInfo.role);
+        console.log('isMultiplayer:', gameInfo.isMultiplayer);
+    }
+    
+    console.log('Orientation actuelle:', defaultConfig.orientation);
+    console.log('Team to play:', teamToPlay);
+    console.log('Tour actuel:', chess ? chess.turn() : 'N/A');
+    console.groupEnd();
+}
 /*
 REFAIRE LA TODO
 */

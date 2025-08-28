@@ -282,23 +282,18 @@ class MultiplayerManager {
         this.socket = io();
         
         this.socket.on('connect', () => {
-            console.log('🔗 Connecté au serveur');
+            console.log('🔌 Connecté au serveur Socket.IO');
+            window.gameSocket = this.socket;
             
-            if (this.role === 'host') {
-                this.socket.emit('createGame', {
-                    gameId: this.gameId,
-                    hostName: this.streamerName,
-                    settings: {
-                        timer: true,
-                        restrictions: {}
-                    }
-                });
-            } else if (this.role === 'guest') {
-                this.socket.emit('joinGame', {
-                    gameId: this.gameId,
-                    guestName: this.streamerName
-                });
-            }
+            // Rejoindre la partie
+            this.socket.emit('joinGame', {
+                gameId: this.gameId,
+                role: this.role,
+                streamer: this.streamerName
+            });
+            
+            // Configurer les handlers après connexion
+            setupMultiplayerHandlers();
         });
         
         this.socket.on('gameReady', (data) => {
@@ -321,13 +316,11 @@ class MultiplayerManager {
         });
         
         this.socket.on('movePlayed', (data) => {
-            // Synchroniser les coups
-            if (data.player !== window.playerColor && typeof window.chess !== 'undefined') {
-                window.chess.move(data.move);
-                if (typeof window.board !== 'undefined') {
-                    window.board.position(window.chess.fen());
-                }
-                console.log(`🎯 Coup reçu de l'adversaire: ${data.move}`);
+            console.log('📨 Move reçu via MultiplayerManager:', data);
+            
+            // Propager l'événement au handler global
+            if (window.gameSocket) {
+                window.gameSocket.emit('movePlayed', data);
             }
         });
         
