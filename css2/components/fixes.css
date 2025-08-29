@@ -811,3 +811,28 @@ body.omg-lose h2.omg-lose {
         font-size: 14px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
+
+body.noBg {
+  background: #00ff00;   /* vert pétant pour OBS */
+  box-shadow: none !important;      /* pas d’ombre parasite */
+  border: none !important;          /* pas de bordures colorées */
+}
+
+/* Pour les zones de texte : texte blanc sur fond vert */
+body.noBg,
+body.noBg h1, 
+body.noBg h2,
+body.noBg h3,
+body.noBg h4,
+body.noBg h5,
+body.noBg p,
+body.noBg span,
+body.noBg li,
+body.noBg label {
+  color: #ffffff !important;        /* texte lisible */
+}
+
+/* Echiquier : garder le damier visible */
+body.noBg .main-header, body.noBg .sidebar, body.noBg .chart-container {
+  background: transparent;
+}

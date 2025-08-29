@@ -1425,7 +1425,7 @@ function play(target, context, args) {
 			//client.say(target, `@${context.username} vote for ${move}`);
 			
 			// Move = resetTimeOut  + nouveau coup		
-            if(timerMode && gameMode === 'normal') {
+            if(timerMode) {
 				addMoveToPoll(context.username, move);
 			} else {
 				moveAction(move);
