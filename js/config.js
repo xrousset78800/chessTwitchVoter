@@ -22,7 +22,7 @@ $("#configForm input[name='gameMode'][value='" + gameMode + "']").attr("checked"
 const mod1vViewers = (gameMode === '1vViewers');
 const mod1v1 = (gameMode === '1v1');
 const modViewersvViewers = (gameMode === 'viewersVviewers');
-const modStreamerChatvStreamerChat = (gameMode === 'streamerVstreamer');
+const modStreamerChatvStreamerChat = (gameMode === 'modStreamerChatvStreamerChat');
 
 // PARAMÈTRES SPÉCIFIQUES AUX MODES
 const mod1vViewersPlayer = $.urlParam('mod1vViewersPlayer') ? $.urlParam('mod1vViewersPlayer') : defaultChannel;

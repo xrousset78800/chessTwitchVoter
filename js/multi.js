@@ -320,16 +320,15 @@ class MultiplayerManager {
             this.displayPartnerVotes(votes);
         });
         
-        this.socket.on('movePlayed', (data) => {
-            // Synchroniser les coups
-            if (data.player !== window.playerColor && typeof window.chess !== 'undefined') {
-                window.chess.move(data.move);
-                if (typeof window.board !== 'undefined') {
-                    window.board.position(window.chess.fen());
-                }
-                console.log(`🎯 Coup reçu de l'adversaire: ${data.move}`);
-            }
-        });
+this.socket.on('movePlayed', (data) => {
+    if (data.player !== window.playerColor && typeof window.chess !== 'undefined') {
+        // Appeler moveAction avec flag réseau pour éviter boucle
+        if (typeof window.moveAction === 'function') {
+            window.moveAction(data.move, true);
+        }
+        console.log(`🎯 Coup reçu: ${data.move}`);
+    }
+});
         
         this.socket.on('disconnect', () => {
             console.log('🔌 Déconnecté du serveur');

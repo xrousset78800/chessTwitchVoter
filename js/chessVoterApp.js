@@ -117,6 +117,21 @@ mateAudio.volume = globalVolume*0.8;
 
 //http-server C:\Users\gnole\Documents\GitHub\chessTwitchVoter
 
+window.multiplayerSocket = null;
+window.multiplayerGameId = null;
+window.multiplayerRole = null;
+window.multiplayerColor = null;
+
+// Détection multiplayer depuis URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('game') && urlParams.get('role')) {
+    window.multiplayerGameId = urlParams.get('game');
+    window.multiplayerRole = urlParams.get('role');
+    window.multiplayerColor = (window.multiplayerRole === 'host') ? 'white' : 'black';
+    window.modStreamerChatvStreamerChat = true; // Forcer le mode
+    console.log(`🎮 Multiplayer: ${window.multiplayerRole} (${window.multiplayerColor})`);
+}
+
 var allProblems = [];
 var filteredProblems = [];
 var selectedThemes = new Set();
@@ -160,6 +175,36 @@ function preloadThemesForMenu() {
         });
 }
 
+function setupMultiplayerTimerHandlers() {
+    if (!window.multiplayerSocket) return;
+    
+    // Écouter les mises à jour du timer
+    window.multiplayerSocket.on('timerUpdate', (data) => {
+        voterTimer = data.timeLeft;
+        updateTimerDisplay(voterTimer);
+    });
+    
+    // Écouter le début/fin du timer
+    window.multiplayerSocket.on('timerStart', (data) => {
+        startTimer(data.duration, true);
+        voteOpen = true;
+    });
+    
+    window.multiplayerSocket.on('timerStop', () => {
+        stopTimer();
+        voteOpen = false;
+    });
+}
+
+function syncTimerWithServer() {
+    if (window.multiplayerSocket && window.multiplayerRole === 'host' && voterTimer > 0) {
+        window.multiplayerSocket.emit('timerSync', {
+            gameId: window.multiplayerGameId,
+            timeLeft: voterTimer
+        });
+    }
+}
+
 $(document).ready(function() {
 		//addPhantomBridgeControls();
 
@@ -187,7 +232,6 @@ $(document).ready(function() {
                         setTimeout(() => {
                             startTimer(InitialvoterTimer, true);
                             voteOpen = true;
-                            updateTurnIndicator();
                         }, 1000);
                     }
                 }
@@ -445,19 +489,41 @@ if(noBg) {
 }
 
 var overlay = new ChessboardArrows('board_wrapper');
-if (gameMode !== "probMode") {
-	loadNewgame();
-} else {
-  loadNewProblem();
+
+
+function initializeGame() {
+    return gameMode === "probMode" ? loadNewProblem() : loadNewgame();
 }
 
+initializeGame();
 
-/***********************************************************************************************************************/
-/**********************************     OMG Voter     *****************************************************************/
-/***********************************************************************************************************************/
-
-
-
+if (window.multiplayerGameId) {
+    const script = document.createElement('script');
+    script.src = '/socket.io/socket.io.js';
+    script.onload = function() {
+        window.multiplayerSocket = io();
+        
+        // Rejoindre la partie
+        window.multiplayerSocket.emit('reconnectGame', {
+            gameId: window.multiplayerGameId,
+            role: window.multiplayerRole
+        });
+        
+        // Réception des coups
+        window.multiplayerSocket.on('movePlayed', (data) => {
+            if (data.player !== window.multiplayerColor) {
+                console.log(`📥 Coup reçu: ${data.move}`);
+                moveAction(data.move, true); // true = coup réseau
+            }
+        });
+        
+        console.log('✅ Socket.IO connecté');
+    };
+    script.onerror = function() {
+        console.error('❌ Erreur chargement Socket.IO - Vérifiez que le serveur Node.js est lancé');
+    };
+    document.head.appendChild(script);
+}
 /***********************************************************************************************************************/
 /**********************************     OMG Voter     *****************************************************************/
 /***********************************************************************************************************************/
@@ -478,62 +544,39 @@ function loadNewgame() {
     else if(mod1vViewers) {
         p1 = mod1vViewersPlayer;
         p2 = "viewers";     
-    } else if(modStreamerChatvStreamerChat) {
-        if (window.multiplayerManager && window.multiplayerManager.getGameInfo().isMultiplayer) {
-            const gameInfo = window.multiplayerManager.getGameInfo();
-            if (gameInfo.role === 'host') {
-                p1 = gameInfo.streamerName + " chat";
-                p2 = "Adversaire"; // Sera mis à jour quand l'adversaire se connecte
-            } else {
-                p1 = "Host"; // Sera mis à jour quand on reçoit les infos
-                p2 = gameInfo.streamerName + " chat";
-            }
+    } else if (modStreamerChatvStreamerChat && window.multiplayerColor) {
+        // Utiliser directement window.playerColor défini par multi.js
+        if (window.multiplayerColor  === 'black') {
+            defaultConfig.orientation = 'black';
+            teamToPlay = 1;
         } else {
-            p1 = (streamer1Channel || streamerChatvStreamerChat0 || "Streamer1") + " chat";
-            p2 = (streamer2Channel || streamerChatvStreamerChat1 || "Streamer2") + " chat";
+            defaultConfig.orientation = 'white';
+            teamToPlay = 0;
         }
+        console.log(`🎮 Orientation: ${defaultConfig.orientation} pour ${window.playerColor}`);
     } else {
         p1 = "*";
         p2 = "*";
     }
     vs = " - "+p1+" vs "+p2;
 
-    // CORRECTION: Orientation du plateau selon le rôle en mode multiplayer
-    if (modStreamerChatvStreamerChat && window.multiplayerMode && window.multiplayerManager) {
-        const gameInfo = window.multiplayerManager.getGameInfo();
-        
-        if (gameInfo.role === 'host') {
-            // Host joue toujours avec les blancs (orientation normale)
-            defaultConfig.orientation = 'white';
-            teamToPlay = 0;
-            window.playerColor = 'white';
-            console.log('🎮 Host: orientation WHITE (blancs en bas)');
-        } else if (gameInfo.role === 'guest') {
-            // Guest joue toujours avec les noirs (orientation inversée)
-            defaultConfig.orientation = 'black';
-            teamToPlay = 1;
-            window.playerColor = 'black';
-            console.log('🎮 Guest: orientation BLACK (noirs en bas)');
-        } else {
-            // Fallback: comportement par défaut
-            if(chess.turn() == 'b') {
-                defaultConfig.orientation = 'black';
-                teamToPlay = 1;
-            } else {
-                defaultConfig.orientation = 'white';
-                teamToPlay = 0;
-            }
-        }
+if (gameMode === "probMode") {
+    // Mode problème : ne pas toucher
+    if(chess.turn() == 'b') {
+        defaultConfig.orientation = 'white';
     } else {
-        // Comportement par défaut pour tous les autres modes
-        if(chess.turn() == 'b') {
-            defaultConfig.orientation = 'black';
-            teamToPlay = 1;
-        } else {
-            defaultConfig.orientation = 'white';
-            teamToPlay = 0;
-        }
+        defaultConfig.orientation = 'black';
     }
+} else if (modStreamerChatvStreamerChat && window.multiplayerColor) {
+    // Mode multiplayer avec orientation fixe
+    defaultConfig.orientation = window.multiplayerColor;
+    teamToPlay = (window.multiplayerColor === 'white') ? 0 : 1;
+    console.log(`🎮 Multiplayer orientation: ${defaultConfig.orientation}`);
+} else {
+    // Autres modes : orientation normale
+    defaultConfig.orientation = 'white';
+    teamToPlay = 0;
+}
 
     if(timerMode == true) {
         startTimer(InitialvoterTimer, true);
@@ -805,13 +848,9 @@ function addMoveToPoll(player, move){
 
     showCurrentmax(poll);
 
-    if (multiplayerMode && chess.turn() === playerColor[0]) {
-        gameSocket.emit('votesUpdate', {
-            gameId: currentGameId,
-            votes: poll,
-            turn: chess.turn()
-        });
-    }
+	    if (multiplayerMode && window.multiplayerManager) {
+	        window.multiplayerManager.sendVotes(poll);
+	    }
 }
 
 function showCurrentmax(poll) {
@@ -833,6 +872,17 @@ function voteResult(poll) {
 	let vote = "";
 	var randomIdx = null;
 	console.log(poll);
+
+    if (window.multiplayerGameId) {
+        const isMyTurn = (window.multiplayerColor === 'white' && teamToPlay === 0) ||
+                         (window.multiplayerColor === 'black' && teamToPlay === 1);
+        
+        if (!isMyTurn) {
+            console.log('⏭️ Pas mon tour, j\'attends le coup réseau');
+            return;
+        }
+    }
+
 	if(Object.entries(poll).length > 0) {
 		// FUNCTION Meilleur vote
 		console.log("on a des votes")
@@ -1181,23 +1231,48 @@ var poll = [];
 var moves = [];
 
 function moveAction(move, isFromNetwork = false) {
-		(teamToPlay == 1) ? 0 : 1;
-		chess.move(move);
-		board.position(chess.fen());
-        setTimeout(refreshPlayerDisplay, 100);
-    playSoundForMove(chess)
+	(teamToPlay == 1) ? 0 : 1;
+	chess.move(move);
+	board.position(chess.fen());
 
 
-    if (window.multiplayerMode && window.gameSocket && !isFromNetwork) {
-        console.log('🎯 Émission du coup vers le serveur:', move);
-        window.gameSocket.emit('moveSelected', {
-            gameId: window.currentGameId,
-            player: window.playerColor,
-            move: move,
-            fen: chess.fen()
-        });
+
+    if (isFromNetwork) {
+        chess.move(move);
+        board.position(chess.fen());
+        playSoundForMove(chess);
+        
+        // Mise à jour de l'historique - UNE SEULE FOIS
+        if(chess.turn() == 'b') {
+            $(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+        } else {
+            if($(".poll ol li").length == 0) {
+                $(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+            } else {
+                $(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
+            }
+        }
+        
+        refreshBoard(chess);
+        return; // IMPORTANT : sortir ici pour éviter la double exécution
     }
 
+
+
+if (window.multiplayerSocket && !isFromNetwork && 
+    ((window.multiplayerColor === 'white' && teamToPlay === 0) ||
+     (window.multiplayerColor === 'black' && teamToPlay === 1))) {
+    window.multiplayerSocket.emit('moveSelected', {
+        gameId: window.multiplayerGameId,
+        player: window.multiplayerColor,
+        move: move,
+        fen: chess.fen()
+    });
+    console.log(`📤 Coup émis: ${move}`);
+}	
+
+    setTimeout(refreshPlayerDisplay, 100);
+    playSoundForMove(chess)
 
 		if(chess.turn() == 'b') {
 			$(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
@@ -1343,7 +1418,9 @@ function play(target, context, args) {
 				showAvailableMoves(target, chess, context);
 				return false;
 			}
-
+    if (window.multiplayerMode && window.multiplayerManager && !isFromNetwork) {
+        window.multiplayerManager.sendMove(move);
+    }
 			// FUNCTION MOVE
 			//client.say(target, `@${context.username} vote for ${move}`);
 			
@@ -2247,8 +2324,11 @@ function setupMultiplayerButtons() {
             
             // Générer les URLs
             const baseUrl = window.location.origin + window.location.pathname;
-            const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
-            const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
+            //const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
+            //const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
+            
+            const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=80&timerWheelAnimation=5`;
+            const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=80&timerWheelAnimation=5`;
             
             const hostUrlEl = document.getElementById('hostUrl');
             const guestUrlEl = document.getElementById('guestUrl');
@@ -2280,7 +2360,9 @@ function setupMultiplayerButtons() {
             
             // Simuler la connexion
             const baseUrl = window.location.origin + window.location.pathname;
-            const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
+            //const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&`;
+            
+            const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=80&timerWheelAnimation=5`;
             
             const playerUrlEl = document.getElementById('playerUrl');
             if (playerUrlEl) {

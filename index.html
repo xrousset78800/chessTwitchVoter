@@ -395,7 +395,7 @@
     <!-- Twitch -->
     <script src="js/tmi.min.js"></script>
     <script src="js/client.js"></script>
-    <script src="js/multi.js"></script>
+    <!--script src="js/multi.js"></script-->
     <script src="twitchToken.js"></script>
     
     <script src="js/config.js"></script>
@@ -404,19 +404,6 @@
     <script src="js/chessVoterApp.js"></script>
     
     <script>
-/**
- * Crée un contexte Twitch simulé
- */
-function createMockContext(voter, index) {
-    return {
-        username: voter.username,
-        'user-id': voter.userId || index,
-        subscriber: Math.random() < 0.3,
-        follower: Math.random() < 0.7,
-        mod: Math.random() < 0.05
-    };
-}
-
 /**
  * Teste les permissions de vote selon les règles du mode de jeu
  */
