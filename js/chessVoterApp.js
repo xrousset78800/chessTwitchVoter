@@ -166,6 +166,34 @@ $(document).ready(function() {
         preloadThemesForMenu();
         updatePageTitle();
 
+
+    // Si on est en mode multiplayer avec timer
+    if (window.multiplayerMode && modStreamerChatvStreamerChat) {
+        const checkSocket = setInterval(() => {
+            if (window.gameSocket && window.gameSocket.connected) {
+                clearInterval(checkSocket);
+                setupMultiplayerTimerHandlers();
+                
+                // Synchronisation périodique du timer (toutes les 5 secondes)
+                setInterval(syncTimerWithServer, 5000);
+                
+                console.log('✅ Handlers timer multiplayer configurés');
+                
+                // Si c'est le host et c'est le début de partie, démarrer le premier timer
+                if (window.multiplayerManager) {
+                    const gameInfo = window.multiplayerManager.getGameInfo();
+                    if (gameInfo.role === 'host' && chess.turn() === 'w') {
+                        console.log('🏁 Host démarre le premier timer');
+                        setTimeout(() => {
+                            startTimer(InitialvoterTimer, true);
+                            voteOpen = true;
+                            updateTurnIndicator();
+                        }, 1000);
+                    }
+                }
+            }
+        }, 100);
+    }
     console.log('🐍 Phantom Bridge Client initialisé');
 });
 
@@ -2219,8 +2247,8 @@ function setupMultiplayerButtons() {
             
             // Générer les URLs
             const baseUrl = window.location.origin + window.location.pathname;
-            const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
-            const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+            const hostUrl = `${baseUrl}?game=${gameCode}&role=host&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
+            const guestUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
             
             const hostUrlEl = document.getElementById('hostUrl');
             const guestUrlEl = document.getElementById('guestUrl');
@@ -2252,7 +2280,7 @@ function setupMultiplayerButtons() {
             
             // Simuler la connexion
             const baseUrl = window.location.origin + window.location.pathname;
-            const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat&timerMode=on&InitialvoterTimer=50&timerWheelAnimation=10&pauseAfterWinLose=15`;
+            const playerUrl = `${baseUrl}?game=${gameCode}&role=guest&streamer=${encodeURIComponent(streamerName)}&defaultChannel=Xou____&gameMode=modStreamerChatvStreamerChat`;
             
             const playerUrlEl = document.getElementById('playerUrl');
             if (playerUrlEl) {
