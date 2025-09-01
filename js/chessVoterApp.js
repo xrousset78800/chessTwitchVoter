@@ -610,6 +610,27 @@ function getMultiplayerTeamInfo() {
     };
 }
 
+function reopenVoteAfterProblemLoad() {
+    console.log("🗳️ Réouverture du vote après chargement du problème");
+    
+    if(timerMode) {
+        // Mode timer : relancer le timer
+        console.log("⏱️ Relancement du timer pour le nouveau problème");
+        $("body").addClass("showTimer");
+        startTimer(InitialvoterTimer, true);
+        voteOpen = true;
+    } else {
+        // Mode vote continu : simplement rouvrir le vote
+        console.log("🔄 Réouverture du vote continu");
+        voteOpen = true;
+    }
+    
+    // S'assurer que les classes CSS sont correctes
+    $("body").removeClass('omg-win omg-lose');
+    
+    console.log("✅ Vote rouvert - voteOpen:", voteOpen, "- timerMode:", timerMode);
+}
+
 function loadNewProblem() {
     console.log('🔄 Chargement d\'un nouveau problème...');
     console.log('🎯 Thèmes sélectionnés:', Array.from(selectedThemes));
@@ -646,6 +667,8 @@ function loadNewProblem() {
 }
 
 function selectAndLoadProblem() {
+    console.log("🎯 selectAndLoadProblem - Sélection et chargement d'un problème");
+    
     $('.poll ol').empty();
     poll = [];
     
@@ -702,19 +725,18 @@ function selectAndLoadProblem() {
     // CORRECTIF : Créer un nouvel échiquier propre
     board = Chessboard('myBoard', defaultConfig);
     
+    // Jouer le premier coup du problème après un délai
     setTimeout(function() {
         firstMove = playPbm();
-        console.log("first move");
+        console.log("Premier coup du problème:", firstMove);
         moveAction(firstMove);
         var moves = chess.moves();
         refreshBoard(chess);
+        
+        // 🔧 CORRECTION PRINCIPALE : Rouvrir le vote APRÈS le premier coup du bot
+        reopenVoteAfterProblemLoad();
+        
     }, 1000);
-
-    if(timerMode) {
-        startTimer(InitialvoterTimer, true);
-    }
-
-    (teamToPlay == 1) ? 0 : 1;
 }
 /***********************************************************************************************/
 /***************************************      voter     ****************************************/
@@ -868,173 +890,227 @@ function showCurrentmax(poll) {
 }
 
 function voteResult(poll) {
-	
-	let vote = "";
-	var randomIdx = null;
-	console.log(poll);
-
-    if (window.multiplayerGameId) {
-        const isMyTurn = (window.multiplayerColor === 'white' && teamToPlay === 0) ||
-                         (window.multiplayerColor === 'black' && teamToPlay === 1);
+    console.log("voteResult appelé avec", poll.length, "votes");
+    
+    if(Object.entries(poll).length > 0) {
+        // ✅ Il y a des votes
+        console.log("on a des votes");
         
-        if (!isMyTurn) {
-            console.log('⏭️ Pas mon tour, j\'attends le coup réseau');
-            return;
+        // ========== SÉPARATION COMPLÈTE DES LOGIQUES ==========
+        // Le choix majorité/roue est INDÉPENDANT du mode problème/normal
+        
+        if(majorityMode) {
+            // Mode majorité : coup le plus voté, peu importe le mode de jeu
+            selectMoveByMajority(poll);
+        } else {
+            // Mode roue : animation + tirage au sort, peu importe le mode de jeu
+            selectMoveByWheel(poll);
+        }
+        
+    } else {
+        // ❌ Pas de votes
+        handleNoVotes();
+    }
+}
+
+// ========== SÉLECTION PAR MAJORITÉ ==========
+function selectMoveByMajority(poll) {
+    console.log("Mode majorité activé");
+    
+    var result = poll.reduce( (acc, o) => (acc[o.move] = (acc[o.move] || 0)+1, acc), {} );
+    let max = Math.max.apply(null, Object.values(result));
+    let vote = "";
+
+    $.each(result, function(i, value) {
+        if(value === max) {
+            vote = i;
+        }
+    });
+    
+    console.log("Coup majoritaire sélectionné:", vote);
+    
+    // Exécuter le coup immédiatement (pas d'animation)
+    executeMove(vote);
+}
+
+// ========== SÉLECTION PAR ROUE ==========
+function selectMoveByWheel(poll) {
+    console.log("Mode roue activé");
+    
+    $(".votes ol").html("");
+    $("body").addClass("randomWheel");
+    
+    let selectedMove = randomWheel(poll, chess.turn());
+    voteOpen = false;
+    
+    setTimeout(function(){
+        $("body").removeClass("randomWheel");
+        $(".votes ol").html("");
+        
+        // Exécuter le coup après l'animation
+        executeMove(selectedMove);
+        
+    }, timerWheelAnimation * 1000);
+}
+
+// ========== EXÉCUTION DU COUP ET DISPATCH SELON LE MODE DE JEU ==========
+function executeMove(move) {
+    console.log("Exécution du coup:", move);
+    moveAction(move);
+    
+    // Vérifier échec et mat seulement si pas en mode problème
+    if((gameMode !== "probMode") && checkforChemate()) {
+        $("body").addClass('omg-win');
+        startTimer(pauseAfterWinLose, false);
+        setTimeout(function() {
+            $("body").removeClass('omg-win');
+            loadNewgame();
+        }, pauseAfterWinLose*1000);
+        return;
+    }
+    
+    // ========== DISPATCH SELON LE MODE DE JEU ==========
+    if(gameMode === "probMode") {
+        // Mode problème : validation obligatoire
+        handleProblemValidation();
+    } else {
+        // Mode normal : continuer normalement
+        handleNormalModeAfterMove();
+    }
+}
+
+// ========== GESTION MODE NORMAL APRÈS COUP ==========
+function handleNormalModeAfterMove() {
+    if(timerMode) {
+        // Timer activé : relancer pour le prochain tour
+        $("body").addClass("showTimer");
+        startTimer(InitialvoterTimer, true);
+        voteOpen = true;
+        console.log("Mode normal + Timer : relancé pour le prochain tour");
+    } else {
+        // Pas de timer : vote continu
+        voteOpen = true;
+        console.log("Mode normal + Vote continu activé");
+    }
+}
+
+// ========== GESTION MODE PROBLÈME APRÈS COUP ==========
+function handleProblemValidation() {
+    console.log("Mode problème : validation en cours...");
+    
+    // Arrêter le timer pendant la validation (si activé)
+    if(timerMode) {
+        stopTimer();
+        voteOpen = false;
+    }
+    
+    let verif = verifPbm();
+    
+    if(verif == false) {
+        // ❌ Erreur dans le problème
+        console.log("Erreur détectée dans le problème");
+        showCorrectMove();
+        globalReloadProblem(false);
+        
+    } else {
+        // ✅ Coup correct
+        console.log("Coup correct validé");
+
+        if (isProblemComplete()) {
+            // Problème terminé avec succès
+            globalReloadProblem(true);
+        } else {
+            // Continuer le problème avec le coup du bot
+            setTimeout(function() {
+                playBotMoveAndContinue();
+            }, 2000);
         }
     }
+}
 
-	if(Object.entries(poll).length > 0) {
-		// FUNCTION Meilleur vote
-		console.log("on a des votes")
-		//console.log(poll)
-		//Pas de proportionnel en mode problème
-		if(majorityMode || probMode) {
-			var result = poll.reduce( (acc, o) => (acc[o.move] = (acc[o.move] || 0)+1, acc), {} );
-			let max = Math.max.apply(null, Object.values(result));
+// ========== HELPERS POUR LE MODE PROBLÈME ==========
+function showCorrectMove() {
+    var tmp = $("[data-solution]").text();
+    if (tmp && tmp.length >= 4) {
+        $("[data-square]").removeClass("highlight-black");
+        $("[data-square='"+tmp.slice(0,2)+"']").addClass("highlight-black");
+        $("[data-square='"+tmp.slice(2,4)+"']").addClass("highlight-black");
+    }
+    chess.move({from:tmp.slice(0,2), to:tmp.slice(2,4)});
+    board.position(chess);
+}
 
-			//console.log(result);
-			$.each(result, function(i, value) {
-			  if(value === max) {
-			  	vote = i;
-			  }
-			});
-			//console.log(vote);
-    	moveAction(vote)
+function isProblemComplete() {
+    return $("[data-attempt]").attr("data-attempt") == $("[data-length]").attr("data-length");
+}
 
-		  if(!probMode && checkforChemate()) {
-		      $("body").addClass('omg-win');
-		      startTimer(pauseAfterWinLose, false);
-		      setTimeout(function() {
-		          $("body").removeClass('omg-win');
-		          loadNewgame();
-		      }, pauseAfterWinLose*1000);
-		      return; // Important : arrêter l'exécution
-		  }
+function playBotMoveAndContinue() {
+    let move = playPbm();
+    moveAction(move);
+    refreshBoard(chess);
+    
+    // Relancer la phase de vote selon la configuration
+    if(timerMode) {
+        $("body").addClass("showTimer");
+        startTimer(InitialvoterTimer, true);
+        voteOpen = true;
+        console.log("Mode problème + Timer : relancé après coup du bot");
+    } else {
+        voteOpen = true;
+        console.log("Mode problème + Vote continu : réactivé après coup du bot");
+    }
+}
 
+// ========== GESTION QUAND AUCUN VOTE ==========
+function handleNoVotes() {
+    if(gameMode === "probMode") {
+        // GAME OVER en mode problème
+        console.log("Game over - pas de votes en mode problème");
+        $("body").addClass('omg-lose');
+        if(timerMode) {
+            stopTimer();
+        }
+        startTimer(pauseAfterWinLose, false); // false = timer visuel SANS vote
+        setTimeout(function() {
+            $("body").removeClass('omg-lose');
+            globalReloadProblem(false);
+        }, pauseAfterWinLose * 1000);
+    } else {
+        // Mode normal sans votes - coup aléatoire selon le mode de sélection
+        playRandomMoveInNormalMode();
+    }
+}
 
+function playRandomMoveInNormalMode() {
+    var moves = chess.moves();
+    
+    if(majorityMode) {
+        // Mode majorité : coup aléatoire direct (pas d'animation)
+        let randomMove = moves[Math.floor(Math.random() * moves.length)];
+        console.log("Pas de votes + Mode majorité : coup aléatoire direct");
+        executeMove(randomMove);
+    } else {
+        // Mode roue : animation même pour le coup aléatoire
+        var randomPoll = [];
+        $.each(moves, function(i, value) {
+            let color = colorArray[Math.floor(Math.random() * colorArray.length)];
+            randomPoll.push({"player": 'random', "move": value, color: color });
+        });
 
-			$("body").addClass("showTimer");
-			startTimer(InitialvoterTimer, true);
-			voteOpen = true;
-		} else {
-			console.log("Pas mode majorité, donc random sur les votes");
-
-			$(".votes ol").html("");
-			$("body").addClass("randomWheel");
-
-			$.each(moves, function(i, value) {
-			  poll.push({"player": moves.player, "move": moves.move});
-			});
-
-			let move = randomWheel(poll, chess.turn());
-			voteOpen = false;
-			setTimeout(function(){
-      	$("body").removeClass("randomWheel");
-				$(".votes ol").html("");
-      	moveAction(move)
-				$("body").addClass("showTimer");
-				startTimer(InitialvoterTimer, true);
-				voteOpen = true;
-    	}, timerWheelAnimation * 1000)
-		}
-	}	else{
-		if(probMode == true){
-			//GAME OVER
-			console.log("game over")
-			$("body").addClass('omg-lose');
-				if(timerMode) {
-					stopTimer();
-				}
-	
-			startPauseTimer(pauseAfterWinLose, function() {
-				$("body").removeClass('omg-lose');
-				if(probMode == true) {
-					globalReloadProblem(false);
-				}
-			});
-
-			//GAME OVER
-		} else {
-			// FUNCTION RANDOM MOVE QUAND PAS DE VOTE
-			var moves = chess.moves();
-			$.each(moves, function(i, value) {
-				let color = colorArray[Math.floor(Math.random() * colorArray.length)];
-			  poll.push({"player": 'random', "move": value, color: color });
-			});
-
-			$(".votes ol").html("");
-			console.log("pas de résultat, random sur les choix dispo");
-			$("body").addClass("randomWheel");
-
-			let move = randomWheel(poll, chess.turn());
-			//console.log(move);
-			voteOpen = false;
-			setTimeout(function(){
-				moveAction(move)
-      	$("body").removeClass("randomWheel");
-				$(".votes ol").html("");
-				$("body").addClass("showTimer");
-				startTimer(InitialvoterTimer, true);
-				voteOpen = true;
-    	}, timerWheelAnimation * 1000)
-
-			// FUNCTION RANDOM MOVE QUAND PAS DE VOTE
-		}
-
-	}
-
-	if(probMode == true) {
-		let verif = verifPbm();
-		let status;
-		if(verif == false) {
-			//Nope, erreur
-			status = 'Erreur !';
-			console.log("faute dans le pb mode timer");
-			
-            var tmp = $("[data-solution]").text();
-            if (tmp && tmp.length >= 4) {
-                $("[data-square]").removeClass("highlight-black");
-                $("[data-square='"+tmp.slice(0,2)+"']").addClass("highlight-black");
-                $("[data-square='"+tmp.slice(2,4)+"']").addClass("highlight-black");
-            }
-			
-
-			chess.move({from:tmp.slice(0,2), to:tmp.slice(2,4)});
-			board.position(chess);
-
-			globalReloadProblem(false);
-		} else {
-			//On vérifie si c'est la fin du problème
-			console.log("Correct, on continue par le move du bot dans le timer");
-
-			if ($("[data-attempt]").attr("data-attempt") == $("[data-length]").attr("data-length")) {
-				globalReloadProblem(true);
-		  } else {
-				setTimeout(function() {
-					let move = playPbm();
-						moveAction(move);
-						var moves = chess.moves();
-						refreshBoard(chess);
-
-
-				}, 2000);
-		  }
-		}
-	} else {
-
-
-
-	  // checkmate?
-		if(checkforChemate()) {
-			$("body").addClass('omg-win');
-		  startTimer(pauseAfterWinLose, false);
-			setTimeout(function() {
-				$("body").removeClass('omg-win');
-						loadNewgame();
-			}, pauseAfterWinLose*1000);
-		}
-	}
-}	
+        console.log("Pas de votes + Mode roue : animation coup aléatoire");
+        $(".votes ol").html("");
+        $("body").addClass("randomWheel");
+        
+        let move = randomWheel(randomPoll, chess.turn());
+        voteOpen = false;
+        
+        setTimeout(function(){
+            $("body").removeClass("randomWheel");
+            $(".votes ol").html("");
+            executeMove(move);
+        }, timerWheelAnimation * 1000);
+    }
+}
 /***********************************************************************************************/
 /***************************************      voter     ****************************************/
 /***********************************************************************************************/
@@ -1170,28 +1246,31 @@ function playPbm(){
 }
 
 function globalReloadProblem(isWinner = true){
-	if(isWinner) {
-		$("body").addClass('omg-win');
+    console.log("🔄 globalReloadProblem appelé, isWinner:", isWinner);
+    
+    if(isWinner) {
+        $("body").addClass('omg-win');
+        let status = 'Problème résolu';
+        console.log("✅ Problème résolu avec succès !");
+    } else {
+        $("body").addClass('omg-lose');
+        let status = 'Erreur';
+        console.log("❌ Erreur dans le problème");
+        board.position(chess);
+    }
 
-    let status = 'Probleme résolu';
+    // Arrêter le timer pendant la transition
+    if(timerMode) {
+        stopTimer();
+        voteOpen = false;
+    }
 
-	}
-	else {
-		$("body").addClass('omg-lose');
-    let status = 'Erreur';
-		board.position(chess.fen(chess.undo()), false)
-	}
-	
-	$("[data-attempt]").attr("data-attempt", 0);
-	$("[data-square]").removeClass("highlight-white");
-	
     startTimer(pauseAfterWinLose, false);
     setTimeout(function() {
-        $("body").removeClass('omg-win');        
-        $("body").removeClass('omg-lose');
+        $("body").removeClass('omg-win omg-lose');
+        console.log("🎲 Chargement d'un nouveau problème...");
         loadNewProblem();
-        $("[data-square]").removeClass("highlight-black");
-    }, pauseAfterWinLose*1000);
+    }, pauseAfterWinLose * 1000);
 }
 
 function ReloadPgn(pgn, target, chess, context) {
