@@ -1064,17 +1064,10 @@ function playBotMoveAndContinue() {
 // ========== GESTION QUAND AUCUN VOTE ==========
 function handleNoVotes() {
     if(gameMode === "probMode") {
-        // GAME OVER en mode problème
         console.log("Game over - pas de votes en mode problème");
         $("body").addClass('omg-lose');
-        if(timerMode) {
-            stopTimer();
-        }
-        startTimer(pauseAfterWinLose, false); // false = timer visuel SANS vote
-        setTimeout(function() {
-            $("body").removeClass('omg-lose');
-            globalReloadProblem(false);
-        }, pauseAfterWinLose * 1000);
+        // Appel direct sans attendre - globalReloadProblem gère déjà le timer
+        globalReloadProblem(false);
     } else {
         // Mode normal sans votes - coup aléatoire selon le mode de sélection
         playRandomMoveInNormalMode();
@@ -1265,7 +1258,7 @@ function globalReloadProblem(isWinner = true){
         voteOpen = false;
     }
 
-    startTimer(pauseAfterWinLose, false);
+    startTimer(pauseAfterWinLose, true);
     setTimeout(function() {
         $("body").removeClass('omg-win omg-lose');
         console.log("🎲 Chargement d'un nouveau problème...");
