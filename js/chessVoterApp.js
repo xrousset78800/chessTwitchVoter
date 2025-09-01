@@ -1718,7 +1718,9 @@ function refreshBoard(chess, context=null) {
 	});
 	
 	moves.forEach((item) => {	
-		let li = document.createElement("li");
+        let li = document.createElement("li");
+        let btn = document.createElement("button");
+        btn.setAttribute("class", "button-56");
 		let val = item.replaceAll('#', '').replaceAll('+', '');
 		
 		let list = document.getElementById("availableList"+val.slice(0,1));
@@ -1726,7 +1728,8 @@ function refreshBoard(chess, context=null) {
 		if(list == null)
 			list = document.getElementById("availableListP");
 		
-		li.innerText = val
+		btn.innerText = val;
+        li.appendChild(btn);
 		list.appendChild(li);
 	});
 	
