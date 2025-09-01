@@ -113,7 +113,7 @@ var mateAudio = new Audio('mp3/mate.wav');
 takeAudio.volume = globalVolume*0.8;
 checkAudio.volume = globalVolume*0.8;
 moveAudio.volume = globalVolume*0.8;
-mateAudio.volume = globalVolume*0.8;
+mateAudio.volume = globalVolume*0.4;
 
 //http-server C:\Users\gnole\Documents\GitHub\chessTwitchVoter
 
