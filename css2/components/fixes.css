@@ -876,10 +876,19 @@ body.noBg .main-header, body.noBg .sidebar, body.noBg .chart-container {
   width: 100%;
   position: absolute;
   top: -2px;
-  transform: translate(8px, 8px);
+  transform: translate(5px, 5px);
   transition: transform .2s ease-out;
   z-index: -1;
 }
+[data-team="w"] .button-56:after {
+  background-color: #eee;
+  border-color: #eee;
+}
+[data-team="b"] .button-56:after {
+  background-color: #111;
+  border-color: #111;
+}
+
 
 .button-56:hover:after {
   transform: translate(0, 0);
