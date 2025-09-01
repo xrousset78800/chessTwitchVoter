@@ -1467,16 +1467,18 @@ function play(target, context, args) {
 							}, 2000);
 					  }
 					}
-				}
-
-				if(checkforChemate()) {
-					$("body").addClass('omg-win');
-				  startTimer(pauseAfterWinLose, false);
-					setTimeout(function() {
-						$("body").removeClass('omg-win');
-								loadNewgame();
-					}, pauseAfterWinLose*1000);
-				}
+				} else {
+                    if(checkforChemate()) {
+                        $("body").addClass('omg-win');
+                        startTimer(pauseAfterWinLose, false);
+                        setTimeout(function() {
+                        $("body").removeClass('omg-win');
+                            loadNewgame();
+                        }, pauseAfterWinLose*1000);
+                    }
+                }
+/*
+				*/
 
 
 			}
@@ -2474,18 +2476,18 @@ function detectMultiplayerMode() {
         console.log('🎮 Mode multiplayer détecté:', { gameId, role, playerColor: window.playerColor });
         
         // Check if we have a server URL or if we should always load Socket.IO
-        if (window.CHESS_VOTER_CONFIG.serverUrl || true) { // Set to true to always load
-            const script = document.createElement('script');
-            script.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
-            script.onload = function() {
-                console.log('✅ Socket.io chargé avec succès');
-                initializeSocketIO(gameId, role);
-            };
-            script.onerror = function() {
-                console.error('❌ Erreur lors du chargement de Socket.io');
-            };
+
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
+        script.onload = function() {
+            console.log('✅ Socket.io chargé avec succès');
+            initializeSocketIO(gameId, role);
+        };
+        script.onerror = function() {
+            console.error('❌ Erreur lors du chargement de Socket.io');
+        };
             document.head.appendChild(script);
-        }
     } else {
         console.log('🎯 Mode solo détecté - Socket.IO non chargé');
     }
