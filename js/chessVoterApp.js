@@ -725,18 +725,15 @@ function selectAndLoadProblem() {
     // CORRECTIF : Créer un nouvel échiquier propre
     board = Chessboard('myBoard', defaultConfig);
     
-    // Jouer le premier coup du problème après un délai
-    setTimeout(function() {
-        firstMove = playPbm();
-        console.log("Premier coup du problème:", firstMove);
-        moveAction(firstMove);
-        var moves = chess.moves();
-        refreshBoard(chess);
+    firstMove = playPbm();
+    console.log("Premier coup du problème:", firstMove);
+    moveAction(firstMove);
+    var moves = chess.moves();
+    refreshBoard(chess);
+    
+    // 🔧 CORRECTION PRINCIPALE : Rouvrir le vote APRÈS le premier coup du bot
+    reopenVoteAfterProblemLoad();
         
-        // 🔧 CORRECTION PRINCIPALE : Rouvrir le vote APRÈS le premier coup du bot
-        reopenVoteAfterProblemLoad();
-        
-    }, 1000);
 }
 /***********************************************************************************************/
 /***************************************      voter     ****************************************/
@@ -1258,7 +1255,7 @@ function globalReloadProblem(isWinner = true){
         voteOpen = false;
     }
 
-    startTimer(pauseAfterWinLose, true);
+    startTimer(pauseAfterWinLose, false);
     setTimeout(function() {
         $("body").removeClass('omg-win omg-lose');
         console.log("🎲 Chargement d'un nouveau problème...");
