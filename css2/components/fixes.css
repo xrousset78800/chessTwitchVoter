@@ -904,3 +904,54 @@ body.noBg .main-header, body.noBg .sidebar, body.noBg .chart-container {
 }
         
         
+
+.ready-status-panel {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #4CAF50;
+    z-index: 1000;
+    min-width: 300px;
+}
+
+.ready-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.streamer-name {
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.ready-indicator.waiting {
+    color: #FFA500;
+}
+
+.ready-indicator.ready {
+    color: #4CAF50;
+}
+
+.ready-instructions {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.game-starting {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}

@@ -2619,7 +2619,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Détection du mode multiplayer
     detectMultiplayerMode();
-    
     console.log('✅ Gestionnaires DOM initialisés');
 });
 
@@ -2631,5 +2630,60 @@ window.DOMHandlers = {
     setupMultiplayerButtons,
     setupCopyButtons,
     detectMultiplayerMode,
-    initializeSocketIO
+    initializeSocketIO,
+    ReadySyncManager
 };
+let readySyncManager = null;
+
+// Initialiser le système ready quand on est en mode ChatvsChat
+function initializeReadySync() {
+    if (window.modStreamerChatvStreamerChat && !readySyncManager) {
+        readySyncManager = new ReadySyncManager();
+        
+        // Écouter les événements Socket.IO si disponible
+        if (window.multiplayerSocket) {
+            window.multiplayerSocket.on('streamerReady', (data) => {
+                readySyncManager.handleRemoteReadyState(data);
+            });
+            
+            window.multiplayerSocket.on('gameStarted', (data) => {
+                console.log("📡 Jeu démarré par l'autre instance");
+            });
+        }
+    }
+}
+
+// Modifier la fonction de démarrage existante
+function startGameWithReadyCheck() {
+    if (window.modStreamerChatvStreamerChat) {
+        // En mode ChatvsChat, attendre le ready
+        console.log('🎯 Mode ChatvsChat : Attente du ready des streamers');
+        initializeReadySync();
+        
+        // Désactiver le timer et les votes jusqu'au ready
+        window.voteOpen = false;
+        if (window.timerMode) {
+            stopTimer();
+        }
+        
+    } else {
+        // Autres modes : démarrage normal
+        if (window.timerMode) {
+            startTimer(window.InitialvoterTimer, true);
+        }
+        window.voteOpen = true;
+    }
+}
+
+// ========== AUTO-INITIALISATION ==========
+
+// Appeler au démarrage du jeu
+document.addEventListener('DOMContentLoaded', function() {
+    // Attendre que les variables de configuration soient chargées
+    /*
+    setTimeout(() => {
+        if (window.modStreamerChatvStreamerChat) {
+            startGameWithReadyCheck();
+        }
+    }, 1000);*/
+});

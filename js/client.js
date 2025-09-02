@@ -5,6 +5,9 @@
 // Called every time a message comes in
 function onMessageHandler (target, context, msg, self) {
 
+	if (typeof window.handleChatMessage === 'function') {
+	    window.handleChatMessage(target, context, msg, self);
+	}
   if (self) { return; } // Ignore messages from the bot
   
   const args = msg.slice(1).split(' ');

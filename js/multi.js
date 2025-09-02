@@ -284,6 +284,10 @@ class MultiplayerManager {
         this.socket.on('connect', () => {
             console.log('🔗 Connecté au serveur');
             
+            // AJOUTER CETTE LIGNE
+            this.setupChatListeners();
+            console.log('🔗 Connecté au serveur');
+            
             if (this.role === 'host') {
                 this.socket.emit('createGame', {
                     gameId: this.gameId,
@@ -429,6 +433,83 @@ this.socket.on('movePlayed', (data) => {
             isMultiplayer: !!this.gameId
         };
     }
+
+    /**
+     * Envoie un message de chat via Socket.IO
+     * @param {Object} messageData - Données du message
+     */
+    sendChatMessage(messageData) {
+        if (!this.socket || !this.gameId) {
+            console.warn('⚠️ Pas de connexion Socket.IO active');
+            return;
+        }
+        
+        this.socket.emit('chat:message', {
+            gameId: this.gameId,
+            role: this.role,
+            ...messageData
+        });
+        
+        console.log('💬 Message envoyé:', messageData);
+    }
+
+    /**
+     * Configure l'écoute des messages de chat entrants
+     */
+    setupChatListeners() {
+        if (!this.socket) return;
+        
+        this.socket.on('chat:message', (data) => {
+            this.displayChatMessage(data);
+        });
+        
+        this.socket.on('chat:history', (messages) => {
+            // Afficher l'historique des messages
+            messages.forEach(msg => this.displayChatMessage(msg));
+        });
+    }
+
+    /**
+     * Affiche un message de chat dans l'interface
+     */
+    displayChatMessage(data) {
+        const chatMessages = document.querySelector('.chat-messages');
+        if (!chatMessages) {
+            console.warn('⚠️ Zone de chat non trouvée dans le DOM');
+            return;
+        }
+        
+        const messageElement = document.createElement('div');
+        messageElement.className = 'chat-message';
+        
+        // Déterminer l'équipe du message
+        const teamClass = data.team || (data.role === 'host' ? 'white' : 'black');
+        
+        messageElement.innerHTML = `
+            <div class="message-author ${teamClass}-team">
+                ${data.author} 
+                ${data.badges?.broadcaster ? '📺' : ''}
+                ${data.badges?.moderator ? '⚔️' : ''}
+                ${data.badges?.subscriber ? '⭐' : ''}
+            </div>
+            <div class="message-content">${this.escapeHtml(data.content)}</div>
+            <div class="message-time">${new Date(data.timestamp).toLocaleTimeString()}</div>
+        `;
+        
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    /**
+     * Échappe le HTML pour éviter les injections XSS
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    
 }
 
 // Initialiser le gestionnaire multiplayer

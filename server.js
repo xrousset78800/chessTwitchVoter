@@ -8,6 +8,7 @@ const io = require('socket.io')(http, {
     }
 });
 const path = require('path');
+const chatHistory = {};
 
 // Servir les fichiers statiques (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname)));
@@ -42,12 +43,34 @@ io.on('connection', (socket) => {
         socket.join(data.gameId);
         console.log(`Partie créée: ${data.gameId} par ${data.hostName}`);
     });
-    
+
+    socket.on('chat:message', (data) => {
+        // Stocker dans l'historique
+        if (!chatHistory[data.gameId]) {
+            chatHistory[data.gameId] = [];
+        }
+        chatHistory[data.gameId].push(data);
+        
+        // Limiter l'historique à 100 messages
+        if (chatHistory[data.gameId].length > 100) {
+            chatHistory[data.gameId].shift();
+        }
+        
+        // Diffuser à tous les participants de la partie
+        io.to(data.gameId).emit('chat:message', data);
+        
+        console.log(`💬 [${data.gameId}] ${data.author}: ${data.content}`);
+    });
+
     socket.on('joinGame', (data) => {
         if (games[data.gameId]) {
             games[data.gameId].guest = data.guestName;
             games[data.gameId].guestSocket = socket.id;
             socket.join(data.gameId);
+
+            if (chatHistory[data.gameId]) {
+                socket.emit('chat:history', chatHistory[data.gameId]);
+            }
             
             // Notifier les deux joueurs
             io.to(data.gameId).emit('gameReady', {

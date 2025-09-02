@@ -77,6 +77,17 @@
                 </div>
             </div>
         </aside>
+        <div id="chat-container" class="chat-container" style="display: none;">
+            <div class="chat-header">
+                <span>💬 Chat de partie</span>
+                <span id="chat-team-indicator"></span>
+            </div>
+            <div class="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Message..." />
+                <button id="chat-send" class="chat-send-btn">Envoyer</button>
+            </div>
+        </div>
     </main>
 
     <!-- Section problèmes d'échecs -->
@@ -394,15 +405,14 @@
     
     <!-- Twitch -->
     <script src="js/tmi.min.js"></script>
-    <script src="js/client.js"></script>
-    <!--script src="js/multi.js"></script-->
-    <script src="twitchToken.js"></script>
-    
+    <script src="twitchToken.js"></script>    
     <script src="js/config.js"></script>
-    
-    <!-- Script principal -->
+    <script src="js/multi.js"></script-->
+    <script src="js/handleChatMessage.js"></script>
+    <script src="js/client.js"></script>
+    <script src="js/ready.js"></script>    
     <script src="js/chessVoterApp.js"></script>
-    
+
     <script>
 /**
  * Teste les permissions de vote selon les règles du mode de jeu
