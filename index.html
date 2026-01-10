@@ -144,6 +144,30 @@
                 <input type="text" id="defaultChannel" name="defaultChannel" >
                 <span class="tooltip-icon" data-tooltip="Chaine twitch avec laquelle se connecter">?</span>
             </fieldset>
+            <fieldset>
+                <legend>Mode Vote !</legend> 
+                <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
+                <label for="timerMode">Activer le mode vote</label>
+                <span class="tooltip-icon" data-tooltip="Active le timer et la fonction de vote">?</span>
+                <div data-time-mode>
+                    <label for="InitialvoterTimer">Temps d'un tour</label>
+                    <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
+                    <span class="tooltip-icon" data-tooltip="Durée d'un tour de vote pour une partie">?</span>
+                    <br>                
+                    <label for="timerWheelAnimation">Animation de la roue </label>
+                    <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
+                    <span class="tooltip-icon" data-tooltip="Durée de l'animation de la roue">?</span>
+                    <br>
+                    <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
+                    <label for="limitToOneVote">Vote unique</label>
+                    <span class="tooltip-icon" data-tooltip="Chaque viewer ne peut voter qu'une seule fois par tour">?</span>
+                    <br>
+                    <input type="checkbox" id="majorityMode" name="majorityMode">               
+                    <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label>
+                    <span class="tooltip-icon" data-tooltip="Si coché, la majorité sur le vote est joué automatiquement. Sinon il y aura toujours un tirage au sort">?</span>
+
+                </div>
+            </fieldset>                 
             <fieldset class="gameMode">
                 <legend>Mode de jeu</legend>            
                 <input type="radio" id="yoloMode" name="gameMode" value="normal">
@@ -321,38 +345,7 @@
                 <input disabled="disabled" type="radio" id="modPuzzleRush" name="gameMode" value="modPuzzleRush">
                 <label for="modPuzzleRush"><s>Puzzle rush ?</s></label>
                 <span class="tooltip-icon" data-tooltip="Puzzle rush en double chaine twitch ?">?</span>
-            </fieldset>
-
-            <fieldset>
-            <legend>Mode Vote !</legend> 
-            <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
-            <label for="timerMode">Activer le mode vote</label>
-            <span class="tooltip-icon" data-tooltip="Active le timer et la fonction de vote">?</span>
-            <div data-time-mode>
-                <label for="InitialvoterTimer">Temps d'un tour</label>
-                <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
-                <span class="tooltip-icon" data-tooltip="Durée d'un tour de vote pour une partie">?</span>
-                <br>                
-                <label for="timerWheelAnimation">Animation de la roue </label>
-                <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
-                <span class="tooltip-icon" data-tooltip="Durée de l'animation de la roue">?</span>
-                <br>
-                <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
-                <label for="limitToOneVote">Vote unique</label>
-                <span class="tooltip-icon" data-tooltip="Chaque viewer ne peut voter qu'une seule fois par tour">?</span>
-                <br>
-                <input type="checkbox" id="majorityMode" name="majorityMode">               
-                <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label>
-                <span class="tooltip-icon" data-tooltip="Si coché, la majorité sur le vote est joué automatiquement. Sinon il y aura toujours un tirage au sort">?</span>
-
-            </div>
-        </fieldset>         
-            <fieldset>
-                <legend>Options de timer</legend> 
-                <label for="pauseAfterWinLose">Durée de la pause</label>
-                <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
-                <span class="tooltip-icon" data-tooltip="Durée de la pause entre les parties ou les problèmes avant de relancer automatiquement">?</span>
-        </fieldset>
+            </fieldset>    
                 <fieldset>
                     <legend>Restrictions d'accès</legend>
                     <input type="checkbox" id="followMode" name="followMode">
@@ -369,6 +362,10 @@
                 </fieldset>
             <fieldset>
                 <legend>Autres options</legend> 
+                <label for="pauseAfterWinLose">Durée de la pause</label>
+                <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
+                <span class="tooltip-icon" data-tooltip="Durée de la pause entre les parties ou les problèmes avant de relancer automatiquement">?</span>  
+                <br>              
             <input type="checkbox" id="noBg" name="noBg">
             <label for="noBg">Supprimer le background (test sur OBS ?)</label>
             <span class="tooltip-icon" data-tooltip="Fond vert en option pour intégration OBS (WIP)">?</span>
@@ -407,7 +404,7 @@
     <script src="js/tmi.min.js"></script>
     <script src="twitchToken.js"></script>    
     <script src="js/config.js"></script>
-    <script src="js/multi.js"></script-->
+    <script src="js/multi.js"></script>
     <script src="js/handleChatMessage.js"></script>
     <script src="js/client.js"></script>
     <script src="js/ready.js"></script>    
@@ -496,6 +493,49 @@ Exemples :
 > testGameModeVoting('mod1v1') // Test spécifique du mode 1v1
 > simulateSmartVotes(15)      // Test personnalisé
 `);
+</script>
+<script>
+// Gestionnaire pour l'envoi manuel de messages (optionnel)
+document.addEventListener('DOMContentLoaded', function() {
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const chatContainer = document.getElementById('chat-container');
+    
+    // Afficher le chat en mode multiplayer
+    if (window.multiplayerMode) {
+        chatContainer.style.display = 'flex';
+    }
+    
+    // Envoi de message manuel
+    function sendManualMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
+        if (window.multiplayerManager && window.multiplayerManager.gameId) {
+            window.multiplayerManager.sendChatMessage({
+                author: 'Organisateur',
+                content: message,
+                timestamp: Date.now(),
+                badges: { broadcaster: true },
+                team: window.multiplayerManager.role === 'host' ? 'white' : 'black'
+            });
+        }
+        
+        chatInput.value = '';
+    }
+    
+    if (chatSend) {
+        chatSend.addEventListener('click', sendManualMessage);
+    }
+    
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendManualMessage();
+            }
+        });
+    }
+});
 </script>
 </body>
 </html>

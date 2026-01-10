@@ -2680,10 +2680,10 @@ function startGameWithReadyCheck() {
 // Appeler au démarrage du jeu
 document.addEventListener('DOMContentLoaded', function() {
     // Attendre que les variables de configuration soient chargées
-    /*
+    
     setTimeout(() => {
-        if (window.modStreamerChatvStreamerChat) {
+        if (window.multiplayerMode) {
             startGameWithReadyCheck();
         }
-    }, 1000);*/
+    }, 1000);
 });

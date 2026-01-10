@@ -955,3 +955,8 @@ body.noBg .main-header, body.noBg .sidebar, body.noBg .chart-container {
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
+
+#configModal {
+    width: 50%;
+    min-width: 700px;
+}
