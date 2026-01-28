@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom Debug</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 10px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #4CAF50; margin-bottom: 10px; border-bottom: 2px solid #4CAF50; padding-bottom: 5px; font-size: 1.3em; }
+        .section { background: #2a2a2a; border-radius: 6px; padding: 12px; margin-bottom: 10px; border: 1px solid #3a3a3a; }
+        h2 { color: #64B5F6; margin-bottom: 8px; font-size: 1em; }
+        .status { padding: 8px; border-radius: 4px; margin-bottom: 10px; font-weight: bold; font-size: 0.9em; }
+        .status.disconnected { background: #D32F2F; color: white; }
+        .status.connected { background: #388E3C; color: white; }
+        button { background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin: 3px; }
+        button:hover:not(:disabled) { background: #45a049; }
+        button:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
+        button.danger { background: #f44336; }
+        button.secondary { background: #2196F3; }
+        input, select { background: #3a3a3a; color: #e0e0e0; border: 1px solid #555; padding: 5px; border-radius: 3px; margin: 2px; font-size: 12px; }
+        input[type="range"] { width: 150px; }
+        input[type="checkbox"] { width: 16px; height: 16px; }
+        #logs { background: #1a1a1a; border: 1px solid #444; border-radius: 4px; padding: 10px; height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; }
+        .log-entry { padding: 2px 0; border-bottom: 1px solid #2a2a2a; }
+        .log-entry.received { color: #81C784; }
+        .log-entry.sent { color: #64B5F6; }
+        .log-entry.error { color: #E57373; }
+        .log-entry.info { color: #FFD54F; }
+        .timestamp { color: #888; font-size: 10px; }
+        .info-row, .control-row { display: flex; justify-content: space-between; align-items: center; padding: 4px; margin: 3px 0; background: #333; border-radius: 3px; font-size: 12px; }
+        .info-label { color: #aaa; }
+        .info-value { color: #81C784; font-weight: bold; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .compact-input { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Phantom Debug</h1>
+        
+        <!-- LOGS EN HAUT -->
+        <div class="section">
+            <h2>📋 Logs BLE</h2>
+            <button onclick="clearLogs()">Effacer</button>
+            <div id="logs"></div>
+        </div>
+
+        <!-- CONNEXION -->
+        <div class="section">
+            <h2>📡 Connexion</h2>
+            <div id="connectionStatus" class="status disconnected">❌ Déconnecté</div>
+            <button id="connectBtn" onclick="connectToBoard()">Connecter</button>
+            <button id="disconnectBtn" onclick="disconnectFromBoard()" disabled>Déconnecter</button>
+        </div>
+
+        <!-- CONTRÔLE DE PARTIE -->
+        <div class="section">
+            <h2>🎮 Partie</h2>
+            <div class="compact-input">
+                <button id="startGameBtn" onclick="startGame()" disabled>START</button>
+                <select id="sideSelect" disabled>
+                    <option value="0">2 joueurs</option>
+                    <option value="1">Board</option>
+                    <option value="2">BLE</option>
+                </select>
+                <button id="selectSideBtn" onclick="selectSide()" disabled>SELECT SIDE</button>
+                <button id="endGameBtn" class="danger" onclick="endGame()" disabled>END</button>
+            </div>
+            <div class="compact-input" style="margin-top: 5px;">
+                <input type="text" id="moveInput" placeholder="e2-e4" disabled style="width: 80px;">
+                <select id="promotionSelect" disabled>
+                    <option value=" ">-</option>
+                    <option value="Q">Q</option>
+                    <option value="R">R</option>
+                    <option value="B">B</option>
+                    <option value="N">N</option>
+                </select>
+                <button id="sendMoveBtn" onclick="sendMove()" disabled>SEND MOVE</button>
+            </div>
+            <div class="compact-input" style="margin-top: 5px;">
+                <span style="font-size: 11px;">🧪 Tests FEN:</span>
+                <button id="test1Btn" onclick="testMove1()" disabled class="secondary">1.e4</button>
+                <button id="test2Btn" onclick="testMove2()" disabled class="secondary">1...e5</button>
+                <button id="test3Btn" onclick="testMove3()" disabled class="secondary">2.Nf3</button>
+                <button id="test4Btn" onclick="testMove4()" disabled class="secondary">2...Nc6</button>
+            </div>
+        </div>
+
+        <!-- STATUS COMPACT -->
+        <div class="section">
+            <h2>📊 Status</h2>
+            <button id="refreshStatusBtn" onclick="refreshBoardStatus()" disabled class="secondary">🔄 Refresh</button>
+            <div class="grid-2" style="margin-top: 5px;">
+                <div class="info-row"><span class="info-label">État:</span><span class="info-value" id="boardState">-</span></div>
+                <div class="info-row"><span class="info-label">Batterie:</span><span class="info-value" id="batteryLevel">-</span></div>
+                <div class="info-row"><span class="info-label">Vitesse:</span><span class="info-value" id="currentSpeed">-</span></div>
+                <div class="info-row"><span class="info-label">Volume:</span><span class="info-value" id="currentVolume">-</span></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS COMPACT -->
+        <div class="section">
+            <h2>⚙️ Settings</h2>
+            <div class="compact-input">
+                <span style="font-size: 11px;">Vitesse:</span>
+                <input type="range" id="speedSlider" min="1" max="5" value="2" disabled>
+                <span id="speedValue">2</span>
+                <button onclick="setMechanismSpeed()" disabled id="setSpeedBtn">OK</button>
+            </div>
+            <div class="compact-input" style="margin-top: 3px;">
+                <span style="font-size: 11px;">Volume:</span>
+                <input type="range" id="volumeSlider" min="0" max="32" value="32" disabled>
+                <span id="volumeValue">32</span>
+                <button onclick="setSoundSettings()" disabled id="setSoundBtn">OK</button>
+            </div>
+        </div>
+
+        <!-- COMMANDES AVANCÉES -->
+        <div class="section">
+            <h2>🔧 Avancé</h2>
+            <button id="calibrateBtn" onclick="calibrate()" disabled>Calibration</button>
+            <button id="snapBtn" onclick="snapToCenter()" disabled>Snap Center</button>
+            <button id="factoryResetBtn" class="danger" onclick="factoryReset()" disabled>Factory Reset</button>
+        </div>
+    </div>
+
+    <script>
+        const SERVICE_UUID = 'fd31a840-22e7-11eb-adc1-0242ac120002';
+        const UUID_GAME = 'cc68a66e-3bfa-4614-a77f-f46954a4c103';
+        const UUID_MECHANISM_SPEED = 'acb646cc-92ca-11ee-b9d1-0242ac120002';
+        const UUID_SOUND_SETTINGS = 'acb64a32-92ca-11ee-b9d1-0242ac120002';
+        const UUID_JUMP_TO_CENTER = '5e316147-4550-4cf3-8e2b-edc098312a43';
+        const UUID_BATTERY = '7b204548-40c4-11eb-adc1-0242ac120002';
+        const UUID_VERSION = '392d9e66-937a-11ee-b9d1-0242ac120002';
+        const UUID_SETSTATE = 'acb6543c-92ca-11ee-b9d1-0242ac120002';
+        const UUID_ROTATION = 'b5a650ea-92ca-11ee-b9d1-0242ac120002';
+        const UUID_FACTORY_RESET = 'b583ff00-b77a-42f5-a53f-a9bf4c291d80';
+        
+        const OP_CODES = { GAME_START: 0, GAME_END: 1, MOVEMENT: 2, MOVEMENT_VERIFY: 3, VOICE_COMMAND: 4, TAKE_BACK: 5, BOARD_STATE: 6, CALIBRATION: 7, ERROR_MSG: 8, CHECK_SOUND: 9, SIDE: 10, GAME_ASSISTANCE: 11, BLE_MOVE_DONE: 12, SNAPTOCENTERCOM: 13, RESET_DETECTION: 14 };
+        const OP_CODE_NAMES = { 0: 'GAME_START', 1: 'GAME_END', 2: 'MOVEMENT', 3: 'MOVEMENT_VERIFY', 4: 'VOICE_COMMAND', 5: 'TAKE_BACK', 6: 'BOARD_STATE', 7: 'CALIBRATION', 8: 'ERROR_MSG', 9: 'CHECK_SOUND', 10: 'SIDE', 11: 'GAME_ASSISTANCE', 12: 'BLE_MOVE_DONE', 13: 'SNAPTOCENTERCOM', 14: 'RESET_DETECTION' };
+        
+        let device = null, server = null, service = null, characteristics = {};
+        const INITIAL_MATRIX = '...........rp....PR..np....PN..bp....PB..qp....PQ..kp....PK..bp....PB..np....PN..rp....PR...........,W';
+        
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            addLog('Logs effacés', 'info');
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            const allButtons = document.querySelectorAll('button:not(#connectBtn):not(#disconnectBtn)');
+            const allInputs = document.querySelectorAll('input, select');
+            
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '✅ Connecté à ' + device.name;
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                allButtons.forEach(btn => btn.disabled = false);
+                allInputs.forEach(input => input.disabled = false);
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '❌ Déconnecté';
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = true;
+                allButtons.forEach(btn => btn.disabled = true);
+                allInputs.forEach(input => input.disabled = true);
+            }
+        }
+        
+        async function connectToBoard() {
+            try {
+                addLog('Recherche...', 'info');
+                device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'Phantom' }], optionalServices: [SERVICE_UUID] });
+                addLog(`Connexion à ${device.name}...`, 'info');
+                server = await device.gatt.connect();
+                service = await server.getPrimaryService(SERVICE_UUID);
+                
+                const uuids = { game: UUID_GAME, speed: UUID_MECHANISM_SPEED, sound: UUID_SOUND_SETTINGS, jump: UUID_JUMP_TO_CENTER, battery: UUID_BATTERY, version: UUID_VERSION, state: UUID_SETSTATE, rotation: UUID_ROTATION, factory_reset: UUID_FACTORY_RESET };
+                
+                for (const [key, uuid] of Object.entries(uuids)) {
+                    try {
+                        characteristics[key] = await service.getCharacteristic(uuid);
+                        addLog(`✓ ${key}`, 'info');
+                    } catch (e) {
+                        addLog(`⚠ ${key} KO`, 'error');
+                    }
+                }
+                
+                if (characteristics.game) {
+                    await characteristics.game.startNotifications();
+                    characteristics.game.addEventListener('characteristicvaluechanged', handleGameNotification);
+                }
+                if (characteristics.state) {
+                    await characteristics.state.startNotifications();
+                    characteristics.state.addEventListener('characteristicvaluechanged', handleStateNotification);
+                }
+                if (characteristics.battery) {
+                    await characteristics.battery.startNotifications();
+                    characteristics.battery.addEventListener('characteristicvaluechanged', handleBatteryNotification);
+                }
+                
+                addLog(`✅ Connecté`, 'info');
+                updateConnectionStatus(true);
+                setTimeout(refreshBoardStatus, 500);
+                
+            } catch (error) {
+                addLog(`❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+        
+        async function disconnectFromBoard() {
+            if (device && device.gatt.connected) {
+                device.gatt.disconnect();
+                addLog('Déconnecté', 'info');
+                updateConnectionStatus(false);
+            }
+        }
+        
+        function handleGameNotification(event) {
+            const value = event.target.value;
+            const decoder = new TextDecoder('utf-8');
+            const bytes = new Uint8Array(value.buffer);
+            
+            try {
+                const strValue = decoder.decode(value);
+                const opCode = bytes[0];
+                const opName = OP_CODE_NAMES[opCode] || 'UNK';
+                const dataStr = strValue.substring(1);
+                
+                if (dataStr.trim() && dataStr.length < 100) {
+                    addLog(`📥 [${opName}] "${dataStr}"`, 'received');
+                } else if (dataStr.trim()) {
+                    addLog(`📥 [${opName}] (longue)`, 'received');
+                } else {
+                    addLog(`📥 [${opName}]`, 'received');
+                }
+            } catch (e) {
+                addLog(`📥 bytes`, 'received');
+            }
+        }
+        
+        function handleStateNotification(event) {
+            const state = new TextDecoder('utf-8').decode(event.target.value);
+            document.getElementById('boardState').textContent = state;
+            addLog(`📊 ${state}`, 'received');
+        }
+        
+        function handleBatteryNotification(event) {
+            const batteryData = new TextDecoder('utf-8').decode(event.target.value);
+            const [percentage] = batteryData.split(',');
+            document.getElementById('batteryLevel').textContent = percentage + '%';
+        }
+        
+        async function readCharacteristic(char, displayId, formatter = null) {
+            if (!characteristics[char]) return;
+            try {
+                const value = await characteristics[char].readValue();
+                const strValue = new TextDecoder('utf-8').decode(value);
+                const displayValue = formatter ? formatter(strValue) : strValue;
+                if (displayId) document.getElementById(displayId).textContent = displayValue;
+                return strValue;
+            } catch (e) {
+                addLog(`❌ ${char}`, 'error');
+            }
+        }
+        
+        async function writeCharacteristic(char, value) {
+            if (!characteristics[char]) {
+                addLog(`❌ ${char} KO`, 'error');
+                return;
+            }
+            try {
+                const encoded = new TextEncoder().encode(value);
+                await characteristics[char].writeValue(encoded);
+                addLog(`📤 ${char}: ${value}`, 'sent');
+                return true;
+            } catch (e) {
+                addLog(`❌ ${char}`, 'error');
+                return false;
+            }
+        }
+        
+        async function refreshBoardStatus() {
+            addLog('🔄 Refresh...', 'info');
+            await readCharacteristic('state', 'boardState');
+            const speed = await readCharacteristic('speed', 'currentSpeed', (v) => ['', 'Lent', 'Moyen', 'Rapide', 'Très rapide', 'Ultra'][parseInt(v)] || v);
+            if (speed) document.getElementById('speedSlider').value = speed;
+            const sound = await readCharacteristic('sound', null);
+            if (sound) {
+                const [vol] = sound.split(',');
+                document.getElementById('currentVolume').textContent = vol;
+                document.getElementById('volumeSlider').value = vol;
+            }
+            addLog('✅ OK', 'info');
+        }
+        
+        async function setMechanismSpeed() {
+            const speed = document.getElementById('speedSlider').value;
+            if (await writeCharacteristic('speed', speed)) {
+                addLog(`✅ Vitesse: ${speed}`, 'info');
+                await refreshBoardStatus();
+            }
+        }
+        
+        async function setSoundSettings() {
+            const volume = document.getElementById('volumeSlider').value;
+            const value = `${volume},11110,0`;
+            if (await writeCharacteristic('sound', value)) {
+                addLog(`✅ Volume: ${volume}`, 'info');
+                await refreshBoardStatus();
+            }
+        }
+        
+        async function sendCommand(opCode, data = '') {
+            if (!characteristics.game) {
+                addLog('❌ Pas connecté', 'error');
+                return;
+            }
+            try {
+                const message = String.fromCharCode(opCode) + data;
+                const encoded = new TextEncoder().encode(message);
+                await characteristics.game.writeValue(encoded);
+                const opName = OP_CODE_NAMES[opCode] || 'UNK';
+                if (data.length < 50) {
+                    addLog(`📤 [${opName}] "${data}"`, 'sent');
+                } else {
+                    addLog(`📤 [${opName}] (longue)`, 'sent');
+                }
+            } catch (error) {
+                addLog(`❌ ${error.message}`, 'error');
+            }
+        }
+        
+        async function startGame() {
+            addLog('🎮 START...', 'info');
+            await sendCommand(OP_CODES.GAME_START, INITIAL_MATRIX);
+        }
+        
+        async function selectSide() {
+            const side = document.getElementById('sideSelect').value;
+            addLog(`👥 Side: ${side}`, 'info');
+            await sendCommand(OP_CODES.SIDE, side);
+        }
+        
+        async function sendMove() {
+            const move = document.getElementById('moveInput').value.trim();
+            const promotion = document.getElementById('promotionSelect').value;
+            
+            if (!move.match(/^[a-h][1-8]-[a-h][1-8]$/)) {
+                addLog('❌ Format invalide', 'error');
+                return;
+            }
+            
+            // Format avec "M 1 e2-e4 " ou "M 1 e2-e4 Q" pour promotion
+            const moveString = `M 1 ${move} ${promotion}`;
+            addLog(`♟️ ${move}${promotion.trim() ? ' ' + promotion : ''}`, 'info');
+            await sendCommand(OP_CODES.MOVEMENT, moveString);
+        }
+        
+        async function endGame() {
+            addLog('🏁 END...', 'info');
+            await sendCommand(OP_CODES.GAME_END);
+        }
+        
+        // Tests de coups avec RESET_DETECTION (FEN)
+        async function testMove1() {
+            // 1. e4
+            const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
+            addLog(`🧪 1.e4`, 'info');
+            await sendCommand(OP_CODES.RESET_DETECTION, fen);
+        }
+        
+        async function testMove2() {
+            // 1...e5 (après 1.e4)
+            const fen = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2';
+            addLog(`🧪 1...e5`, 'info');
+            await sendCommand(OP_CODES.RESET_DETECTION, fen);
+        }
+        
+        async function testMove3() {
+            // 2. Nf3 (après 1.e4 e5)
+            const fen = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2';
+            addLog(`🧪 2.Nf3`, 'info');
+            await sendCommand(OP_CODES.RESET_DETECTION, fen);
+        }
+        
+        async function testMove4() {
+            // 2...Nc6 (après 1.e4 e5 2.Nf3)
+            const fen = 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3';
+            addLog(`🧪 2...Nc6`, 'info');
+            await sendCommand(OP_CODES.RESET_DETECTION, fen);
+        }
+        
+        async function calibrate() {
+            addLog('🔧 Calibration...', 'info');
+            await sendCommand(OP_CODES.CALIBRATION);
+        }
+        
+        async function snapToCenter() {
+            addLog('📍 Snap...', 'info');
+            await sendCommand(OP_CODES.SNAPTOCENTERCOM);
+        }
+        
+        async function factoryReset() {
+            if (!confirm('⚠️ Factory Reset ?')) return;
+            addLog('🔄 Reset...', 'info');
+            if (await writeCharacteristic('factory_reset', '1')) {
+                addLog('✅ Redémarrage...', 'info');
+                setTimeout(() => {
+                    if (device && device.gatt.connected) device.gatt.disconnect();
+                }, 2000);
+            }
+        }
+        
+        if (navigator.bluetooth) {
+            navigator.bluetooth.addEventListener('disconnect', () => {
+                addLog('⚠️ Déconnecté', 'error');
+                updateConnectionStatus(false);
+            });
+        }
+        
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            document.getElementById('speedValue').textContent = e.target.value;
+        });
+        
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            document.getElementById('volumeValue').textContent = e.target.value;
+        });
+        
+        document.getElementById('moveInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMove();
+        });
+        
+        addLog('🚀 Prêt', 'info');
+    </script>
+</body>
+</html>

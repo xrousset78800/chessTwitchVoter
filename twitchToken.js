@@ -1,3 +1,3 @@
 const configTwitch = {
-    TWITCH_TOKEN: 'qrb2ljnc7ahr1bkf7s12d8ecqeuira'
+    TWITCH_TOKEN: '0dr0v09fu56yiu6297tat6azbfm348'
 };
