@@ -1,0 +1,145 @@
+/* ==========================================================================
+   PHANTOM.CSS - Styles pour l'intégration Phantom Chessboard
+   ========================================================================== */
+
+/* ========== Panneau de contrôle Phantom ========== */
+#phantomControlPanel {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+/* ========== Status de connexion ========== */
+#phantom-status {
+    font-weight: bold;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    background: rgba(244, 67, 54, 0.3);
+    transition: all 0.3s ease;
+}
+
+/* ========== Boutons Phantom ========== */
+.phantom-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    margin: 3px;
+}
+
+.phantom-btn:hover:not(:disabled) {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.phantom-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.phantom-btn:disabled {
+    background: #4a5568;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.phantom-btn.secondary {
+    background: #48bb78;
+}
+
+.phantom-btn.secondary:hover:not(:disabled) {
+    background: #38a169;
+}
+
+/* ========== Conteneur des boutons ========== */
+.phantom-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}
+
+/* ========== Affichage batterie ========== */
+#phantom-battery {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #cbd5e0;
+    font-weight: 500;
+}
+
+/* ========== Checkbox auto-sync ========== */
+.phantom-autosync {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.phantom-autosync input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+}
+
+.phantom-autosync label {
+    color: #cbd5e0;
+    font-size: 13px;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* ========== Message d'information ========== */
+.phantom-info {
+    font-size: 12px;
+    color: #a0aec0;
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.4;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+    #phantomControlPanel {
+        padding: 12px;
+    }
+    
+    .phantom-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .phantom-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .phantom-buttons .phantom-btn {
+        width: 100%;
+    }
+}
+
+/* ========== Animations ========== */
+@keyframes phantom-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.phantom-connecting {
+    animation: phantom-pulse 1.5s infinite;
+}
