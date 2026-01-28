@@ -370,20 +370,11 @@
                 <label for="noBg">Supprimer le background (test sur OBS ?)</label>
                 <span class="tooltip-icon" data-tooltip="Fond vert en option pour intégration OBS (WIP)">?</span>
                 <br>
-                <input disabled="disabled" type="checkbox" id="phantomChess" name="gameMode" value="phantomChess">
-                <label for="phantomChess"><s>Phantom chess integration ?</s></label>
+                <input type="checkbox" id="phantomChess" name="gameMode" value="phantomChess">
+                <label for="phantomChess">Phantom chess integration ?</label>
                 <span class="tooltip-icon" data-tooltip="Intégration de l'échiquier automatique phantomChess (WIP)">?</span>
-            </fieldset>
-            <fieldset>
-                <legend>🎯 Phantom Chessboard</legend>
-                
-                <!-- Checkbox pour activer/désactiver -->
-                <input type="checkbox" id="phantomChess" name="phantomControlPanel" value="1">
-                <label for="phantomChess">Activer l'échiquier Phantom</label>
-                <span class="tooltip-icon" data-tooltip="Synchronise l'échiquier physique Phantom avec l'échiquier virtuel via Bluetooth">?</span>
-                
                 <!-- Panneau de contrôle Phantom (visible si checkbox cochée) -->
-                <div id="phantomControlPanel" data-game-mode="phantomControlPanel">
+                <div id="phantomControlPanel">
                     
                     <!-- Status de connexion -->
                     <div id="phantom-status">
@@ -421,10 +412,8 @@
                     <div class="phantom-info">
                         ℹ️ L'échiquier Phantom se synchronisera automatiquement après chaque coup joué
                     </div>
-                </div>
+                </div>                
             </fieldset>
-
-
         <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>
     </form>
         </div>
@@ -459,7 +448,6 @@
     <script src="js/client.js"></script>
     <script src="js/ready.js"></script>
     <script src="js/phantom.js"></script>
-    <script src="js/phantom-form.js"></script>
     <script src="js/chessVoterApp.js"></script>
 
 </body>

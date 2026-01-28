@@ -1,3 +1,210 @@
+/**
+ * CONFIG.JS - VERSION FINALE SANS DOUBLONS
+ * Gestion unifiée de tous les toggles : gameMode, timerMode, phantom
+ */
+
+// ========== FONCTIONS DE TOGGLE (PATTERN UNIFIÉ) ==========
+
+function toggleGameModeElements() {
+    $('div[data-game-mode]').hide();
+    const selectedMode = $('input[name="gameMode"]:checked').val();
+    if (selectedMode) {
+        $('div[data-game-mode="' + selectedMode + '"]').show();
+    }
+}
+
+function toggleTimeModeElements() {
+    $('div[data-time-mode]').hide();
+    const timerChecked = $('#timerMode').is(':checked');
+    if (timerChecked) {
+        $('div[data-time-mode]').show();
+    }
+}
+
+function togglePhantomPanel() {
+    const phantomChecked = $('#phantomChess').is(':checked');
+    
+    if (phantomChecked) {
+        $('#phantomControlPanel').show();
+        if (window.phantomChessboard) {
+            window.phantomChessboard.setEnabled(true);
+        }
+    } else {
+        $('#phantomControlPanel').hide();
+        if (window.phantomChessboard) {
+            window.phantomChessboard.setEnabled(false);
+        }
+    }
+}
+
+// ========== INITIALISATION ==========
+
+$(document).ready(function() {
+    console.log('🎯 Initialisation config.js...');
+    
+    // États initiaux
+    toggleGameModeElements();
+    toggleTimeModeElements();
+    togglePhantomPanel();
+    
+    // ===== LISTENERS =====
+    
+    // Mode de jeu
+    $('input[name="gameMode"]').on('change', function() {
+        console.log('Game mode changed:', this.value);
+        toggleGameModeElements();
+    });
+    
+    // Mode timer
+    $('#timerMode').on('change', function() {
+        console.log('Timer mode changed:', this.checked);
+        toggleTimeModeElements();
+    });
+    
+    // Mode Phantom
+    $('#phantomChess').on('change', function() {
+        console.log('Phantom mode changed:', this.checked);
+        togglePhantomPanel();
+    });
+    
+    // ===== BOUTONS PHANTOM =====
+    
+    // Connecter
+    $('#phantom-connect').on('click', async function(e) {
+        e.preventDefault();
+        console.log('🔗 Tentative de connexion Phantom...');
+        
+        if (!window.phantomChessboard) {
+            console.error('❌ phantomChessboard non disponible');
+            alert('Module Phantom non chargé. Vérifiez que phantom.js est bien inclus.');
+            return;
+        }
+        
+        const connected = await window.phantomChessboard.connect();
+        
+        if (connected) {
+            console.log('✅ Connexion réussie');
+            $('#phantomChess').prop('checked', true);
+            togglePhantomPanel();
+        }
+    });
+    
+    // Déconnecter
+    $('#phantom-disconnect').on('click', async function(e) {
+        e.preventDefault();
+        console.log('🔌 Déconnexion Phantom...');
+        
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.disconnect();
+        }
+    });
+    
+    // Calibrer
+    $('#phantom-calibrate').on('click', async function(e) {
+        e.preventDefault();
+        console.log('🔧 Calibration Phantom...');
+        
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.calibrate();
+        }
+    });
+    
+    // Test Sync
+    $('#phantom-test').on('click', function(e) {
+        e.preventDefault();
+        console.log('🧪 Test de synchronisation...');
+        
+        if (window.phantomChessboard && typeof chess !== 'undefined') {
+            window.phantomChessboard.syncPosition(chess.fen());
+        } else {
+            console.warn('⚠️ Aucune partie en cours pour tester');
+            alert('Lancez une partie avant de tester la synchronisation');
+        }
+    });
+    
+    // Auto-Sync checkbox
+    $('#phantom-auto-sync').on('change', function() {
+        const enabled = this.checked;
+        console.log(`🔄 Auto-sync ${enabled ? 'activé' : 'désactivé'}`);
+        
+        if (window.phantomChessboard) {
+            window.phantomChessboard.setEnabled(enabled);
+        }
+    });
+    
+    // Override updateUI
+    if (window.phantomChessboard) {
+        window.phantomChessboard.updateUI = function(connected) {
+            const statusEl = $('#phantom-status');
+            const connectBtn = $('#phantom-connect');
+            const disconnectBtn = $('#phantom-disconnect');
+            const calibrateBtn = $('#phantom-calibrate');
+            const testBtn = $('#phantom-test');
+            
+            if (statusEl.length) {
+                if (connected) {
+                    statusEl.text(`✅ Connecté: ${this.device ? this.device.name : 'Phantom'}`);
+                    statusEl.css('background', 'rgba(72, 187, 120, 0.3)');
+                } else {
+                    statusEl.text('❌ Déconnecté');
+                    statusEl.css('background', 'rgba(244, 67, 54, 0.3)');
+                }
+            }
+            
+            connectBtn.prop('disabled', connected);
+            disconnectBtn.prop('disabled', !connected);
+            calibrateBtn.prop('disabled', !connected);
+            testBtn.prop('disabled', !connected);
+        };
+    }
+    
+    console.log('✅ Config.js initialisé');
+});
+
+// ========== RESET AVEC PHANTOM ==========
+
+function resetGameWithPhantom() {
+    console.log('🔄 Reset de la partie avec synchronisation Phantom...');
+    
+    if (typeof chess !== 'undefined') {
+        chess.reset();
+        console.log('✅ Moteur d\'échecs réinitialisé');
+    }
+    
+    if (typeof board !== 'undefined') {
+        board.position('start');
+        console.log('✅ Échiquier visuel réinitialisé');
+    }
+    
+    setTimeout(function() {
+        if ($('#phantomChess').is(':checked') && 
+            window.phantomChessboard && 
+            window.phantomChessboard.isConnected) {
+            
+            const startFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            window.phantomChessboard.syncPosition(startFEN);
+            console.log('✅ Phantom synchronisé à la position initiale');
+            
+            if ($('#phantom-auto-sync').is(':checked')) {
+                window.phantomChessboard.setEnabled(true);
+            }
+        } else {
+            console.log('ℹ️ Phantom non actif, sync ignorée');
+        }
+    }, 500);
+    
+    console.log('🎉 Reset complet terminé !');
+}
+
+// Hook reset après reload
+$(document).ready(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.toString()) {
+        console.log('📄 Configuration détectée, reset automatique dans 1s...');
+        setTimeout(resetGameWithPhantom, 1000);
+    }
+});
+
 /***********************************************************************************************************************/
 /************************************************     OMG CONFIG     ***************************************************/
 /***********************************************************************************************************************/
@@ -136,24 +343,6 @@ function toggleTimeModeElements() {
     }
 }
 
-function togglePhantomPanel() {
-    const phantomCheckbox = document.getElementById('phantomChess');
-    const phantomPanel = document.getElementById('phantomControlPanel');
-    
-    if (phantomCheckbox && phantomPanel) {
-        if (phantomCheckbox.checked) {
-            phantomPanel.style.display = 'block';
-            if (window.phantomChessboard) {
-                window.phantomChessboard.setEnabled(true);
-            }
-        } else {
-            phantomPanel.style.display = 'none';
-            if (window.phantomChessboard) {
-                window.phantomChessboard.setEnabled(false);
-            }
-        }
-    }
-}
 
 $(document).ready(function() {
     // Appel initial pour définir l'état correct au chargement
@@ -184,26 +373,6 @@ $(document).ready(function() {
         }
     });
 });
-
-function resetGameWithPhantom() {
-    console.log('🔄 Reset de la partie avec synchronisation Phantom...');
-    
-    if (typeof chess !== 'undefined') {
-        chess.reset();
-    }
-    
-    if (typeof board !== 'undefined') {
-        board.position('start');
-    }
-    
-    setTimeout(function() {
-        if ($('#phantomChess').is(':checked') && 
-            window.phantomChessboard && window.phantomChessboard.isConnected) {
-            const startFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-            window.phantomChessboard.syncPosition(startFEN);
-        }
-    }, 500);
-}
 
 /*
 REFAIRE LA TODO
