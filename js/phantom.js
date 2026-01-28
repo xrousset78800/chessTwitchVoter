@@ -1,338 +1,470 @@
-// Module d'intégration Phantom via pont Python local
-// Remplace le Web Bluetooth par des appels HTTP vers le serveur Python
+/**
+ * 🎯 PHANTOM CHESS INTEGRATION
+ * Module pour synchroniser l'échiquier Phantom avec l'échiquier virtuel
+ * Utilise Web Bluetooth API (comme phantom_debug.html)
+ */
 
-class PhantomBridgeClient {
+class PhantomChessboard {
     constructor() {
-        this.baseUrl = 'http://localhost:5000';
-        this.isConnected = false;
-        this.batteryLevel = 0;
-        this.checkInterval = null;
-    }
-
-    // Vérifier le statut du pont Python
-    async checkBridge() {
-        try {
-            const response = await fetch(`${this.baseUrl}/phantom/status`);
-            return response.ok;
-        } catch (error) {
-            return false;
-        }
-    }
-
-    // Scanner les appareils Phantom
-    async scanDevices() {
-        try {
-            const response = await fetch(`${this.baseUrl}/phantom/scan`);
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('❌ Erreur scan:', error);
-            return { found: false, address: null };
-        }
-    }
-
-    // Se connecter au Phantom
-    async connect(address = null) {
-        try {
-            this.showNotification('🔄 Connexion au Phantom...', 'info');
-            
-            const response = await fetch(`${this.baseUrl}/phantom/connect`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address: address })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.isConnected = true;
-                this.showNotification('✅ Phantom connecté!', 'success');
-                this.startStatusUpdates();
-                $('#phantom-status').text('✅ Connecté').css('color', 'green');
-                return true;
-            } else {
-                this.showNotification('❌ Connexion échouée', 'error');
-                $('#phantom-status').text('❌ Connexion échouée').css('color', 'red');
-                return false;
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur connexion:', error);
-            this.showNotification('❌ Serveur Python non accessible', 'error');
-            $('#phantom-status').text('❌ Serveur Python non accessible').css('color', 'red');
-            return false;
-        }
-    }
-
-    // Démarrer les mises à jour de statut
-    startStatusUpdates() {
-        this.checkInterval = setInterval(async () => {
-            await this.updateStatus();
-        }, 3000); // Vérifier toutes les 3 secondes
-    }
-
-    // Mettre à jour le statut
-    async updateStatus() {
-        try {
-            const response = await fetch(`${this.baseUrl}/phantom/status`);
-            const status = await response.json();
-            
-            this.isConnected = status.connected;
-            this.batteryLevel = status.battery;
-            
-            $('#phantom-battery').text(`🔋 ${this.batteryLevel}%`);
-            
-            if (!this.isConnected) {
-                $('#phantom-status').text('❌ Déconnecté').css('color', 'red');
-                this.stopStatusUpdates();
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur mise à jour statut:', error);
-        }
-    }
-
-    // Arrêter les mises à jour
-    stopStatusUpdates() {
-        if (this.checkInterval) {
-            clearInterval(this.checkInterval);
-            this.checkInterval = null;
-        }
-    }
-
-    // Envoyer un coup au Phantom
-    async makeMove(from, to) {
-        if (!this.isConnected) {
-            console.warn('⚠️ Phantom non connecté');
-            return false;
-        }
-
-        try {
-            const response = await fetch(`${this.baseUrl}/phantom/move`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from: from, to: to })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                console.log(`🎯 Coup envoyé: ${from}→${to}`);
-                this.showNotification(`Phantom: ${from}→${to}`, 'success');
-                return true;
-            } else {
-                console.error('❌ Échec envoi coup');
-                this.showNotification('❌ Échec envoi coup', 'error');
-                return false;
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur envoi coup:', error);
-            this.showNotification('❌ Erreur envoi coup', 'error');
-            return false;
-        }
-    }
-
-    // Synchroniser la position
-    async syncPosition(fen) {
-        if (!this.isConnected) return false;
-
-        try {
-            const response = await fetch(`${this.baseUrl}/phantom/sync`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fen: fen })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                console.log('🔄 Position synchronisée');
-                this.showNotification('🔄 Position synchronisée', 'success');
-                return true;
-            }
-            
-        } catch (error) {
-            console.error('❌ Erreur sync position:', error);
-            return false;
-        }
+        // UUIDs Bluetooth
+        this.SERVICE_UUID = 'fd31a840-22e7-11eb-adc1-0242ac120002';
+        this.UUID_GAME = 'cc68a66e-3bfa-4614-a77f-f46954a4c103';
+        this.UUID_MECHANISM_SPEED = 'acb646cc-92ca-11ee-b9d1-0242ac120002';
+        this.UUID_SOUND_SETTINGS = 'acb64a32-92ca-11ee-b9d1-0242ac120002';
+        this.UUID_BATTERY = '7b204548-40c4-11eb-adc1-0242ac120002';
+        this.UUID_SETSTATE = 'acb6543c-92ca-11ee-b9d1-0242ac120002';
         
-        return false;
-    }
-
-    // Déconnecter
-    async disconnect() {
-        try {
-            await fetch(`${this.baseUrl}/phantom/disconnect`, {
-                method: 'POST'
-            });
-            
-            this.isConnected = false;
-            this.stopStatusUpdates();
-            this.showNotification('👋 Phantom déconnecté', 'info');
-            $('#phantom-status').text('❌ Déconnecté').css('color', 'red');
-            
-        } catch (error) {
-            console.error('❌ Erreur déconnexion:', error);
-        }
-    }
-
-    // Notification visuelle (même que avant)
-    showNotification(message, type = 'info') {
-        const colors = {
-            'success': '#4CAF50',
-            'error': '#f44336', 
-            'info': '#2196F3',
-            'warning': '#ff9800'
+        // OpCodes (alignés avec phantom_debug.html)
+        this.OP_CODES = {
+            GAME_START: 0,
+            GAME_END: 1,
+            MOVEMENT: 2,
+            BOARD_STATE: 6,
+            CALIBRATION: 7,
+            SIDE: 10,
+            BLE_MOVE_DONE: 12,
+            SNAPTOCENTERCOM: 13,
+            RESET_DETECTION: 14  // ⭐ CRUCIAL : C'est celui-ci qu'on utilise avec FEN
         };
-
-        const notification = $(`
-            <div class="phantom-notification phantom-${type}">
-                ${message}
-            </div>
-        `);
         
-        $('body').append(notification);
+        this.OP_CODE_NAMES = {
+            0: 'GAME_START', 1: 'GAME_END', 2: 'MOVEMENT',
+            6: 'BOARD_STATE', 7: 'CALIBRATION', 10: 'SIDE',
+            12: 'BLE_MOVE_DONE', 13: 'SNAPTOCENTERCOM', 14: 'RESET_DETECTION'
+        };
         
-        notification.css({
-            'position': 'fixed',
-            'top': '10px',
-            'right': '10px',
-            'background': colors[type] || colors.info,
-            'color': 'white',
-            'padding': '12px 20px',
-            'border-radius': '8px',
-            'z-index': '10000',
-            'font-weight': 'bold',
-            'box-shadow': '0 4px 12px rgba(0,0,0,0.3)',
-            'animation': 'phantomSlideIn 0.3s ease-out forwards'
-        });
-
-        setTimeout(() => {
-            notification.css('animation', 'phantomSlideOut 0.3s ease-in forwards');
-            setTimeout(() => notification.remove(), 300);
-        }, 4000);
+        // État
+        this.device = null;
+        this.server = null;
+        this.service = null;
+        this.characteristics = {};
+        this.isConnected = false;
+        this.enabled = false;
+        this.lastFenSent = null;
+        
+        console.log('🎯 PhantomChessboard initialisé');
+    }
+    
+    /**
+     * ========== CONNEXION ==========
+     */
+    
+    async connect() {
+        if (!navigator.bluetooth) {
+            this.log('❌ Web Bluetooth non supporté', 'error');
+            alert('Web Bluetooth non supporté par ce navigateur. Utilisez Chrome ou Edge.');
+            return false;
+        }
+        
+        try {
+            this.log('🔍 Recherche de l\'échiquier Phantom...', 'info');
+            
+            // Demander la connexion BLE
+            this.device = await navigator.bluetooth.requestDevice({
+                filters: [{ namePrefix: 'Phantom' }],
+                optionalServices: [this.SERVICE_UUID]
+            });
+            
+            this.log(`📱 Connexion à ${this.device.name}...`, 'info');
+            
+            // Connexion GATT
+            this.server = await this.device.gatt.connect();
+            this.service = await this.server.getPrimaryService(this.SERVICE_UUID);
+            
+            // Récupérer les caractéristiques
+            const uuids = {
+                game: this.UUID_GAME,
+                speed: this.UUID_MECHANISM_SPEED,
+                sound: this.UUID_SOUND_SETTINGS,
+                battery: this.UUID_BATTERY,
+                state: this.UUID_SETSTATE
+            };
+            
+            for (const [key, uuid] of Object.entries(uuids)) {
+                try {
+                    this.characteristics[key] = await this.service.getCharacteristic(uuid);
+                    this.log(`✓ Caractéristique ${key} OK`, 'info');
+                } catch (e) {
+                    this.log(`⚠ Caractéristique ${key} non disponible`, 'warn');
+                }
+            }
+            
+            // Activer les notifications
+            if (this.characteristics.game) {
+                await this.characteristics.game.startNotifications();
+                this.characteristics.game.addEventListener('characteristicvaluechanged', 
+                    this.handleGameNotification.bind(this));
+            }
+            
+            if (this.characteristics.state) {
+                await this.characteristics.state.startNotifications();
+                this.characteristics.state.addEventListener('characteristicvaluechanged',
+                    this.handleStateNotification.bind(this));
+            }
+            
+            if (this.characteristics.battery) {
+                await this.characteristics.battery.startNotifications();
+                this.characteristics.battery.addEventListener('characteristicvaluechanged',
+                    this.handleBatteryNotification.bind(this));
+            }
+            
+            this.isConnected = true;
+            this.enabled = true;
+            this.log(`✅ Connecté à ${this.device.name}`, 'success');
+            this.updateUI(true);
+            
+            // Gérer la déconnexion
+            this.device.addEventListener('gattserverdisconnected', () => {
+                this.log('⚠️ Échiquier déconnecté', 'warn');
+                this.isConnected = false;
+                this.enabled = false;
+                this.updateUI(false);
+            });
+            
+            return true;
+            
+        } catch (error) {
+            this.log(`❌ Erreur de connexion: ${error.message}`, 'error');
+            return false;
+        }
+    }
+    
+    async disconnect() {
+        if (this.device && this.device.gatt.connected) {
+            this.device.gatt.disconnect();
+            this.isConnected = false;
+            this.enabled = false;
+            this.log('🔌 Déconnecté', 'info');
+            this.updateUI(false);
+        }
+    }
+    
+    /**
+     * ========== ENVOI DE COMMANDES ==========
+     */
+    
+    async sendCommand(opCode, data = '') {
+        if (!this.isConnected || !this.characteristics.game) {
+            this.log('❌ Échiquier non connecté', 'error');
+            return false;
+        }
+        
+        try {
+            const message = String.fromCharCode(opCode) + data;
+            const encoded = new TextEncoder().encode(message);
+            await this.characteristics.game.writeValue(encoded);
+            
+            const opName = this.OP_CODE_NAMES[opCode] || 'UNK';
+            if (data.length < 100) {
+                this.log(`📤 [${opName}] "${data}"`, 'sent');
+            } else {
+                this.log(`📤 [${opName}] (FEN longue)`, 'sent');
+            }
+            return true;
+        } catch (error) {
+            this.log(`❌ Erreur envoi: ${error.message}`, 'error');
+            return false;
+        }
+    }
+    
+    /**
+     * ========== SYNCHRONISATION POSITION ==========
+     * 🎯 C'EST LA FONCTION PRINCIPALE !
+     * Envoie un FEN à l'échiquier via RESET_DETECTION
+     */
+    async syncPosition(fen) {
+        if (!this.enabled || !this.isConnected) {
+            console.log('⚠️ Phantom non connecté, sync ignorée');
+            return false;
+        }
+        
+        // Éviter d'envoyer la même position deux fois
+        if (fen === this.lastFenSent) {
+            console.log('⏭️ FEN identique, envoi ignoré');
+            return true;
+        }
+        
+        this.log(`♟️ Synchronisation: ${fen}`, 'info');
+        
+        // ⭐ RESET_DETECTION avec FEN (comme les boutons Tests FEN de debug)
+        const success = await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
+        
+        if (success) {
+            this.lastFenSent = fen;
+            this.log('✅ Position synchronisée avec l\'échiquier', 'success');
+        }
+        
+        return success;
+    }
+    
+    /**
+     * ========== GESTION DES NOTIFICATIONS ==========
+     */
+    
+    handleGameNotification(event) {
+        const value = event.target.value;
+        const decoder = new TextDecoder('utf-8');
+        const bytes = new Uint8Array(value.buffer);
+        
+        try {
+            const strValue = decoder.decode(value);
+            const opCode = bytes[0];
+            const opName = this.OP_CODE_NAMES[opCode] || 'UNK';
+            const dataStr = strValue.substring(1);
+            
+            if (dataStr.trim() && dataStr.length < 100) {
+                this.log(`📥 [${opName}] "${dataStr}"`, 'received');
+            } else if (dataStr.trim()) {
+                this.log(`📥 [${opName}] (longue)`, 'received');
+            } else {
+                this.log(`📥 [${opName}]`, 'received');
+            }
+            
+            // Si c'est un mouvement détecté sur l'échiquier physique
+            if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
+                this.log(`🎯 Coup détecté sur échiquier: ${dataStr}`, 'info');
+                // TODO: Si besoin, synchroniser vers le virtuel
+            }
+            
+        } catch (e) {
+            this.log(`📥 Notification binaire`, 'received');
+        }
+    }
+    
+    handleStateNotification(event) {
+        const state = new TextDecoder('utf-8').decode(event.target.value);
+        this.log(`📊 État: ${state}`, 'info');
+    }
+    
+    handleBatteryNotification(event) {
+        const batteryData = new TextDecoder('utf-8').decode(event.target.value);
+        const [percentage] = batteryData.split(',');
+        this.log(`🔋 Batterie: ${percentage}%`, 'info');
+        
+        // Mettre à jour l'UI si un élément existe
+        const batteryEl = document.getElementById('phantom-battery');
+        if (batteryEl) {
+            batteryEl.textContent = `🔋 ${percentage}%`;
+        }
+    }
+    
+    /**
+     * ========== COMMANDES UTILES ==========
+     */
+    
+    async startGame() {
+        const INITIAL_MATRIX = '...........rp....PR..np....PN..bp....PB..qp....PQ..kp....PK..bp....PB..np....PN..rp....PR...........,W';
+        return await this.sendCommand(this.OP_CODES.GAME_START, INITIAL_MATRIX);
+    }
+    
+    async endGame() {
+        return await this.sendCommand(this.OP_CODES.GAME_END);
+    }
+    
+    async selectSide(side) {
+        // 0 = 2 joueurs, 1 = Board, 2 = BLE
+        return await this.sendCommand(this.OP_CODES.SIDE, side.toString());
+    }
+    
+    async calibrate() {
+        return await this.sendCommand(this.OP_CODES.CALIBRATION);
+    }
+    
+    /**
+     * ========== UTILITAIRES ==========
+     */
+    
+    log(message, type = 'info') {
+        const prefix = {
+            'info': 'ℹ️',
+            'success': '✅',
+            'error': '❌',
+            'warn': '⚠️',
+            'sent': '📤',
+            'received': '📥'
+        }[type] || 'ℹ️';
+        
+        console.log(`${prefix} [Phantom] ${message}`);
+    }
+    
+    updateUI(connected) {
+        const statusEl = document.getElementById('phantom-status');
+        const connectBtn = document.getElementById('phantom-connect');
+        const disconnectBtn = document.getElementById('phantom-disconnect');
+        
+        if (statusEl) {
+            if (connected) {
+                statusEl.textContent = `✅ Connecté: ${this.device.name}`;
+                statusEl.style.background = '#4CAF50';
+            } else {
+                statusEl.textContent = '❌ Déconnecté';
+                statusEl.style.background = '#f44336';
+            }
+        }
+        
+        if (connectBtn) connectBtn.disabled = connected;
+        if (disconnectBtn) disconnectBtn.disabled = !connected;
+    }
+    
+    /**
+     * Active/désactive le Phantom
+     */
+    setEnabled(enabled) {
+        this.enabled = enabled;
+        this.log(enabled ? '🟢 Phantom activé' : '🔴 Phantom désactivé', 'info');
+    }
+    
+    isEnabled() {
+        return this.enabled && this.isConnected;
     }
 }
 
-// Instance globale
-let phantomBridge = null;
+// ========== INSTANCE GLOBALE ==========
+window.phantomChessboard = new PhantomChessboard();
 
-// Interface utilisateur (adaptée pour le pont Python)
-function addPhantomBridgeControls() {
+// ========== INTERFACE UTILISATEUR ==========
+function addPhantomControls() {
     const phantomHTML = `
-        <div id="phantom-controls" style="background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 20px; border-radius: 15px; margin: 15px 0; color: white; box-shadow: 0 8px 25px rgba(0,0,0,0.3);">
-            <h4 style="margin: 0 0 15px 0; text-align: center;">🎯 Phantom Chessboard (Python Bridge)</h4>
+        <div id="phantom-controls" style="background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 15px; border-radius: 10px; margin: 15px 0; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <h4 style="margin: 0 0 10px 0; text-align: center;">🎯 Phantom Chessboard</h4>
             
-            <div id="phantom-status" style="font-weight: bold; margin: 10px 0; padding: 8px; border-radius: 5px; text-align: center; background: rgba(255,255,255,0.1);">
-                ❌ Non connecté
+            <div id="phantom-status" style="font-weight: bold; margin: 8px 0; padding: 8px; border-radius: 5px; text-align: center; background: rgba(255,255,255,0.1);">
+                ❌ Déconnecté
             </div>
             
-            <div style="text-align: center; margin: 15px 0;">
-                <button id="check-bridge" class="phantom-button">🔍 Vérifier pont</button>
-                <button id="scan-phantom" class="phantom-button">📡 Scanner</button>
+            <div style="display: flex; gap: 8px; justify-content: center; margin: 10px 0;">
+                <button id="phantom-connect" class="phantom-btn" onclick="window.phantomChessboard.connect()">
+                    🔗 Connecter
+                </button>
+                <button id="phantom-disconnect" class="phantom-btn" onclick="window.phantomChessboard.disconnect()" disabled>
+                    🔌 Déconnecter
+                </button>
             </div>
             
-            <div style="text-align: center; margin: 10px 0;">
-                <button id="connect-phantom" class="phantom-button" disabled>🔗 Connecter</button>
-                <button id="disconnect-phantom" class="phantom-button" disabled>🔌 Déconnecter</button>
+            <div style="display: flex; gap: 8px; justify-content: center; margin: 5px 0;">
+                <button class="phantom-btn secondary" onclick="window.phantomChessboard.calibrate()" id="phantom-calibrate" disabled>
+                    🔧 Calibrer
+                </button>
+                <button class="phantom-btn secondary" onclick="testPhantomSync()" id="phantom-test" disabled>
+                    🧪 Test Sync
+                </button>
             </div>
             
-            <div style="text-align: center; margin: 10px 0;">
-                <button id="sync-position" class="phantom-button" disabled>🔄 Sync Position</button>
-                <button id="test-move" class="phantom-button" disabled>🎮 Test e2-e4</button>
+            <div id="phantom-battery" style="text-align: center; margin-top: 8px; font-size: 12px;">
+                🔋 ---%
             </div>
             
-            <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 14px;">
-                <div id="phantom-battery" style="color: #4CAF50; font-weight: bold;">🔋 ---%</div>
-                <div>Python: <span id="bridge-status" style="color: #ff9800;">Non vérifié</span></div>
-            </div>
-            
-            <div style="font-size: 11px; margin-top: 15px; color: #ccc; text-align: center;">
-                ⚠️ Nécessite: python phantom_bridge.py<br>
-                📦 pip install bleak flask flask-cors
-            </div>
+            <label style="display: block; text-align: center; margin-top: 10px; font-size: 12px;">
+                <input type="checkbox" id="phantom-auto-sync" checked onchange="togglePhantomSync(this.checked)">
+                Synchronisation automatique
+            </label>
         </div>
+        
+        <style>
+            .phantom-btn {
+                background: #4CAF50;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: bold;
+                transition: background 0.3s;
+            }
+            .phantom-btn:hover:not(:disabled) {
+                background: #45a049;
+            }
+            .phantom-btn:disabled {
+                background: #555;
+                cursor: not-allowed;
+                opacity: 0.5;
+            }
+            .phantom-btn.secondary {
+                background: #2196F3;
+            }
+            .phantom-btn.secondary:hover:not(:disabled) {
+                background: #1976D2;
+            }
+        </style>
     `;
-
-    // Ajouter après le formulaire de configuration
-    $('#configForm').after(phantomHTML);
-
-    // Styles pour les boutons
-    $('.phantom-button').css({
-        'background': 'linear-gradient(45deg, #667eea, #764ba2)',
-        'color': 'white',
-        'border': 'none',
-        'padding': '8px 12px',
-        'border-radius': '6px',
-        'cursor': 'pointer',
-        'margin': '3px',
-        'font-size': '12px',
-        'transition': 'all 0.3s ease'
-    });
-
-    // Event listeners
-    $('#check-bridge').click(async function() {
-        $(this).text('🔄 Vérification...');
+    
+    // Insérer dans la page (ajuster le sélecteur selon votre HTML)
+    const container = document.querySelector('.sidebar') || document.querySelector('.controls-panel') || document.body;
+    const phantomDiv = document.createElement('div');
+    phantomDiv.innerHTML = phantomHTML;
+    container.insertBefore(phantomDiv.firstElementChild, container.firstChild);
+    
+    // Activer les boutons après connexion
+    window.phantomChessboard.updateUI = function(connected) {
+        const statusEl = document.getElementById('phantom-status');
+        const connectBtn = document.getElementById('phantom-connect');
+        const disconnectBtn = document.getElementById('phantom-disconnect');
+        const calibrateBtn = document.getElementById('phantom-calibrate');
+        const testBtn = document.getElementById('phantom-test');
         
-        if (!phantomBridge) phantomBridge = new PhantomBridgeClient();
-        
-        const available = await phantomBridge.checkBridge();
-        
-        if (available) {
-            $('#bridge-status').text('✅ Actif').css('color', '#4CAF50');
-            $('#scan-phantom, #connect-phantom').prop('disabled', false);
-            phantomBridge.showNotification('✅ Pont Python accessible', 'success');
-        } else {
-            $('#bridge-status').text('❌ Inactif').css('color', '#f44336');
-            phantomBridge.showNotification('❌ Pont Python non accessible. Lancez phantom_bridge.py', 'error');
+        if (statusEl) {
+            if (connected) {
+                statusEl.textContent = `✅ Connecté: ${this.device.name}`;
+                statusEl.style.background = 'rgba(76, 175, 80, 0.3)';
+            } else {
+                statusEl.textContent = '❌ Déconnecté';
+                statusEl.style.background = 'rgba(244, 67, 54, 0.3)';
+            }
         }
         
-        $(this).text('🔍 Vérifier pont');
-    });
-
-    $('#scan-phantom').click(async function() {
-        $(this).text('🔄 Scan...');
-        
-        const result = await phantomBridge.scanDevices();
-        
-        if (result.found) {
-            phantomBridge.showNotification(`📱 Phantom trouvé: ${result.address}`, 'success');
-            $('#connect-phantom').prop('disabled', false);
-        } else {
-            phantomBridge.showNotification('❌ Aucun Phantom trouvé', 'warning');
-        }
-        
-        $(this).text('📡 Scanner');
-    });
-
-    $('#connect-phantom').click(async function() {
-        $(this).prop('disabled', true).text('🔄 Connexion...');
-        
-        const connected = await phantomBridge.connect();
-        
-        if (connected) {
-            $('#disconnect-phantom, #sync-position, #test-move').prop('disabled', false);
-        }
-        
-        $(this).prop('disabled', false).text('🔗 Connecter');
-    });
-
-    $('#disconnect-phantom').click(async function() {
-        await phantomBridge.disconnect();
-        $('#disconnect-phantom, #sync-position, #test-move').prop('disabled', true);
-        $('#phantom-battery').text('🔋 ---%');
-    });
-
-    $('#sync-position').click(async function() {
-        if (phantomBridge && chess) {
-            await phantomBridge.syncPosition(chess.fen());
-        }
-    });
-
-    $('#test-move').click(async function() {
-        if (phantomBridge) {
-            await phantomBridge.makeMove('e2', 'e4');
-        }
-    });
+        if (connectBtn) connectBtn.disabled = connected;
+        if (disconnectBtn) disconnectBtn.disabled = !connected;
+        if (calibrateBtn) calibrateBtn.disabled = !connected;
+        if (testBtn) testBtn.disabled = !connected;
+    };
 }
+
+// ========== HOOK DANS moveAction() ==========
+/**
+ * 🎯 FONCTION À APPELER APRÈS CHAQUE COUP
+ * Cette fonction doit être appelée dans votre moveAction()
+ */
+function syncPhantomPosition() {
+    // Vérifier que le Phantom est actif et connecté
+    if (!window.phantomChessboard || !window.phantomChessboard.isEnabled()) {
+        return;
+    }
+    
+    // Vérifier que l'auto-sync est activée
+    const autoSyncCheckbox = document.getElementById('phantom-auto-sync');
+    if (autoSyncCheckbox && !autoSyncCheckbox.checked) {
+        return;
+    }
+    
+    // Récupérer le FEN de la position actuelle
+    if (typeof chess !== 'undefined') {
+        const currentFen = chess.fen();
+        window.phantomChessboard.syncPosition(currentFen);
+    }
+}
+
+// ========== FONCTION DE TEST ==========
+function testPhantomSync() {
+    if (typeof chess !== 'undefined') {
+        const fen = chess.fen();
+        console.log('🧪 Test de synchronisation avec FEN:', fen);
+        window.phantomChessboard.syncPosition(fen);
+    } else {
+        alert('Aucune partie en cours pour tester');
+    }
+}
+
+// ========== FONCTION DE TOGGLE ==========
+function togglePhantomSync(enabled) {
+    window.phantomChessboard.setEnabled(enabled);
+}
+
+// ========== INITIALISATION AU CHARGEMENT ==========
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addPhantomControls);
+} else {
+    addPhantomControls();
+}
+
+console.log('🎯 Module Phantom Chessboard chargé');

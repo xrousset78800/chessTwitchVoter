@@ -1300,11 +1300,9 @@ var poll = [];
 var moves = [];
 
 function moveAction(move, isFromNetwork = false) {
-	(teamToPlay == 1) ? 0 : 1;
-	chess.move(move);
-	board.position(chess.fen());
-
-
+    (teamToPlay == 1) ? 0 : 1;
+    chess.move(move);
+    board.position(chess.fen());
 
     if (isFromNetwork) {
         chess.move(move);
@@ -1323,47 +1321,56 @@ function moveAction(move, isFromNetwork = false) {
         }
         
         refreshBoard(chess);
+        
+        // ⭐ NOUVEAU : Sync Phantom
+        if (typeof syncPhantomPosition === 'function') {
+            syncPhantomPosition();
+        }
+        
         return; // IMPORTANT : sortir ici pour éviter la double exécution
     }
 
-
-
-if (window.multiplayerSocket && !isFromNetwork && 
-    ((window.multiplayerColor === 'white' && teamToPlay === 0) ||
-     (window.multiplayerColor === 'black' && teamToPlay === 1))) {
-    window.multiplayerSocket.emit('moveSelected', {
-        gameId: window.multiplayerGameId,
-        player: window.multiplayerColor,
-        move: move,
-        fen: chess.fen()
-    });
-    console.log(`📤 Coup émis: ${move}`);
-}	
+    if (window.multiplayerSocket && !isFromNetwork && 
+        ((window.multiplayerColor === 'white' && teamToPlay === 0) ||
+         (window.multiplayerColor === 'black' && teamToPlay === 1))) {
+        window.multiplayerSocket.emit('moveSelected', {
+            gameId: window.multiplayerGameId,
+            player: window.multiplayerColor,
+            move: move,
+            fen: chess.fen()
+        });
+        console.log(`📤 Coup émis: ${move}`);
+    }   
 
     setTimeout(refreshPlayerDisplay, 100);
+    
     playSoundForMove(chess)
 
-		if(chess.turn() == 'b') {
-			$(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
-		} else {
-			if($(".poll ol li").length == 0) {
-				$(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
-			} else {
-				$(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
-			}
-		}
-		// ANIMATION DU MOVE
-		// ANIMATION DU MOVE
-		console.log("move action")
-	  $("[data-attempt]").attr("data-attempt", parseInt($("[data-attempt]").attr("data-attempt"))+1 );
+    if(chess.turn() == 'b') {
+        $(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+    } else {
+        if($(".poll ol li").length == 0) {
+            $(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+        } else {
+            $(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
+        }
+    }
+    
+    console.log("move action")
+    $("[data-attempt]").attr("data-attempt", parseInt($("[data-attempt]").attr("data-attempt"))+1 );
 
-		$(".poll ol").animate({ scrollTop: $(".poll").offset().top }, 500);
-		refreshBoard(chess);
+    $(".poll ol").animate({ scrollTop: $(".poll").offset().top }, 500);
+    refreshBoard(chess);
 
-		$("[data-fen]").click(function(){
-			board.position($(this).data("fen"));
-		});
-	}
+    $("[data-fen]").click(function(){
+        board.position($(this).data("fen"));
+    });
+    
+    // ⭐ NOUVEAU : Sync Phantom après CHAQUE coup
+    if (typeof syncPhantomPosition === 'function') {
+        syncPhantomPosition();
+    }
+}
 
 function play(target, context, args) {
 	if(!voteOpen) { 
