@@ -136,10 +136,30 @@ function toggleTimeModeElements() {
     }
 }
 
+function togglePhantomPanel() {
+    const phantomCheckbox = document.getElementById('phantomChess');
+    const phantomPanel = document.getElementById('phantomControlPanel');
+    
+    if (phantomCheckbox && phantomPanel) {
+        if (phantomCheckbox.checked) {
+            phantomPanel.style.display = 'block';
+            if (window.phantomChessboard) {
+                window.phantomChessboard.setEnabled(true);
+            }
+        } else {
+            phantomPanel.style.display = 'none';
+            if (window.phantomChessboard) {
+                window.phantomChessboard.setEnabled(false);
+            }
+        }
+    }
+}
+
 $(document).ready(function() {
     // Appel initial pour définir l'état correct au chargement
     toggleGameModeElements();
     toggleTimeModeElements();
+    togglePhantomPanel();
     // Écouter les changements de radio button
     $('input[name="gameMode"]').on('change', function() {
         toggleGameModeElements();
@@ -148,7 +168,42 @@ $(document).ready(function() {
     $('input[name="timerMode"]').on('change', function() {
         toggleTimeModeElements();
     });
+
+    $('#phantomChess').on('change', function() {
+        togglePhantomPanel();
+    });
+    
+    $('#phantom-connect').on('click', async function(e) {
+        e.preventDefault();
+        if (window.phantomChessboard) {
+            const connected = await window.phantomChessboard.connect();
+            if (connected) {
+                $('#phantomChess').prop('checked', true);
+                togglePhantomPanel();
+            }
+        }
+    });
 });
+
+function resetGameWithPhantom() {
+    console.log('🔄 Reset de la partie avec synchronisation Phantom...');
+    
+    if (typeof chess !== 'undefined') {
+        chess.reset();
+    }
+    
+    if (typeof board !== 'undefined') {
+        board.position('start');
+    }
+    
+    setTimeout(function() {
+        if ($('#phantomChess').is(':checked') && 
+            window.phantomChessboard && window.phantomChessboard.isConnected) {
+            const startFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            window.phantomChessboard.syncPosition(startFEN);
+        }
+    }, 500);
+}
 
 /*
 REFAIRE LA TODO
