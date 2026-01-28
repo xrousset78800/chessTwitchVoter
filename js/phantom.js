@@ -1,7 +1,7 @@
 /**
- * 🎯 PHANTOM CHESS INTEGRATION
+ * 🎯 PHANTOM CHESS INTEGRATION (Version sans UI auto-générée)
  * Module pour synchroniser l'échiquier Phantom avec l'échiquier virtuel
- * Utilise Web Bluetooth API (comme phantom_debug.html)
+ * L'interface utilisateur est gérée par le formulaire de configuration
  */
 
 class PhantomChessboard {
@@ -42,7 +42,7 @@ class PhantomChessboard {
         this.enabled = false;
         this.lastFenSent = null;
         
-        console.log('🎯 PhantomChessboard initialisé');
+        console.log('🎯 PhantomChessboard initialisé (version formulaire)');
     }
     
     /**
@@ -287,23 +287,13 @@ class PhantomChessboard {
         console.log(`${prefix} [Phantom] ${message}`);
     }
     
+    /**
+     * Mise à jour de l'interface utilisateur
+     * Cette fonction sera override par le script du formulaire
+     */
     updateUI(connected) {
-        const statusEl = document.getElementById('phantom-status');
-        const connectBtn = document.getElementById('phantom-connect');
-        const disconnectBtn = document.getElementById('phantom-disconnect');
-        
-        if (statusEl) {
-            if (connected) {
-                statusEl.textContent = `✅ Connecté: ${this.device.name}`;
-                statusEl.style.background = '#4CAF50';
-            } else {
-                statusEl.textContent = '❌ Déconnecté';
-                statusEl.style.background = '#f44336';
-            }
-        }
-        
-        if (connectBtn) connectBtn.disabled = connected;
-        if (disconnectBtn) disconnectBtn.disabled = !connected;
+        // Stub - sera remplacé par le code du formulaire
+        console.log(`UI Update: ${connected ? 'Connecté' : 'Déconnecté'}`);
     }
     
     /**
@@ -322,109 +312,7 @@ class PhantomChessboard {
 // ========== INSTANCE GLOBALE ==========
 window.phantomChessboard = new PhantomChessboard();
 
-// ========== INTERFACE UTILISATEUR ==========
-function addPhantomControls() {
-    const phantomHTML = `
-        <div id="phantom-controls" style="background: linear-gradient(135deg, #1e3c72, #2a5298); padding: 15px; border-radius: 10px; margin: 15px 0; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-            <h4 style="margin: 0 0 10px 0; text-align: center;">🎯 Phantom Chessboard</h4>
-            
-            <div id="phantom-status" style="font-weight: bold; margin: 8px 0; padding: 8px; border-radius: 5px; text-align: center; background: rgba(255,255,255,0.1);">
-                ❌ Déconnecté
-            </div>
-            
-            <div style="display: flex; gap: 8px; justify-content: center; margin: 10px 0;">
-                <button id="phantom-connect" class="phantom-btn" onclick="window.phantomChessboard.connect()">
-                    🔗 Connecter
-                </button>
-                <button id="phantom-disconnect" class="phantom-btn" onclick="window.phantomChessboard.disconnect()" disabled>
-                    🔌 Déconnecter
-                </button>
-            </div>
-            
-            <div style="display: flex; gap: 8px; justify-content: center; margin: 5px 0;">
-                <button class="phantom-btn secondary" onclick="window.phantomChessboard.calibrate()" id="phantom-calibrate" disabled>
-                    🔧 Calibrer
-                </button>
-                <button class="phantom-btn secondary" onclick="testPhantomSync()" id="phantom-test" disabled>
-                    🧪 Test Sync
-                </button>
-            </div>
-            
-            <div id="phantom-battery" style="text-align: center; margin-top: 8px; font-size: 12px;">
-                🔋 ---%
-            </div>
-            
-            <label style="display: block; text-align: center; margin-top: 10px; font-size: 12px;">
-                <input type="checkbox" id="phantom-auto-sync" checked onchange="togglePhantomSync(this.checked)">
-                Synchronisation automatique
-            </label>
-        </div>
-        
-        <style>
-            .phantom-btn {
-                background: #4CAF50;
-                color: white;
-                border: none;
-                padding: 8px 12px;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: bold;
-                transition: background 0.3s;
-            }
-            .phantom-btn:hover:not(:disabled) {
-                background: #45a049;
-            }
-            .phantom-btn:disabled {
-                background: #555;
-                cursor: not-allowed;
-                opacity: 0.5;
-            }
-            .phantom-btn.secondary {
-                background: #2196F3;
-            }
-            .phantom-btn.secondary:hover:not(:disabled) {
-                background: #1976D2;
-            }
-        </style>
-    `;
-    
-    // Insérer dans la page (ajuster le sélecteur selon votre HTML)
-    const container = document.querySelector('.sidebar') || document.querySelector('.controls-panel') || document.body;
-    const phantomDiv = document.createElement('div');
-    phantomDiv.innerHTML = phantomHTML;
-    container.insertBefore(phantomDiv.firstElementChild, container.firstChild);
-    
-    // Activer les boutons après connexion
-    window.phantomChessboard.updateUI = function(connected) {
-        const statusEl = document.getElementById('phantom-status');
-        const connectBtn = document.getElementById('phantom-connect');
-        const disconnectBtn = document.getElementById('phantom-disconnect');
-        const calibrateBtn = document.getElementById('phantom-calibrate');
-        const testBtn = document.getElementById('phantom-test');
-        
-        if (statusEl) {
-            if (connected) {
-                statusEl.textContent = `✅ Connecté: ${this.device.name}`;
-                statusEl.style.background = 'rgba(76, 175, 80, 0.3)';
-            } else {
-                statusEl.textContent = '❌ Déconnecté';
-                statusEl.style.background = 'rgba(244, 67, 54, 0.3)';
-            }
-        }
-        
-        if (connectBtn) connectBtn.disabled = connected;
-        if (disconnectBtn) disconnectBtn.disabled = !connected;
-        if (calibrateBtn) calibrateBtn.disabled = !connected;
-        if (testBtn) testBtn.disabled = !connected;
-    };
-}
-
-// ========== HOOK DANS moveAction() ==========
-/**
- * 🎯 FONCTION À APPELER APRÈS CHAQUE COUP
- * Cette fonction doit être appelée dans votre moveAction()
- */
+// ========== FONCTION DE SYNC (appelée par moveAction) ==========
 function syncPhantomPosition() {
     // Vérifier que le Phantom est actif et connecté
     if (!window.phantomChessboard || !window.phantomChessboard.isEnabled()) {
@@ -455,16 +343,4 @@ function testPhantomSync() {
     }
 }
 
-// ========== FONCTION DE TOGGLE ==========
-function togglePhantomSync(enabled) {
-    window.phantomChessboard.setEnabled(enabled);
-}
-
-// ========== INITIALISATION AU CHARGEMENT ==========
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addPhantomControls);
-} else {
-    addPhantomControls();
-}
-
-console.log('🎯 Module Phantom Chessboard chargé');
+console.log('🎯 Module Phantom Chessboard chargé (version formulaire)');
