@@ -184,10 +184,50 @@ class PhantomChessboard {
         }
     }
     
-    /**
-     * 🎯 SYNCHRONISATION - VERSION FINALE
-     * MOVEMENT + RESET_DETECTION + SIDE automatique
-     */
+function fenToPhantomMatrix(fen) {
+    const parts = fen.split(' ');
+    const position = parts[0];
+    const turn = parts[1]; // 'w' ou 'b'
+    
+    let matrix = '';
+    
+    // Ajouter 12 cases vides au début (bord supérieur)
+    matrix += '.'.repeat(12);
+    
+    // Convertir chaque rangée
+    const rows = position.split('/').reverse(); // Inverser car FEN va de 8 à 1
+    
+    for (let row of rows) {
+        // Bord gauche (2 cases)
+        matrix += '..';
+        
+        // Convertir la rangée
+        for (let char of row) {
+            if (char >= '1' && char <= '8') {
+                // Chiffre = cases vides
+                matrix += '.'.repeat(parseInt(char));
+            } else {
+                // Pièce
+                // FEN utilise minuscules pour noir, majuscules pour blanc
+                // Phantom utilise p/r/n/b/q/k pour noir, P/R/N/B/Q/K pour blanc
+                matrix += char;
+            }
+        }
+        
+        // Bord droit (2 cases)
+        matrix += '..';
+    }
+    
+    // Ajouter 12 cases vides à la fin (bord inférieur)
+    matrix += '.'.repeat(12);
+    
+    // Ajouter virgule + couleur
+    matrix += ',' + (turn === 'w' ? 'W' : 'B');
+    
+    return matrix;
+}
+
+// Modifier syncPosition pour utiliser cette approche
 async syncPosition(fen, moveInfo = null) {
     if (!this.enabled || !this.isConnected) {
         console.log('⚠️ Phantom non connecté');
@@ -203,28 +243,25 @@ async syncPosition(fen, moveInfo = null) {
         return true;
     }
     
-    this.log(`♟️ Sync: ${fen}`, 'info');
+    this.log(`♟️ Sync via MATRICE: ${fen}`, 'info');
     
     try {
-        // 🎯 ÉTAPE 1 : Demander au Phantom de scanner la position actuelle
-        this.log('📊 Demande scan position actuelle...', 'info');
-        await this.sendCommand(this.OP_CODES.BOARD_STATE);
+        // 🎯 CONVERTIR LE FEN EN MATRICE
+        const matrix = fenToPhantomMatrix(fen);
         
-        // Attendre que le scan soit terminé
-        await new Promise(resolve => setTimeout(resolve, 800));
+        this.log(`📊 Matrice: ${matrix.substring(0, 50)}...`, 'info');
         
-        // 🎯 ÉTAPE 2 : Envoyer le FEN cible
-        this.log('📤 Envoi FEN cible...', 'info');
-        await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
+        // 🎯 ENVOYER VIA GAME_START (même commande que l'initialisation)
+        await this.sendCommand(this.OP_CODES.GAME_START, matrix);
         
-        // Attendre le traitement
+        // Délai
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // 🎯 ÉTAPE 3 : Mode BLE
+        // Mode BLE
         await this.selectSide(2);
         
         this.lastFenSent = fen;
-        this.log('✅ Position synchronisée', 'success');
+        this.log('✅ Position synchronisée via matrice', 'success');
         
         return true;
         

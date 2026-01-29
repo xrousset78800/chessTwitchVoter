@@ -79,13 +79,6 @@
                 </select>
                 <button id="sendMoveBtn" onclick="sendMove()" disabled>SEND MOVE</button>
             </div>
-            <div class="compact-input" style="margin-top: 5px;">
-                <span style="font-size: 11px;">🧪 Tests FEN:</span>
-                <button id="test1Btn" onclick="testMove1()" disabled class="secondary">1.e4</button>
-                <button id="test2Btn" onclick="testMove2()" disabled class="secondary">1...e5</button>
-                <button id="test3Btn" onclick="testMove3()" disabled class="secondary">2.Nf3</button>
-                <button id="test4Btn" onclick="testMove4()" disabled class="secondary">2...Nc6</button>
-            </div>
         </div>
 
         <!-- STATUS COMPACT -->
@@ -143,7 +136,9 @@
         
         let device = null, server = null, service = null, characteristics = {};
         const INITIAL_MATRIX = '...........rp....PR..np....PN..bp....PB..qp....PQ..kp....PK..bp....PB..np....PN..rp....PR...........,W';
-        
+        let capturedMoves = [];
+        let captureCount = 0;
+
         function addLog(message, type = 'info') {
             const logsDiv = document.getElementById('logs');
             const timestamp = new Date().toLocaleTimeString();
@@ -230,28 +225,74 @@
             }
         }
         
-        function handleGameNotification(event) {
-            const value = event.target.value;
-            const decoder = new TextDecoder('utf-8');
-            const bytes = new Uint8Array(value.buffer);
+function handleGameNotification(event) {
+    const value = event.target.value;
+    const decoder = new TextDecoder('utf-8');
+    const bytes = new Uint8Array(value.buffer);
+    
+    try {
+        const strValue = decoder.decode(value);
+        const opCode = bytes[0];
+        const opName = OP_CODE_NAMES[opCode] || 'UNK';
+        const dataStr = strValue.substring(1);
+        const timestamp = new Date().toLocaleTimeString();
+        
+        // 🔍 LOGS DÉTAILLÉS DANS LA CONSOLE
+        console.log('═══════════════════════════════════════');
+        console.log(`[${timestamp}] 📥 NOTIFICATION`);
+        console.log(`OpCode: ${opCode} (${opName})`);
+        console.log(`Data: "${dataStr}"`);
+        console.log(`Bytes: ${Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
+        
+        // 🎯 ANALYSE SPÉCIALE POUR LES COUPS
+        if (opCode === OP_CODES.BLE_MOVE_DONE || opCode === OP_CODES.MOVEMENT) {
+            console.log('🎯 COUP DÉTECTÉ !');
+            console.log(`   Format complet: "${dataStr}"`);
             
-            try {
-                const strValue = decoder.decode(value);
-                const opCode = bytes[0];
-                const opName = OP_CODE_NAMES[opCode] || 'UNK';
-                const dataStr = strValue.substring(1);
-                
-                if (dataStr.trim() && dataStr.length < 100) {
-                    addLog(`📥 [${opName}] "${dataStr}"`, 'received');
-                } else if (dataStr.trim()) {
-                    addLog(`📥 [${opName}] (longue)`, 'received');
-                } else {
-                    addLog(`📥 [${opName}]`, 'received');
-                }
-            } catch (e) {
-                addLog(`📥 bytes`, 'received');
+            // Analyser le format
+            if (dataStr.includes('x')) {
+                console.log('   ⚠️ CONTIENT "x" → CAPTURE !');
+                captureCount++;
+                console.log(`   📊 Nombre de captures: ${captureCount}`);
             }
+            if (dataStr.includes('-')) {
+                console.log('   ℹ️ CONTIENT "-" → Déplacement simple');
+            }
+            if (dataStr.includes('O-O')) {
+                console.log('   👑 ROQUE !');
+            }
+            
+            // Stocker pour analyse
+            capturedMoves.push({
+                timestamp,
+                opCode: opName,
+                data: dataStr,
+                bytes: Array.from(bytes)
+            });
+            
+            console.log(`   📦 Total coups capturés: ${capturedMoves.length}`);
         }
+        
+        // 🔍 ERREURS
+        if (opCode === OP_CODES.ERROR_MSG) {
+            console.log('❌ ERREUR PHANTOM !');
+            console.log(`   Message: ${dataStr.substring(0, 100)}...`);
+        }
+        
+        console.log('═══════════════════════════════════════');
+        
+        // Log normal dans l'interface (inchangé)
+        if (dataStr.trim() && dataStr.length < 100) {
+            addLog(`📥 [${opName}] "${dataStr}"`, 'received');
+        } else if (dataStr.trim()) {
+            addLog(`📥 [${opName}] (longue)`, 'received');
+        } else {
+            addLog(`📥 [${opName}]`, 'received');
+        }
+    } catch (e) {
+        addLog(`📥 bytes`, 'received');
+    }
+}
         
         function handleStateNotification(event) {
             const state = new TextDecoder('utf-8').decode(event.target.value);
@@ -375,36 +416,7 @@
             addLog('🏁 END...', 'info');
             await sendCommand(OP_CODES.GAME_END);
         }
-        
-        // Tests de coups avec RESET_DETECTION (FEN)
-        async function testMove1() {
-            // 1. e4
-            const fen = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1';
-            addLog(`🧪 1.e4`, 'info');
-            await sendCommand(OP_CODES.RESET_DETECTION, fen);
-        }
-        
-        async function testMove2() {
-            // 1...e5 (après 1.e4)
-            const fen = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2';
-            addLog(`🧪 1...e5`, 'info');
-            await sendCommand(OP_CODES.RESET_DETECTION, fen);
-        }
-        
-        async function testMove3() {
-            // 2. Nf3 (après 1.e4 e5)
-            const fen = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2';
-            addLog(`🧪 2.Nf3`, 'info');
-            await sendCommand(OP_CODES.RESET_DETECTION, fen);
-        }
-        
-        async function testMove4() {
-            // 2...Nc6 (après 1.e4 e5 2.Nf3)
-            const fen = 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3';
-            addLog(`🧪 2...Nc6`, 'info');
-            await sendCommand(OP_CODES.RESET_DETECTION, fen);
-        }
-        
+                
         async function calibrate() {
             addLog('🔧 Calibration...', 'info');
             await sendCommand(OP_CODES.CALIBRATION);
@@ -446,6 +458,38 @@
         });
         
         addLog('🚀 Prêt', 'info');
+
+
+
+        function exportCapturedMoves() {
+    console.log('═══════════════════════════════════════');
+    console.log('📊 RAPPORT DES COUPS CAPTURÉS');
+    console.log(`Total: ${capturedMoves.length} coups`);
+    console.log(`Captures: ${captureCount}`);
+    console.log('');
+    
+    capturedMoves.forEach((move, index) => {
+        const isCapture = move.data.includes('x');
+        const icon = isCapture ? '⚔️' : '♟️';
+        console.log(`${icon} Coup ${index + 1} [${move.timestamp}] ${move.opCode}: "${move.data}"`);
+    });
+    
+    console.log('═══════════════════════════════════════');
+    
+    // Export JSON pour analyse
+    const json = JSON.stringify(capturedMoves, null, 2);
+    console.log('JSON export:');
+    console.log(json);
+    
+    addLog(`📊 ${capturedMoves.length} coups exportés dans la console`, 'info');
+}
+
+function clearCapturedMoves() {
+    capturedMoves = [];
+    captureCount = 0;
+    console.log('🗑️ Coups effacés');
+    addLog('🗑️ Historique des coups effacé', 'info');
+}
     </script>
 </body>
 </html>
