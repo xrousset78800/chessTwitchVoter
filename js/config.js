@@ -132,7 +132,6 @@ $(document).ready(function() {
         }
     });
     
-    // Override updateUI
     if (window.phantomChessboard) {
         window.phantomChessboard.updateUI = function(connected) {
             const statusEl = $('#phantom-status');
@@ -140,6 +139,9 @@ $(document).ready(function() {
             const disconnectBtn = $('#phantom-disconnect');
             const calibrateBtn = $('#phantom-calibrate');
             const testBtn = $('#phantom-test');
+            const speedSlider = $('#phantom-speed');      // 👈 NOUVEAU
+            const volumeSlider = $('#phantom-volume');    // 👈 NOUVEAU
+            const undoBtn = $('#phantom-undo');
             
             if (statusEl.length) {
                 if (connected) {
@@ -155,6 +157,10 @@ $(document).ready(function() {
             disconnectBtn.prop('disabled', !connected);
             calibrateBtn.prop('disabled', !connected);
             testBtn.prop('disabled', !connected);
+            undoBtn.prop('disabled', !connected);
+            // 👇 NOUVEAU : Activer/désactiver les sliders
+            speedSlider.prop('disabled', !connected);
+            volumeSlider.prop('disabled', !connected);
         };
     }
     
@@ -162,6 +168,25 @@ $(document).ready(function() {
 });
 
 // ========== RESET AVEC PHANTOM ==========
+
+$('#phantom-undo').on('click', function(e) {
+    e.preventDefault();
+    
+    if (typeof chess !== 'undefined' && typeof board !== 'undefined') {
+        const undoneMove = chess.undo();
+        
+        if (undoneMove) {
+            console.log('✅ Coup annulé:', undoneMove.san);
+            board.position(chess.fen());
+            
+            if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+                window.phantomChessboard.syncPosition(chess.fen(), null);
+            }
+        } else {
+            alert('Aucun coup à annuler');
+        }
+    }
+});
 
 function resetGameWithPhantom() {
     console.log('🔄 Reset de la partie avec synchronisation Phantom...');
@@ -205,6 +230,34 @@ $(document).ready(function() {
     }
 });
 
+$('#phantom-speed').on('input', function() {
+    const speed = this.value;
+    $('#phantom-speed-value').text(speed + '%');
+});
+
+$('#phantom-speed').on('change', async function() {
+    const speed = parseInt(this.value);
+    console.log(`⚡ Modification vitesse: ${speed}%`);
+    
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        await window.phantomChessboard.setSpeed(speed);
+    }
+});
+
+// Slider Volume
+$('#phantom-volume').on('input', function() {
+    const volume = this.value;
+    $('#phantom-volume-value').text(volume + '%');
+});
+
+$('#phantom-volume').on('change', async function() {
+    const volume = parseInt(this.value);
+    console.log(`🔊 Modification volume: ${volume}%`);
+    
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        await window.phantomChessboard.setVolume(volume);
+    }
+});
 /***********************************************************************************************************************/
 /************************************************     OMG CONFIG     ***************************************************/
 /***********************************************************************************************************************/

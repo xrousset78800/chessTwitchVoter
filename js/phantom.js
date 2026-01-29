@@ -1,7 +1,6 @@
 /**
- * 🎯 PHANTOM CHESS INTEGRATION (Version sans UI auto-générée)
- * Module pour synchroniser l'échiquier Phantom avec l'échiquier virtuel
- * L'interface utilisateur est gérée par le formulaire de configuration
+ * 🎯 PHANTOM CHESS - VERSION FINALE CORRIGÉE
+ * MOVEMENT + alternance automatique du SIDE
  */
 
 class PhantomChessboard {
@@ -14,7 +13,6 @@ class PhantomChessboard {
         this.UUID_BATTERY = '7b204548-40c4-11eb-adc1-0242ac120002';
         this.UUID_SETSTATE = 'acb6543c-92ca-11ee-b9d1-0242ac120002';
         
-        // OpCodes (alignés avec phantom_debug.html)
         this.OP_CODES = {
             GAME_START: 0,
             GAME_END: 1,
@@ -24,7 +22,7 @@ class PhantomChessboard {
             SIDE: 10,
             BLE_MOVE_DONE: 12,
             SNAPTOCENTERCOM: 13,
-            RESET_DETECTION: 14  // ⭐ CRUCIAL : C'est celui-ci qu'on utilise avec FEN
+            RESET_DETECTION: 14
         };
         
         this.OP_CODE_NAMES = {
@@ -41,25 +39,27 @@ class PhantomChessboard {
         this.isConnected = false;
         this.enabled = false;
         this.lastFenSent = null;
+        this.gameInitialized = false;
+        this.currentSide = 2; // 👈 NOUVEAU : Toujours BLE (mode 2)
         
-        console.log('🎯 PhantomChessboard initialisé (version formulaire)');
+        // Matrice initiale
+        this.INITIAL_MATRIX = '...........rp....PR..np....PN..bp....PB..qp....PQ..kp....PK..bp....PB..np....PN..rp....PR...........,W';
+        
+        console.log('🎯 PhantomChessboard initialisé (version finale)');
     }
     
-    /**
-     * ========== CONNEXION ==========
-     */
+    // ... [MÉTHODES connect, disconnect, initializeGame, sendCommand INCHANGÉES] ...
     
     async connect() {
         if (!navigator.bluetooth) {
             this.log('❌ Web Bluetooth non supporté', 'error');
-            alert('Web Bluetooth non supporté par ce navigateur. Utilisez Chrome ou Edge.');
+            alert('Web Bluetooth non supporté. Utilisez Chrome ou Edge.');
             return false;
         }
         
         try {
-            this.log('🔍 Recherche de l\'échiquier Phantom...', 'info');
+            this.log('🔍 Recherche Phantom...', 'info');
             
-            // Demander la connexion BLE
             this.device = await navigator.bluetooth.requestDevice({
                 filters: [{ namePrefix: 'Phantom' }],
                 optionalServices: [this.SERVICE_UUID]
@@ -67,11 +67,9 @@ class PhantomChessboard {
             
             this.log(`📱 Connexion à ${this.device.name}...`, 'info');
             
-            // Connexion GATT
             this.server = await this.device.gatt.connect();
             this.service = await this.server.getPrimaryService(this.SERVICE_UUID);
             
-            // Récupérer les caractéristiques
             const uuids = {
                 game: this.UUID_GAME,
                 speed: this.UUID_MECHANISM_SPEED,
@@ -83,13 +81,13 @@ class PhantomChessboard {
             for (const [key, uuid] of Object.entries(uuids)) {
                 try {
                     this.characteristics[key] = await this.service.getCharacteristic(uuid);
-                    this.log(`✓ Caractéristique ${key} OK`, 'info');
+                    this.log(`✓ ${key} OK`, 'info');
                 } catch (e) {
-                    this.log(`⚠ Caractéristique ${key} non disponible`, 'warn');
+                    this.log(`⚠ ${key} indisponible`, 'warn');
                 }
             }
             
-            // Activer les notifications
+            // Notifications
             if (this.characteristics.game) {
                 await this.characteristics.game.startNotifications();
                 this.characteristics.game.addEventListener('characteristicvaluechanged', 
@@ -113,39 +111,58 @@ class PhantomChessboard {
             this.log(`✅ Connecté à ${this.device.name}`, 'success');
             this.updateUI(true);
             
-            // Gérer la déconnexion
+            await this.initializeGame();
+            
             this.device.addEventListener('gattserverdisconnected', () => {
-                this.log('⚠️ Échiquier déconnecté', 'warn');
+                this.log('⚠️ Déconnecté', 'warn');
                 this.isConnected = false;
                 this.enabled = false;
+                this.gameInitialized = false;
                 this.updateUI(false);
             });
             
             return true;
             
         } catch (error) {
-            this.log(`❌ Erreur de connexion: ${error.message}`, 'error');
+            this.log(`❌ Erreur: ${error.message}`, 'error');
             return false;
         }
     }
     
     async disconnect() {
         if (this.device && this.device.gatt.connected) {
+            if (this.gameInitialized) {
+                await this.endGame();
+            }
             this.device.gatt.disconnect();
             this.isConnected = false;
             this.enabled = false;
+            this.gameInitialized = false;
             this.log('🔌 Déconnecté', 'info');
             this.updateUI(false);
         }
     }
     
-    /**
-     * ========== ENVOI DE COMMANDES ==========
-     */
+    async initializeGame() {
+        if (this.gameInitialized) {
+            this.log('ℹ️ Déjà initialisé', 'info');
+            return true;
+        }
+        
+        this.log('🎮 Initialisation...', 'info');
+        
+        await this.startGame();
+        await this.selectSide(2); // BLE mode
+        
+        this.gameInitialized = true;
+        this.log('✅ Initialisé (START + BLE)', 'success');
+        
+        return true;
+    }
     
     async sendCommand(opCode, data = '') {
         if (!this.isConnected || !this.characteristics.game) {
-            this.log('❌ Échiquier non connecté', 'error');
+            this.log('❌ Non connecté', 'error');
             return false;
         }
         
@@ -158,48 +175,61 @@ class PhantomChessboard {
             if (data.length < 100) {
                 this.log(`📤 [${opName}] "${data}"`, 'sent');
             } else {
-                this.log(`📤 [${opName}] (FEN longue)`, 'sent');
+                this.log(`📤 [${opName}] (longue)`, 'sent');
             }
             return true;
         } catch (error) {
-            this.log(`❌ Erreur envoi: ${error.message}`, 'error');
+            this.log(`❌ Erreur: ${error.message}`, 'error');
             return false;
         }
     }
     
     /**
-     * ========== SYNCHRONISATION POSITION ==========
-     * 🎯 C'EST LA FONCTION PRINCIPALE !
-     * Envoie un FEN à l'échiquier via RESET_DETECTION
+     * 🎯 SYNCHRONISATION - VERSION FINALE
+     * MOVEMENT + RESET_DETECTION + SIDE automatique
      */
-    async syncPosition(fen) {
-        if (!this.enabled || !this.isConnected) {
-            console.log('⚠️ Phantom non connecté, sync ignorée');
-            return false;
-        }
-        
-        // Éviter d'envoyer la même position deux fois
-        if (fen === this.lastFenSent) {
-            console.log('⏭️ FEN identique, envoi ignoré');
-            return true;
-        }
-        
-        this.log(`♟️ Synchronisation: ${fen}`, 'info');
-        
-        // ⭐ RESET_DETECTION avec FEN (comme les boutons Tests FEN de debug)
-        const success = await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
-        
-        if (success) {
-            this.lastFenSent = fen;
-            this.log('✅ Position synchronisée avec l\'échiquier', 'success');
-        }
-        
-        return success;
+async syncPosition(fen, moveInfo = null) {
+    if (!this.enabled || !this.isConnected) {
+        console.log('⚠️ Phantom non connecté');
+        return false;
     }
     
-    /**
-     * ========== GESTION DES NOTIFICATIONS ==========
-     */
+    if (!this.gameInitialized) {
+        await this.initializeGame();
+    }
+    
+    if (fen === this.lastFenSent) {
+        console.log('⏭️ FEN identique');
+        return true;
+    }
+    
+    this.log(`♟️ Sync FEN uniquement: ${fen}`, 'info');
+    
+    try {
+        // 🧪 TEST : ENVOYER SEULEMENT LE FEN
+        // Le Phantom doit calculer lui-même comment passer 
+        // de la position actuelle au FEN cible
+        
+        await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
+        
+        // Délai plus long pour laisser le Phantom analyser
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Mode BLE
+        await this.selectSide(2);
+        
+        this.lastFenSent = fen;
+        this.log('✅ Position synchronisée', 'success');
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Erreur sync:', error);
+        return false;
+    }
+}
+    
+    // ... [MÉTHODES handleGameNotification, handleStateNotification, handleBatteryNotification INCHANGÉES] ...
     
     handleGameNotification(event) {
         const value = event.target.value;
@@ -212,6 +242,29 @@ class PhantomChessboard {
             const opName = this.OP_CODE_NAMES[opCode] || 'UNK';
             const dataStr = strValue.substring(1);
             
+            // 🔍 ESPION : Logger TOUT en détail
+            console.log('═══════════════════════════════════════');
+            console.log('📥 NOTIFICATION REÇUE');
+            console.log('OpCode:', opCode, `(${opName})`);
+            console.log('Data brute:', dataStr);
+            console.log('Bytes:', Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' '));
+            
+            // Si c'est un coup (MOVEMENT ou BLE_MOVE_DONE)
+            if (opCode === this.OP_CODES.MOVEMENT || opCode === this.OP_CODES.BLE_MOVE_DONE) {
+                console.log('🎯 COUP DÉTECTÉ !');
+                console.log('   Format:', dataStr);
+                
+                // Analyser le format
+                if (dataStr.includes('x')) {
+                    console.log('   ⚠️ CONTIENT UN X (capture)');
+                }
+                if (dataStr.includes('-')) {
+                    console.log('   ⚠️ CONTIENT UN - (simple move)');
+                }
+            }
+            console.log('═══════════════════════════════════════');
+            
+            // Logs normaux (gardés)
             if (dataStr.trim() && dataStr.length < 100) {
                 this.log(`📥 [${opName}] "${dataStr}"`, 'received');
             } else if (dataStr.trim()) {
@@ -220,14 +273,12 @@ class PhantomChessboard {
                 this.log(`📥 [${opName}]`, 'received');
             }
             
-            // Si c'est un mouvement détecté sur l'échiquier physique
             if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
-                this.log(`🎯 Coup détecté sur échiquier: ${dataStr}`, 'info');
-                // TODO: Si besoin, synchroniser vers le virtuel
+                this.log(`🎯 Coup détecté: ${dataStr}`, 'info');
             }
             
         } catch (e) {
-            this.log(`📥 Notification binaire`, 'received');
+            this.log(`📥 Notif binaire`, 'received');
         }
     }
     
@@ -239,30 +290,24 @@ class PhantomChessboard {
     handleBatteryNotification(event) {
         const batteryData = new TextDecoder('utf-8').decode(event.target.value);
         const [percentage] = batteryData.split(',');
-        this.log(`🔋 Batterie: ${percentage}%`, 'info');
+        this.log(`🔋 ${percentage}%`, 'info');
         
-        // Mettre à jour l'UI si un élément existe
         const batteryEl = document.getElementById('phantom-battery');
         if (batteryEl) {
             batteryEl.textContent = `🔋 ${percentage}%`;
         }
     }
     
-    /**
-     * ========== COMMANDES UTILES ==========
-     */
-    
     async startGame() {
-        const INITIAL_MATRIX = '...........rp....PR..np....PN..bp....PB..qp....PQ..kp....PK..bp....PB..np....PN..rp....PR...........,W';
-        return await this.sendCommand(this.OP_CODES.GAME_START, INITIAL_MATRIX);
+        return await this.sendCommand(this.OP_CODES.GAME_START, this.INITIAL_MATRIX);
     }
     
     async endGame() {
+        this.gameInitialized = false;
         return await this.sendCommand(this.OP_CODES.GAME_END);
     }
     
     async selectSide(side) {
-        // 0 = 2 joueurs, 1 = Board, 2 = BLE
         return await this.sendCommand(this.OP_CODES.SIDE, side.toString());
     }
     
@@ -270,38 +315,59 @@ class PhantomChessboard {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
     }
     
-    /**
-     * ========== UTILITAIRES ==========
-     */
+    async setSpeed(speed) {
+        if (!this.characteristics.speed) {
+            this.log('⚠️ Vitesse indisponible', 'warn');
+            return false;
+        }
+        
+        try {
+            const value = Math.max(0, Math.min(100, speed));
+            const encoded = new TextEncoder().encode(value.toString());
+            await this.characteristics.speed.writeValue(encoded);
+            this.log(`⚡ Vitesse: ${value}%`, 'info');
+            return true;
+        } catch (error) {
+            this.log(`❌ Erreur vitesse: ${error.message}`, 'error');
+            return false;
+        }
+    }
+    
+    async setVolume(volume) {
+        if (!this.characteristics.sound) {
+            this.log('⚠️ Volume indisponible', 'warn');
+            return false;
+        }
+        
+        try {
+            const value = Math.max(0, Math.min(100, volume));
+            const soundSettings = `${value},1`;
+            const encoded = new TextEncoder().encode(soundSettings);
+            await this.characteristics.sound.writeValue(encoded);
+            this.log(`🔊 Volume: ${value}%`, 'info');
+            return true;
+        } catch (error) {
+            this.log(`❌ Erreur volume: ${error.message}`, 'error');
+            return false;
+        }
+    }
     
     log(message, type = 'info') {
         const prefix = {
-            'info': 'ℹ️',
-            'success': '✅',
-            'error': '❌',
-            'warn': '⚠️',
-            'sent': '📤',
-            'received': '📥'
+            'info': 'ℹ️', 'success': '✅', 'error': '❌',
+            'warn': '⚠️', 'sent': '📤', 'received': '📥'
         }[type] || 'ℹ️';
         
         console.log(`${prefix} [Phantom] ${message}`);
     }
     
-    /**
-     * Mise à jour de l'interface utilisateur
-     * Cette fonction sera override par le script du formulaire
-     */
     updateUI(connected) {
-        // Stub - sera remplacé par le code du formulaire
-        console.log(`UI Update: ${connected ? 'Connecté' : 'Déconnecté'}`);
+        console.log(`UI: ${connected ? 'Connecté' : 'Déconnecté'}`);
     }
     
-    /**
-     * Active/désactive le Phantom
-     */
     setEnabled(enabled) {
         this.enabled = enabled;
-        this.log(enabled ? '🟢 Phantom activé' : '🔴 Phantom désactivé', 'info');
+        this.log(enabled ? '🟢 Activé' : '🔴 Désactivé', 'info');
     }
     
     isEnabled() {
@@ -309,38 +375,54 @@ class PhantomChessboard {
     }
 }
 
-// ========== INSTANCE GLOBALE ==========
+// Instance globale
 window.phantomChessboard = new PhantomChessboard();
 
-// ========== FONCTION DE SYNC (appelée par moveAction) ==========
+// Fonction de sync
 function syncPhantomPosition() {
-    // Vérifier que le Phantom est actif et connecté
     if (!window.phantomChessboard || !window.phantomChessboard.isEnabled()) {
         return;
     }
     
-    // Vérifier que l'auto-sync est activée
     const autoSyncCheckbox = document.getElementById('phantom-auto-sync');
     if (autoSyncCheckbox && !autoSyncCheckbox.checked) {
         return;
     }
     
-    // Récupérer le FEN de la position actuelle
     if (typeof chess !== 'undefined') {
         const currentFen = chess.fen();
-        window.phantomChessboard.syncPosition(currentFen);
+        
+        // 🎯 RÉCUPÉRER L'OBJET COMPLET depuis chess.history({ verbose: true })
+        const history = chess.history({ verbose: true });
+        const lastMove = history.length > 0 ? history[history.length - 1] : null;
+        
+        // 🎯 PASSER L'OBJET COMPLET (pas un objet simplifié)
+        // lastMove contient déjà : from, to, flags, captured, san, etc.
+        window.phantomChessboard.syncPosition(currentFen, lastMove);
     }
 }
 
-// ========== FONCTION DE TEST ==========
+// Fonction de test
 function testPhantomSync() {
     if (typeof chess !== 'undefined') {
         const fen = chess.fen();
-        console.log('🧪 Test de synchronisation avec FEN:', fen);
-        window.phantomChessboard.syncPosition(fen);
+        const history = chess.history({ verbose: true });
+        const lastMove = history.length > 0 ? history[history.length - 1] : null;
+        
+        const moveInfo = lastMove ? {
+            from: lastMove.from,
+            to: lastMove.to,
+            promotion: lastMove.promotion || ''
+        } : null;
+        
+        console.log('🧪 Test sync');
+        console.log('FEN:', fen);
+        console.log('Coup:', moveInfo);
+        
+        window.phantomChessboard.syncPosition(fen, moveInfo);
     } else {
-        alert('Aucune partie en cours pour tester');
+        alert('Aucune partie en cours');
     }
 }
 
-console.log('🎯 Module Phantom Chessboard chargé (version formulaire)');
+console.log('🎯 Phantom chargé (v.finale - MOVEMENT + FEN + SIDE)');

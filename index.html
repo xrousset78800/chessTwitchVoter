@@ -395,8 +395,29 @@
                         <button type="button" id="phantom-test" class="phantom-btn secondary" disabled>
                             🧪 Test Sync
                         </button>
+                        <button type="button" id="phantom-undo" class="phantom-btn secondary" disabled>
+                            ↩️ Undo
+                        </button>                        
                     </div>
-                    
+                    <div class="phantom-controls">
+                        <!-- Vitesse -->
+                        <div class="phantom-control-group">
+                            <label for="phantom-speed">⚡ Vitesse du mécanisme</label>
+                            <div class="phantom-slider-container">
+                                <input type="range" id="phantom-speed" min="0" max="100" value="50" disabled>
+                                <span id="phantom-speed-value">50%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Volume -->
+                        <div class="phantom-control-group">
+                            <label for="phantom-volume">🔊 Volume des sons</label>
+                            <div class="phantom-slider-container">
+                                <input type="range" id="phantom-volume" min="0" max="100" value="75" disabled>
+                                <span id="phantom-volume-value">75%</span>
+                            </div>
+                        </div>
+                    </div>                    
                     <!-- Informations batterie -->
                     <div id="phantom-battery">
                         🔋 ---%
@@ -414,6 +435,7 @@
                     </div>
                 </div>                
             </fieldset>
+
         <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>
     </form>
         </div>
