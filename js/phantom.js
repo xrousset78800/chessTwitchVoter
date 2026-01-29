@@ -203,19 +203,24 @@ async syncPosition(fen, moveInfo = null) {
         return true;
     }
     
-    this.log(`♟️ Sync FEN uniquement: ${fen}`, 'info');
+    this.log(`♟️ Sync: ${fen}`, 'info');
     
     try {
-        // 🧪 TEST : ENVOYER SEULEMENT LE FEN
-        // Le Phantom doit calculer lui-même comment passer 
-        // de la position actuelle au FEN cible
+        // 🎯 ÉTAPE 1 : Demander au Phantom de scanner la position actuelle
+        this.log('📊 Demande scan position actuelle...', 'info');
+        await this.sendCommand(this.OP_CODES.BOARD_STATE);
         
+        // Attendre que le scan soit terminé
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // 🎯 ÉTAPE 2 : Envoyer le FEN cible
+        this.log('📤 Envoi FEN cible...', 'info');
         await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
         
-        // Délai plus long pour laisser le Phantom analyser
+        // Attendre le traitement
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Mode BLE
+        // 🎯 ÉTAPE 3 : Mode BLE
         await this.selectSide(2);
         
         this.lastFenSent = fen;
