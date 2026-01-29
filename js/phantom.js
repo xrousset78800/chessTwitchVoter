@@ -184,50 +184,10 @@ class PhantomChessboard {
         }
     }
     
-function fenToPhantomMatrix(fen) {
-    const parts = fen.split(' ');
-    const position = parts[0];
-    const turn = parts[1]; // 'w' ou 'b'
-    
-    let matrix = '';
-    
-    // Ajouter 12 cases vides au début (bord supérieur)
-    matrix += '.'.repeat(12);
-    
-    // Convertir chaque rangée
-    const rows = position.split('/').reverse(); // Inverser car FEN va de 8 à 1
-    
-    for (let row of rows) {
-        // Bord gauche (2 cases)
-        matrix += '..';
-        
-        // Convertir la rangée
-        for (let char of row) {
-            if (char >= '1' && char <= '8') {
-                // Chiffre = cases vides
-                matrix += '.'.repeat(parseInt(char));
-            } else {
-                // Pièce
-                // FEN utilise minuscules pour noir, majuscules pour blanc
-                // Phantom utilise p/r/n/b/q/k pour noir, P/R/N/B/Q/K pour blanc
-                matrix += char;
-            }
-        }
-        
-        // Bord droit (2 cases)
-        matrix += '..';
-    }
-    
-    // Ajouter 12 cases vides à la fin (bord inférieur)
-    matrix += '.'.repeat(12);
-    
-    // Ajouter virgule + couleur
-    matrix += ',' + (turn === 'w' ? 'W' : 'B');
-    
-    return matrix;
-}
-
-// Modifier syncPosition pour utiliser cette approche
+    /**
+     * 🎯 SYNCHRONISATION - VERSION FINALE
+     * MOVEMENT + RESET_DETECTION + SIDE automatique
+     */
 async syncPosition(fen, moveInfo = null) {
     if (!this.enabled || !this.isConnected) {
         console.log('⚠️ Phantom non connecté');
@@ -243,25 +203,23 @@ async syncPosition(fen, moveInfo = null) {
         return true;
     }
     
-    this.log(`♟️ Sync via MATRICE: ${fen}`, 'info');
+    this.log(`♟️ Sync FEN uniquement: ${fen}`, 'info');
     
     try {
-        // 🎯 CONVERTIR LE FEN EN MATRICE
-        const matrix = fenToPhantomMatrix(fen);
+        // 🧪 TEST : ENVOYER SEULEMENT LE FEN
+        // Le Phantom doit calculer lui-même comment passer 
+        // de la position actuelle au FEN cible
         
-        this.log(`📊 Matrice: ${matrix.substring(0, 50)}...`, 'info');
+        await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
         
-        // 🎯 ENVOYER VIA GAME_START (même commande que l'initialisation)
-        await this.sendCommand(this.OP_CODES.GAME_START, matrix);
-        
-        // Délai
+        // Délai plus long pour laisser le Phantom analyser
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Mode BLE
         await this.selectSide(2);
         
         this.lastFenSent = fen;
-        this.log('✅ Position synchronisée via matrice', 'success');
+        this.log('✅ Position synchronisée', 'success');
         
         return true;
         
@@ -284,29 +242,6 @@ async syncPosition(fen, moveInfo = null) {
             const opName = this.OP_CODE_NAMES[opCode] || 'UNK';
             const dataStr = strValue.substring(1);
             
-            // 🔍 ESPION : Logger TOUT en détail
-            console.log('═══════════════════════════════════════');
-            console.log('📥 NOTIFICATION REÇUE');
-            console.log('OpCode:', opCode, `(${opName})`);
-            console.log('Data brute:', dataStr);
-            console.log('Bytes:', Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' '));
-            
-            // Si c'est un coup (MOVEMENT ou BLE_MOVE_DONE)
-            if (opCode === this.OP_CODES.MOVEMENT || opCode === this.OP_CODES.BLE_MOVE_DONE) {
-                console.log('🎯 COUP DÉTECTÉ !');
-                console.log('   Format:', dataStr);
-                
-                // Analyser le format
-                if (dataStr.includes('x')) {
-                    console.log('   ⚠️ CONTIENT UN X (capture)');
-                }
-                if (dataStr.includes('-')) {
-                    console.log('   ⚠️ CONTIENT UN - (simple move)');
-                }
-            }
-            console.log('═══════════════════════════════════════');
-            
-            // Logs normaux (gardés)
             if (dataStr.trim() && dataStr.length < 100) {
                 this.log(`📥 [${opName}] "${dataStr}"`, 'received');
             } else if (dataStr.trim()) {

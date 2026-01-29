@@ -132,6 +132,57 @@ $(document).ready(function() {
         }
     });
     
+    // Undo
+    $('#phantom-undo').on('click', function(e) {
+        e.preventDefault();
+        
+        if (typeof chess !== 'undefined' && typeof board !== 'undefined') {
+            const undoneMove = chess.undo();
+            
+            if (undoneMove) {
+                console.log('✅ Coup annulé:', undoneMove.san);
+                board.position(chess.fen());
+                
+                if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+                    window.phantomChessboard.syncPosition(chess.fen(), null);
+                }
+            } else {
+                alert('Aucun coup à annuler');
+            }
+        }
+    });
+    
+    // Slider Speed
+    $('#phantom-speed').on('input', function() {
+        const speed = this.value;
+        $('#phantom-speed-value').text(speed + '%');
+    });
+    
+    $('#phantom-speed').on('change', async function() {
+        const speed = parseInt(this.value);
+        console.log(`⚡ Modification vitesse: ${speed}%`);
+        
+        if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+            await window.phantomChessboard.setSpeed(speed);
+        }
+    });
+    
+    // Slider Volume
+    $('#phantom-volume').on('input', function() {
+        const volume = this.value;
+        $('#phantom-volume-value').text(volume + '%');
+    });
+    
+    $('#phantom-volume').on('change', async function() {
+        const volume = parseInt(this.value);
+        console.log(`🔊 Modification volume: ${volume}%`);
+        
+        if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+            await window.phantomChessboard.setVolume(volume);
+        }
+    });
+    
+    // Hook pour l'UI update (si phantom.js veut mettre à jour l'interface)
     if (window.phantomChessboard) {
         window.phantomChessboard.updateUI = function(connected) {
             const statusEl = $('#phantom-status');
@@ -139,8 +190,8 @@ $(document).ready(function() {
             const disconnectBtn = $('#phantom-disconnect');
             const calibrateBtn = $('#phantom-calibrate');
             const testBtn = $('#phantom-test');
-            const speedSlider = $('#phantom-speed');      // 👈 NOUVEAU
-            const volumeSlider = $('#phantom-volume');    // 👈 NOUVEAU
+            const speedSlider = $('#phantom-speed');
+            const volumeSlider = $('#phantom-volume');
             const undoBtn = $('#phantom-undo');
             
             if (statusEl.length) {
@@ -158,7 +209,6 @@ $(document).ready(function() {
             calibrateBtn.prop('disabled', !connected);
             testBtn.prop('disabled', !connected);
             undoBtn.prop('disabled', !connected);
-            // 👇 NOUVEAU : Activer/désactiver les sliders
             speedSlider.prop('disabled', !connected);
             volumeSlider.prop('disabled', !connected);
         };
@@ -168,25 +218,6 @@ $(document).ready(function() {
 });
 
 // ========== RESET AVEC PHANTOM ==========
-
-$('#phantom-undo').on('click', function(e) {
-    e.preventDefault();
-    
-    if (typeof chess !== 'undefined' && typeof board !== 'undefined') {
-        const undoneMove = chess.undo();
-        
-        if (undoneMove) {
-            console.log('✅ Coup annulé:', undoneMove.san);
-            board.position(chess.fen());
-            
-            if (window.phantomChessboard && window.phantomChessboard.isConnected) {
-                window.phantomChessboard.syncPosition(chess.fen(), null);
-            }
-        } else {
-            alert('Aucun coup à annuler');
-        }
-    }
-});
 
 function resetGameWithPhantom() {
     console.log('🔄 Reset de la partie avec synchronisation Phantom...');
@@ -230,34 +261,6 @@ $(document).ready(function() {
     }
 });
 
-$('#phantom-speed').on('input', function() {
-    const speed = this.value;
-    $('#phantom-speed-value').text(speed + '%');
-});
-
-$('#phantom-speed').on('change', async function() {
-    const speed = parseInt(this.value);
-    console.log(`⚡ Modification vitesse: ${speed}%`);
-    
-    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
-        await window.phantomChessboard.setSpeed(speed);
-    }
-});
-
-// Slider Volume
-$('#phantom-volume').on('input', function() {
-    const volume = this.value;
-    $('#phantom-volume-value').text(volume + '%');
-});
-
-$('#phantom-volume').on('change', async function() {
-    const volume = parseInt(this.value);
-    console.log(`🔊 Modification volume: ${volume}%`);
-    
-    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
-        await window.phantomChessboard.setVolume(volume);
-    }
-});
 /***********************************************************************************************************************/
 /************************************************     OMG CONFIG     ***************************************************/
 /***********************************************************************************************************************/
@@ -327,18 +330,17 @@ if(noBg)
 
 const followMode = $.urlParam('followMode') == 'on' ? true : false;
 if(followMode)
-	$("#configForm #followMode").attr("checked", "checked");
+    $("#configForm #followMode").attr("checked", "checked");
 
 const subMode = $.urlParam('subMode') == 'on' ? true : false;
 if(subMode)
-	$("#configForm #subMode").attr("checked", "checked");
+    $("#configForm #subMode").attr("checked", "checked");
 
 const selectedThemesParam = $.urlParam('selectedThemes');
 let selectedThemesFromUrl = new Set();
 
 if (selectedThemesParam) {
     try {
-        // Les thèmes sont séparés par des virgules dans l'URL
         const themesArray = decodeURIComponent(selectedThemesParam).split(',').filter(t => t.trim());
         selectedThemesFromUrl = new Set(themesArray);
         console.log('🎯 Thèmes récupérés depuis l\'URL:', Array.from(selectedThemesFromUrl));
@@ -346,16 +348,15 @@ if (selectedThemesParam) {
         console.warn('⚠️ Erreur lors du parsing des thèmes URL:', error);
     }
 }
+
 document.addEventListener('DOMContentLoaded', function() {
     const configForm = document.getElementById('configForm');
     
     if (configForm) {
         configForm.addEventListener('submit', function(event) {
-            // Ajouter les thèmes sélectionnés juste avant la soumission
             if (typeof selectedThemes !== 'undefined' && selectedThemes.size > 0) {
                 const themesString = Array.from(selectedThemes).join(',');
                 
-                // Créer un champ hidden temporaire pour les thèmes
                 let themesInput = document.getElementById('hiddenSelectedThemes');
                 if (!themesInput) {
                     themesInput = document.createElement('input');
@@ -370,61 +371,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
-function toggleGameModeElements() {
-    // Masquer toutes les divs de mode de jeu
-    $('div[data-game-mode]').hide();
-    
-    // Obtenir la valeur du radio button sélectionné
-    const selectedMode = $('input[name="gameMode"]:checked').val();
-    
-    // Afficher seulement la div correspondante
-    if (selectedMode) {
-        $('div[data-game-mode="' + selectedMode + '"]').toggle(300);
-    }
-}
-function toggleTimeModeElements() {
-    // Masquer toutes les divs de mode de jeu
-    $('div[data-time-mode]').hide();
-    
-    // Obtenir la valeur du radio button sélectionné
-    const selectedMode = $('input[data-mode]:checked').val();
-    
-    // Afficher seulement la div correspondante
-    if (selectedMode) {
-        $('div[data-time-mode]').toggle(300);
-    }
-}
-
-
-$(document).ready(function() {
-    // Appel initial pour définir l'état correct au chargement
-    toggleGameModeElements();
-    toggleTimeModeElements();
-    togglePhantomPanel();
-    // Écouter les changements de radio button
-    $('input[name="gameMode"]').on('change', function() {
-        toggleGameModeElements();
-    });
-        // Écouter les changements de radio button
-    $('input[name="timerMode"]').on('change', function() {
-        toggleTimeModeElements();
-    });
-
-    $('#phantomChess').on('change', function() {
-        togglePhantomPanel();
-    });
-    
-    $('#phantom-connect').on('click', async function(e) {
-        e.preventDefault();
-        if (window.phantomChessboard) {
-            const connected = await window.phantomChessboard.connect();
-            if (connected) {
-                $('#phantomChess').prop('checked', true);
-                togglePhantomPanel();
-            }
-        }
-    });
 });
 
 /*
