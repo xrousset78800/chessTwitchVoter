@@ -1,6 +1,6 @@
 /**
- * 🎯 PHANTOM CHESS - VERSION FINALE CORRIGÉE
- * MOVEMENT + alternance automatique du SIDE
+ * 🎯 PHANTOM CHESS - VERSION DEBUG OPTIMISÉE
+ * Support complet des commandes pour tests sans FEN
  */
 
 class PhantomChessboard {
@@ -13,10 +13,13 @@ class PhantomChessboard {
         this.UUID_BATTERY = '7b204548-40c4-11eb-adc1-0242ac120002';
         this.UUID_SETSTATE = 'acb6543c-92ca-11ee-b9d1-0242ac120002';
         
+        // OpCodes (valeurs décimales pour cohérence)
         this.OP_CODES = {
             GAME_START: 0,
             GAME_END: 1,
             MOVEMENT: 2,
+            MOVEMENT_VERIFY: 3,
+            TAKE_BACK: 5,
             BOARD_STATE: 6,
             CALIBRATION: 7,
             SIDE: 10,
@@ -26,7 +29,7 @@ class PhantomChessboard {
         };
         
         this.OP_CODE_NAMES = {
-            0: 'GAME_START', 1: 'GAME_END', 2: 'MOVEMENT',
+            0: 'GAME_START', 1: 'GAME_END', 2: 'MOVEMENT',3: 'MOVEMENT_VERIFY', 5: 'TAKE_BACK',
             6: 'BOARD_STATE', 7: 'CALIBRATION', 10: 'SIDE',
             12: 'BLE_MOVE_DONE', 13: 'SNAPTOCENTERCOM', 14: 'RESET_DETECTION'
         };
@@ -40,15 +43,14 @@ class PhantomChessboard {
         this.enabled = false;
         this.lastFenSent = null;
         this.gameInitialized = false;
-        this.currentSide = 2; // 👈 NOUVEAU : Toujours BLE (mode 2)
         
         // Matrice initiale
         this.INITIAL_MATRIX = '...........rp....PR..np....PN..bp....PB..qp....PQ..kp....PK..bp....PB..np....PN..rp....PR...........,W';
         
-        console.log('🎯 PhantomChessboard initialisé (version finale)');
+        console.log('🎯 PhantomChessboard initialisé');
     }
     
-    // ... [MÉTHODES connect, disconnect, initializeGame, sendCommand INCHANGÉES] ...
+    // ========== CONNEXION ==========
     
     async connect() {
         if (!navigator.bluetooth) {
@@ -70,6 +72,7 @@ class PhantomChessboard {
             this.server = await this.device.gatt.connect();
             this.service = await this.server.getPrimaryService(this.SERVICE_UUID);
             
+            // Récupération des caractéristiques
             const uuids = {
                 game: this.UUID_GAME,
                 speed: this.UUID_MECHANISM_SPEED,
@@ -111,8 +114,10 @@ class PhantomChessboard {
             this.log(`✅ Connecté à ${this.device.name}`, 'success');
             this.updateUI(true);
             
+            // Initialisation automatique
             await this.initializeGame();
             
+            // Déconnexion automatique
             this.device.addEventListener('gattserverdisconnected', () => {
                 this.log('⚠️ Déconnecté', 'warn');
                 this.isConnected = false;
@@ -132,7 +137,7 @@ class PhantomChessboard {
     async disconnect() {
         if (this.device && this.device.gatt.connected) {
             if (this.gameInitialized) {
-                await this.endGame();
+                await this.sendGameEnd();
             }
             this.device.gatt.disconnect();
             this.isConnected = false;
@@ -143,22 +148,26 @@ class PhantomChessboard {
         }
     }
     
+    // ========== INITIALISATION ==========
+    
     async initializeGame() {
         if (this.gameInitialized) {
-            this.log('ℹ️ Déjà initialisé', 'info');
+            this.log('ℹ️ Partie déjà initialisée', 'info');
             return true;
         }
         
-        this.log('🎮 Initialisation...', 'info');
+        this.log('🎮 Initialisation partie...', 'info');
         
-        await this.startGame();
-        await this.selectSide(2); // BLE mode
+        await this.sendGameStart();
+        //await this.sendCommand(this.OP_CODES.SIDE, '2'); // Mode BLE
         
         this.gameInitialized = true;
-        this.log('✅ Initialisé (START + BLE)', 'success');
+        this.log('✅ Partie initialisée (GAME_START + BLE)', 'success');
         
         return true;
     }
+    
+    // ========== COMMANDES BLE DE BASE ==========
     
     async sendCommand(opCode, data = '') {
         if (!this.isConnected || !this.characteristics.game) {
@@ -171,126 +180,106 @@ class PhantomChessboard {
             const encoded = new TextEncoder().encode(message);
             await this.characteristics.game.writeValue(encoded);
             
-            const opName = this.OP_CODE_NAMES[opCode] || 'UNK';
-            if (data.length < 100) {
+            const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
+            if (data.length < 50) {
                 this.log(`📤 [${opName}] "${data}"`, 'sent');
             } else {
-                this.log(`📤 [${opName}] (longue)`, 'sent');
+                this.log(`📤 [${opName}] (${data.length} chars)`, 'sent');
             }
             return true;
         } catch (error) {
-            this.log(`❌ Erreur: ${error.message}`, 'error');
+            this.log(`❌ Erreur envoi: ${error.message}`, 'error');
             return false;
         }
     }
     
-    /**
-     * 🎯 SYNCHRONISATION - VERSION FINALE
-     * MOVEMENT + RESET_DETECTION + SIDE automatique
-     */
-async syncPosition(fen, moveInfo = null) {
-    if (!this.enabled || !this.isConnected) {
-        console.log('⚠️ Phantom non connecté');
-        return false;
+    // ========== COMMANDES DE JEU ==========
+    
+    async sendGameStart() {
+       return await this.sendCommand(this.OP_CODES.GAME_START, this.INITIAL_MATRIX);
     }
     
-    if (!this.gameInitialized) {
-        await this.initializeGame();
-    }
-    
-    if (fen === this.lastFenSent) {
-        console.log('⏭️ FEN identique');
-        return true;
-    }
-    
-    this.log(`♟️ Sync FEN uniquement: ${fen}`, 'info');
-    
-    try {
-        // 🧪 TEST : ENVOYER SEULEMENT LE FEN
-        // Le Phantom doit calculer lui-même comment passer 
-        // de la position actuelle au FEN cible
-        
-        await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
-        
-        // Délai plus long pour laisser le Phantom analyser
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Mode BLE
-        await this.selectSide(2);
-        
-        this.lastFenSent = fen;
-        this.log('✅ Position synchronisée', 'success');
-        
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Erreur sync:', error);
-        return false;
-    }
-}
-    
-    // ... [MÉTHODES handleGameNotification, handleStateNotification, handleBatteryNotification INCHANGÉES] ...
-    
-    handleGameNotification(event) {
-        const value = event.target.value;
-        const decoder = new TextDecoder('utf-8');
-        const bytes = new Uint8Array(value.buffer);
-        
-        try {
-            const strValue = decoder.decode(value);
-            const opCode = bytes[0];
-            const opName = this.OP_CODE_NAMES[opCode] || 'UNK';
-            const dataStr = strValue.substring(1);
-            
-            if (dataStr.trim() && dataStr.length < 100) {
-                this.log(`📥 [${opName}] "${dataStr}"`, 'received');
-            } else if (dataStr.trim()) {
-                this.log(`📥 [${opName}] (longue)`, 'received');
-            } else {
-                this.log(`📥 [${opName}]`, 'received');
-            }
-            
-            if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
-                this.log(`🎯 Coup détecté: ${dataStr}`, 'info');
-            }
-            
-        } catch (e) {
-            this.log(`📥 Notif binaire`, 'received');
-        }
-    }
-    
-    handleStateNotification(event) {
-        const state = new TextDecoder('utf-8').decode(event.target.value);
-        this.log(`📊 État: ${state}`, 'info');
-    }
-    
-    handleBatteryNotification(event) {
-        const batteryData = new TextDecoder('utf-8').decode(event.target.value);
-        const [percentage] = batteryData.split(',');
-        this.log(`🔋 ${percentage}%`, 'info');
-        
-        const batteryEl = document.getElementById('phantom-battery');
-        if (batteryEl) {
-            batteryEl.textContent = `🔋 ${percentage}%`;
-        }
-    }
-    
-    async startGame() {
-        return await this.sendCommand(this.OP_CODES.GAME_START, this.INITIAL_MATRIX);
-    }
-    
-    async endGame() {
+    async sendGameEnd() {
         this.gameInitialized = false;
         return await this.sendCommand(this.OP_CODES.GAME_END);
     }
     
-    async selectSide(side) {
-        return await this.sendCommand(this.OP_CODES.SIDE, side.toString());
+    async sendResetDetection(fen = '') {
+        return await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
     }
     
     async calibrate() {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
     }
+
+    async sendTakeBack(count, fen, side = '1') {
+        const data = `${count},${fen},${side}`;
+        this.log(`↩️ TAKE_BACK: ${count} coups, side=${side}`, 'info');
+        return await this.sendCommand(this.OP_CODES.TAKE_BACK, data);
+    }
+
+    async sendUndo() {
+        this.log('↩️ Annulation du dernier coup', 'info');
+        // Le Phantom n'a pas d'OpCode UNDO natif, on utilise une commande personnalisée
+        // Vous devrez adapter selon ce que votre Phantom supporte
+        return await this.sendRawCommand(0x55, ''); // À vérifier avec votre protocole
+    }
+
+    // ========== MOUVEMENTS ==========
+    
+    /**
+     * Envoie un mouvement (sans FEN)
+     * Formats acceptés : "e2e4", "e2-e4", "e7e8q" (promotion)
+     */
+    async sendMove(move) {
+        if (!this.gameInitialized) {
+            this.log('⚠️ Partie non initialisée', 'warn');
+            await this.initializeGame();
+        }
+        
+        // Normaliser le format (accepte UCI et case-case)
+        //let normalizedMove = move.replace('-', '').toLowerCase().trim();
+        
+        this.log(`♟️ Envoi mouvement: ${move}`, 'info');
+        return await this.sendCommand(this.OP_CODES.MOVEMENT, move);
+    }
+    
+    /**
+     * Synchronisation FEN (méthode pour compatibilité)
+     */
+    async syncPosition(fen, moveInfo = null) {
+        if (!this.enabled || !this.isConnected) {
+            console.log('⚠️ Phantom non actif');
+            return false;
+        }
+        
+        if (!this.gameInitialized) {
+            await this.initializeGame();
+        }
+        
+        if (fen === this.lastFenSent) {
+            console.log('⏭️ FEN identique, ignoré');
+            return true;
+        }
+        
+        this.log(`🔄 Sync FEN: ${fen}`, 'info');
+        
+        try {
+            await this.sendResetDetection(fen);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await this.sendCommand(this.OP_CODES.SIDE, '2'); // BLE mode
+            
+            this.lastFenSent = fen;
+            this.log('✅ Position synchronisée', 'success');
+            
+            return true;
+        } catch (error) {
+            this.log(`❌ Erreur sync: ${error.message}`, 'error');
+            return false;
+        }
+    }
+    
+    // ========== PARAMÈTRES ==========
     
     async setSpeed(speed) {
         if (!this.characteristics.speed) {
@@ -329,6 +318,88 @@ async syncPosition(fen, moveInfo = null) {
         }
     }
     
+    // ========== COMMANDES BRUTES (POUR DEBUG) ==========
+    
+    async sendRawCommand(opCode, data = '') {
+        this.log(`🔧 Commande brute: 0x${opCode.toString(16)} "${data}"`, 'info');
+        return await this.sendCommand(opCode, data);
+    }
+    
+    // ========== NOTIFICATIONS ==========
+    
+handleGameNotification(event) {
+    const value = event.target.value;
+    const decoder = new TextDecoder('utf-8');
+    const bytes = new Uint8Array(value.buffer);
+    
+    try {
+        const strValue = decoder.decode(value);
+        const opCode = bytes[0];
+        const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
+        const dataStr = strValue.substring(1);
+        
+        // TOUJOURS LOGGER
+        if (dataStr.trim() && dataStr.length < 100) {
+            this.log(`📥 [${opName}] "${dataStr}"`, 'received');
+        } else if (dataStr.trim()) {
+            this.log(`📥 [${opName}] (${dataStr.length} chars)`, 'received');
+        } else {
+            this.log(`📥 [${opName}]`, 'received');
+        }
+        
+        // Cas spéciaux
+        if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
+            this.log(`🎯 MOVE_DONE: ${dataStr}`, 'success');
+        }
+        
+        // MOVEMENT_VERIFY (OpCode 3) - RÉPONDRE AUTOMATIQUEMENT
+        if (opCode === 3) {
+            this.log(`🔍 MOVEMENT_VERIFY: "${dataStr}" → Envoi confirmation...`, 'warning');
+            
+            // Répondre automatiquement "1" = verified
+            setTimeout(() => {
+                this.sendCommand(this.OP_CODES.MOVEMENT_VERIFY, "1")
+                    .then(() => {
+                        this.log(`✅ MOVEMENT_VERIFY confirmé`, 'success');
+                    })
+                    .catch(err => {
+                        this.log(`❌ Erreur confirmation: ${err.message}`, 'error');
+                    });
+            }, 100);
+        }
+        
+    } catch (e) {
+        this.log(`📥 Notification binaire (${bytes.length} bytes)`, 'received');
+    }
+}
+    
+handleStateNotification(event) {
+    const state = new TextDecoder('utf-8').decode(event.target.value);
+    
+    // TOUJOURS LOGGER L'ÉTAT
+    this.log(`📊 ÉTAT: ${state}`, 'info');
+    
+    // Mettre à jour l'affichage dans le HTML
+    const stateEl = document.getElementById('phantom-state-text');
+    if (stateEl) {
+        stateEl.textContent = state;
+        stateEl.style.color = '#0ff';
+    }
+}
+    
+    handleBatteryNotification(event) {
+        const batteryData = new TextDecoder('utf-8').decode(event.target.value);
+        const [percentage] = batteryData.split(',');
+        this.log(`🔋 Batterie: ${percentage}%`, 'info');
+        
+        const batteryEl = document.getElementById('phantom-battery');
+        if (batteryEl) {
+            batteryEl.textContent = `🔋 ${percentage}%`;
+        }
+    }
+    
+    // ========== UTILITAIRES ==========
+    
     log(message, type = 'info') {
         const prefix = {
             'info': 'ℹ️', 'success': '✅', 'error': '❌',
@@ -339,6 +410,7 @@ async syncPosition(fen, moveInfo = null) {
     }
     
     updateUI(connected) {
+        // Hook pour mise à jour UI externe
         console.log(`UI: ${connected ? 'Connecté' : 'Déconnecté'}`);
     }
     
@@ -355,51 +427,4 @@ async syncPosition(fen, moveInfo = null) {
 // Instance globale
 window.phantomChessboard = new PhantomChessboard();
 
-// Fonction de sync
-function syncPhantomPosition() {
-    if (!window.phantomChessboard || !window.phantomChessboard.isEnabled()) {
-        return;
-    }
-    
-    const autoSyncCheckbox = document.getElementById('phantom-auto-sync');
-    if (autoSyncCheckbox && !autoSyncCheckbox.checked) {
-        return;
-    }
-    
-    if (typeof chess !== 'undefined') {
-        const currentFen = chess.fen();
-        
-        // 🎯 RÉCUPÉRER L'OBJET COMPLET depuis chess.history({ verbose: true })
-        const history = chess.history({ verbose: true });
-        const lastMove = history.length > 0 ? history[history.length - 1] : null;
-        
-        // 🎯 PASSER L'OBJET COMPLET (pas un objet simplifié)
-        // lastMove contient déjà : from, to, flags, captured, san, etc.
-        window.phantomChessboard.syncPosition(currentFen, lastMove);
-    }
-}
-
-// Fonction de test
-function testPhantomSync() {
-    if (typeof chess !== 'undefined') {
-        const fen = chess.fen();
-        const history = chess.history({ verbose: true });
-        const lastMove = history.length > 0 ? history[history.length - 1] : null;
-        
-        const moveInfo = lastMove ? {
-            from: lastMove.from,
-            to: lastMove.to,
-            promotion: lastMove.promotion || ''
-        } : null;
-        
-        console.log('🧪 Test sync');
-        console.log('FEN:', fen);
-        console.log('Coup:', moveInfo);
-        
-        window.phantomChessboard.syncPosition(fen, moveInfo);
-    } else {
-        alert('Aucune partie en cours');
-    }
-}
-
-console.log('🎯 Phantom chargé (v.finale - MOVEMENT + FEN + SIDE)');
+console.log('🎯 Phantom.js chargé (version debug optimisée)');

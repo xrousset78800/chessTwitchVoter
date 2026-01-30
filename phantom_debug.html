@@ -3,493 +3,1028 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom Debug</title>
+    <title>Phantom Debug Interface</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 10px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        h1 { color: #4CAF50; margin-bottom: 10px; border-bottom: 2px solid #4CAF50; padding-bottom: 5px; font-size: 1.3em; }
-        .section { background: #2a2a2a; border-radius: 6px; padding: 12px; margin-bottom: 10px; border: 1px solid #3a3a3a; }
-        h2 { color: #64B5F6; margin-bottom: 8px; font-size: 1em; }
-        .status { padding: 8px; border-radius: 4px; margin-bottom: 10px; font-weight: bold; font-size: 0.9em; }
-        .status.disconnected { background: #D32F2F; color: white; }
-        .status.connected { background: #388E3C; color: white; }
-        button { background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin: 3px; }
-        button:hover:not(:disabled) { background: #45a049; }
-        button:disabled { background: #555; cursor: not-allowed; opacity: 0.5; }
-        button.danger { background: #f44336; }
-        button.secondary { background: #2196F3; }
-        input, select { background: #3a3a3a; color: #e0e0e0; border: 1px solid #555; padding: 5px; border-radius: 3px; margin: 2px; font-size: 12px; }
-        input[type="range"] { width: 150px; }
-        input[type="checkbox"] { width: 16px; height: 16px; }
-        #logs { background: #1a1a1a; border: 1px solid #444; border-radius: 4px; padding: 10px; height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; }
-        .log-entry { padding: 2px 0; border-bottom: 1px solid #2a2a2a; }
-        .log-entry.received { color: #81C784; }
-        .log-entry.sent { color: #64B5F6; }
-        .log-entry.error { color: #E57373; }
-        .log-entry.info { color: #FFD54F; }
-        .timestamp { color: #888; font-size: 10px; }
-        .info-row, .control-row { display: flex; justify-content: space-between; align-items: center; padding: 4px; margin: 3px 0; background: #333; border-radius: 3px; font-size: 12px; }
-        .info-label { color: #aaa; }
-        .info-value { color: #81C784; font-weight: bold; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .compact-input { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+        body {
+            background: #1a1a2e;
+            color: #eee;
+            padding: 10px;
+        }
+        .debug-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
+        }
+        .card-header {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .card-body {
+            padding: 10px;
+        }
+        .log-area {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            height: 250px;
+            overflow-y: auto;
+            padding: 8px;
+            border: 1px solid #333;
+        }
+        .btn-test {
+            margin: 2px;
+            padding: 4px 10px;
+            font-size: 13px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-connected {
+            background: #48bb78;
+            box-shadow: 0 0 10px #48bb78;
+        }
+        .status-disconnected {
+            background: #f44336;
+        }
+        .form-group {
+            margin-bottom: 8px;
+        }
+        label {
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        .form-control {
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        h5 {
+            font-size: 15px;
+            margin: 0;
+        }
+        h6 {
+            font-size: 13px;
+            margin: 5px 0 3px 0;
+        }
+        hr {
+            margin: 8px 0;
+        }
+        small {
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎯 Phantom Debug</h1>
+
+<div class="container-fluid">
+    <h1>🔧 Phantom Chess - Interface de Debug</h1>
+    
+    <!-- LOGS EN PREMIER -->
+    <div class="card debug-card">
+        <div class="card-header">
+            <h5 style="display: inline-block;">📜 Console de Debug</h5>
+            <button id="btn-clear-log" class="btn btn-sm btn-secondary float-right" style="padding: 2px 8px;">🗑️ Effacer</button>
+        </div>
+        <div class="card-body">
+            <div id="log-area" class="log-area"></div>
+        </div>
+    </div>
+<div class="card debug-card" style="background: rgba(0, 150, 255, 0.1); border: 2px solid #0096ff;">
+    <div class="card-header" style="background: rgba(0, 150, 255, 0.2);">
+        <h5>🔄 Test Ancienne Méthode (FEN via RESET_DETECTION)</h5>
+    </div>
+    <div class="card-body">
+        <p style="font-size: 11px; margin-bottom: 8px;">
+            <strong>Méthode FEN :</strong> Envoie la position complète après e2-e4<br>
+            Utile pour valider le bouton UNDO
+        </p>
         
-        <!-- LOGS EN HAUT -->
-        <div class="section">
-            <h2>📋 Logs BLE</h2>
-            <button onclick="clearLogs()">Effacer</button>
-            <div id="logs"></div>
+        <button id="btn-fen-initial" class="btn btn-info btn-test">
+            ♟️ Position Initiale (FEN)
+        </button>
+        <button id="btn-fen-e2e4" class="btn btn-primary btn-test">
+            ♟️ E2-E4 (FEN)
+        </button>
+        <button id="btn-fen-e2e4-e7e5" class="btn btn-primary btn-test">
+            ♟️ E2-E4 E7-E5 (FEN)
+        </button>
+        <button id="btn-fen-capture" class="btn btn-danger btn-test">
+            ⚔️ A4 B5 BxA5 (FEN avec capture)
+        </button>
+        <hr style="margin: 8px 0;">
+        
+        <div style="font-size: 11px; color: #aaa;">
+            <strong>Workflow test UNDO :</strong><br>
+            1. Cliquez "E2-E4 (FEN)" → la pièce bouge<br>
+            2. Cliquez "↩️ UNDO" → la pièce revient<br>
+            3. Cliquez "⏹️ END" → reset complet
+        </div>
+    </div>
+</div>
+    <!-- STATUS -->
+    <div class="card debug-card">
+        <div class="card-body">
+            <h4 style="font-size: 16px; margin: 0;">
+                <span id="status-indicator" class="status-indicator status-disconnected"></span>
+                <span id="status-text">Déconnecté</span>
+            </h4>
+            <button id="btn-connect" class="btn btn-success btn-test">🔌 Connecter</button>
+            <button id="btn-disconnect" class="btn btn-danger btn-test" disabled>🔌 Déconnecter</button>
+            <button id="btn-diagnostic" class="btn btn-info btn-test">
+                🔍 Diagnostic État
+            </button>
+            <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 11px;">
+                <strong>📊 État Phantom :</strong> <span id="phantom-state-text" style="color: #888;">-</span>
+            </div>            
+            <button id="btn-factory-reset" class="btn btn-warning btn-test" style="float: right;">⚠️ Factory Reset</button>
+
         </div>
 
-        <!-- CONNEXION -->
-        <div class="section">
-            <h2>📡 Connexion</h2>
-            <div id="connectionStatus" class="status disconnected">❌ Déconnecté</div>
-            <button id="connectBtn" onclick="connectToBoard()">Connecter</button>
-            <button id="disconnectBtn" onclick="disconnectFromBoard()" disabled>Déconnecter</button>
+        <h6>Séquence A4 → B5 → BxA5 :</h6>
+        <button id="btn-seq-1-a4" class="btn btn-warning btn-test">
+            1️⃣ A2-A4 (FEN)
+        </button>
+        <button id="btn-seq-2-b5" class="btn btn-warning btn-test">
+            2️⃣ B7-B5 (FEN)
+        </button>
+        <button id="btn-seq-3-bxa5" class="btn btn-danger btn-test">
+            3️⃣ BxA5 CAPTURE (FEN)
+        </button>        
+    </div>
+<div class="card debug-card">
+    <div class="card-header">
+        <h5>🎭 Sélection du Côté (OpCode SIDE = 10)</h5>
+    </div>
+    <div class="card-body">
+        <p style="font-size: 11px; margin-bottom: 8px;">
+            <strong>Après GAME_START, sélectionnez qui joue :</strong><br>
+            - "0" = 2 joueurs locaux (physique)<br>
+            - "1" = Plateau commence<br>
+            - "2" = BLE commence (app/contrôle externe)
+        </p>
+        
+        <button id="btn-side-local" class="btn btn-info btn-test" data-side="0">
+            👥 Mode Local (0)
+        </button>
+        <button id="btn-side-board" class="btn btn-primary btn-test" data-side="1">
+            🎲 Plateau Commence (1)
+        </button>
+        <button id="btn-side-ble" class="btn btn-success btn-test" data-side="2">
+            📱 BLE Commence (2)
+        </button>
+        
+        <hr style="margin: 8px 0;">
+        
+        <div style="font-size: 11px; color: #aaa;">
+            <strong>État actuel :</strong> <span id="current-side" style="color: #0ff;">Non défini</span>
         </div>
-
-        <!-- CONTRÔLE DE PARTIE -->
-        <div class="section">
-            <h2>🎮 Partie</h2>
-            <div class="compact-input">
-                <button id="startGameBtn" onclick="startGame()" disabled>START</button>
-                <select id="sideSelect" disabled>
-                    <option value="0">2 joueurs</option>
-                    <option value="1">Board</option>
-                    <option value="2">BLE</option>
-                </select>
-                <button id="selectSideBtn" onclick="selectSide()" disabled>SELECT SIDE</button>
-                <button id="endGameBtn" class="danger" onclick="endGame()" disabled>END</button>
-            </div>
-            <div class="compact-input" style="margin-top: 5px;">
-                <input type="text" id="moveInput" placeholder="e2-e4" disabled style="width: 80px;">
-                <select id="promotionSelect" disabled>
-                    <option value=" ">-</option>
-                    <option value="Q">Q</option>
-                    <option value="R">R</option>
-                    <option value="B">B</option>
-                    <option value="N">N</option>
-                </select>
-                <button id="sendMoveBtn" onclick="sendMove()" disabled>SEND MOVE</button>
-            </div>
+    </div>
+</div>
+    <!-- CONTRÔLES DE JEU -->
+    <div class="card debug-card">
+        <div class="card-header">
+            <h5>🎮 Contrôles de Jeu</h5>
         </div>
-
-        <!-- STATUS COMPACT -->
-        <div class="section">
-            <h2>📊 Status</h2>
-            <button id="refreshStatusBtn" onclick="refreshBoardStatus()" disabled class="secondary">🔄 Refresh</button>
-            <div class="grid-2" style="margin-top: 5px;">
-                <div class="info-row"><span class="info-label">État:</span><span class="info-value" id="boardState">-</span></div>
-                <div class="info-row"><span class="info-label">Batterie:</span><span class="info-value" id="batteryLevel">-</span></div>
-                <div class="info-row"><span class="info-label">Vitesse:</span><span class="info-value" id="currentSpeed">-</span></div>
-                <div class="info-row"><span class="info-label">Volume:</span><span class="info-value" id="currentVolume">-</span></div>
-            </div>
+        <div class="card-body">
+            <button id="btn-game-start" class="btn btn-primary btn-test">▶️ START</button>
+            <button id="btn-game-end" class="btn btn-warning btn-test">⏹️ END</button>
+            <button id="btn-undo" class="btn btn-secondary btn-test">↩️ UNDO (FEN précédent)</button>
+            <button id="btn-reset-detection" class="btn btn-info btn-test">🔄 RESET</button>
+            <button id="btn-calibrate" class="btn btn-secondary btn-test">🔧 CALIBRATE</button>
         </div>
-
-        <!-- SETTINGS COMPACT -->
-        <div class="section">
-            <h2>⚙️ Settings</h2>
-            <div class="compact-input">
-                <span style="font-size: 11px;">Vitesse:</span>
-                <input type="range" id="speedSlider" min="1" max="5" value="2" disabled>
-                <span id="speedValue">2</span>
-                <button onclick="setMechanismSpeed()" disabled id="setSpeedBtn">OK</button>
-            </div>
-            <div class="compact-input" style="margin-top: 3px;">
-                <span style="font-size: 11px;">Volume:</span>
-                <input type="range" id="volumeSlider" min="0" max="32" value="32" disabled>
-                <span id="volumeValue">32</span>
-                <button onclick="setSoundSettings()" disabled id="setSoundBtn">OK</button>
-            </div>
+    </div>
+<div class="card debug-card" style="background: rgba(255, 0, 0, 0.1); border: 2px solid #ff0000;">
+    <div class="card-header" style="background: rgba(255, 0, 0, 0.2);">
+        <h5>⚔️ TEST CAPTURE avec MOVEMENT</h5>
+    </div>
+    <div class="card-body">
+        <p style="font-size: 11px; margin-bottom: 8px;">
+            <strong>Setup :</strong> Position avec pion blanc en a4, pion noir en b5<br>
+            <strong>Objectif :</strong> Trouver le bon format pour capturer a4 avec le pion b5
+        </p>
+        
+        <button id="btn-setup-capture" class="btn btn-info btn-test">
+            🎬 Setup Position (a4 vs b5)
+        </button>
+        
+        <hr style="margin: 8px 0;">
+        
+        <!-- FORMAT STANDARD DOC -->
+        <h6>📝 Format standard (selon doc) :</h6>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5-a4 E">
+            C1: "M 1 b5-a4 E"
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M b5-a4 E">
+            C2: "M b5-a4 E" (sans priorité)
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5-a4">
+            C3: "M 1 b5-a4" (sans promotion)
+        </button>
+        
+        <hr style="margin: 6px 0;">
+        
+        <!-- AVEC NOTATION x -->
+        <h6>⚔️ Avec notation capture "x" :</h6>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5xa4 E">
+            C4: "M 1 b5xa4 E"
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5xa4">
+            C5: "M 1 b5xa4"
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="b5xa4">
+            C6: "b5xa4" (minimal)
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M b5xa4">
+            C7: "M b5xa4"
+        </button>
+        
+        <hr style="margin: 6px 0;">
+        
+        <!-- FORMAT UCI PUR -->
+        <h6>♟️ Format UCI (sans tiret ni x) :</h6>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5a4 E">
+            C8: "M 1 b5a4 E"
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M b5a4 E">
+            C9: "M b5a4 E"
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="b5a4">
+            C10: "b5a4" (minimal UCI)
+        </button>
+        
+        <hr style="margin: 6px 0;">
+        
+        <!-- AVEC INDICATEUR DE TYPE -->
+        <h6>🏷️ Avec indicateur de type de coup :</h6>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5-a4 x">
+            C11: "M 1 b5-a4 x" (x en promotion)
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5-a4 c">
+            C12: "M 1 b5-a4 c" (c=capture?)
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5-a4 C">
+            C13: "M 1 b5-a4 C" (C=Capture?)
+        </button>
+        
+        <hr style="margin: 6px 0;">
+        
+        <!-- APPROCHE EN 2 TEMPS -->
+        <h6>⚰️ Approche en 2 temps (cimetière puis mouvement) :</h6>
+        <button id="btn-capture-step1" class="btn btn-sm btn-warning btn-test">
+            D1: b5→cimetière (b5-b0)
+        </button>
+        <button id="btn-capture-step2" class="btn btn-sm btn-warning btn-test">
+            D2: b5→a4 (b5-a4)
+        </button>
+        <button id="btn-capture-combined" class="btn btn-sm btn-warning btn-test">
+            D3: Les 2 d'un coup
+        </button>
+        
+        <hr style="margin: 6px 0;">
+        
+        <!-- VARIATIONS PRIORITÉ -->
+        <h6>🎯 Variations de priorité :</h6>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 0 b5-a4 E">
+            C14: "M 0 b5-a4 E" (priorité 0)
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 2 b5-a4 E">
+            C15: "M 2 b5-a4 E" (priorité 2)
+        </button>
+        
+        <hr style="margin: 6px 0;">
+        
+        <!-- NOTATIONS ALTERNATIVES -->
+        <h6>🔀 Notations alternatives :</h6>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5:a4 E">
+            C16: "M 1 b5:a4 E" (avec :)
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 b5*a4 E">
+            C17: "M 1 b5*a4 E" (avec *)
+        </button>
+        <button class="btn btn-sm btn-danger btn-test" data-test="movement" data-payload="M 1 bxa4 E">
+            C18: "M 1 bxa4 E" (sans colonne départ)
+        </button>
+        
+        <hr style="margin: 6px 0;">
+        
+        <div style="font-size: 11px; color: #aaa;">
+            <strong>💡 Stratégie :</strong> Tester systématiquement tous les formats jusqu'à trouver celui qui fonctionne
         </div>
-
-        <!-- COMMANDES AVANCÉES -->
-        <div class="section">
-            <h2>🔧 Avancé</h2>
-            <button id="calibrateBtn" onclick="calibrate()" disabled>Calibration</button>
-            <button id="snapBtn" onclick="snapToCenter()" disabled>Snap Center</button>
-            <button id="factoryResetBtn" class="danger" onclick="factoryReset()" disabled>Factory Reset</button>
+    </div>
+</div>
+    <!-- TEST MOUVEMENTS CLASSIQUES -->
+    <div class="card debug-card">
+        <div class="card-header">
+            <h5>♟️ Test Mouvements (MOVEMENT - sans FEN)</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <label>Mouvement (UCI ou case-case)</label>
+                    <input type="text" id="move-input" class="form-control" placeholder="e2-e4" value="e2-e4">
+                </div>
+                <div class="col-md-4">
+                    <label>&nbsp;</label>
+                    <button id="btn-send-move" class="btn btn-success btn-block btn-test">📤 Envoyer</button>
+                </div>
+            </div>
+            
+            <h6>🚀 Tests rapides :</h6>
+            <button class="btn btn-sm btn-outline-light btn-test" data-move="e2-e4">e2→e4</button>
         </div>
     </div>
 
-    <script>
-        const SERVICE_UUID = 'fd31a840-22e7-11eb-adc1-0242ac120002';
-        const UUID_GAME = 'cc68a66e-3bfa-4614-a77f-f46954a4c103';
-        const UUID_MECHANISM_SPEED = 'acb646cc-92ca-11ee-b9d1-0242ac120002';
-        const UUID_SOUND_SETTINGS = 'acb64a32-92ca-11ee-b9d1-0242ac120002';
-        const UUID_JUMP_TO_CENTER = '5e316147-4550-4cf3-8e2b-edc098312a43';
-        const UUID_BATTERY = '7b204548-40c4-11eb-adc1-0242ac120002';
-        const UUID_VERSION = '392d9e66-937a-11ee-b9d1-0242ac120002';
-        const UUID_SETSTATE = 'acb6543c-92ca-11ee-b9d1-0242ac120002';
-        const UUID_ROTATION = 'b5a650ea-92ca-11ee-b9d1-0242ac120002';
-        const UUID_FACTORY_RESET = 'b583ff00-b77a-42f5-a53f-a9bf4c291d80';
-        
-        const OP_CODES = { GAME_START: 0, GAME_END: 1, MOVEMENT: 2, MOVEMENT_VERIFY: 3, VOICE_COMMAND: 4, TAKE_BACK: 5, BOARD_STATE: 6, CALIBRATION: 7, ERROR_MSG: 8, CHECK_SOUND: 9, SIDE: 10, GAME_ASSISTANCE: 11, BLE_MOVE_DONE: 12, SNAPTOCENTERCOM: 13, RESET_DETECTION: 14 };
-        const OP_CODE_NAMES = { 0: 'GAME_START', 1: 'GAME_END', 2: 'MOVEMENT', 3: 'MOVEMENT_VERIFY', 4: 'VOICE_COMMAND', 5: 'TAKE_BACK', 6: 'BOARD_STATE', 7: 'CALIBRATION', 8: 'ERROR_MSG', 9: 'CHECK_SOUND', 10: 'SIDE', 11: 'GAME_ASSISTANCE', 12: 'BLE_MOVE_DONE', 13: 'SNAPTOCENTERCOM', 14: 'RESET_DETECTION' };
-        
-        let device = null, server = null, service = null, characteristics = {};
-        const INITIAL_MATRIX = '...........rp....PR..np....PN..bp....PB..qp....PQ..kp....PK..bp....PB..np....PN..rp....PR...........,W';
-        let capturedMoves = [];
-        let captureCount = 0;
+    <!-- TEST CAPTURES -->
+    <div class="card debug-card">
+        <div class="card-header">
+            <h5>⚔️ Test Captures & Spéciaux</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <label>Mouvement personnalisé</label>
+                    <input type="text" id="capture-move" class="form-control" placeholder="e5d4" value="e5d4">
+                    <small class="text-muted">Format: source+destination (ex: e5d4)</small>
+                </div>
+                <div class="col-md-4">
+                    <label>&nbsp;</label>
+                    <button id="btn-test-capture" class="btn btn-danger btn-block btn-test">⚔️ Envoyer</button>
+                </div>
+            </div>
+            
+            <h6>🧪 Tests spéciaux :</h6>
+            <button id="btn-graveyard" class="btn btn-warning btn-test">⚰️ Cimetière (e2-e0)</button>
+            <button class="btn btn-info btn-test" data-move="e1g1">🏰 Petit roque</button>
+            <button class="btn btn-info btn-test" data-move="e7e8q">👑 Promotion</button>
+        </div>
+    </div>
 
-        function addLog(message, type = 'info') {
-            const logsDiv = document.getElementById('logs');
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.className = `log-entry ${type}`;
-            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
-            logsDiv.appendChild(logEntry);
-            logsDiv.scrollTop = logsDiv.scrollHeight;
-        }
-        
-        function clearLogs() {
-            document.getElementById('logs').innerHTML = '';
-            addLog('Logs effacés', 'info');
-        }
-        
-        function updateConnectionStatus(connected) {
-            const statusDiv = document.getElementById('connectionStatus');
-            const allButtons = document.querySelectorAll('button:not(#connectBtn):not(#disconnectBtn)');
-            const allInputs = document.querySelectorAll('input, select');
-            
-            if (connected) {
-                statusDiv.className = 'status connected';
-                statusDiv.textContent = '✅ Connecté à ' + device.name;
-                document.getElementById('connectBtn').disabled = true;
-                document.getElementById('disconnectBtn').disabled = false;
-                allButtons.forEach(btn => btn.disabled = false);
-                allInputs.forEach(input => input.disabled = false);
-            } else {
-                statusDiv.className = 'status disconnected';
-                statusDiv.textContent = '❌ Déconnecté';
-                document.getElementById('connectBtn').disabled = false;
-                document.getElementById('disconnectBtn').disabled = true;
-                allButtons.forEach(btn => btn.disabled = true);
-                allInputs.forEach(input => input.disabled = true);
-            }
-        }
-        
-        async function connectToBoard() {
-            try {
-                addLog('Recherche...', 'info');
-                device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'Phantom' }], optionalServices: [SERVICE_UUID] });
-                addLog(`Connexion à ${device.name}...`, 'info');
-                server = await device.gatt.connect();
-                service = await server.getPrimaryService(SERVICE_UUID);
-                
-                const uuids = { game: UUID_GAME, speed: UUID_MECHANISM_SPEED, sound: UUID_SOUND_SETTINGS, jump: UUID_JUMP_TO_CENTER, battery: UUID_BATTERY, version: UUID_VERSION, state: UUID_SETSTATE, rotation: UUID_ROTATION, factory_reset: UUID_FACTORY_RESET };
-                
-                for (const [key, uuid] of Object.entries(uuids)) {
-                    try {
-                        characteristics[key] = await service.getCharacteristic(uuid);
-                        addLog(`✓ ${key}`, 'info');
-                    } catch (e) {
-                        addLog(`⚠ ${key} KO`, 'error');
-                    }
-                }
-                
-                if (characteristics.game) {
-                    await characteristics.game.startNotifications();
-                    characteristics.game.addEventListener('characteristicvaluechanged', handleGameNotification);
-                }
-                if (characteristics.state) {
-                    await characteristics.state.startNotifications();
-                    characteristics.state.addEventListener('characteristicvaluechanged', handleStateNotification);
-                }
-                if (characteristics.battery) {
-                    await characteristics.battery.startNotifications();
-                    characteristics.battery.addEventListener('characteristicvaluechanged', handleBatteryNotification);
-                }
-                
-                addLog(`✅ Connecté`, 'info');
-                updateConnectionStatus(true);
-                setTimeout(refreshBoardStatus, 500);
-                
-            } catch (error) {
-                addLog(`❌ Erreur: ${error.message}`, 'error');
-            }
-        }
-        
-        async function disconnectFromBoard() {
-            if (device && device.gatt.connected) {
-                device.gatt.disconnect();
-                addLog('Déconnecté', 'info');
-                updateConnectionStatus(false);
-            }
-        }
-        
-function handleGameNotification(event) {
-    const value = event.target.value;
-    const decoder = new TextDecoder('utf-8');
-    const bytes = new Uint8Array(value.buffer);
+    <!-- COMMANDES BRUTES -->
+    <div class="card debug-card">
+        <div class="card-header">
+            <h5>📡 Commandes BLE Brutes</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>OpCode (décimal)</label>
+                    <select id="opcode-select" class="form-control">
+                        <option value="0">0 - GAME_START</option>
+                        <option value="1">1 - GAME_END</option>
+                        <option selected value="2">2 - MOVEMENT</option>
+                        <option value="6">6 - BOARD_STATE</option>
+                        <option value="7">7 - CALIBRATION</option>
+                        <option value="10">10 - SIDE</option>
+                        <option value="14">14 - RESET_DETECTION</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label>Données (texte)</label>
+                    <input type="text" id="raw-data" class="form-control" placeholder="e2e4" value="e2-e4">
+                </div>
+                <div class="col-md-3">
+                    <label>&nbsp;</label>
+                    <button id="btn-send-raw" class="btn btn-danger btn-block btn-test">🚀 Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/phantom2.js"></script>
+<script>
+
+
+// ========== LOGGING ==========
+function log(message, type = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    const colors = {
+        info: '#0ff',
+        success: '#0f0',
+        warning: '#ff0',
+        error: '#f00',
+        send: '#f0f',
+        receive: '#0f0'
+    };
     
-    try {
-        const strValue = decoder.decode(value);
-        const opCode = bytes[0];
-        const opName = OP_CODE_NAMES[opCode] || 'UNK';
-        const dataStr = strValue.substring(1);
-        const timestamp = new Date().toLocaleTimeString();
-        
-        // 🔍 LOGS DÉTAILLÉS DANS LA CONSOLE
-        console.log('═══════════════════════════════════════');
-        console.log(`[${timestamp}] 📥 NOTIFICATION`);
-        console.log(`OpCode: ${opCode} (${opName})`);
-        console.log(`Data: "${dataStr}"`);
-        console.log(`Bytes: ${Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
-        
-        // 🎯 ANALYSE SPÉCIALE POUR LES COUPS
-        if (opCode === OP_CODES.BLE_MOVE_DONE || opCode === OP_CODES.MOVEMENT) {
-            console.log('🎯 COUP DÉTECTÉ !');
-            console.log(`   Format complet: "${dataStr}"`);
-            
-            // Analyser le format
-            if (dataStr.includes('x')) {
-                console.log('   ⚠️ CONTIENT "x" → CAPTURE !');
-                captureCount++;
-                console.log(`   📊 Nombre de captures: ${captureCount}`);
-            }
-            if (dataStr.includes('-')) {
-                console.log('   ℹ️ CONTIENT "-" → Déplacement simple');
-            }
-            if (dataStr.includes('O-O')) {
-                console.log('   👑 ROQUE !');
-            }
-            
-            // Stocker pour analyse
-            capturedMoves.push({
-                timestamp,
-                opCode: opName,
-                data: dataStr,
-                bytes: Array.from(bytes)
-            });
-            
-            console.log(`   📦 Total coups capturés: ${capturedMoves.length}`);
-        }
-        
-        // 🔍 ERREURS
-        if (opCode === OP_CODES.ERROR_MSG) {
-            console.log('❌ ERREUR PHANTOM !');
-            console.log(`   Message: ${dataStr.substring(0, 100)}...`);
-        }
-        
-        console.log('═══════════════════════════════════════');
-        
-        // Log normal dans l'interface (inchangé)
-        if (dataStr.trim() && dataStr.length < 100) {
-            addLog(`📥 [${opName}] "${dataStr}"`, 'received');
-        } else if (dataStr.trim()) {
-            addLog(`📥 [${opName}] (longue)`, 'received');
-        } else {
-            addLog(`📥 [${opName}]`, 'received');
-        }
-    } catch (e) {
-        addLog(`📥 bytes`, 'received');
+    const logArea = document.getElementById('log-area');
+    const entry = document.createElement('div');
+    entry.style.color = colors[type] || '#0ff';
+    entry.textContent = `[${timestamp}] ${message}`;
+    logArea.appendChild(entry);
+    logArea.scrollTop = logArea.scrollHeight;
+}
+
+// ========== UI UPDATE ==========
+function updateConnectionStatus(connected) {
+    const indicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const btnConnect = document.getElementById('btn-connect');
+    const btnDisconnect = document.getElementById('btn-disconnect');
+    
+    if (connected) {
+        indicator.className = 'status-indicator status-connected';
+        statusText.textContent = 'Connecté ✅';
+        btnConnect.disabled = true;
+        btnDisconnect.disabled = false;
+        log('✅ Connexion établie', 'success');
+    } else {
+        indicator.className = 'status-indicator status-disconnected';
+        statusText.textContent = 'Déconnecté ❌';
+        btnConnect.disabled = false;
+        btnDisconnect.disabled = true;
+        log('❌ Déconnecté', 'error');
     }
 }
-        
-        function handleStateNotification(event) {
-            const state = new TextDecoder('utf-8').decode(event.target.value);
-            document.getElementById('boardState').textContent = state;
-            addLog(`📊 ${state}`, 'received');
-        }
-        
-        function handleBatteryNotification(event) {
-            const batteryData = new TextDecoder('utf-8').decode(event.target.value);
-            const [percentage] = batteryData.split(',');
-            document.getElementById('batteryLevel').textContent = percentage + '%';
-        }
-        
-        async function readCharacteristic(char, displayId, formatter = null) {
-            if (!characteristics[char]) return;
-            try {
-                const value = await characteristics[char].readValue();
-                const strValue = new TextDecoder('utf-8').decode(value);
-                const displayValue = formatter ? formatter(strValue) : strValue;
-                if (displayId) document.getElementById(displayId).textContent = displayValue;
-                return strValue;
-            } catch (e) {
-                addLog(`❌ ${char}`, 'error');
-            }
-        }
-        
-        async function writeCharacteristic(char, value) {
-            if (!characteristics[char]) {
-                addLog(`❌ ${char} KO`, 'error');
-                return;
-            }
-            try {
-                const encoded = new TextEncoder().encode(value);
-                await characteristics[char].writeValue(encoded);
-                addLog(`📤 ${char}: ${value}`, 'sent');
-                return true;
-            } catch (e) {
-                addLog(`❌ ${char}`, 'error');
-                return false;
-            }
-        }
-        
-        async function refreshBoardStatus() {
-            addLog('🔄 Refresh...', 'info');
-            await readCharacteristic('state', 'boardState');
-            const speed = await readCharacteristic('speed', 'currentSpeed', (v) => ['', 'Lent', 'Moyen', 'Rapide', 'Très rapide', 'Ultra'][parseInt(v)] || v);
-            if (speed) document.getElementById('speedSlider').value = speed;
-            const sound = await readCharacteristic('sound', null);
-            if (sound) {
-                const [vol] = sound.split(',');
-                document.getElementById('currentVolume').textContent = vol;
-                document.getElementById('volumeSlider').value = vol;
-            }
-            addLog('✅ OK', 'info');
-        }
-        
-        async function setMechanismSpeed() {
-            const speed = document.getElementById('speedSlider').value;
-            if (await writeCharacteristic('speed', speed)) {
-                addLog(`✅ Vitesse: ${speed}`, 'info');
-                await refreshBoardStatus();
-            }
-        }
-        
-        async function setSoundSettings() {
-            const volume = document.getElementById('volumeSlider').value;
-            const value = `${volume},11110,0`;
-            if (await writeCharacteristic('sound', value)) {
-                addLog(`✅ Volume: ${volume}`, 'info');
-                await refreshBoardStatus();
-            }
-        }
-        
-        async function sendCommand(opCode, data = '') {
-            if (!characteristics.game) {
-                addLog('❌ Pas connecté', 'error');
-                return;
-            }
-            try {
-                const message = String.fromCharCode(opCode) + data;
-                const encoded = new TextEncoder().encode(message);
-                await characteristics.game.writeValue(encoded);
-                const opName = OP_CODE_NAMES[opCode] || 'UNK';
-                if (data.length < 50) {
-                    addLog(`📤 [${opName}] "${data}"`, 'sent');
-                } else {
-                    addLog(`📤 [${opName}] (longue)`, 'sent');
-                }
-            } catch (error) {
-                addLog(`❌ ${error.message}`, 'error');
-            }
-        }
-        
-        async function startGame() {
-            addLog('🎮 START...', 'info');
-            await sendCommand(OP_CODES.GAME_START, INITIAL_MATRIX);
-        }
-        
-        async function selectSide() {
-            const side = document.getElementById('sideSelect').value;
-            addLog(`👥 Side: ${side}`, 'info');
-            await sendCommand(OP_CODES.SIDE, side);
-        }
-        
-        async function sendMove() {
-            const move = document.getElementById('moveInput').value.trim();
-            const promotion = document.getElementById('promotionSelect').value;
-            
-            if (!move.match(/^[a-h][1-8]-[a-h][1-8]$/)) {
-                addLog('❌ Format invalide', 'error');
-                return;
-            }
-            
-            // Format avec "M 1 e2-e4 " ou "M 1 e2-e4 Q" pour promotion
-            const moveString = `M 1 ${move} ${promotion}`;
-            addLog(`♟️ ${move}${promotion.trim() ? ' ' + promotion : ''}`, 'info');
-            await sendCommand(OP_CODES.MOVEMENT, moveString);
-        }
-        
-        async function endGame() {
-            addLog('🏁 END...', 'info');
-            await sendCommand(OP_CODES.GAME_END);
-        }
-                
-        async function calibrate() {
-            addLog('🔧 Calibration...', 'info');
-            await sendCommand(OP_CODES.CALIBRATION);
-        }
-        
-        async function snapToCenter() {
-            addLog('📍 Snap...', 'info');
-            await sendCommand(OP_CODES.SNAPTOCENTERCOM);
-        }
-        
-        async function factoryReset() {
-            if (!confirm('⚠️ Factory Reset ?')) return;
-            addLog('🔄 Reset...', 'info');
-            if (await writeCharacteristic('factory_reset', '1')) {
-                addLog('✅ Redémarrage...', 'info');
-                setTimeout(() => {
-                    if (device && device.gatt.connected) device.gatt.disconnect();
-                }, 2000);
-            }
-        }
-        
-        if (navigator.bluetooth) {
-            navigator.bluetooth.addEventListener('disconnect', () => {
-                addLog('⚠️ Déconnecté', 'error');
-                updateConnectionStatus(false);
-            });
-        }
-        
-        document.getElementById('speedSlider').addEventListener('input', (e) => {
-            document.getElementById('speedValue').textContent = e.target.value;
-        });
-        
-        document.getElementById('volumeSlider').addEventListener('input', (e) => {
-            document.getElementById('volumeValue').textContent = e.target.value;
-        });
-        
-        document.getElementById('moveInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMove();
-        });
-        
-        addLog('🚀 Prêt', 'info');
 
+// ========== ÉVÉNEMENTS ==========
+$(document).ready(function() {
 
-
-        function exportCapturedMoves() {
-    console.log('═══════════════════════════════════════');
-    console.log('📊 RAPPORT DES COUPS CAPTURÉS');
-    console.log(`Total: ${capturedMoves.length} coups`);
-    console.log(`Captures: ${captureCount}`);
-    console.log('');
+$('#btn-capture-step1').on('click', async function() {
+    log('D1: ⚰️ Envoi a4 au cimetière (a4-a0)', 'send');
     
-    capturedMoves.forEach((move, index) => {
-        const isCapture = move.data.includes('x');
-        const icon = isCapture ? '⚔️' : '♟️';
-        console.log(`${icon} Coup ${index + 1} [${move.timestamp}] ${move.opCode}: "${move.data}"`);
+    if (window.phantomChessboard) {
+        try {
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.MOVEMENT,
+                'M 1 a4-a0 E'
+            );
+            log('✅ D1 envoyé: a4→cimetière', 'success');
+        } catch (error) {
+            log(`❌ Erreur D1: ${error.message}`, 'error');
+        }
+    }
+});
+
+// D2: Déplacer le pion capturant
+$('#btn-capture-step2').on('click', async function() {
+    log('D2: ♟️ Déplacement b5→a4', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.MOVEMENT,
+                'M 1 b5-a4 E'
+            );
+            log('✅ D2 envoyé: b5→a4', 'success');
+        } catch (error) {
+            log(`❌ Erreur D2: ${error.message}`, 'error');
+        }
+    }
+});
+
+// D3: Les deux mouvements d'un coup
+$('#btn-capture-combined').on('click', async function() {
+    log('D3: 🎬 Séquence complète: a4→cimetière puis b5→a4', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            // Étape 1: Cimetière
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.MOVEMENT,
+                'M 1 a4-a0 E'
+            );
+            log('  → a4 envoyé au cimetière', 'info');
+            
+            // Attendre un peu
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Étape 2: Mouvement
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.MOVEMENT,
+                'M 1 b5-a4 E'
+            );
+            log('  → b5 déplacé vers a4', 'info');
+            
+            log('✅ D3 séquence complète exécutée', 'success');
+        } catch (error) {
+            log(`❌ Erreur D3: ${error.message}`, 'error');
+        }
+    }
+});
+// ========== SETUP CAPTURE ==========
+const FEN_CAPTURE_SETUP = 'rnbqkbnr/p1pppppp/8/1p6/P7/8/1PPPPPPP/RNBQKBNR w KQkq b6 0 2';
+
+$('#btn-setup-capture').on('click', async function() {
+    log('🎬 Setup position pour test capture (a4 vs b5)', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_CAPTURE_SETUP);
+            
+            await window.phantomChessboard.sendResetDetection(FEN_CAPTURE_SETUP);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE, '2'
+            );
+            
+            log('✅ Position setup : pion blanc en a4, pion noir en b5', 'success');
+            log('➡️ Maintenant testez les boutons de capture', 'info');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+// ========== TESTS MOVEMENT POUR CAPTURES ==========
+$('button[data-test="movement"]').on('click', async function() {
+    const payload = $(this).data('payload');
+    const buttonText = $(this).text();
+    
+    log(`🧪 Envoi MOVEMENT "${payload}"`, 'send');
+    log(`   Bouton: ${buttonText}`, 'info');
+    
+    if (window.phantomChessboard) {
+        try {
+            const success = await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.MOVEMENT, 
+                payload
+            );
+            
+            if (success) {
+                log(`✅ Commande envoyée avec succès`, 'success');
+            }
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    } else {
+        log('❌ Phantom non connecté', 'error');
+    }
+});
+
+// ========== SÉLECTION DU CÔTÉ ==========
+$('button[data-side]').on('click', async function() {
+    const side = $(this).data('side');
+    const sideNames = {
+        '0': 'Mode Local (2 joueurs physiques)',
+        '1': 'Plateau commence',
+        '2': 'BLE commence (app)'
+    };
+    
+    log(`🎭 Sélection côté: ${sideNames[side]}`, 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            const success = await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                side.toString()
+            );
+            
+            if (success) {
+                $('#current-side').text(sideNames[side]).css('color', '#0f0');
+                log(`✅ Côté défini: ${sideNames[side]}`, 'success');
+            }
+        } catch (error) {
+            log(`❌ Erreur sélection côté: ${error.message}`, 'error');
+        }
+    } else {
+        log('❌ Phantom non connecté', 'error');
+    }
+});
+
+    log('🚀 Interface de debug chargée', 'info');
+    
+    // Connexion / Déconnexion
+    $('#btn-connect').on('click', async function() {
+        log('🔌 Tentative de connexion...', 'info');
+        if (window.phantomChessboard) {
+            const connected = await window.phantomChessboard.connect();
+            updateConnectionStatus(connected);
+
+(async () => {
+    await phantom.connect();
+    await phantom.setBLEMode();
+    await phantom.setFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
+    await phantom.gameStart();
+    await phantom.move("e2", "e4");
+})();
+
+            
+        } else {
+            log('❌ phantomChessboard non disponible', 'error');
+        }
     });
     
-    console.log('═══════════════════════════════════════');
+    $('#btn-disconnect').on('click', async function() {
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.disconnect();
+            updateConnectionStatus(false);
+        }
+    });
     
-    // Export JSON pour analyse
-    const json = JSON.stringify(capturedMoves, null, 2);
-    console.log('JSON export:');
-    console.log(json);
+    // Contrôles de jeu
+    $('#btn-game-start').on('click', async function() {
+        log('▶️ Envoi GAME_START', 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendGameStart();
+        }
+    });
     
-    addLog(`📊 ${capturedMoves.length} coups exportés dans la console`, 'info');
+    $('#btn-game-end').on('click', async function() {
+        log('⏹️ Envoi GAME_END', 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendGameEnd();
+        }
+    });
+    
+    $('#btn-reset-detection').on('click', async function() {
+        log('🔄 Envoi RESET_DETECTION', 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendResetDetection();
+        }
+    });
+    
+    $('#btn-calibrate').on('click', async function() {
+        log('🔧 Envoi CALIBRATE', 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.calibrate();
+        }
+    });
+    
+    // Mouvements
+    $('#btn-send-move').on('click', async function() {
+        const move = $('#move-input').val();
+        if (!move) {
+            log('⚠️ Aucun mouvement saisi', 'warning');
+            return;
+        }
+        log(`📤 Envoi mouvement: ${move}`, 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendMove(move);
+        }
+    });
+    
+    // Tests rapides
+    $('button[data-move]').on('click', async function() {
+        const move = $(this).data('move');
+        log(`📤 Test rapide: ${move}`, 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendMove(move);
+        }
+    });
+    $('#btn-diagnostic').on('click', async function() {
+    log('🔍 Diagnostic de l\'état actuel...', 'info');
+    
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        // Vérifier si le Phantom répond encore
+        try {
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.BOARD_STATE
+            );
+            log('✅ Phantom répond encore', 'success');
+        } catch (error) {
+            log(`❌ Phantom ne répond pas: ${error.message}`, 'error');
+        }
+    }
+});
+    // Test capture
+    $('#btn-test-capture').on('click', async function() {
+        const move = $('#capture-move').val().trim();
+        if (!move) {
+            log('⚠️ Aucun mouvement saisi', 'warning');
+            return;
+        }
+        log(`⚔️ Test capture: ${move}`, 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendMove(move);
+        }
+    });
+    
+    // Test cimetière
+    $('#btn-graveyard').on('click', async function() {
+        log('⚰️ Test cimetière: b5-b0', 'send');
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendMove('b5-b0');
+        }
+    });
+    
+    // Commande brute
+    $('#btn-send-raw').on('click', async function() {
+        const opcode = parseInt($('#opcode-select').val());
+        const data = $('#raw-data').val();
+        
+        log(`🚀 Commande brute: OpCode=${opcode} Data="${data}"`, 'send');
+        
+        if (window.phantomChessboard) {
+            await window.phantomChessboard.sendRawCommand(opcode, data);
+        }
+    });
+
+$('#btn-side-ble').on('click', async function() {
+    const side = '2';
+    
+    log('🎭 Sélection côté: BLE commence (app)', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            // 1. Sélectionner le côté
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                side
+            );
+            
+            $('#current-side').text('BLE commence (app)').css('color', '#0f0');
+            log('✅ Côté défini: BLE commence', 'success');
+            
+            // 2. Envoyer le FEN initial pour synchroniser
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            const initialFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+            saveFenToHistory(initialFEN);
+            
+            await window.phantomChessboard.sendResetDetection(initialFEN);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // 3. Re-confirmer le côté BLE
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                '2'
+            );
+            
+            log('✅ Position initiale synchronisée', 'success');
+            
+        } catch (error) {
+            log(`❌ Erreur sélection côté: ${error.message}`, 'error');
+        }
+    }
+});
+    // Clear log
+    $('#btn-clear-log').on('click', function() {
+        $('#log-area').empty();
+        log('🗑️ Console effacée', 'info');
+    });
+
+    // Hook logs console
+    const originalLog = console.log;
+    console.log = function(...args) {
+        originalLog.apply(console, args);
+        const message = args.join(' ');
+        if (message.includes('[Phantom]')) {
+            if (message.includes('📤')) {
+                log(message.replace(/.*\[Phantom\]\s*/, ''), 'send');
+            } else if (message.includes('📥')) {
+                log(message.replace(/.*\[Phantom\]\s*/, ''), 'receive');
+            }
+        }
+    };
+$('#btn-factory-reset').on('click', async function() {
+    const confirm = window.confirm('⚠️ ATTENTION !\n\nCeci va réinitialiser TOUS les paramètres du Phantom aux valeurs d\'usine et redémarrer le plateau.\n\nÊtes-vous sûr ?');
+    
+    if (!confirm) return;
+    
+    log('⚠️ FACTORY RESET - Réinitialisation...', 'warning');
+    
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        try {
+            const UUID_FACTORY_RESET = 'b583ff00-b77a-42f5-a53f-a9bf4c291d80';
+            
+            if (window.phantomChessboard.service) {
+                const characteristic = await window.phantomChessboard.service.getCharacteristic(UUID_FACTORY_RESET);
+                const value = new TextEncoder().encode('1');
+                await characteristic.writeValue(value);
+                
+                log('✅ Factory Reset envoyé - Le Phantom va redémarrer', 'success');
+                alert('Factory Reset envoyé !\n\nLe Phantom va redémarrer.\nReconnectez-vous dans quelques secondes.');
+                
+                // Déconnecter automatiquement
+                setTimeout(() => {
+                    window.phantomChessboard.disconnect();
+                }, 1000);
+            }
+        } catch (error) {
+            log(`❌ Erreur Factory Reset: ${error.message}`, 'error');
+        }
+    } else {
+        log('❌ Connectez-vous d\'abord au Phantom', 'error');
+    }
+});
+let fenHistory = [];
+let currentFenIndex = -1;
+
+// Fonction pour sauvegarder un FEN dans l'historique
+function saveFenToHistory(fen) {
+    // Si on n'est pas à la fin de l'historique, on supprime tout ce qui est après
+    if (currentFenIndex < fenHistory.length - 1) {
+        fenHistory = fenHistory.slice(0, currentFenIndex + 1);
+    }
+    
+    fenHistory.push(fen);
+    currentFenIndex = fenHistory.length - 1;
+    
+    log(`📚 FEN sauvegardé (${fenHistory.length} positions)`, 'info');
 }
 
-function clearCapturedMoves() {
-    capturedMoves = [];
-    captureCount = 0;
-    console.log('🗑️ Coups effacés');
-    addLog('🗑️ Historique des coups effacé', 'info');
-}
-    </script>
+// Bouton UNDO
+$('#btn-undo').on('click', async function() {
+    if (fenHistory.length === 0 || currentFenIndex <= 0) {
+        log('⚠️ Aucune position à annuler', 'warning');
+        alert('Aucune position précédente');
+        return;
+    }
+    
+    // Revenir à la position précédente
+    currentFenIndex--;
+    const previousFen = fenHistory[currentFenIndex];
+    
+    log(`↩️ UNDO vers position ${currentFenIndex + 1}/${fenHistory.length}`, 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            // Utiliser TAKE_BACK au lieu de RESET_DETECTION
+            // Format: "count,FEN,side" où side="1" pour BLE
+            await window.phantomChessboard.sendTakeBack(1, previousFen, '1');
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Re-sélectionner BLE mode
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                '2'
+            );
+            
+            log(`✅ Position restaurée (${currentFenIndex + 1}/${fenHistory.length})`, 'success');
+        } catch (error) {
+            log(`❌ Erreur UNDO: ${error.message}`, 'error');
+        }
+    }
+});
+
+const FEN_POSITIONS = {
+    initial: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    e2e4: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
+    e2e4_e7e5: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2',
+    capture_a4_b5_bxa5: 'rnbqkbnr/2pppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 4'  // ← AJOUT
+};
+$('#btn-fen-capture').on('click', async function() {
+    log('⚔️ Envoi A4 B5 BxA5 via FEN (avec capture)', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_POSITIONS.capture_a4_b5_bxa5);
+            
+            await window.phantomChessboard.sendResetDetection(FEN_POSITIONS.capture_a4_b5_bxa5);
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Re-sélectionner BLE mode
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                '2'
+            );
+            
+            log('✅ Position avec capture exécutée (FEN)', 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+const FEN_SEQUENCE = {
+    step1_a4: 'rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq a3 0 1',
+    step2_b5: 'rnbqkbnr/p1pppppp/8/1p6/P7/8/1PPPPPPP/RNBQKBNR w KQkq b6 0 2',
+    step3_bxa5: 'rnbqkbnr/p1pppppp/8/pp6/8/8/1PPPPPPP/RNBQKBNR b KQkq - 0 2'
+};
+
+$('#btn-seq-1-a4').on('click', async function() {
+    log('1️⃣ Coup 1: A2-A4', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_SEQUENCE.step1_a4);
+            
+            await window.phantomChessboard.sendResetDetection(FEN_SEQUENCE.step1_a4);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE, '2'
+            );
+            
+            log('✅ A2-A4 exécuté', 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+$('#btn-seq-2-b5').on('click', async function() {
+    log('2️⃣ Coup 2: B7-B5', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_SEQUENCE.step2_b5);
+            
+            await window.phantomChessboard.sendResetDetection(FEN_SEQUENCE.step2_b5);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE, '2'
+            );
+            
+            log('✅ B7-B5 exécuté', 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+$('#btn-seq-3-bxa5').on('click', async function() {
+    log('3️⃣ Coup 3: BxA5 (CAPTURE)', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_SEQUENCE.step3_bxa5);
+            
+            await window.phantomChessboard.sendResetDetection(FEN_SEQUENCE.step3_bxa5);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE, '2'
+            );
+            
+            log('✅ BxA5 exécuté (capture)', 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+
+
+
+$('#btn-fen-initial').on('click', async function() {
+    log('🔄 Envoi position initiale (FEN)', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_POSITIONS.initial); // ← AJOUT
+            
+            await window.phantomChessboard.sendResetDetection(FEN_POSITIONS.initial);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                '2'
+            );
+            
+            log('✅ Position initiale synchronisée', 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+$('#btn-fen-e2e4').on('click', async function() {
+    log('♟️ Envoi E2-E4 via FEN', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_POSITIONS.e2e4); // ← AJOUT
+            
+            await window.phantomChessboard.sendResetDetection(FEN_POSITIONS.e2e4);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                '2'
+            );
+            
+            log('✅ E2-E4 exécuté (FEN)', 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+$('#btn-fen-e2e4-e7e5').on('click', async function() {
+    log('♟️ Envoi E2-E4 E7-E5 via FEN', 'send');
+    
+    if (window.phantomChessboard) {
+        try {
+            saveFenToHistory(FEN_POSITIONS.e2e4_e7e5); // ← AJOUT
+            
+            await window.phantomChessboard.sendResetDetection(FEN_POSITIONS.e2e4_e7e5);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await window.phantomChessboard.sendCommand(
+                window.phantomChessboard.OP_CODES.SIDE,
+                '2'
+            );
+            
+            log('✅ E2-E4 E7-E5 exécuté (FEN)', 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+});
+
+
+});
+</script>
+
 </body>
 </html>
