@@ -1,6 +1,7 @@
 /**
- * 🎯 PHANTOM CHESS - VERSION AVEC GESTION DU CIMETIÈRE
- * Support complet des captures via matrice 10x10
+ * 🎯 PHANTOM CHESS - VERSION CORRIGÉE
+ * Le board gère automatiquement le cimetière quand une pièce disparaît
+ * On envoie simplement la matrice 10x10 via GAME_START
  */
 
 class PhantomChessboard {
@@ -47,81 +48,36 @@ class PhantomChessboard {
         this.isConnected = false;
         this.enabled = false;
         this.lastFenSent = null;
-        this.lastMatrixSent = null;
         this.gameInitialized = false;
         
-        // Position initiale pour calculer les pièces capturées
-        this.INITIAL_PIECES = {
-            white: { K: 1, Q: 1, R: 2, B: 2, N: 2, P: 8 },
-            black: { k: 1, q: 1, r: 2, b: 2, n: 2, p: 8 }
-        };
-        
-        // Matrice initiale correcte (10x10) - ATTENTION: lecture par COLONNES !
-        // Le Phantom lit la matrice colonne par colonne, pas ligne par ligne
-        // Colonne 0: cimetière gauche
-        // Colonne 1: pièces noires (r,n,b,q,k,b,n,r)
-        // Colonne 2: pions noirs
-        // Colonnes 3-6: vide
-        // Colonne 7: pions blancs
-        // Colonne 8: pièces blanches (R,N,B,Q,K,B,N,R)
-        // Colonne 9: cimetière droit
-        this.INITIAL_MATRIX = 
-            '..........' +  // Row 0: cimetière haut
-            '.rp....PR.' +  // Row 1: tour noire, pion noir, ..., pion blanc, tour blanche
-            '.np....PN.' +  // Row 2: cavalier noir, pion noir, ..., pion blanc, cavalier blanc
-            '.bp....PB.' +  // Row 3: fou noir, pion noir, ..., pion blanc, fou blanc
-            '.qp....PQ.' +  // Row 4: dame noire, pion noir, ..., pion blanc, dame blanche
-            '.kp....PK.' +  // Row 5: roi noir, pion noir, ..., pion blanc, roi blanc
-            '.bp....PB.' +  // Row 6: fou noir, pion noir, ..., pion blanc, fou blanc
-            '.np....PN.' +  // Row 7: cavalier noir, pion noir, ..., pion blanc, cavalier blanc
-            '.rp....PR.' +  // Row 8: tour noire, pion noir, ..., pion blanc, tour blanche
-            '..........';   // Row 9: cimetière bas
-        
-        console.log('🎯 PhantomChessboard initialisé (avec gestion cimetière)');
+        console.log('🎯 PhantomChessboard initialisé');
     }
     
-    // ========== CONVERSION FEN → MATRICE AVEC CIMETIÈRE ==========
+    // ========== CONVERSION FEN → MATRICE 10x10 ==========
     
     /**
-     * Convertit un FEN en matrice 10x10 avec les pièces capturées au cimetière
+     * Convertit un FEN en matrice 10x10 pour le Phantom
+     * Format simple : ligne par ligne, bordures vides pour le cimetière
+     * Le board gère AUTOMATIQUEMENT le placement des pièces capturées au cimetière
+     * 
      * @param {string} fen - Position FEN
-     * @returns {string} Matrice 10x10 pour le Phantom
+     * @returns {string} Matrice 10x10 (100 caractères)
      */
-    fenToMatrixWithGraveyard(fen) {
+    fenToMatrix(fen) {
         // Extraire juste la position (première partie du FEN)
         const position = fen.split(' ')[0];
-        
-        // Convertir FEN en tableau 8x8
-        const board8x8 = this.fenToBoard8x8(position);
-        
-        // Compter les pièces actuelles
-        const currentPieces = this.countPieces(board8x8);
-        
-        // Calculer les pièces capturées
-        const capturedWhite = this.calculateCaptured(this.INITIAL_PIECES.white, currentPieces.white);
-        const capturedBlack = this.calculateCaptured(this.INITIAL_PIECES.black, currentPieces.black);
-        
-        this.log(`⚰️ Pièces capturées - Blancs: ${capturedWhite.join('')} | Noirs: ${capturedBlack.join('')}`, 'info');
-        
-        // Construire la matrice 10x10
-        const matrix = this.buildMatrix10x10(board8x8, capturedWhite, capturedBlack);
-        
-        return matrix;
-    }
-    
-    /**
-     * Convertit la position FEN en tableau 8x8
-     */
-    fenToBoard8x8(position) {
-        const board = [];
         const rows = position.split('/');
         
+        // Convertir chaque rangée FEN en string de 8 caractères
+        const board = [];
         for (const row of rows) {
             let boardRow = '';
             for (const char of row) {
                 if (/\d/.test(char)) {
+                    // Chiffre = cases vides
                     boardRow += '.'.repeat(parseInt(char));
                 } else {
+                    // Pièce
                     boardRow += char;
                 }
             }
@@ -133,112 +89,39 @@ class PhantomChessboard {
             board.push('........');
         }
         
-        return board;
-    }
-    
-    /**
-     * Compte les pièces présentes sur le plateau
-     */
-    countPieces(board8x8) {
-        const white = { K: 0, Q: 0, R: 0, B: 0, N: 0, P: 0 };
-        const black = { k: 0, q: 0, r: 0, b: 0, n: 0, p: 0 };
+        // Construire la matrice 10x10
+        // Ligne 0 : cimetière haut (vide)
+        // Lignes 1-8 : échiquier avec bordures vides
+        // Ligne 9 : cimetière bas (vide)
+        let matrix = '.'.repeat(10);  // Ligne 0
         
-        for (const row of board8x8) {
-            for (const char of row) {
-                if (char in white) white[char]++;
-                if (char in black) black[char]++;
-            }
+        for (const row of board) {
+            matrix += '.' + row + '.';  // Lignes 1-8
         }
         
-        return { white, black };
-    }
-    
-    /**
-     * Calcule les pièces capturées
-     */
-    calculateCaptured(initial, current) {
-        const captured = [];
-        
-        for (const [piece, count] of Object.entries(initial)) {
-            const missing = count - (current[piece] || 0);
-            for (let i = 0; i < missing; i++) {
-                captured.push(piece);
-            }
-        }
-        
-        return captured;
-    }
-    
-    /**
-     * Construit la matrice 10x10 avec le cimetière
-     * ATTENTION: Le Phantom utilise une matrice TRANSPOSÉE !
-     * - Les colonnes du plateau deviennent les lignes de la matrice
-     * - Colonne 0 = cimetière gauche (pièces noires capturées)
-     * - Colonne 9 = cimetière droit (pièces blanches capturées)
-     */
-    buildMatrix10x10(board8x8, capturedWhite, capturedBlack) {
-        // La matrice Phantom est transposée par rapport à un échiquier standard
-        // board8x8[row][col] → matrix row = col+1, matrix col = row+1
-        
-        let matrix = '';
-        
-        for (let matrixRow = 0; matrixRow < 10; matrixRow++) {
-            for (let matrixCol = 0; matrixCol < 10; matrixCol++) {
-                
-                // Coins et bords du cimetière
-                if (matrixRow === 0 || matrixRow === 9) {
-                    // Lignes 0 et 9 = cimetière haut/bas
-                    if (matrixRow === 0) {
-                        // Cimetière haut - on peut y mettre des pièces capturées si besoin
-                        matrix += '.';
-                    } else {
-                        // Cimetière bas
-                        matrix += '.';
-                    }
-                } else if (matrixCol === 0) {
-                    // Colonne 0 = cimetière gauche (pièces NOIRES capturées par les blancs)
-                    const idx = matrixRow - 1;
-                    matrix += (idx < capturedBlack.length) ? capturedBlack[idx] : '.';
-                } else if (matrixCol === 9) {
-                    // Colonne 9 = cimetière droit (pièces BLANCHES capturées par les noirs)
-                    const idx = matrixRow - 1;
-                    matrix += (idx < capturedWhite.length) ? capturedWhite[idx] : '.';
-                } else {
-                    // Zone de jeu 8x8 (colonnes 1-8, lignes 1-8)
-                    // Conversion: matrixRow 1-8 → boardCol 0-7, matrixCol 1-8 → boardRow 0-7
-                    const boardRow = matrixCol - 1;  // Ligne de l'échiquier (0-7)
-                    const boardCol = matrixRow - 1;  // Colonne de l'échiquier (0-7)
-                    
-                    if (boardRow >= 0 && boardRow < 8 && boardCol >= 0 && boardCol < 8) {
-                        matrix += board8x8[boardRow][boardCol] || '.';
-                    } else {
-                        matrix += '.';
-                    }
-                }
-            }
-        }
+        matrix += '.'.repeat(10);  // Ligne 9
         
         return matrix;
     }
     
     /**
-     * Affiche une matrice 10x10 de façon lisible (pour debug)
-     * Note: La matrice Phantom est transposée par rapport à l'échiquier standard
+     * Affiche une matrice de façon lisible (pour debug)
      */
     formatMatrix(matrix) {
-        let display = '📋 Matrice Phantom (transposée):\n';
-        display += '     0 1 2 3 4 5 6 7 8 9  ← colonnes matrice (= lignes échiquier)\n';
-        display += '     C a b c d e f g h C  ← correspondance échiquier\n';
+        if (!matrix || matrix.length < 100) return 'Matrice invalide';
+        
+        let display = '   a b c d e f g h\n';
+        display += '   0 1 2 3 4 5 6 7 8 9\n';
+        
         for (let row = 0; row < 10; row++) {
-            const rowLabel = row === 0 ? 'C' : (row === 9 ? 'C' : row.toString());
-            const chessFile = row === 0 ? ' ' : (row === 9 ? ' ' : String.fromCharCode(96 + row));
-            display += `${row} ${chessFile}  `;
+            const rank = row === 0 ? ' ' : (row === 9 ? ' ' : (9 - row).toString());
+            display += `${row} ${rank} `;
             for (let col = 0; col < 10; col++) {
                 display += matrix[row * 10 + col] + ' ';
             }
             display += '\n';
         }
-        display += '↑ lignes matrice (= colonnes échiquier a-h)';
+        
         return display;
     }
     
@@ -307,7 +190,7 @@ class PhantomChessboard {
             this.log(`✅ Connecté à ${this.device.name}`, 'success');
             this.updateUI(true);
             
-            // Initialisation automatique
+            // Initialisation automatique avec position de départ
             await this.initializeGame();
             
             // Gestion déconnexion
@@ -351,8 +234,9 @@ class PhantomChessboard {
         
         this.log('🎮 Initialisation partie...', 'info');
         
-        // Envoyer la matrice initiale
-        await this.sendGameStartWithMatrix(this.INITIAL_MATRIX, 'W');
+        // Envoyer la position initiale
+        const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+        await this.syncPosition(initialFen);
         
         this.gameInitialized = true;
         this.log('✅ Partie initialisée', 'success');
@@ -388,17 +272,10 @@ class PhantomChessboard {
     
     // ========== COMMANDES DE JEU ==========
     
-    /**
-     * Envoie GAME_START avec une matrice et une couleur
-     */
-    async sendGameStartWithMatrix(matrix, color = 'W') {
-        const data = matrix + ',' + color;
-        this.lastMatrixSent = matrix;
-        return await this.sendCommand(this.OP_CODES.GAME_START, data);
-    }
-    
     async sendGameStart() {
-        return await this.sendGameStartWithMatrix(this.INITIAL_MATRIX, 'W');
+        const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+        const matrix = this.fenToMatrix(initialFen);
+        return await this.sendCommand(this.OP_CODES.GAME_START, matrix + ',W');
     }
     
     async sendGameEnd() {
@@ -423,8 +300,8 @@ class PhantomChessboard {
     // ========== MOUVEMENTS ==========
     
     /**
-     * Envoie un mouvement simple (sans capture)
-     * Pour les captures, utiliser syncPosition() qui envoie la matrice complète
+     * Envoie un mouvement via MOVEMENT (OpCode 2)
+     * Note: Pour les captures, utiliser syncPosition() qui est plus fiable
      */
     async sendMove(move) {
         if (!this.gameInitialized) {
@@ -438,46 +315,61 @@ class PhantomChessboard {
     
     /**
      * 🎯 MÉTHODE PRINCIPALE : Synchronise la position avec le Phantom
-     * Utilise GAME_START avec matrice complète incluant le cimetière
-     * Cette méthode gère correctement les captures !
+     * 
+     * Utilise GAME_START avec la matrice 10x10 générée depuis le FEN.
+     * Le board Phantom gère AUTOMATIQUEMENT :
+     * - Le déplacement des pièces vers leurs nouvelles positions
+     * - L'envoi des pièces capturées (disparues) au cimetière
      * 
      * @param {string} fen - Position FEN à synchroniser
-     * @param {object} moveInfo - Info sur le coup (optionnel, pour optimisation future)
+     * @param {object} moveInfo - Info sur le coup (optionnel, non utilisé actuellement)
      */
-async syncPosition(fen) {
-    if (!this.isConnected) {
-        this.log("❌ Non connecté", "error");
-        return false;
-    }
-
-    if (!this.gameInitialized) {
-        await this.initializeGame();
-    }
-
-    const matrix = this.fenToMatrixWithGraveyard(fen);
-    const color = fen.includes(" b ") ? "B" : "W";
-
-    this.log("🔄 RESET_DETECTION + MATRIX", "info");
-
-    await this.sendCommand(this.OP_CODES.RESET_DETECTION, matrix);
-
-    // Attendre la stabilisation interne
-    await new Promise(r => setTimeout(r, 200));
-
-    // Reforcer le BLE mode
-    await this.sendCommand(this.OP_CODES.SIDE, "2");
-
-    this.lastFenSent = fen;
-    return true;
-}
-    
-    /**
-     * Synchronisation rapide pour les coups simples (sans capture)
-     * Utilise MOVEMENT au lieu de GAME_START - plus rapide mais ne gère pas les captures
-     */
-    async syncMoveOnly(from, to, promotion = '') {
-        const moveStr = `M 1 ${from}-${to} ${promotion || 'E'}`;
-        return await this.sendCommand(this.OP_CODES.MOVEMENT, moveStr);
+    async syncPosition(fen, moveInfo = null) {
+        if (!this.enabled || !this.isConnected) {
+            console.log('⚠️ Phantom non actif');
+            return false;
+        }
+        
+        // Éviter les envois dupliqués
+        if (fen === this.lastFenSent) {
+            console.log('⏭️ FEN identique, ignoré');
+            return true;
+        }
+        
+        this.log(`🔄 Sync position...`, 'info');
+        
+        try {
+            // Convertir FEN en matrice 10x10
+            const matrix = this.fenToMatrix(fen);
+            
+            // Debug: afficher la matrice
+            console.log('📋 Matrice générée:\n' + this.formatMatrix(matrix));
+            
+            // Déterminer la couleur qui joue
+            const fenParts = fen.split(' ');
+            const colorToPlay = (fenParts.length > 1 && fenParts[1] === 'b') ? 'B' : 'W';
+            
+            // Envoyer via GAME_START avec la matrice
+            // Le board va automatiquement:
+            // 1. Comparer avec la position actuelle
+            // 2. Déplacer les pièces nécessaires
+            // 3. Envoyer les pièces "disparues" au cimetière
+            await this.sendCommand(this.OP_CODES.GAME_START, matrix + ',' + colorToPlay);
+            
+            // Attendre que le board se stabilise
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Sélectionner le mode BLE
+            await this.sendCommand(this.OP_CODES.SIDE, '2');
+            
+            this.lastFenSent = fen;
+            this.log('✅ Position synchronisée', 'success');
+            
+            return true;
+        } catch (error) {
+            this.log(`❌ Erreur sync: ${error.message}`, 'error');
+            return false;
+        }
     }
     
     // ========== PARAMÈTRES ==========
@@ -554,7 +446,7 @@ async syncPosition(fen) {
             
             // BLE_MOVE_DONE
             if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
-                this.log(`🎯 MOVE_DONE: ${dataStr}`, 'success');
+                this.log(`🎯 MOVE_DONE`, 'success');
             }
             
             // MOVEMENT_VERIFY - répondre automatiquement
@@ -623,4 +515,4 @@ async syncPosition(fen) {
 // Instance globale
 window.phantomChessboard = new PhantomChessboard();
 
-console.log('🎯 Phantom.js chargé (version avec gestion cimetière)');
+console.log('🎯 Phantom.js chargé - Le board gère automatiquement le cimetière !');
