@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom BLE Debug Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #1a1a2e;
+            color: #eaeaea;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d9ff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        .connection-panel {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #0f3460;
+        }
+        
+        .connection-panel h2 {
+            margin-top: 0;
+            color: #00d9ff;
+            font-size: 1.2em;
+        }
+        
+        .btn {
+            background: #0f3460;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #1a4a7a;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-connect {
+            background: #00d9ff;
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .btn-connect:hover {
+            background: #00b8d9;
+        }
+        
+        .btn-disconnect {
+            background: #e94560;
+        }
+        
+        .btn-disconnect:hover {
+            background: #c73e54;
+        }
+        
+        .btn-read {
+            background: #4ade80;
+            color: #000;
+        }
+        
+        .btn-write {
+            background: #f59e0b;
+            color: #000;
+        }
+        
+        .btn-notify {
+            background: #8b5cf6;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        
+        .status-disconnected {
+            background: #e94560;
+        }
+        
+        .status-connected {
+            background: #4ade80;
+            color: #000;
+        }
+        
+        .status-connecting {
+            background: #f59e0b;
+            color: #000;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .compact-panel {
+            max-height: 25vh;
+            overflow-y: auto;
+        }
+        
+        .compact-panel h3 {
+            font-size: 0.95em;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+            position: sticky;
+            top: 0;
+            background: #16213e;
+            z-index: 1;
+        }
+        
+        .compact-panel .characteristic {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .compact-panel .char-name {
+            font-size: 12px;
+        }
+        
+        .compact-panel .char-uuid {
+            font-size: 9px;
+        }
+        
+        .compact-panel .char-value label {
+            font-size: 10px;
+        }
+        
+        .compact-panel .char-value input,
+        .compact-panel .char-value textarea {
+            padding: 6px;
+            font-size: 11px;
+        }
+        
+        .compact-panel .btn-small {
+            padding: 4px 8px;
+            font-size: 10px;
+        }
+        
+        .panel {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #0f3460;
+        }
+        
+        .panel h3 {
+            margin-top: 0;
+            color: #00d9ff;
+            font-size: 1.1em;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+        
+        .characteristic {
+            background: #0f3460;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .characteristic:last-child {
+            margin-bottom: 0;
+        }
+        
+        .char-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .char-name {
+            font-weight: bold;
+            color: #f59e0b;
+        }
+        
+        .char-uuid {
+            font-family: monospace;
+            font-size: 11px;
+            color: #888;
+            word-break: break-all;
+        }
+        
+        .char-props {
+            display: flex;
+            gap: 5px;
+            margin: 8px 0;
+        }
+        
+        .prop-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #1a1a2e;
+        }
+        
+        .prop-read { color: #4ade80; }
+        .prop-write { color: #f59e0b; }
+        .prop-notify { color: #8b5cf6; }
+        
+        .char-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .char-value {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .char-value label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .char-value input,
+        .char-value textarea {
+            width: 100%;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        
+        .char-value textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+        
+        .char-value input:focus,
+        .char-value textarea:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+        
+        .log-panel {
+            grid-column: 1 / -1;
+        }
+        
+        .log-container {
+            background: #0a0a15;
+            border-radius: 8px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #1a1a2e;
+        }
+        
+        .log-time {
+            color: #888;
+        }
+        
+        .log-type-info { color: #00d9ff; }
+        .log-type-send { color: #f59e0b; }
+        .log-type-receive { color: #4ade80; }
+        .log-type-notify { color: #8b5cf6; }
+        .log-type-error { color: #e94560; }
+        
+        .log-data {
+            color: #fff;
+            word-break: break-all;
+        }
+        
+        .quick-commands {
+            margin-top: 15px;
+        }
+        
+        .quick-commands h4 {
+            margin: 0 0 10px 0;
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .quick-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        
+        .opcode-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .opcode-input label {
+            font-size: 12px;
+            color: #888;
+            white-space: nowrap;
+        }
+        
+        .opcode-input input {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        
+        .opcode-input select {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .matrix-preview {
+            font-family: monospace;
+            font-size: 11px;
+            background: #0a0a15;
+            padding: 10px;
+            border-radius: 6px;
+            white-space: pre;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        
+        .hex-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        
+        .hex-byte {
+            background: #1a1a2e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        .tab-container {
+            margin-bottom: 15px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 5px;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+        }
+        
+        .tab.active {
+            background: #0f3460;
+            color: #00d9ff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .format-toggle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .format-toggle label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .clear-log {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Phantom BLE Debug Tool</h1>
+    <p class="subtitle">Outil de debug complet pour le Phantom Chessboard</p>
+    
+    <!-- Connection Panel -->
+    <div class="connection-panel">
+        <h2>📡 Connexion Bluetooth</h2>
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <button id="connectBtn" class="btn btn-connect" onclick="connectToBoard()">
+                🔌 Connecter au Phantom
+            </button>
+            <button id="disconnectBtn" class="btn btn-disconnect" onclick="disconnectFromBoard()" disabled>
+                ❌ Déconnecter
+            </button>
+            <span id="connectionStatus" class="status status-disconnected">Déconnecté</span>
+            <span id="deviceName" style="color: #888;"></span>
+        </div>
+        <p style="margin-top: 15px; font-size: 12px; color: #888;">
+            Service UUID: <code style="color: #00d9ff;">fd31a840-22e7-11eb-adc1-0242ac120002</code>
+        </p>
+    </div>
+    
+    <!-- Log Panel EN HAUT -->
+    <div class="panel log-panel" style="margin-bottom: 20px;">
+        <h3>
+            📋 Log des Communications
+            <button class="btn btn-small clear-log" onclick="clearLog()">🗑️ Effacer</button>
+            <button class="btn btn-small" style="float: right; margin-right: 10px;" onclick="exportLog()">💾 Exporter JSON</button>
+        </h3>
+        <div class="log-container" id="logContainer" style="height: 200px;"></div>
+    </div>
+    
+    <!-- Matrix Analysis Panel -->
+    <div class="panel" style="margin-bottom: 20px;">
+        <h3>🔬 Analyse des Matrices (Partie Maître)</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+            <div>
+                <h4 style="color: #4ade80; margin: 0 0 5px 0; font-size: 12px;">🔍 Sensor Matrix</h4>
+                <pre id="sensorMatrixDisplay" class="matrix-preview" style="font-size: 9px; height: 120px; margin: 0;">En attente...</pre>
+            </div>
+            <div>
+                <h4 style="color: #f59e0b; margin: 0 0 5px 0; font-size: 12px;">♟️ Piece Matrix</h4>
+                <pre id="pieceMatrixDisplay" class="matrix-preview" style="font-size: 9px; height: 120px; margin: 0;">En attente...</pre>
+            </div>
+            <div>
+                <h4 style="color: #8b5cf6; margin: 0 0 5px 0; font-size: 12px;">📊 Mouvements</h4>
+                <div id="moveSequenceDisplay" style="background: #0a0a15; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 10px; height: 120px; overflow-y: auto;">
+                    Aucun mouvement...
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 10px;">
+            <button class="btn btn-small" onclick="clearMasterLog()">🗑️ Reset</button>
+            <button class="btn btn-small" onclick="showFullLog()">📜 Log Complet</button>
+        </div>
+    </div>
+
+    <div class="main-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <!-- Game Characteristic Panel -->
+        <div class="panel compact-panel">
+            <h3>🎮 UUID_GAME (Principale)</h3>
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Game Commands</span>
+                </div>
+                <div class="char-uuid">cc68a66e-3bfa-4614-a77f-f46954a4c103</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-write">WRITE</span>
+                    <span class="prop-badge prop-notify">NOTIFY</span>
+                </div>
+                
+                <div class="opcode-input">
+                    <label>OpCode:</label>
+                    <select id="opcodeSelect" onchange="updateOpcodeHelp()">
+                        <option value="0">0 - GAME_START</option>
+                        <option value="1">1 - GAME_END</option>
+                        <option value="2">2 - MOVEMENT</option>
+                        <option value="3">3 - MOVEMENT_VERIFY</option>
+                        <option value="4">4 - VOICE_COMMAND</option>
+                        <option value="5">5 - TAKE_BACK</option>
+                        <option value="6">6 - BOARD_STATE</option>
+                        <option value="7">7 - CALIBRATION</option>
+                        <option value="8">8 - ERROR_MSG</option>
+                        <option value="9">9 - CHECK_SOUND</option>
+                        <option value="10">10 - SIDE</option>
+                        <option value="11">11 - GAME_ASSISTANCE</option>
+                        <option value="12">12 - BLE_MOVE_DONE</option>
+                        <option value="13">13 - SNAPTOCENTERCOM</option>
+                        <option value="14">14 - RESET_DETECTION</option>
+                    </select>
+                </div>
+                
+                <div class="char-value">
+                    <label>Data à envoyer (String):</label>
+                    <textarea id="gameDataInput" placeholder="Ex: ...........rp....PR...,W pour GAME_START"></textarea>
+                </div>
+                
+                <div id="opcodeHelp" style="font-size: 11px; color: #888; margin-top: 5px;"></div>
+                
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeGameCommand()">📤 Envoyer</button>
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('game')">📥 Lire</button>
+                    <button class="btn btn-small btn-notify" onclick="toggleNotify('game')">🔔 Toggle Notify</button>
+                </div>
+                
+                <div class="char-value">
+                    <label>Dernière valeur reçue:</label>
+                    <input type="text" id="gameValueDisplay" readonly placeholder="En attente...">
+                    <div class="hex-display" id="gameHexDisplay"></div>
+                </div>
+                
+                <div class="quick-commands">
+                    <h4>⚡ Commandes rapides:</h4>
+                    <div class="quick-btn-grid">
+                        <button class="btn btn-small" onclick="quickCommand('startGame')">🆕 Start Game</button>
+                        <button class="btn btn-small" onclick="quickCommand('endGame')">🏁 End Game</button>
+                        <button class="btn btn-small" onclick="quickCommand('sideLocal')">👥 Side: Local</button>
+                        <button class="btn btn-small" onclick="quickCommand('sideBoard')">♟️ Side: Board</button>
+                        <button class="btn btn-small" onclick="quickCommand('sideBLE')">📱 Side: BLE</button>
+                        <button class="btn btn-small" onclick="quickCommand('calibrate')">🎯 Calibrer</button>
+                        <button class="btn btn-small" onclick="quickCommand('snapCenter')">📍 Snap Center</button>
+                    </div>
+                    <h4 style="margin-top: 10px;">⚔️ Tests Capture (e4xd5):</h4>
+                    <div class="quick-btn-grid">
+                        <button class="btn btn-small" style="background:#2a5a2a;" onclick="quickCommand('captureReady')">2️⃣ Capture Ready</button>
+                        <button class="btn btn-small" style="background:#5a2a2a;" onclick="quickCommand('captured')">3️⃣ Captured (cim↑)</button>
+                        <button class="btn btn-small" style="background:#5a2a5a;" onclick="quickCommand('capturedAlt')">4️⃣ Captured (cim↓)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Panel -->
+        <div class="panel compact-panel">
+            <h3>⚙️ Paramètres du Board</h3>
+            
+            <!-- Mechanism Speed -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Mechanism Speed</span>
+                </div>
+                <div class="char-uuid">acb646cc-92ca-11ee-b9d1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-write">WRITE</span>
+                </div>
+                <div class="char-value">
+                    <label>Vitesse (1-5):</label>
+                    <input type="text" id="mechanismSpeedInput" placeholder="2">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeCharacteristic('mechanismSpeed')">📤 Écrire</button>
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('mechanismSpeed')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Sound Settings -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Sound Settings</span>
+                </div>
+                <div class="char-uuid">acb64a32-92ca-11ee-b9d1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-write">WRITE</span>
+                </div>
+                <div class="char-value">
+                    <label>Format: "volume,flags,extra" (ex: 32,11110,0):</label>
+                    <input type="text" id="soundSettingsInput" placeholder="32,11110,0">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeCharacteristic('soundSettings')">📤 Écrire</button>
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('soundSettings')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Board State -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Board State</span>
+                </div>
+                <div class="char-uuid">acb6543c-92ca-11ee-b9d1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-notify">NOTIFY</span>
+                </div>
+                <div class="char-value">
+                    <label>État actuel:</label>
+                    <input type="text" id="boardStateDisplay" readonly placeholder="En attente...">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('boardState')">📥 Lire</button>
+                    <button class="btn btn-small btn-notify" onclick="toggleNotify('boardState')">🔔 Toggle Notify</button>
+                </div>
+            </div>
+            
+            <!-- Battery -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Battery Info</span>
+                </div>
+                <div class="char-uuid">7b204548-40c4-11eb-adc1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                </div>
+                <div class="char-value">
+                    <label>Niveau batterie:</label>
+                    <input type="text" id="batteryDisplay" readonly placeholder="...">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('battery')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Game Assistance -->
+            <div class="characteristic" style="background: #1a3a1a; border: 1px solid #4ade80;">
+                <div class="char-header">
+                    <span class="char-name" style="color: #4ade80;">🎮 Game Assistance</span>
+                </div>
+                <div class="char-uuid">Via UUID_GAME OpCode 11</div>
+                <div style="font-size: 10px; color: #888; margin: 5px 0;">
+                    Format: "C,E,S,W,A,G" (0 ou 1 chaque)
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3px; font-size: 10px; margin: 8px 0;">
+                    <label><input type="checkbox" id="ga_autoCastling" checked> C: Auto Castling</label>
+                    <label><input type="checkbox" id="ga_autoEnPassant" checked> E: Auto En Passant</label>
+                    <label><input type="checkbox" id="ga_snapToCenter" checked> S: Snap to Center</label>
+                    <label><input type="checkbox" id="ga_autoCorrect" checked> W: Auto Correct</label>
+                    <label><input type="checkbox" id="ga_advCapture"> A: Adv. Capture</label>
+                    <label><input type="checkbox" id="ga_strictGame"> G: Strict Gameplay</label>
+                </div>
+                <div class="char-value">
+                    <label>Valeur directe:</label>
+                    <input type="text" id="gameAssistanceInput" placeholder="1,1,1,1,0,0" value="1,1,1,1,0,0">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeGameAssistance()">📤 Envoyer</button>
+                    <button class="btn btn-small" onclick="buildGameAssistance()">🔧 Build</button>
+                </div>
+                <div class="quick-commands" style="margin-top: 8px;">
+                    <h4 style="font-size: 10px;">⚡ Presets:</h4>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="btn btn-small" onclick="setGameAssistance('1,1,1,1,0,0')">Default</button>
+                        <button class="btn btn-small" onclick="setGameAssistance('0,0,0,0,0,0')">All OFF</button>
+                        <button class="btn btn-small" onclick="setGameAssistance('1,1,1,1,1,1')">All ON</button>
+                        <button class="btn btn-small" onclick="setGameAssistance('1,1,1,1,1,0')">+AdvCapture</button>
+                        <button class="btn btn-small" onclick="setGameAssistance('1,1,1,1,0,1')">+Strict</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- More Settings Panel -->
+        <div class="panel compact-panel">
+            <h3>🔧 Paramètres Avancés</h3>
+            
+            <!-- Jump to Center -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Jump to Center</span>
+                </div>
+                <div class="char-uuid">5e316147-4550-4cf3-8e2b-edc098312a43</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-write">WRITE</span>
+                </div>
+                <div class="char-value">
+                    <label>Valeur (0 ou 1):</label>
+                    <input type="text" id="jumpToCenterInput" placeholder="0">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeCharacteristic('jumpToCenter')">📤 Écrire</button>
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('jumpToCenter')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Offset Pieces -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Offset Pieces</span>
+                </div>
+                <div class="char-uuid">acb650ea-92ca-11ee-b9d1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-write">WRITE</span>
+                </div>
+                <div class="char-value">
+                    <label>Offset (défaut: 3):</label>
+                    <input type="text" id="offsetPiecesInput" placeholder="3">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeCharacteristic('offsetPieces')">📤 Écrire</button>
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('offsetPieces')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Electromagnet Config -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Electromagnet Config</span>
+                </div>
+                <div class="char-uuid">acb651f4-92ca-11ee-b9d1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-write">WRITE</span>
+                </div>
+                <div class="char-value">
+                    <label>Config (défaut: 100,0):</label>
+                    <input type="text" id="electroConfigInput" placeholder="100,0">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeCharacteristic('electroConfig')">📤 Écrire</button>
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('electroConfig')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Board Rotation -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Board Rotation</span>
+                </div>
+                <div class="char-uuid">b5a650ea-92ca-11ee-b9d1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                    <span class="prop-badge prop-write">WRITE</span>
+                </div>
+                <div class="char-value">
+                    <label>Rotation (0-3):</label>
+                    <input type="text" id="boardRotationInput" placeholder="0">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeCharacteristic('boardRotation')">📤 Écrire</button>
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('boardRotation')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Version -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Firmware Version</span>
+                </div>
+                <div class="char-uuid">392d9e66-937a-11ee-b9d1-0242ac120002</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-read">READ</span>
+                </div>
+                <div class="char-value">
+                    <label>Version:</label>
+                    <input type="text" id="versionDisplay" readonly placeholder="En attente...">
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small btn-read" onclick="readCharacteristic('version')">📥 Lire</button>
+                </div>
+            </div>
+            
+            <!-- Factory Reset -->
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">⚠️ Factory Reset</span>
+                </div>
+                <div class="char-uuid">b583ff00-b77a-42f5-a53f-a9bf4c291d80</div>
+                <div class="char-props">
+                    <span class="prop-badge prop-write">WRITE</span>
+                </div>
+                <div class="char-controls">
+                    <button class="btn btn-small" style="background: #e94560;" onclick="factoryReset()">🔄 Factory Reset</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Raw/Custom Command Panel -->
+        <div class="panel compact-panel">
+            <h3>📝 Commande Personnalisée</h3>
+            
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">Envoi Raw</span>
+                </div>
+                
+                <div class="char-value">
+                    <label>UUID Caractéristique:</label>
+                    <input type="text" id="customUUID" placeholder="cc68a66e-3bfa-4614-a77f-f46954a4c103">
+                </div>
+                
+                <div class="format-toggle">
+                    <label>Format:</label>
+                    <select id="dataFormat">
+                        <option value="string">String (texte)</option>
+                        <option value="hex">Hex (ex: 0A 0B 0C)</option>
+                        <option value="opcode">OpCode + String</option>
+                    </select>
+                </div>
+                
+                <div class="char-value">
+                    <label>Données:</label>
+                    <textarea id="customDataInput" placeholder="Entrez vos données..."></textarea>
+                </div>
+                
+                <div class="opcode-input" id="customOpcodeRow" style="display: none;">
+                    <label>OpCode (0-255):</label>
+                    <input type="number" id="customOpcode" min="0" max="255" value="0" style="width: 80px;">
+                </div>
+                
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="writeCustomCommand()">📤 Envoyer</button>
+                    <button class="btn btn-small btn-read" onclick="readCustomCharacteristic()">📥 Lire</button>
+                    <button class="btn btn-small btn-notify" onclick="subscribeCustomCharacteristic()">🔔 Subscribe</button>
+                </div>
+                
+                <div class="char-value">
+                    <label>Réponse:</label>
+                    <textarea id="customResponseDisplay" readonly placeholder="En attente..."></textarea>
+                    <div class="hex-display" id="customHexDisplay"></div>
+                </div>
+            </div>
+            
+            <div class="characteristic">
+                <div class="char-header">
+                    <span class="char-name">🧮 Générateur de Matrice</span>
+                </div>
+                
+                <div class="char-value">
+                    <label>FEN (optionnel):</label>
+                    <input type="text" id="fenInput" placeholder="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR">
+                </div>
+                
+                <div class="char-controls">
+                    <button class="btn btn-small" onclick="fenToMatrix()">🔄 FEN → Matrice</button>
+                    <button class="btn btn-small" onclick="loadStartPosition()">♟️ Position initiale</button>
+                    <button class="btn btn-small" onclick="loadCaptureReady()">⚔️ Capture Ready</button>
+                    <button class="btn btn-small" onclick="loadCaptured()">💀 Captured</button>
+                </div>
+                
+                <div class="matrix-preview" id="matrixPreview" style="font-size: 9px;">
+La matrice apparaîtra ici...
+                </div>
+                
+                <div class="char-value">
+                    <label>Matrice (100 chars + couleur):</label>
+                    <textarea id="matrixOutput" placeholder="..." style="font-size: 10px;"></textarea>
+                </div>
+                
+                <div class="char-controls">
+                    <button class="btn btn-small btn-write" onclick="sendMatrixAsGameStart()">📤 Envoyer comme GAME_START</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // UUIDs
+        const SERVICE_UUID = 'fd31a840-22e7-11eb-adc1-0242ac120002';
+        
+        const CHARACTERISTICS = {
+            game: 'cc68a66e-3bfa-4614-a77f-f46954a4c103',
+            mechanismSpeed: 'acb646cc-92ca-11ee-b9d1-0242ac120002',
+            soundSettings: 'acb64a32-92ca-11ee-b9d1-0242ac120002',
+            jumpToCenter: '5e316147-4550-4cf3-8e2b-edc098312a43',
+            offsetPieces: 'acb650ea-92ca-11ee-b9d1-0242ac120002',
+            electroConfig: 'acb651f4-92ca-11ee-b9d1-0242ac120002',
+            boardRotation: 'b5a650ea-92ca-11ee-b9d1-0242ac120002',
+            battery: '7b204548-40c4-11eb-adc1-0242ac120002',
+            version: '392d9e66-937a-11ee-b9d1-0242ac120002',
+            boardState: 'acb6543c-92ca-11ee-b9d1-0242ac120002',
+            factoryReset: 'b583ff00-b77a-42f5-a53f-a9bf4c291d80'
+        };
+        
+        // Master game analysis storage
+        let masterGameLog = [];
+        let lastSensorMatrix = null;
+        let lastPieceMatrix = null;
+        let moveSequence = [];
+        
+        const OPCODES = {
+            GAME_START: 0,
+            GAME_END: 1,
+            MOVEMENT: 2,
+            MOVEMENT_VERIFY: 3,
+            VOICE_COMMAND: 4,
+            TAKE_BACK: 5,
+            BOARD_STATE: 6,
+            CALIBRATION: 7,
+            ERROR_MSG: 8,
+            CHECK_SOUND: 9,
+            SIDE: 10,
+            GAME_ASSISTANCE: 11,
+            BLE_MOVE_DONE: 12,
+            SNAPTOCENTERCOM: 13,
+            RESET_DETECTION: 14
+        };
+        
+        const OPCODE_HELP = {
+            0: 'Data: matrice 100 chars + ",W" ou ",B" pour la couleur',
+            1: 'Pas de data nécessaire',
+            2: 'Data: "M 1 e2-e4 E" (from-to, E=empty promotion)',
+            3: 'Data: "1"=accepter, "2"=rejeter, "Q/R/B/N"=promotion',
+            4: 'Data: "M 1 e2-e4 E" (comme MOVEMENT)',
+            5: 'Data: "count,FEN,side" (ex: "1,fen_string,0")',
+            6: 'Read only - état du board',
+            7: 'Pas de data - lance calibration',
+            8: 'Read only - messages d\'erreur',
+            9: 'Data: "1"=check, "2"=checkmate',
+            10: 'Data: "0"=2 joueurs locaux, "1"=board commence, "2"=BLE commence',
+            11: 'Data: "C,E,S,W,A,G" (ex: "1,1,1,1,0,0")',
+            12: 'Read only - notification move done',
+            13: 'Pas de data - centre les pièces',
+            14: 'Data: FEN string pour reset position'
+        };
+        
+        const BOARD_STATES = {
+            0: 'IDLE',
+            1: 'STARTGAME_STATE',
+            2: 'SETTING_UP',
+            3: 'WAITING_SIDE',
+            4: 'PLAYING',
+            5: 'BOARD_PLAYING',
+            6: 'BLE_PLAYING',
+            7: 'ENDING',
+            8: 'CORRECT_MATRIX',
+            9: 'SNAP_TO_CENTER',
+            10: 'CALIBRATE'
+        };
+        
+        // State
+        let device = null;
+        let server = null;
+        let service = null;
+        let characteristics = {};
+        let notifySubscriptions = {};
+        
+        // ============ MATRIX PARSING FUNCTIONS ============
+        
+        function parseMatrixNotification(data) {
+            // Format attendu: "MESSAGE,sensorMatrix,pieceMatrix" ou "MESSAGE,matrix,"
+            const parts = data.split(',');
+            const result = {
+                message: parts[0] || '',
+                sensorMatrix: null,
+                pieceMatrix: null,
+                raw: data
+            };
+            
+            if (parts.length >= 2 && parts[1] && parts[1].length >= 64) {
+                result.sensorMatrix = parts[1];
+            }
+            if (parts.length >= 3 && parts[2] && parts[2].length >= 64) {
+                result.pieceMatrix = parts[2];
+            }
+            
+            return result;
+        }
+        
+        function formatMatrix10x10(matrix) {
+            if (!matrix || matrix.length < 100) return 'Invalid matrix (length: ' + (matrix?.length || 0) + ')';
+            
+            let display = '   0 1 2 3 4 5 6 7 8 9\n';
+            for (let row = 0; row < 10; row++) {
+                display += `${row}  `;
+                for (let col = 0; col < 10; col++) {
+                    const char = matrix[row * 10 + col];
+                    display += char + ' ';
+                }
+                display += '\n';
+            }
+            return display;
+        }
+        
+        function formatMatrix8x8(matrix) {
+            if (!matrix || matrix.length < 64) return 'Invalid matrix (length: ' + (matrix?.length || 0) + ')';
+            
+            let display = '   a b c d e f g h\n';
+            for (let row = 0; row < 8; row++) {
+                display += `${8 - row}  `;
+                for (let col = 0; col < 8; col++) {
+                    const char = matrix[row * 8 + col];
+                    display += char + ' ';
+                }
+                display += ` ${8 - row}\n`;
+            }
+            display += '   a b c d e f g h';
+            return display;
+        }
+        
+        function compareSensorMatrices(prev, curr) {
+            if (!prev || !curr) return null;
+            
+            const changes = [];
+            const len = Math.min(prev.length, curr.length);
+            
+            for (let i = 0; i < len; i++) {
+                if (prev[i] !== curr[i]) {
+                    const row = Math.floor(i / (len === 100 ? 10 : 8));
+                    const col = i % (len === 100 ? 10 : 8);
+                    changes.push({
+                        index: i,
+                        row,
+                        col,
+                        from: prev[i],
+                        to: curr[i],
+                        square: len === 100 ? `(${row},${col})` : String.fromCharCode(97 + col) + (8 - row)
+                    });
+                }
+            }
+            
+            return changes;
+        }
+        
+        function analyzeNotification(opcode, data) {
+            const analysis = {
+                opcode,
+                opcodeName: OPCODES_REVERSE[opcode] || 'UNKNOWN',
+                timestamp: new Date().toISOString(),
+                data,
+                parsed: null
+            };
+            
+            // OpCode 8 = ERROR_MSG - contient souvent des matrices
+            if (opcode === 8) {
+                analysis.parsed = parseMatrixNotification(data);
+                
+                if (analysis.parsed.sensorMatrix) {
+                    const changes = compareSensorMatrices(lastSensorMatrix, analysis.parsed.sensorMatrix);
+                    analysis.sensorChanges = changes;
+                    lastSensorMatrix = analysis.parsed.sensorMatrix;
+                }
+                
+                if (analysis.parsed.pieceMatrix) {
+                    lastPieceMatrix = analysis.parsed.pieceMatrix;
+                }
+            }
+            
+            // OpCode 3 = MOVEMENT_VERIFY - mouvement détecté par le board
+            if (opcode === 3) {
+                analysis.moveDetected = data;
+                moveSequence.push({
+                    type: 'BOARD_MOVE',
+                    data,
+                    timestamp: analysis.timestamp
+                });
+            }
+            
+            // OpCode 12 = BLE_MOVE_DONE
+            if (opcode === 12) {
+                moveSequence.push({
+                    type: 'MOVE_DONE',
+                    timestamp: analysis.timestamp
+                });
+            }
+            
+            masterGameLog.push(analysis);
+            return analysis;
+        }
+        
+        const OPCODES_REVERSE = {
+            0: 'GAME_START',
+            1: 'GAME_END',
+            2: 'MOVEMENT',
+            3: 'MOVEMENT_VERIFY',
+            4: 'VOICE_COMMAND',
+            5: 'TAKE_BACK',
+            6: 'BOARD_STATE',
+            7: 'CALIBRATION',
+            8: 'ERROR_MSG',
+            9: 'CHECK_SOUND',
+            10: 'SIDE',
+            11: 'GAME_ASSISTANCE',
+            12: 'BLE_MOVE_DONE',
+            13: 'SNAPTOCENTERCOM',
+            14: 'RESET_DETECTION'
+        };
+        
+        // Update opcode help
+        function updateOpcodeHelp() {
+            const opcode = document.getElementById('opcodeSelect').value;
+            document.getElementById('opcodeHelp').textContent = OPCODE_HELP[opcode] || '';
+        }
+        updateOpcodeHelp();
+        
+        // Data format toggle
+        document.getElementById('dataFormat').addEventListener('change', function() {
+            const format = this.value;
+            document.getElementById('customOpcodeRow').style.display = 
+                format === 'opcode' ? 'flex' : 'none';
+        });
+        
+        // Logging
+        function log(type, message, data = '') {
+            const container = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const time = new Date().toLocaleTimeString('fr-FR', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                fractionalSecondDigits: 3 
+            });
+            
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-type-${type}">[${type.toUpperCase()}]</span>
+                <span class="log-data">${message}${data ? ': ' + data : ''}</span>
+            `;
+            
+            container.appendChild(entry);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('logContainer').innerHTML = '';
+            log('info', 'Log effacé');
+        }
+        
+        // Hex display helper
+        function displayHex(containerId, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if (data instanceof DataView) {
+                for (let i = 0; i < data.byteLength; i++) {
+                    const span = document.createElement('span');
+                    span.className = 'hex-byte';
+                    span.textContent = data.getUint8(i).toString(16).padStart(2, '0').toUpperCase();
+                    container.appendChild(span);
+                }
+            } else if (typeof data === 'string') {
+                for (let i = 0; i < data.length; i++) {
+                    const span = document.createElement('span');
+                    span.className = 'hex-byte';
+                    span.textContent = data.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase();
+                    container.appendChild(span);
+                }
+            }
+        }
+        
+        // DataView to string
+        function dataViewToString(dataView) {
+            let str = '';
+            for (let i = 0; i < dataView.byteLength; i++) {
+                str += String.fromCharCode(dataView.getUint8(i));
+            }
+            return str;
+        }
+        
+        // Connection
+        async function connectToBoard() {
+            try {
+                log('info', 'Recherche du Phantom...');
+                updateConnectionStatus('connecting');
+                
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'Phantom' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+                
+                log('info', 'Appareil trouvé', device.name);
+                document.getElementById('deviceName').textContent = device.name;
+                
+                device.addEventListener('gattserverdisconnected', onDisconnected);
+                
+                log('info', 'Connexion au GATT server...');
+                server = await device.gatt.connect();
+                
+                log('info', 'Récupération du service...');
+                service = await server.getPrimaryService(SERVICE_UUID);
+                
+                log('info', 'Récupération des caractéristiques...');
+                
+                // Get all characteristics
+                for (const [name, uuid] of Object.entries(CHARACTERISTICS)) {
+                    try {
+                        characteristics[name] = await service.getCharacteristic(uuid);
+                        log('info', `Caractéristique ${name} trouvée`);
+                    } catch (e) {
+                        log('error', `Caractéristique ${name} non trouvée`, e.message);
+                    }
+                }
+                
+                updateConnectionStatus('connected');
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                
+                log('info', '✅ Connexion réussie!');
+                
+                // Auto-read some values
+                setTimeout(() => {
+                    readCharacteristic('version');
+                    readCharacteristic('battery');
+                    readCharacteristic('boardState');
+                }, 500);
+                
+            } catch (error) {
+                log('error', 'Erreur de connexion', error.message);
+                updateConnectionStatus('disconnected');
+            }
+        }
+        
+        function onDisconnected() {
+            log('info', '❌ Déconnecté');
+            updateConnectionStatus('disconnected');
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('disconnectBtn').disabled = true;
+            characteristics = {};
+            notifySubscriptions = {};
+        }
+        
+        async function disconnectFromBoard() {
+            if (device && device.gatt.connected) {
+                device.gatt.disconnect();
+            }
+        }
+        
+        function updateConnectionStatus(status) {
+            const el = document.getElementById('connectionStatus');
+            el.className = 'status status-' + status;
+            el.textContent = {
+                'disconnected': 'Déconnecté',
+                'connecting': 'Connexion...',
+                'connected': 'Connecté'
+            }[status];
+        }
+        
+        // Read characteristic
+        async function readCharacteristic(name) {
+            if (!characteristics[name]) {
+                log('error', `Caractéristique ${name} non disponible`);
+                return;
+            }
+            
+            try {
+                log('info', `Lecture de ${name}...`);
+                const value = await characteristics[name].readValue();
+                const strValue = dataViewToString(value);
+                
+                log('receive', `${name}`, strValue);
+                
+                // Update display
+                const displayId = name + (name.includes('Display') ? '' : 
+                    ['game', 'boardState', 'battery', 'version'].includes(name) ? 'Display' : 'Input');
+                
+                const displayEl = document.getElementById(displayId);
+                if (displayEl) {
+                    displayEl.value = strValue;
+                }
+                
+                // Hex display for game
+                if (name === 'game') {
+                    displayHex('gameHexDisplay', value);
+                }
+                
+                // Decode board state
+                if (name === 'boardState') {
+                    const stateNum = value.getUint8(0);
+                    const stateName = BOARD_STATES[stateNum] || 'UNKNOWN';
+                    document.getElementById('boardStateDisplay').value = `${stateNum} (${stateName})`;
+                }
+                
+                return value;
+            } catch (error) {
+                log('error', `Erreur lecture ${name}`, error.message);
+            }
+        }
+        
+        // Write characteristic
+        async function writeCharacteristic(name) {
+            if (!characteristics[name]) {
+                log('error', `Caractéristique ${name} non disponible`);
+                return;
+            }
+            
+            const inputId = name + 'Input';
+            const input = document.getElementById(inputId);
+            if (!input) {
+                log('error', `Input ${inputId} non trouvé`);
+                return;
+            }
+            
+            const data = input.value;
+            
+            try {
+                log('send', `${name}`, data);
+                const encoder = new TextEncoder();
+                await characteristics[name].writeValue(encoder.encode(data));
+                log('info', `✅ Écrit sur ${name}`);
+            } catch (error) {
+                log('error', `Erreur écriture ${name}`, error.message);
+            }
+        }
+        
+        // Write game command with opcode
+        async function writeGameCommand() {
+            if (!characteristics.game) {
+                log('error', 'Caractéristique game non disponible');
+                return;
+            }
+            
+            const opcode = parseInt(document.getElementById('opcodeSelect').value);
+            const data = document.getElementById('gameDataInput').value;
+            
+            // Build command: opcode byte + data string
+            const dataBytes = new TextEncoder().encode(data);
+            const command = new Uint8Array(1 + dataBytes.length);
+            command[0] = opcode;
+            command.set(dataBytes, 1);
+            
+            try {
+                log('send', `GAME OpCode=${opcode}`, data);
+                await characteristics.game.writeValue(command);
+                log('info', `✅ Commande envoyée`);
+            } catch (error) {
+                log('error', 'Erreur envoi commande', error.message);
+            }
+        }
+        
+        // Toggle notifications
+        async function toggleNotify(name) {
+            if (!characteristics[name]) {
+                log('error', `Caractéristique ${name} non disponible`);
+                return;
+            }
+            
+            try {
+                if (notifySubscriptions[name]) {
+                    await characteristics[name].stopNotifications();
+                    characteristics[name].removeEventListener('characteristicvaluechanged', 
+                        notifySubscriptions[name]);
+                    delete notifySubscriptions[name];
+                    log('info', `🔕 Notifications ${name} désactivées`);
+                } else {
+                    const handler = (event) => {
+                        const value = event.target.value;
+                        const strValue = dataViewToString(value);
+                        
+                        // Get opcode if present
+                        let opcode = -1;
+                        let opcodeName = '';
+                        let dataContent = strValue;
+                        
+                        if (value.byteLength > 0) {
+                            opcode = value.getUint8(0);
+                            opcodeName = OPCODES_REVERSE[opcode] || `UNK(${opcode})`;
+                            // Data sans l'opcode
+                            dataContent = strValue.substring(1);
+                        }
+                        
+                        // Analyze and log
+                        const analysis = analyzeNotification(opcode, dataContent);
+                        
+                        // Log principal
+                        log('notify', `${name} [Op:${opcode} ${opcodeName}]`, dataContent.substring(0, 80) + (dataContent.length > 80 ? '...' : ''));
+                        
+                        // Si c'est un ERROR_MSG avec matrice, log détaillé
+                        if (opcode === 8 && analysis.parsed) {
+                            if (analysis.parsed.message) {
+                                log('info', `📋 Message: ${analysis.parsed.message}`);
+                            }
+                            if (analysis.parsed.sensorMatrix) {
+                                log('info', `🔍 Sensor Matrix (${analysis.parsed.sensorMatrix.length} chars)`);
+                                // Afficher dans le panneau dédié
+                                updateMatrixDisplay('sensor', analysis.parsed.sensorMatrix);
+                            }
+                            if (analysis.parsed.pieceMatrix) {
+                                log('info', `♟️ Piece Matrix (${analysis.parsed.pieceMatrix.length} chars)`);
+                                updateMatrixDisplay('piece', analysis.parsed.pieceMatrix);
+                            }
+                            if (analysis.sensorChanges && analysis.sensorChanges.length > 0) {
+                                log('info', `⚡ ${analysis.sensorChanges.length} changements détectés:`);
+                                analysis.sensorChanges.forEach(c => {
+                                    log('info', `   ${c.square}: "${c.from}" → "${c.to}"`);
+                                });
+                            }
+                        }
+                        
+                        // Si c'est un MOVEMENT_VERIFY, log le mouvement détecté
+                        if (opcode === 3) {
+                            log('receive', `🎯 MOUVEMENT DÉTECTÉ: ${dataContent}`);
+                        }
+                        
+                        // Si c'est BLE_MOVE_DONE
+                        if (opcode === 12) {
+                            log('receive', `✅ MOUVEMENT TERMINÉ`);
+                        }
+                        
+                        // Update display
+                        if (name === 'game') {
+                            document.getElementById('gameValueDisplay').value = `[${opcodeName}] ${dataContent}`;
+                            displayHex('gameHexDisplay', value);
+                        } else if (name === 'boardState') {
+                            const stateNum = value.getUint8(0);
+                            const stateName = BOARD_STATES[stateNum] || 'UNKNOWN';
+                            document.getElementById('boardStateDisplay').value = `${stateNum} (${stateName})`;
+                            log('info', `📊 État: ${stateName}`);
+                        }
+                    };
+                    
+                    characteristics[name].addEventListener('characteristicvaluechanged', handler);
+                    await characteristics[name].startNotifications();
+                    notifySubscriptions[name] = handler;
+                    log('info', `🔔 Notifications ${name} activées`);
+                }
+            } catch (error) {
+                log('error', `Erreur notifications ${name}`, error.message);
+            }
+        }
+        
+        // Mise à jour des affichages de matrices
+        function updateMatrixDisplay(type, matrix) {
+            const displayEl = document.getElementById(type + 'MatrixDisplay');
+            if (displayEl) {
+                if (matrix.length === 100) {
+                    displayEl.textContent = formatMatrix10x10(matrix);
+                } else if (matrix.length === 64) {
+                    displayEl.textContent = formatMatrix8x8(matrix);
+                } else {
+                    displayEl.textContent = `Raw (${matrix.length}): ${matrix}`;
+                }
+            }
+        }
+        
+        // Quick commands
+        function quickCommand(cmd) {
+            // MATRICES CORRIGÉES - Le Phantom utilise une matrice TRANSPOSÉE !
+            // Les colonnes de l'échiquier deviennent les lignes de la matrice
+            // Colonne 0 = cimetière gauche, Colonne 9 = cimetière droit
+            
+            // MATRICE 1: Position de départ correcte (transposée)
+            // Chaque ligne de la matrice = une colonne de l'échiquier
+            const startMatrix = 
+                '..........' +  // Row 0: cimetière haut
+                '.rp....PR.' +  // Row 1 (=col a): Ta8, pa7, ..., P2, Ta1
+                '.np....PN.' +  // Row 2 (=col b): Cb8, pb7, ..., Pb2, Cb1
+                '.bp....PB.' +  // Row 3 (=col c): Fc8, pc7, ..., Pc2, Fc1
+                '.qp....PQ.' +  // Row 4 (=col d): Dd8, pd7, ..., Pd2, Dd1
+                '.kp....PK.' +  // Row 5 (=col e): Re8, pe7, ..., Pe2, Re1
+                '.bp....PB.' +  // Row 6 (=col f): Ff8, pf7, ..., Pf2, Ff1
+                '.np....PN.' +  // Row 7 (=col g): Cg8, pg7, ..., Pg2, Cg1
+                '.rp....PR.' +  // Row 8 (=col h): Th8, ph7, ..., Ph2, Th1
+                '..........';   // Row 9: cimetière bas
+            
+            // MATRICE 2: Position avec capture possible (pion blanc e4, pion noir d5)
+            // Après 1.e4 d5 - le pion blanc peut capturer en d5
+            const captureReadyMatrix = 
+                '..........' +  // Row 0
+                '.rp....PR.' +  // Row 1 (col a)
+                '.np....PN.' +  // Row 2 (col b)
+                '.bp....PB.' +  // Row 3 (col c)
+                '.qp.p..PQ.' +  // Row 4 (col d): pion noir en d5 (position 4 = rang 5)
+                '.kp..P.PK.' +  // Row 5 (col e): pion blanc en e4 (position 4 = rang 4), plus de pion en e2
+                '.bp....PB.' +  // Row 6 (col f)
+                '.np....PN.' +  // Row 7 (col g)
+                '.rp....PR.' +  // Row 8 (col h)
+                '..........';   // Row 9
+            
+            // MATRICE 3: Après capture exd5 - pion blanc en d5, pion noir au cimetière
+            const capturedMatrix = 
+                '..........' +  // Row 0
+                '.rp....PR.' +  // Row 1 (col a)
+                '.np....PN.' +  // Row 2 (col b)
+                '.bp....PB.' +  // Row 3 (col c)
+                'pqp.P..PQ.' +  // Row 4 (col d): pion noir capturé en cimetière (col 0), pion BLANC en d5
+                '.kp....PK.' +  // Row 5 (col e): plus de pion en e4
+                '.bp....PB.' +  // Row 6 (col f)
+                '.np....PN.' +  // Row 7 (col g)
+                '.rp....PR.' +  // Row 8 (col h)
+                '..........';   // Row 9
+            
+            // MATRICE 4: Alternative - cimetière à droite
+            const capturedMatrixAlt = 
+                '..........' +  // Row 0
+                '.rp....PR.' +  // Row 1 (col a)
+                '.np....PN.' +  // Row 2 (col b)
+                '.bp....PB.' +  // Row 3 (col c)
+                '.qp.P..PQp' +  // Row 4 (col d): pion BLANC en d5, pion noir au cimetière droit
+                '.kp....PK.' +  // Row 5 (col e)
+                '.bp....PB.' +  // Row 6 (col f)
+                '.np....PN.' +  // Row 7 (col g)
+                '.rp....PR.' +  // Row 8 (col h)
+                '..........';   // Row 9
+            
+            switch (cmd) {
+                case 'startGame':
+                    document.getElementById('opcodeSelect').value = '0';
+                    document.getElementById('gameDataInput').value = startMatrix + ',W';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'captureReady':
+                    document.getElementById('opcodeSelect').value = '0';
+                    document.getElementById('gameDataInput').value = captureReadyMatrix + ',W';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'captured':
+                    document.getElementById('opcodeSelect').value = '0';
+                    document.getElementById('gameDataInput').value = capturedMatrix + ',W';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'capturedAlt':
+                    document.getElementById('opcodeSelect').value = '0';
+                    document.getElementById('gameDataInput').value = capturedMatrixAlt + ',W';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'endGame':
+                    document.getElementById('opcodeSelect').value = '1';
+                    document.getElementById('gameDataInput').value = '';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'sideBoard':
+                    document.getElementById('opcodeSelect').value = '10';
+                    document.getElementById('gameDataInput').value = '1';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'sideBLE':
+                    document.getElementById('opcodeSelect').value = '10';
+                    document.getElementById('gameDataInput').value = '2';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'sideLocal':
+                    document.getElementById('opcodeSelect').value = '10';
+                    document.getElementById('gameDataInput').value = '0';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'calibrate':
+                    document.getElementById('opcodeSelect').value = '7';
+                    document.getElementById('gameDataInput').value = '';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+                case 'snapCenter':
+                    document.getElementById('opcodeSelect').value = '13';
+                    document.getElementById('gameDataInput').value = '';
+                    updateOpcodeHelp();
+                    writeGameCommand();
+                    break;
+            }
+        }
+        
+        // Factory reset
+        async function factoryReset() {
+            if (!confirm('⚠️ ATTENTION: Ceci va réinitialiser tous les paramètres du board!\n\nContinuer?')) {
+                return;
+            }
+            
+            if (!characteristics.factoryReset) {
+                log('error', 'Caractéristique factoryReset non disponible');
+                return;
+            }
+            
+            try {
+                log('send', 'FACTORY RESET');
+                await characteristics.factoryReset.writeValue(new Uint8Array([1]));
+                log('info', '✅ Factory reset envoyé - le board va redémarrer');
+            } catch (error) {
+                log('error', 'Erreur factory reset', error.message);
+            }
+        }
+        
+        // ============ GAME ASSISTANCE ============
+        
+        function buildGameAssistance() {
+            const c = document.getElementById('ga_autoCastling').checked ? '1' : '0';
+            const e = document.getElementById('ga_autoEnPassant').checked ? '1' : '0';
+            const s = document.getElementById('ga_snapToCenter').checked ? '1' : '0';
+            const w = document.getElementById('ga_autoCorrect').checked ? '1' : '0';
+            const a = document.getElementById('ga_advCapture').checked ? '1' : '0';
+            const g = document.getElementById('ga_strictGame').checked ? '1' : '0';
+            
+            const value = `${c},${e},${s},${w},${a},${g}`;
+            document.getElementById('gameAssistanceInput').value = value;
+            log('info', `🔧 Game Assistance built: ${value}`);
+        }
+        
+        function setGameAssistance(value) {
+            document.getElementById('gameAssistanceInput').value = value;
+            
+            // Update checkboxes
+            const parts = value.split(',');
+            if (parts.length >= 6) {
+                document.getElementById('ga_autoCastling').checked = parts[0] === '1';
+                document.getElementById('ga_autoEnPassant').checked = parts[1] === '1';
+                document.getElementById('ga_snapToCenter').checked = parts[2] === '1';
+                document.getElementById('ga_autoCorrect').checked = parts[3] === '1';
+                document.getElementById('ga_advCapture').checked = parts[4] === '1';
+                document.getElementById('ga_strictGame').checked = parts[5] === '1';
+            }
+            
+            log('info', `🎮 Game Assistance preset: ${value}`);
+        }
+        
+        async function writeGameAssistance() {
+            if (!characteristics.game) {
+                log('error', 'Caractéristique game non disponible');
+                return;
+            }
+            
+            const data = document.getElementById('gameAssistanceInput').value;
+            
+            // OpCode 11 = GAME_ASSISTANCE
+            const dataBytes = new TextEncoder().encode(data);
+            const command = new Uint8Array(1 + dataBytes.length);
+            command[0] = 11; // GAME_ASSISTANCE
+            command.set(dataBytes, 1);
+            
+            try {
+                log('send', `GAME_ASSISTANCE (OpCode 11)`, data);
+                await characteristics.game.writeValue(command);
+                log('info', `✅ Game Assistance envoyé: ${data}`);
+            } catch (error) {
+                log('error', 'Erreur envoi Game Assistance', error.message);
+            }
+        }
+        
+        // Sync checkboxes when input changes
+        document.getElementById('gameAssistanceInput')?.addEventListener('change', function() {
+            const parts = this.value.split(',');
+            if (parts.length >= 6) {
+                document.getElementById('ga_autoCastling').checked = parts[0] === '1';
+                document.getElementById('ga_autoEnPassant').checked = parts[1] === '1';
+                document.getElementById('ga_snapToCenter').checked = parts[2] === '1';
+                document.getElementById('ga_autoCorrect').checked = parts[3] === '1';
+                document.getElementById('ga_advCapture').checked = parts[4] === '1';
+                document.getElementById('ga_strictGame').checked = parts[5] === '1';
+            }
+        });
+        
+        // Custom commands
+        async function writeCustomCommand() {
+            const uuid = document.getElementById('customUUID').value.trim();
+            const format = document.getElementById('dataFormat').value;
+            const dataInput = document.getElementById('customDataInput').value;
+            
+            if (!uuid) {
+                log('error', 'UUID requis');
+                return;
+            }
+            
+            try {
+                const char = await service.getCharacteristic(uuid);
+                let data;
+                
+                if (format === 'string') {
+                    data = new TextEncoder().encode(dataInput);
+                } else if (format === 'hex') {
+                    const hexBytes = dataInput.split(/\s+/).filter(b => b).map(b => parseInt(b, 16));
+                    data = new Uint8Array(hexBytes);
+                } else if (format === 'opcode') {
+                    const opcode = parseInt(document.getElementById('customOpcode').value);
+                    const strData = new TextEncoder().encode(dataInput);
+                    data = new Uint8Array(1 + strData.length);
+                    data[0] = opcode;
+                    data.set(strData, 1);
+                }
+                
+                log('send', `Custom [${uuid.slice(0, 8)}...]`, Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '));
+                await char.writeValue(data);
+                log('info', '✅ Envoyé');
+            } catch (error) {
+                log('error', 'Erreur envoi custom', error.message);
+            }
+        }
+        
+        async function readCustomCharacteristic() {
+            const uuid = document.getElementById('customUUID').value.trim();
+            
+            if (!uuid) {
+                log('error', 'UUID requis');
+                return;
+            }
+            
+            try {
+                const char = await service.getCharacteristic(uuid);
+                const value = await char.readValue();
+                const strValue = dataViewToString(value);
+                
+                log('receive', `Custom [${uuid.slice(0, 8)}...]`, strValue);
+                document.getElementById('customResponseDisplay').value = strValue;
+                displayHex('customHexDisplay', value);
+            } catch (error) {
+                log('error', 'Erreur lecture custom', error.message);
+            }
+        }
+        
+        async function subscribeCustomCharacteristic() {
+            const uuid = document.getElementById('customUUID').value.trim();
+            
+            if (!uuid) {
+                log('error', 'UUID requis');
+                return;
+            }
+            
+            try {
+                const char = await service.getCharacteristic(uuid);
+                
+                char.addEventListener('characteristicvaluechanged', (event) => {
+                    const value = event.target.value;
+                    const strValue = dataViewToString(value);
+                    log('notify', `Custom [${uuid.slice(0, 8)}...]`, strValue);
+                    document.getElementById('customResponseDisplay').value = strValue;
+                    displayHex('customHexDisplay', value);
+                });
+                
+                await char.startNotifications();
+                log('info', `🔔 Subscribed to ${uuid.slice(0, 8)}...`);
+            } catch (error) {
+                log('error', 'Erreur subscribe custom', error.message);
+            }
+        }
+        
+        // Matrix generator
+        function fenToMatrix() {
+            const fen = document.getElementById('fenInput').value.trim() || 
+                        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+            
+            // Parse FEN to 8x8
+            const rows = fen.split('/');
+            let board = [];
+            
+            for (const row of rows) {
+                let boardRow = '';
+                for (const char of row) {
+                    if (/\d/.test(char)) {
+                        boardRow += '.'.repeat(parseInt(char));
+                    } else {
+                        boardRow += char;
+                    }
+                }
+                board.push(boardRow.padEnd(8, '.').slice(0, 8));
+            }
+            
+            // Build 10x10 matrix
+            let matrix = '.'.repeat(10); // Top row
+            for (const row of board) {
+                matrix += '.' + row + '.';
+            }
+            matrix += '.'.repeat(10); // Bottom row
+            
+            // Display preview
+            let preview = '   0 1 2 3 4 5 6 7 8 9\n';
+            for (let i = 0; i < 10; i++) {
+                preview += `${i}  ${matrix.slice(i * 10, (i + 1) * 10).split('').join(' ')}\n`;
+            }
+            document.getElementById('matrixPreview').textContent = preview;
+            document.getElementById('matrixOutput').value = matrix + ',W';
+        }
+        
+        function loadStartPosition() {
+            document.getElementById('fenInput').value = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+            fenToMatrix();
+        }
+        
+        function loadCaptureReady() {
+            // Position après 1.e4 d5
+            document.getElementById('fenInput').value = 'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR';
+            fenToMatrix();
+        }
+        
+        function loadCaptured() {
+            // Position après 1.e4 d5 2.exd5
+            document.getElementById('fenInput').value = 'rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR';
+            fenToMatrix();
+        }
+        
+        async function sendMatrixAsGameStart() {
+            const matrix = document.getElementById('matrixOutput').value;
+            if (!matrix || matrix.length < 100) {
+                log('error', 'Matrice invalide');
+                return;
+            }
+            
+            document.getElementById('opcodeSelect').value = '0';
+            document.getElementById('gameDataInput').value = matrix;
+            updateOpcodeHelp();
+            await writeGameCommand();
+        }
+        
+        // Init
+        log('info', 'Phantom BLE Debug Tool initialisé');
+        log('info', 'Cliquez sur "Connecter" pour commencer');
+        
+        // Export functions
+        function exportLog() {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                masterGameLog,
+                moveSequence,
+                lastSensorMatrix,
+                lastPieceMatrix
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `phantom_debug_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            log('info', '💾 Log exporté');
+        }
+        
+        function clearMasterLog() {
+            masterGameLog = [];
+            moveSequence = [];
+            lastSensorMatrix = null;
+            lastPieceMatrix = null;
+            document.getElementById('sensorMatrixDisplay').textContent = 'Reset - en attente...';
+            document.getElementById('pieceMatrixDisplay').textContent = 'Reset - en attente...';
+            document.getElementById('moveSequenceDisplay').textContent = 'Aucun mouvement détecté...';
+            log('info', '🗑️ Analyse master game reset');
+        }
+        
+        function showFullLog() {
+            const logWindow = window.open('', '_blank');
+            logWindow.document.write('<html><head><title>Master Game Log</title>');
+            logWindow.document.write('<style>body{background:#1a1a2e;color:#eee;font-family:monospace;padding:20px;}</style>');
+            logWindow.document.write('</head><body>');
+            logWindow.document.write('<h1>Master Game Log</h1>');
+            logWindow.document.write('<pre>' + JSON.stringify({masterGameLog, moveSequence}, null, 2) + '</pre>');
+            logWindow.document.write('</body></html>');
+        }
+        
+        // Update move sequence display periodically
+        setInterval(() => {
+            if (moveSequence.length > 0) {
+                const display = document.getElementById('moveSequenceDisplay');
+                display.innerHTML = moveSequence.map((m, i) => 
+                    `<div style="color: ${m.type === 'BOARD_MOVE' ? '#4ade80' : '#f59e0b'}">` +
+                    `${i + 1}. [${m.type}] ${m.data || ''} @ ${m.timestamp.split('T')[1].split('.')[0]}</div>`
+                ).join('');
+            }
+        }, 500);
+    </script>
+</body>
+</html>
