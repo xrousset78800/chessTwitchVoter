@@ -339,26 +339,6 @@ if(subMode)
 const selectedThemesParam = $.urlParam('selectedThemes');
 let selectedThemesFromUrl = new Set();
 
-$('#phantom-test-custom').on('click', async function(e) {
-    e.preventDefault();
-    const move = $('#phantom-custom-move').val().trim();
-    
-    if (!move) {
-        alert('Entrez un mouvement (ex: e2-e0)');
-        return;
-    }
-    
-    if (!window.phantomChessboard || !window.phantomChessboard.isConnected) {
-        alert('Phantom non connecté');
-        return;
-    }
-    
-    console.log('🎯 Envoi mouvement personnalisé :', move);
-
-    await window.phantomChessboard.sendCommand(2, move);
-    console.log('✅ Commande envoyée :', move);
-});
-
 
 if (selectedThemesParam) {
     try {

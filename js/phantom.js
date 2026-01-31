@@ -60,6 +60,9 @@ class PhantomChessboard {
      * Format simple : ligne par ligne, bordures vides pour le cimetière
      * Le board gère AUTOMATIQUEMENT le placement des pièces capturées au cimetière
      * 
+     * IMPORTANT: Les lignes doivent être inversées (rang 8↔rang 1)
+     * car le Phantom lit la matrice du bas vers le haut
+     * 
      * @param {string} fen - Position FEN
      * @returns {string} Matrice 10x10 (100 caractères)
      */
@@ -88,6 +91,9 @@ class PhantomChessboard {
         while (board.length < 8) {
             board.push('........');
         }
+        
+        // INVERSER l'ordre des lignes (rang 8 devient rang 1, etc.)
+        board.reverse();
         
         // Construire la matrice 10x10
         // Ligne 0 : cimetière haut (vide)
@@ -312,7 +318,7 @@ class PhantomChessboard {
         this.log(`♟️ Envoi mouvement: ${move}`, 'info');
         return await this.sendCommand(this.OP_CODES.MOVEMENT, move);
     }
-
+    
     /**
      * 🎯 MÉTHODE PRINCIPALE : Synchronise la position avec le Phantom
      * 
@@ -515,17 +521,39 @@ class PhantomChessboard {
 // Instance globale
 window.phantomChessboard = new PhantomChessboard();
 
+/**
+ * 🎯 FONCTION GLOBALE appelée par chessVoterApp.js après chaque coup
+ * C'est le pont entre le jeu d'échecs et le Phantom
+ */
 window.syncPhantomPosition = function() {
-    // Vérifications de sécurité
-    if (!window.phantomChessboard) return;
-    if (!window.phantomChessboard.isConnected) return;
-    if (!window.phantomChessboard.enabled) return;
-    if (typeof chess === 'undefined') return;
+    // Vérifier que tout est disponible
+    if (!window.phantomChessboard) {
+        console.log('⚠️ [syncPhantomPosition] phantomChessboard non disponible');
+        return;
+    }
     
-    // Récupérer le FEN et synchroniser
+    if (!window.phantomChessboard.isConnected) {
+        console.log('⚠️ [syncPhantomPosition] Phantom non connecté');
+        return;
+    }
+    
+    if (!window.phantomChessboard.enabled) {
+        console.log('⚠️ [syncPhantomPosition] Phantom désactivé');
+        return;
+    }
+    
+    // Vérifier que chess.js est disponible
+    if (typeof chess === 'undefined') {
+        console.log('⚠️ [syncPhantomPosition] chess.js non disponible');
+        return;
+    }
+    
+    // Récupérer le FEN actuel et synchroniser
     const currentFen = chess.fen();
     console.log('🔄 [syncPhantomPosition] Sync vers Phantom:', currentFen);
+    
+    // Appeler la méthode de synchronisation
     window.phantomChessboard.syncPosition(currentFen);
-};    
+};
 
-console.log('🎯 Phantom.js chargé - Le board gère automatiquement le cimetière !');
+console.log('🎯 Phantom.js chargé - syncPhantomPosition() disponible globalement');
