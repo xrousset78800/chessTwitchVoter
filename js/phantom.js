@@ -312,7 +312,7 @@ class PhantomChessboard {
         this.log(`♟️ Envoi mouvement: ${move}`, 'info');
         return await this.sendCommand(this.OP_CODES.MOVEMENT, move);
     }
-    
+
     /**
      * 🎯 MÉTHODE PRINCIPALE : Synchronise la position avec le Phantom
      * 
@@ -514,5 +514,18 @@ class PhantomChessboard {
 
 // Instance globale
 window.phantomChessboard = new PhantomChessboard();
+
+window.syncPhantomPosition = function() {
+    // Vérifications de sécurité
+    if (!window.phantomChessboard) return;
+    if (!window.phantomChessboard.isConnected) return;
+    if (!window.phantomChessboard.enabled) return;
+    if (typeof chess === 'undefined') return;
+    
+    // Récupérer le FEN et synchroniser
+    const currentFen = chess.fen();
+    console.log('🔄 [syncPhantomPosition] Sync vers Phantom:', currentFen);
+    window.phantomChessboard.syncPosition(currentFen);
+};    
 
 console.log('🎯 Phantom.js chargé - Le board gère automatiquement le cimetière !');
