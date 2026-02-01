@@ -4,7 +4,3 @@
 - npm install
 - http-server C:\path-to\chessTwitchVoter
 
-
-window.phantomChessboard.sendGameStart()
-window.phantomChessboard.sendCommand(10, "2")
-window.phantomChessboard.sendCommand(2, "M 1 e2-e4 E")

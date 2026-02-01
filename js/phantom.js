@@ -57,11 +57,8 @@ class PhantomChessboard {
     
     /**
      * Convertit un FEN en matrice 10x10 pour le Phantom
-     * Format simple : ligne par ligne, bordures vides pour le cimetière
-     * Le board gère AUTOMATIQUEMENT le placement des pièces capturées au cimetière
      * 
-     * IMPORTANT: Les lignes doivent être inversées (rang 8↔rang 1)
-     * car le Phantom lit la matrice du bas vers le haut
+     * Le Phantom lit la matrice du bas vers le haut, donc on inverse l'ordre des lignes.
      * 
      * @param {string} fen - Position FEN
      * @returns {string} Matrice 10x10 (100 caractères)
@@ -77,10 +74,8 @@ class PhantomChessboard {
             let boardRow = '';
             for (const char of row) {
                 if (/\d/.test(char)) {
-                    // Chiffre = cases vides
                     boardRow += '.'.repeat(parseInt(char));
                 } else {
-                    // Pièce
                     boardRow += char;
                 }
             }
@@ -92,20 +87,17 @@ class PhantomChessboard {
             board.push('........');
         }
         
-        // INVERSER l'ordre des lignes (rang 8 devient rang 1, etc.)
+        // Inverser l'ordre des lignes (rang 8 → rang 1)
         board.reverse();
         
         // Construire la matrice 10x10
-        // Ligne 0 : cimetière haut (vide)
-        // Lignes 1-8 : échiquier avec bordures vides
-        // Ligne 9 : cimetière bas (vide)
-        let matrix = '.'.repeat(10);  // Ligne 0
+        let matrix = '.'.repeat(10);  // Ligne 0 : cimetière haut
         
         for (const row of board) {
             matrix += '.' + row + '.';  // Lignes 1-8
         }
         
-        matrix += '.'.repeat(10);  // Ligne 9
+        matrix += '.'.repeat(10);  // Ligne 9 : cimetière bas
         
         return matrix;
     }
@@ -196,6 +188,9 @@ class PhantomChessboard {
             this.log(`✅ Connecté à ${this.device.name}`, 'success');
             this.updateUI(true);
             
+            // Lire les valeurs initiales des caractéristiques
+            await this.readInitialValues();
+            
             // Initialisation automatique avec position de départ
             await this.initializeGame();
             
@@ -231,6 +226,84 @@ class PhantomChessboard {
     }
     
     // ========== INITIALISATION ==========
+    
+    /**
+     * Lit les valeurs initiales des caractéristiques (vitesse, volume, batterie, état)
+     */
+    async readInitialValues() {
+        this.log('📖 Lecture des valeurs initiales...', 'info');
+        
+        // Lire la vitesse
+        if (this.characteristics.speed) {
+            try {
+                const value = await this.characteristics.speed.readValue();
+                const speed = new TextDecoder().decode(value);
+                this.log(`⚡ Vitesse actuelle: ${speed}%`, 'info');
+                
+                // Mettre à jour l'UI si présente
+                const speedSlider = document.getElementById('phantom-speed');
+                const speedValue = document.getElementById('phantom-speed-value');
+                if (speedSlider) speedSlider.value = parseInt(speed) || 50;
+                if (speedValue) speedValue.textContent = `${speed}%`;
+            } catch (e) {
+                this.log(`⚠️ Impossible de lire la vitesse: ${e.message}`, 'warn');
+            }
+        }
+        
+        // Lire le volume
+        if (this.characteristics.sound) {
+            try {
+                const value = await this.characteristics.sound.readValue();
+                const sound = new TextDecoder().decode(value);
+                const volume = sound.split(',')[0];
+                this.log(`🔊 Volume actuel: ${volume}%`, 'info');
+                
+                // Mettre à jour l'UI si présente
+                const volumeSlider = document.getElementById('phantom-volume');
+                const volumeValue = document.getElementById('phantom-volume-value');
+                if (volumeSlider) volumeSlider.value = parseInt(volume) || 50;
+                if (volumeValue) volumeValue.textContent = `${volume}%`;
+            } catch (e) {
+                this.log(`⚠️ Impossible de lire le volume: ${e.message}`, 'warn');
+            }
+        }
+        
+        // Lire la batterie
+        if (this.characteristics.battery) {
+            try {
+                const value = await this.characteristics.battery.readValue();
+                const batteryData = new TextDecoder().decode(value);
+                const [percentage] = batteryData.split(',');
+                this.log(`🔋 Batterie: ${percentage}%`, 'info');
+                
+                // Mettre à jour l'UI si présente
+                const batteryEl = document.getElementById('phantom-battery');
+                if (batteryEl) batteryEl.textContent = `🔋 ${percentage}%`;
+            } catch (e) {
+                this.log(`⚠️ Impossible de lire la batterie: ${e.message}`, 'warn');
+            }
+        }
+        
+        // Lire l'état du board
+        if (this.characteristics.state) {
+            try {
+                const value = await this.characteristics.state.readValue();
+                const state = new TextDecoder().decode(value);
+                this.log(`📊 État du board: ${state}`, 'info');
+                
+                // Mettre à jour l'UI si présente
+                const stateEl = document.getElementById('phantom-state-text');
+                if (stateEl) {
+                    stateEl.textContent = state;
+                    stateEl.style.color = '#0ff';
+                }
+            } catch (e) {
+                this.log(`⚠️ Impossible de lire l'état: ${e.message}`, 'warn');
+            }
+        }
+        
+        this.log('✅ Lecture des valeurs terminée', 'success');
+    }
     
     async initializeGame() {
         if (this.gameInitialized) {

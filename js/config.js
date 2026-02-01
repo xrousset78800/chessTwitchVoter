@@ -193,7 +193,9 @@ $(document).ready(function() {
             const speedSlider = $('#phantom-speed');
             const volumeSlider = $('#phantom-volume');
             const undoBtn = $('#phantom-undo');
-            
+            const gameEndBtn = $('#phantom-game-end');
+            const gameStartBtn = $('#phantom-game-start');
+
             if (statusEl.length) {
                 if (connected) {
                     statusEl.text(`✅ Connecté: ${this.device ? this.device.name : 'Phantom'}`);
@@ -211,6 +213,8 @@ $(document).ready(function() {
             undoBtn.prop('disabled', !connected);
             speedSlider.prop('disabled', !connected);
             volumeSlider.prop('disabled', !connected);
+            gameEndBtn.prop('disabled', !connected);
+            gameStartBtn.prop('disabled', !connected);            
         };
     }
     
@@ -373,7 +377,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+$('#phantom-game-end').on('click', async function(e) {
+    e.preventDefault();
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        await window.phantomChessboard.sendGameEnd();
+    }
+});
 
+// Game Start
+$('#phantom-game-start').on('click', async function(e) {
+    e.preventDefault();
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        const fen = (typeof chess !== 'undefined') ? chess.fen() : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+        await window.phantomChessboard.syncPosition(fen);
+    }
+});
 /*
 REFAIRE LA TODO
 */
@@ -383,15 +401,11 @@ REFAIRE LA TODO
 //- Rejouer le problème (stop restart auto)
 //- Css piece d'échec pour le coup (transition + blink)
 //- Jouer le problème en entier quand erreur ?
-//- vérifier échec et mat (mauvaise détection)
 //- bug sur le timer entre les problèmes
-//- Possibilité de créer des "teams" (1 ou 2 poll d'inscriptions ?)
 //- Améliorer le design un peu dégueu
-//- Réflexion sur la connexion (siteweb ? Extension ? Local pour le moment ? WIP)
 //- Vérifier certains bugs (notation complexe (Deux pièces concurrentes, sous promotion))
 //- Trouver le moyen de connecter 2 streameurs (Ou 2 chats de streameurs) ok ?
 //- Meilleurs gestion du temps (pause, affichage, transitions)
-//- OMG PHANTOMCHESS !!
 //- Faire un mode avec des coups spéciaux. (fou prend sa propre tour = dame)
 
 
