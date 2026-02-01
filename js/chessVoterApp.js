@@ -1311,12 +1311,13 @@ function moveAction(move, isFromNetwork = false) {
         
         // Mise à jour de l'historique - UNE SEULE FOIS
         if(chess.turn() == 'b') {
-            $(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+            var moveNum = Math.floor(chess.history().length / 2) + 1;
+            $(".poll ol").prepend("<li data-move-num='"+moveNum+"'><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
         } else {
             if($(".poll ol li").length == 0) {
-                $(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+                $(".poll ol").prepend("<li data-move-num='1'><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
             } else {
-                $(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
+                $(".poll ol li").first().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
             }
         }
         
@@ -1347,12 +1348,13 @@ function moveAction(move, isFromNetwork = false) {
     playSoundForMove(chess)
 
     if(chess.turn() == 'b') {
-        $(".poll ol").append("<li><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+        var moveNum = Math.floor(chess.history().length / 2) + 1;
+        $(".poll ol").prepend("<li data-move-num='"+moveNum+"'><span class='w' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
     } else {
         if($(".poll ol li").length == 0) {
-            $(".poll ol").append("<li><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
+            $(".poll ol").prepend("<li data-move-num='1'><span class='b' data-fen='"+chess.fen()+"'>"+move+"</span></li>");
         } else {
-            $(".poll ol li").last().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
+            $(".poll ol li").first().append("<span class='b' data-fen='"+chess.fen()+"'>"+move+"</span>");
         }
     }
     
