@@ -1,7 +1,10 @@
 /**
- * 🎯 PHANTOM CHESS - VERSION CORRIGÉE
- * Le board gère automatiquement le cimetière quand une pièce disparaît
- * On envoie simplement la matrice 10x10 via GAME_START
+ * 🎯 PHANTOM CHESS - VERSION AVEC FILE D'ATTENTE ET BLOCAGE UI
+ * 
+ * Nouvelles fonctionnalités :
+ * - File d'attente des coups (moveQueue)
+ * - Blocage de l'UI pendant l'exécution des mouvements
+ * - Écoute du BLE_MOVE_DONE pour synchroniser
  */
 
 class PhantomChessboard {
@@ -50,25 +53,273 @@ class PhantomChessboard {
         this.lastFenSent = null;
         this.gameInitialized = false;
         
-        console.log('🎯 PhantomChessboard initialisé');
+        // 🆕 File d'attente et état de mouvement
+        this.moveQueue = [];
+        this.isMoving = false;
+        this.moveDoneResolver = null;
+        this.moveTimeout = null;
+        this.MOVE_TIMEOUT_MS = 30000; // 30 secondes max par mouvement
+        this.savedTimerState = null; // Pour la pause du timer de vote
+        
+        console.log('🎯 PhantomChessboard initialisé (avec file d\'attente)');
+    }
+    
+    // ========== GESTION DE L'OVERLAY UI ==========
+    
+    /**
+     * Affiche l'overlay de blocage (petit, sur la zone de vote)
+     */
+    showBlockingOverlay(message = 'Déplacement en cours...', queueSize = 0) {
+        let overlay = document.getElementById('phantom-blocking-overlay');
+        
+        // 🆕 Mettre en pause le timer de vote
+        this.pauseVoteTimer();
+        
+        // Trouver la zone de vote pour positionner l'overlay
+        const voteZone = document.querySelector('.votes') || document.querySelector('.poll') || document.querySelector('#vote-container');
+        
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'phantom-blocking-overlay';
+            overlay.innerHTML = `
+                <div class="phantom-overlay-spinner"></div>
+                <div class="phantom-overlay-message"></div>
+                <div class="phantom-overlay-queue"></div>
+            `;
+            
+            // Insérer dans la zone de vote si trouvée, sinon dans le body
+            if (voteZone) {
+                voteZone.style.position = 'relative';
+                voteZone.appendChild(overlay);
+            } else {
+                document.body.appendChild(overlay);
+            }
+            
+            // Ajouter les styles si pas déjà présents
+            if (!document.getElementById('phantom-overlay-styles')) {
+                const style = document.createElement('style');
+                style.id = 'phantom-overlay-styles';
+                style.textContent = `
+                    #phantom-blocking-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(20, 20, 40, 0.85);
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 10px;
+                        z-index: 100;
+                    }
+                    .phantom-overlay-spinner {
+                        width: 30px;
+                        height: 30px;
+                        border: 3px solid rgba(102, 126, 234, 0.3);
+                        border-top-color: #667eea;
+                        border-radius: 50%;
+                        animation: phantom-spin 1s linear infinite;
+                        margin-bottom: 10px;
+                    }
+                    @keyframes phantom-spin {
+                        to { transform: rotate(360deg); }
+                    }
+                    .phantom-overlay-message {
+                        color: white;
+                        font-size: 0.95em;
+                        font-weight: 500;
+                        margin-bottom: 5px;
+                    }
+                    .phantom-overlay-queue {
+                        color: rgba(255, 255, 255, 0.7);
+                        font-size: 0.8em;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+        
+        overlay.querySelector('.phantom-overlay-message').textContent = message;
+        overlay.querySelector('.phantom-overlay-queue').textContent = 
+            queueSize > 1 ? `${queueSize} coups en attente...` : '';
+        overlay.style.display = 'flex';
+    }
+    
+    /**
+     * Cache l'overlay de blocage
+     */
+    hideBlockingOverlay() {
+        const overlay = document.getElementById('phantom-blocking-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+        
+        // 🆕 Reprendre le timer de vote
+        this.resumeVoteTimer();
+    }
+    
+    /**
+     * 🆕 Met en pause le timer de vote (compatible avec chessVoterApp.js)
+     */
+    pauseVoteTimer() {
+        // Vérifier si intervalId existe (variable globale de chessVoterApp.js)
+        if (typeof intervalId !== 'undefined' && intervalId !== null) {
+            this.savedTimerState = {
+                intervalId: intervalId,
+                voterTimer: typeof voterTimer !== 'undefined' ? voterTimer : 0
+            };
+            clearInterval(intervalId);
+            intervalId = null;
+            this.log(`⏸️ Timer en pause (${this.savedTimerState.voterTimer}s restantes)`, 'info');
+        } else {
+            this.log('⏸️ Pas de timer actif à mettre en pause', 'info');
+        }
+    }
+    
+    /**
+     * 🆕 Reprend le timer de vote
+     */
+    resumeVoteTimer() {
+        if (this.savedTimerState && this.savedTimerState.voterTimer > 0) {
+            // Restaurer voterTimer
+            if (typeof voterTimer !== 'undefined') {
+                voterTimer = this.savedTimerState.voterTimer;
+            }
+            
+            // Relancer l'interval
+            if (typeof bip === 'function') {
+                intervalId = setInterval(function() {
+                    bip(true);
+                }, 1000);
+                this.log(`▶️ Timer repris: ${this.savedTimerState.voterTimer}s restantes`, 'info');
+            }
+            
+            this.savedTimerState = null;
+        }
+    }
+    
+    // ========== GESTION DE LA FILE D'ATTENTE ==========
+    
+    /**
+     * Ajoute un FEN à la file d'attente et lance le traitement
+     */
+    queuePosition(fen) {
+        // 🆕 Détecter si c'est un reset vers la position initiale
+        const initialFenStart = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+        const fenPosition = fen.split(' ')[0];
+        
+        if (fenPosition === initialFenStart && this.lastFenSent !== null) {
+            this.log('🔄 Détection reset partie - réinitialisation', 'info');
+            this.lastFenSent = null; // Permettre le nouveau GAME_START
+            this.moveQueue = []; // Vider la file en cours
+        }
+        
+        // Éviter les doublons consécutifs
+        const lastInQueue = this.moveQueue[this.moveQueue.length - 1];
+        if (lastInQueue === fen || (this.moveQueue.length === 0 && this.lastFenSent === fen)) {
+            console.log('⏭️ FEN identique, ignoré');
+            return;
+        }
+        
+        this.moveQueue.push(fen);
+        this.log(`📥 FEN ajouté à la file (${this.moveQueue.length} en attente)`, 'info');
+        
+        // Lancer le traitement si pas déjà en cours
+        if (!this.isMoving) {
+            this.processQueue();
+        } else {
+            // Mettre à jour l'overlay avec le nombre en attente
+            this.showBlockingOverlay('Déplacement en cours...', this.moveQueue.length);
+        }
+    }
+    
+    /**
+     * Traite la file d'attente coup par coup
+     */
+    async processQueue() {
+        if (this.moveQueue.length === 0) {
+            this.isMoving = false;
+            this.hideBlockingOverlay();
+            this.log('✅ File d\'attente vide', 'success');
+            return;
+        }
+        
+        this.isMoving = true;
+        const fen = this.moveQueue.shift();
+        const remaining = this.moveQueue.length;
+        
+        this.showBlockingOverlay('Déplacement en cours...', remaining + 1);
+        this.log(`🎯 Traitement du coup (${remaining} restants)`, 'info');
+        
+        try {
+            // Exécuter le mouvement et attendre BLE_MOVE_DONE
+            await this.syncPositionAndWait(fen);
+            this.log('✅ Mouvement terminé', 'success');
+        } catch (error) {
+            this.log(`❌ Erreur mouvement: ${error.message}`, 'error');
+        }
+        
+        // Petit délai entre les mouvements pour laisser le board se stabiliser
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Traiter le prochain coup
+        this.processQueue();
+    }
+    
+    /**
+     * Synchronise la position ET attend le BLE_MOVE_DONE
+     */
+    async syncPositionAndWait(fen) {
+        return new Promise(async (resolve, reject) => {
+            // Créer une promesse qui sera résolue par handleGameNotification
+            this.moveDoneResolver = resolve;
+            
+            // Timeout de sécurité
+            this.moveTimeout = setTimeout(() => {
+                this.log('⚠️ Timeout mouvement (30s)', 'warn');
+                this.moveDoneResolver = null;
+                resolve(); // On continue quand même
+            }, this.MOVE_TIMEOUT_MS);
+            
+            try {
+                // Convertir FEN en matrice 10x10
+                const matrix = this.fenToMatrix(fen);
+                
+                // Debug: afficher la matrice
+                console.log('📋 Matrice générée:\n' + this.formatMatrix(matrix));
+                
+                // Déterminer la couleur qui joue (inversée pour le Phantom)
+                const fenParts = fen.split(' ');
+                const colorToPlay = (fenParts[1] === 'b') ? 'B' : 'W';
+                
+                // Envoyer via GAME_START avec la matrice
+                await this.sendCommand(this.OP_CODES.GAME_START, matrix + ',' + colorToPlay);
+                
+                // Attendre un peu puis envoyer SIDE
+                await new Promise(r => setTimeout(r, 300));
+                await this.sendCommand(this.OP_CODES.SIDE, '2');
+                
+                this.lastFenSent = fen;
+                
+                // Note: La promesse sera résolue par handleGameNotification quand BLE_MOVE_DONE arrive
+                // ou par le timeout si ça prend trop longtemps
+                
+            } catch (error) {
+                clearTimeout(this.moveTimeout);
+                this.moveDoneResolver = null;
+                reject(error);
+            }
+        });
     }
     
     // ========== CONVERSION FEN → MATRICE 10x10 ==========
     
-    /**
-     * Convertit un FEN en matrice 10x10 pour le Phantom
-     * 
-     * Le Phantom lit la matrice du bas vers le haut, donc on inverse l'ordre des lignes.
-     * 
-     * @param {string} fen - Position FEN
-     * @returns {string} Matrice 10x10 (100 caractères)
-     */
     fenToMatrix(fen) {
-        // Extraire juste la position (première partie du FEN)
         const position = fen.split(' ')[0];
         const rows = position.split('/');
         
-        // Convertir chaque rangée FEN en string de 8 caractères
         const board = [];
         for (const row of rows) {
             let boardRow = '';
@@ -79,132 +330,92 @@ class PhantomChessboard {
                     boardRow += char;
                 }
             }
-            board.push(boardRow.padEnd(8, '.').slice(0, 8));
+            board.push(boardRow.padEnd(8, '.'));
         }
         
-        // S'assurer qu'on a 8 lignes
-        while (board.length < 8) {
-            board.push('........');
+        // Rotation 90° horaire pour le Phantom
+        // Chaque colonne du FEN devient une ligne de la matrice
+        // L'ordre dans chaque ligne va du rang 8 au rang 1
+        const rotated = [];
+        for (let col = 0; col < 8; col++) {
+            let newRow = '';
+            for (let row = 0; row < 8; row++) {  // De 0 à 7 (rang 8 à rang 1)
+                newRow += board[row][col];
+            }
+            rotated.push(newRow);
         }
-        
-        // Inverser l'ordre des lignes (rang 8 → rang 1)
-        board.reverse();
         
         // Construire la matrice 10x10
-        let matrix = '.'.repeat(10);  // Ligne 0 : cimetière haut
-        
-        for (const row of board) {
-            matrix += '.' + row + '.';  // Lignes 1-8
+        let matrix = '..........'; // Première ligne (cimetière)
+        for (const row of rotated) {
+            matrix += '.' + row + '.';
         }
-        
-        matrix += '.'.repeat(10);  // Ligne 9 : cimetière bas
+        matrix += '..........'; // Dernière ligne (cimetière)
         
         return matrix;
     }
     
-    /**
-     * Affiche une matrice de façon lisible (pour debug)
-     */
     formatMatrix(matrix) {
-        if (!matrix || matrix.length < 100) return 'Matrice invalide';
-        
-        let display = '   a b c d e f g h\n';
-        display += '   0 1 2 3 4 5 6 7 8 9\n';
-        
-        for (let row = 0; row < 10; row++) {
-            const rank = row === 0 ? ' ' : (row === 9 ? ' ' : (9 - row).toString());
-            display += `${row} ${rank} `;
-            for (let col = 0; col < 10; col++) {
-                display += matrix[row * 10 + col] + ' ';
-            }
-            display += '\n';
+        let result = '  0 1 2 3 4 5 6 7 8 9\n';
+        for (let i = 0; i < 10; i++) {
+            result += `${i} ${matrix.slice(i * 10, (i + 1) * 10).split('').join(' ')}\n`;
         }
-        
-        return display;
+        return result;
     }
     
-    // ========== CONNEXION ==========
+    // ========== CONNEXION BLUETOOTH ==========
     
     async connect() {
-        if (!navigator.bluetooth) {
-            this.log('❌ Web Bluetooth non supporté', 'error');
-            alert('Web Bluetooth non supporté. Utilisez Chrome ou Edge.');
-            return false;
-        }
-        
         try {
-            this.log('🔍 Recherche du Phantom...', 'info');
+            this.log('🔍 Recherche Phantom...', 'info');
             
             this.device = await navigator.bluetooth.requestDevice({
                 filters: [{ namePrefix: 'Phantom' }],
                 optionalServices: [this.SERVICE_UUID]
             });
             
-            this.log(`📱 Appareil trouvé: ${this.device.name}`, 'info');
+            this.log(`📱 Appareil: ${this.device.name}`, 'info');
+            
+            this.device.addEventListener('gattserverdisconnected', () => {
+                this.log('🔌 Déconnecté', 'warn');
+                this.isConnected = false;
+                this.hideBlockingOverlay();
+                this.moveQueue = [];
+                this.isMoving = false;
+                this.updateUI(false);
+            });
             
             this.server = await this.device.gatt.connect();
             this.service = await this.server.getPrimaryService(this.SERVICE_UUID);
             
-            // Récupérer les caractéristiques
+            // Caractéristique de jeu
             this.characteristics.game = await this.service.getCharacteristic(this.UUID_GAME);
+            await this.characteristics.game.startNotifications();
+            this.characteristics.game.addEventListener('characteristicvaluechanged', 
+                (e) => this.handleGameNotification(e));
             
+            // Caractéristiques optionnelles
             try {
                 this.characteristics.speed = await this.service.getCharacteristic(this.UUID_MECHANISM_SPEED);
-            } catch (e) { /* Optionnel */ }
+            } catch (e) { }
             
             try {
                 this.characteristics.sound = await this.service.getCharacteristic(this.UUID_SOUND_SETTINGS);
-            } catch (e) { /* Optionnel */ }
-            
-            try {
-                this.characteristics.state = await this.service.getCharacteristic(this.UUID_SETSTATE);
-            } catch (e) { /* Optionnel */ }
+            } catch (e) { }
             
             try {
                 this.characteristics.battery = await this.service.getCharacteristic(this.UUID_BATTERY);
-            } catch (e) { /* Optionnel */ }
-            
-            // Activer les notifications
-            if (this.characteristics.game) {
-                await this.characteristics.game.startNotifications();
-                this.characteristics.game.addEventListener('characteristicvaluechanged',
-                    this.handleGameNotification.bind(this));
-            }
-            
-            if (this.characteristics.state) {
-                await this.characteristics.state.startNotifications();
-                this.characteristics.state.addEventListener('characteristicvaluechanged',
-                    this.handleStateNotification.bind(this));
-            }
-            
-            if (this.characteristics.battery) {
-                await this.characteristics.battery.startNotifications();
-                this.characteristics.battery.addEventListener('characteristicvaluechanged',
-                    this.handleBatteryNotification.bind(this));
-            }
+                const batteryValue = await this.characteristics.battery.readValue();
+                const batteryStr = new TextDecoder().decode(batteryValue);
+                this.log(`🔋 Batterie: ${batteryStr}%`, 'info');
+            } catch (e) { }
             
             this.isConnected = true;
             this.enabled = true;
-            this.log(`✅ Connecté à ${this.device.name}`, 'success');
+            this.log('✅ Connecté!', 'success');
             this.updateUI(true);
             
-            // Lire les valeurs initiales des caractéristiques
-            await this.readInitialValues();
-            
-            // Initialisation automatique avec position de départ
-            await this.initializeGame();
-            
-            // Gestion déconnexion
-            this.device.addEventListener('gattserverdisconnected', () => {
-                this.log('⚠️ Déconnecté', 'warn');
-                this.isConnected = false;
-                this.enabled = false;
-                this.gameInitialized = false;
-                this.updateUI(false);
-            });
-            
             return true;
-            
         } catch (error) {
             this.log(`❌ Erreur: ${error.message}`, 'error');
             return false;
@@ -213,121 +424,69 @@ class PhantomChessboard {
     
     async disconnect() {
         if (this.device && this.device.gatt.connected) {
-            if (this.gameInitialized) {
-                await this.sendGameEnd();
-            }
             this.device.gatt.disconnect();
-            this.isConnected = false;
-            this.enabled = false;
-            this.gameInitialized = false;
-            this.log('🔌 Déconnecté', 'info');
-            this.updateUI(false);
         }
+        this.isConnected = false;
+        this.hideBlockingOverlay();
+        this.moveQueue = [];
+        this.isMoving = false;
+        this.updateUI(false);
     }
     
-    // ========== INITIALISATION ==========
+    // ========== NOTIFICATIONS ==========
     
-    /**
-     * Lit les valeurs initiales des caractéristiques (vitesse, volume, batterie, état)
-     */
-    async readInitialValues() {
-        this.log('📖 Lecture des valeurs initiales...', 'info');
+    handleGameNotification(event) {
+        const value = event.target.value;
+        const decoder = new TextDecoder('utf-8');
+        const bytes = new Uint8Array(value.buffer);
         
-        // Lire la vitesse
-        if (this.characteristics.speed) {
-            try {
-                const value = await this.characteristics.speed.readValue();
-                const speed = new TextDecoder().decode(value);
-                this.log(`⚡ Vitesse actuelle: ${speed}%`, 'info');
-                
-                // Mettre à jour l'UI si présente
-                const speedSlider = document.getElementById('phantom-speed');
-                const speedValue = document.getElementById('phantom-speed-value');
-                if (speedSlider) speedSlider.value = parseInt(speed) || 50;
-                if (speedValue) speedValue.textContent = `${speed}%`;
-            } catch (e) {
-                this.log(`⚠️ Impossible de lire la vitesse: ${e.message}`, 'warn');
+        try {
+            const strValue = decoder.decode(value);
+            const opCode = bytes[0];
+            const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
+            const dataStr = strValue.substring(1);
+            
+            // Log
+            if (dataStr.trim() && dataStr.length < 100) {
+                this.log(`📥 [${opName}] "${dataStr}"`, 'received');
+            } else if (dataStr.trim()) {
+                this.log(`📥 [${opName}] (${dataStr.length} chars)`, 'received');
+            } else {
+                this.log(`📥 [${opName}]`, 'received');
             }
-        }
-        
-        // Lire le volume
-        if (this.characteristics.sound) {
-            try {
-                const value = await this.characteristics.sound.readValue();
-                const sound = new TextDecoder().decode(value);
-                const volume = sound.split(',')[0];
-                this.log(`🔊 Volume actuel: ${volume}%`, 'info');
+            
+            // 🆕 BLE_MOVE_DONE - Résoudre la promesse en attente
+            if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
+                this.log(`🎯 MOVE_DONE reçu!`, 'success');
                 
-                // Mettre à jour l'UI si présente
-                const volumeSlider = document.getElementById('phantom-volume');
-                const volumeValue = document.getElementById('phantom-volume-value');
-                if (volumeSlider) volumeSlider.value = parseInt(volume) || 50;
-                if (volumeValue) volumeValue.textContent = `${volume}%`;
-            } catch (e) {
-                this.log(`⚠️ Impossible de lire le volume: ${e.message}`, 'warn');
-            }
-        }
-        
-        // Lire la batterie
-        if (this.characteristics.battery) {
-            try {
-                const value = await this.characteristics.battery.readValue();
-                const batteryData = new TextDecoder().decode(value);
-                const [percentage] = batteryData.split(',');
-                this.log(`🔋 Batterie: ${percentage}%`, 'info');
-                
-                // Mettre à jour l'UI si présente
-                const batteryEl = document.getElementById('phantom-battery');
-                if (batteryEl) batteryEl.textContent = `🔋 ${percentage}%`;
-            } catch (e) {
-                this.log(`⚠️ Impossible de lire la batterie: ${e.message}`, 'warn');
-            }
-        }
-        
-        // Lire l'état du board
-        if (this.characteristics.state) {
-            try {
-                const value = await this.characteristics.state.readValue();
-                const state = new TextDecoder().decode(value);
-                this.log(`📊 État du board: ${state}`, 'info');
-                
-                // Mettre à jour l'UI si présente
-                const stateEl = document.getElementById('phantom-state-text');
-                if (stateEl) {
-                    stateEl.textContent = state;
-                    stateEl.style.color = '#0ff';
+                if (this.moveTimeout) {
+                    clearTimeout(this.moveTimeout);
+                    this.moveTimeout = null;
                 }
-            } catch (e) {
-                this.log(`⚠️ Impossible de lire l'état: ${e.message}`, 'warn');
+                
+                if (this.moveDoneResolver) {
+                    const resolver = this.moveDoneResolver;
+                    this.moveDoneResolver = null;
+                    resolver();
+                }
             }
+            
+            // MOVEMENT_VERIFY - répondre automatiquement
+            if (opCode === this.OP_CODES.MOVEMENT_VERIFY) {
+                this.log(`✅ Auto-validation du mouvement`, 'info');
+                this.sendCommand(this.OP_CODES.MOVEMENT_VERIFY, '1');
+            }
+            
+        } catch (error) {
+            console.error('Erreur notification:', error);
         }
-        
-        this.log('✅ Lecture des valeurs terminée', 'success');
     }
     
-    async initializeGame() {
-        if (this.gameInitialized) {
-            this.log('ℹ️ Partie déjà initialisée', 'info');
-            return true;
-        }
-        
-        this.log('🎮 Initialisation partie...', 'info');
-        
-        // Envoyer la position initiale
-        const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-        await this.syncPosition(initialFen);
-        
-        this.gameInitialized = true;
-        this.log('✅ Partie initialisée', 'success');
-        
-        return true;
-    }
-    
-    // ========== COMMANDES BLE ==========
+    // ========== ENVOI DE COMMANDES ==========
     
     async sendCommand(opCode, data = '') {
-        if (!this.isConnected || !this.characteristics.game) {
-            this.log('❌ Non connecté', 'error');
+        if (!this.characteristics.game) {
+            this.log('⚠️ Non connecté', 'warn');
             return false;
         }
         
@@ -359,96 +518,31 @@ class PhantomChessboard {
     
     async sendGameEnd() {
         this.gameInitialized = false;
+        this.moveQueue = [];
+        this.isMoving = false;
+        this.lastFenSent = null; // 🆕 Réinitialiser pour permettre un nouveau GAME_START propre
+        this.hideBlockingOverlay();
         return await this.sendCommand(this.OP_CODES.GAME_END);
-    }
-    
-    async sendResetDetection(fen = '') {
-        return await this.sendCommand(this.OP_CODES.RESET_DETECTION, fen);
     }
     
     async calibrate() {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
     }
     
-    async sendTakeBack(count, fen, side = '1') {
-        const data = `${count},${fen},${side}`;
-        this.log(`↩️ TAKE_BACK: ${count} coups, side=${side}`, 'info');
-        return await this.sendCommand(this.OP_CODES.TAKE_BACK, data);
-    }
-    
-    // ========== MOUVEMENTS ==========
+    // ========== MÉTHODE PRINCIPALE DE SYNC ==========
     
     /**
-     * Envoie un mouvement via MOVEMENT (OpCode 2)
-     * Note: Pour les captures, utiliser syncPosition() qui est plus fiable
+     * 🎯 Méthode appelée par l'extérieur pour synchroniser une position
+     * Ajoute à la file d'attente au lieu d'exécuter directement
      */
-    async sendMove(move) {
-        if (!this.gameInitialized) {
-            this.log('⚠️ Partie non initialisée', 'warn');
-            await this.initializeGame();
-        }
-        
-        this.log(`♟️ Envoi mouvement: ${move}`, 'info');
-        return await this.sendCommand(this.OP_CODES.MOVEMENT, move);
-    }
-    
-    /**
-     * 🎯 MÉTHODE PRINCIPALE : Synchronise la position avec le Phantom
-     * 
-     * Utilise GAME_START avec la matrice 10x10 générée depuis le FEN.
-     * Le board Phantom gère AUTOMATIQUEMENT :
-     * - Le déplacement des pièces vers leurs nouvelles positions
-     * - L'envoi des pièces capturées (disparues) au cimetière
-     * 
-     * @param {string} fen - Position FEN à synchroniser
-     * @param {object} moveInfo - Info sur le coup (optionnel, non utilisé actuellement)
-     */
-    async syncPosition(fen, moveInfo = null) {
+    async syncPosition(fen) {
         if (!this.enabled || !this.isConnected) {
             console.log('⚠️ Phantom non actif');
             return false;
         }
         
-        // Éviter les envois dupliqués
-        if (fen === this.lastFenSent) {
-            console.log('⏭️ FEN identique, ignoré');
-            return true;
-        }
-        
-        this.log(`🔄 Sync position...`, 'info');
-        
-        try {
-            // Convertir FEN en matrice 10x10
-            const matrix = this.fenToMatrix(fen);
-            
-            // Debug: afficher la matrice
-            console.log('📋 Matrice générée:\n' + this.formatMatrix(matrix));
-            
-            // Déterminer la couleur qui joue
-            const fenParts = fen.split(' ');
-            const colorToPlay = (fenParts.length > 1 && fenParts[1] === 'b') ? 'B' : 'W';
-            
-            // Envoyer via GAME_START avec la matrice
-            // Le board va automatiquement:
-            // 1. Comparer avec la position actuelle
-            // 2. Déplacer les pièces nécessaires
-            // 3. Envoyer les pièces "disparues" au cimetière
-            await this.sendCommand(this.OP_CODES.GAME_START, matrix + ',' + colorToPlay);
-            
-            // Attendre que le board se stabilise
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Sélectionner le mode BLE
-            await this.sendCommand(this.OP_CODES.SIDE, '2');
-            
-            this.lastFenSent = fen;
-            this.log('✅ Position synchronisée', 'success');
-            
-            return true;
-        } catch (error) {
-            this.log(`❌ Erreur sync: ${error.message}`, 'error');
-            return false;
-        }
+        this.queuePosition(fen);
+        return true;
     }
     
     // ========== PARAMÈTRES ==========
@@ -490,104 +584,97 @@ class PhantomChessboard {
         }
     }
     
-    async setGameAssistance(settings = '1,1,1,1,0,0') {
-        return await this.sendCommand(this.OP_CODES.GAME_ASSISTANCE, settings);
-    }
-    
-    // ========== COMMANDES BRUTES ==========
-    
-    async sendRawCommand(opCode, data = '') {
-        this.log(`🔧 Commande brute: 0x${opCode.toString(16)} "${data}"`, 'info');
-        return await this.sendCommand(opCode, data);
-    }
-    
-    // ========== NOTIFICATIONS ==========
-    
-    handleGameNotification(event) {
-        const value = event.target.value;
-        const decoder = new TextDecoder('utf-8');
-        const bytes = new Uint8Array(value.buffer);
-        
-        try {
-            const strValue = decoder.decode(value);
-            const opCode = bytes[0];
-            const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
-            const dataStr = strValue.substring(1);
-            
-            // Log
-            if (dataStr.trim() && dataStr.length < 100) {
-                this.log(`📥 [${opName}] "${dataStr}"`, 'received');
-            } else if (dataStr.trim()) {
-                this.log(`📥 [${opName}] (${dataStr.length} chars)`, 'received');
-            } else {
-                this.log(`📥 [${opName}]`, 'received');
-            }
-            
-            // BLE_MOVE_DONE
-            if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
-                this.log(`🎯 MOVE_DONE`, 'success');
-            }
-            
-            // MOVEMENT_VERIFY - répondre automatiquement
-            if (opCode === this.OP_CODES.MOVEMENT_VERIFY) {
-                this.log(`🔍 MOVEMENT_VERIFY: "${dataStr}" → Confirmation...`, 'warning');
-                
-                setTimeout(() => {
-                    this.sendCommand(this.OP_CODES.MOVEMENT_VERIFY, "1")
-                        .then(() => this.log(`✅ MOVEMENT_VERIFY confirmé`, 'success'))
-                        .catch(err => this.log(`❌ Erreur confirmation: ${err.message}`, 'error'));
-                }, 100);
-            }
-            
-        } catch (e) {
-            this.log(`📥 Notification binaire (${bytes.length} bytes)`, 'received');
-        }
-    }
-    
-    handleStateNotification(event) {
-        const state = new TextDecoder('utf-8').decode(event.target.value);
-        this.log(`📊 ÉTAT: ${state}`, 'info');
-        
-        const stateEl = document.getElementById('phantom-state-text');
-        if (stateEl) {
-            stateEl.textContent = state;
-            stateEl.style.color = '#0ff';
-        }
-    }
-    
-    handleBatteryNotification(event) {
-        const batteryData = new TextDecoder('utf-8').decode(event.target.value);
-        const [percentage] = batteryData.split(',');
-        this.log(`🔋 Batterie: ${percentage}%`, 'info');
-        
-        const batteryEl = document.getElementById('phantom-battery');
-        if (batteryEl) {
-            batteryEl.textContent = `🔋 ${percentage}%`;
-        }
-    }
-    
     // ========== UTILITAIRES ==========
     
     log(message, type = 'info') {
-        const prefix = {
-            'info': 'ℹ️', 'success': '✅', 'error': '❌',
-            'warn': '⚠️', 'sent': '📤', 'received': '📥'
-        }[type] || 'ℹ️';
+        const prefix = '🎯 [Phantom]';
+        const fullMessage = `${prefix} ${message}`;
         
-        console.log(`${prefix} [Phantom] ${message}`);
+        switch (type) {
+            case 'error':
+                console.error(fullMessage);
+                break;
+            case 'warn':
+                console.warn(fullMessage);
+                break;
+            case 'success':
+                console.log(`%c${fullMessage}`, 'color: #4CAF50');
+                break;
+            case 'sent':
+                console.log(`%c${fullMessage}`, 'color: #2196F3');
+                break;
+            case 'received':
+                console.log(`%c${fullMessage}`, 'color: #FF9800');
+                break;
+            default:
+                console.log(fullMessage);
+        }
+        
+        // Mettre à jour le log UI si présent
+        const logElement = document.getElementById('phantom-log');
+        if (logElement) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
     }
     
     updateUI(connected) {
-        console.log(`UI: ${connected ? 'Connecté' : 'Déconnecté'}`);
+        // Utiliser le paramètre ou l'état interne
+        const isConn = (connected !== undefined) ? connected : this.isConnected;
+        
+        const statusEl = document.getElementById('phantom-status');
+        if (statusEl) {
+            if (isConn) {
+                statusEl.textContent = `✅ Connecté: ${this.device ? this.device.name : 'Phantom'}`;
+                statusEl.style.background = 'rgba(72, 187, 120, 0.3)';
+            } else {
+                statusEl.textContent = '❌ Déconnecté';
+                statusEl.style.background = 'rgba(244, 67, 54, 0.3)';
+            }
+        }
+        
+        // Activer/désactiver les boutons (compatible jQuery et vanilla)
+        const buttonIds = [
+            'phantom-connect', 'phantom-disconnect', 'phantom-calibrate', 
+            'phantom-test', 'phantom-speed', 'phantom-volume', 'phantom-undo',
+            'phantom-game-start', 'phantom-game-end'
+        ];
+        
+        buttonIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (id === 'phantom-connect') {
+                    el.disabled = isConn;
+                } else {
+                    el.disabled = !isConn;
+                }
+            }
+        });
     }
     
     setEnabled(enabled) {
         this.enabled = enabled;
         this.log(enabled ? '🟢 Activé' : '🔴 Désactivé', 'info');
+        
+        if (!enabled) {
+            this.hideBlockingOverlay();
+            this.moveQueue = [];
+            this.isMoving = false;
+        }
     }
     
     isEnabled() {
         return this.enabled && this.isConnected;
+    }
+    
+    /**
+     * 🆕 Retourne si un mouvement est en cours (pour bloquer l'UI externe)
+     */
+    isBusy() {
+        return this.isMoving || this.moveQueue.length > 0;
     }
 }
 
@@ -596,10 +683,8 @@ window.phantomChessboard = new PhantomChessboard();
 
 /**
  * 🎯 FONCTION GLOBALE appelée par chessVoterApp.js après chaque coup
- * C'est le pont entre le jeu d'échecs et le Phantom
  */
 window.syncPhantomPosition = function() {
-    // Vérifier que tout est disponible
     if (!window.phantomChessboard) {
         console.log('⚠️ [syncPhantomPosition] phantomChessboard non disponible');
         return;
@@ -615,18 +700,25 @@ window.syncPhantomPosition = function() {
         return;
     }
     
-    // Vérifier que chess.js est disponible
     if (typeof chess === 'undefined') {
         console.log('⚠️ [syncPhantomPosition] chess.js non disponible');
         return;
     }
     
-    // Récupérer le FEN actuel et synchroniser
     const currentFen = chess.fen();
     console.log('🔄 [syncPhantomPosition] Sync vers Phantom:', currentFen);
     
-    // Appeler la méthode de synchronisation
     window.phantomChessboard.syncPosition(currentFen);
 };
 
-console.log('🎯 Phantom.js chargé - syncPhantomPosition() disponible globalement');
+/**
+ * 🆕 Fonction pour vérifier si le Phantom est occupé (pour bloquer les votes etc.)
+ */
+window.isPhantomBusy = function() {
+    return window.phantomChessboard && 
+           window.phantomChessboard.isConnected && 
+           window.phantomChessboard.enabled && 
+           window.phantomChessboard.isBusy();
+};
+
+console.log('🎯 Phantom.js chargé - Version avec file d\'attente et blocage UI');
