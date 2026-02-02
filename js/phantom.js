@@ -419,6 +419,9 @@ class PhantomChessboard {
             this.log('✅ Connecté!', 'success');
             this.updateUI(true);
             
+            // 🆕 Sauvegarder l'état en localStorage
+            this.saveState();
+            
             // 🆕 Lancer la webcam
             this.startWebcam();
             
@@ -437,6 +440,9 @@ class PhantomChessboard {
         this.hideBlockingOverlay();
         this.moveQueue = [];
         this.isMoving = false;
+        
+        // 🆕 Effacer l'état sauvegardé
+        this.clearState();
         
         // 🆕 Arrêter la webcam
         this.stopWebcam();
@@ -632,6 +638,170 @@ class PhantomChessboard {
         }
     }
     
+    // ========== PERSISTANCE ==========
+    
+    /**
+     * 🆕 Sauvegarde l'état en localStorage
+     */
+    saveState() {
+        try {
+            const state = {
+                wasConnected: true,
+                deviceName: this.device?.name || 'Phantom',
+                timestamp: Date.now()
+            };
+            localStorage.setItem('phantomState', JSON.stringify(state));
+            this.log('💾 État sauvegardé', 'info');
+        } catch (e) {
+            console.warn('Impossible de sauvegarder l\'état Phantom:', e);
+        }
+    }
+    
+    /**
+     * 🆕 Efface l'état sauvegardé
+     */
+    clearState() {
+        try {
+            localStorage.removeItem('phantomState');
+            this.log('🗑️ État effacé', 'info');
+        } catch (e) {
+            console.warn('Impossible d\'effacer l\'état Phantom:', e);
+        }
+    }
+    
+    /**
+     * 🆕 Vérifie si une reconnexion est suggérée
+     */
+    checkPreviousConnection() {
+        try {
+            const stateStr = localStorage.getItem('phantomState');
+            if (!stateStr) return null;
+            
+            const state = JSON.parse(stateStr);
+            
+            // Vérifier que l'état n'est pas trop vieux (24h max)
+            const maxAge = 24 * 60 * 60 * 1000;
+            if (Date.now() - state.timestamp > maxAge) {
+                this.clearState();
+                return null;
+            }
+            
+            return state;
+        } catch (e) {
+            return null;
+        }
+    }
+    
+    /**
+     * 🆕 Affiche le prompt de reconnexion si nécessaire
+     */
+    showReconnectPrompt() {
+        const previousState = this.checkPreviousConnection();
+        if (!previousState) return;
+        
+        // Vérifier si le prompt existe déjà
+        if (document.getElementById('phantom-reconnect-prompt')) return;
+        
+        const prompt = document.createElement('div');
+        prompt.id = 'phantom-reconnect-prompt';
+        prompt.innerHTML = `
+            <div class="phantom-reconnect-content">
+                <span>🎯 Reconnecter "${previousState.deviceName}" ?</span>
+                <button id="phantom-reconnect-yes">Connecter</button>
+                <button id="phantom-reconnect-no">✕</button>
+            </div>
+        `;
+        document.body.appendChild(prompt);
+        
+        // Styles
+        if (!document.getElementById('phantom-reconnect-styles')) {
+            const style = document.createElement('style');
+            style.id = 'phantom-reconnect-styles';
+            style.textContent = `
+                #phantom-reconnect-prompt {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease;
+                }
+                
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                
+                .phantom-reconnect-content {
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                    padding: 15px 20px;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+                    border: 1px solid rgba(102, 126, 234, 0.3);
+                    color: white;
+                    font-size: 14px;
+                }
+                
+                .phantom-reconnect-content button {
+                    padding: 8px 16px;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                }
+                
+                #phantom-reconnect-yes {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }
+                
+                #phantom-reconnect-yes:hover {
+                    transform: scale(1.05);
+                }
+                
+                #phantom-reconnect-no {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                }
+                
+                #phantom-reconnect-no:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Event listeners
+        document.getElementById('phantom-reconnect-yes')?.addEventListener('click', async () => {
+            prompt.remove();
+            
+            // 🆕 Cocher la checkbox Phantom
+            const phantomCheckbox = document.getElementById('phantomChess');
+            if (phantomCheckbox && !phantomCheckbox.checked) {
+                phantomCheckbox.checked = true;
+                // Déclencher le change pour afficher le panneau
+                $(phantomCheckbox).trigger('change');
+            }
+            
+            await this.connect();
+        });
+        
+        document.getElementById('phantom-reconnect-no')?.addEventListener('click', () => {
+            prompt.remove();
+            this.clearState();
+        });
+        
+        // Auto-dismiss après 10 secondes
+        setTimeout(() => {
+            if (document.getElementById('phantom-reconnect-prompt')) {
+                prompt.remove();
+            }
+        }, 10000);
+    }
+    
     // ========== WEBCAM ==========
     
     /**
@@ -803,22 +973,28 @@ class PhantomChessboard {
         
         // Opacité initiale
         this.webcamOpacity = 0.5;
+        this.webcamVisible = true;
         
         // Toggle visibilité
         document.getElementById('phantom-webcam-toggle')?.addEventListener('click', () => {
-            overlay.classList.toggle('hidden');
+            this.webcamVisible = !this.webcamVisible;
+            video.style.opacity = this.webcamVisible ? this.webcamOpacity : 0;
         });
         
         // Diminuer opacité
         document.getElementById('phantom-webcam-opacity-down')?.addEventListener('click', () => {
             this.webcamOpacity = Math.max(0.1, this.webcamOpacity - 0.1);
-            video.style.opacity = this.webcamOpacity;
+            if (this.webcamVisible) {
+                video.style.opacity = this.webcamOpacity;
+            }
         });
         
         // Augmenter opacité
         document.getElementById('phantom-webcam-opacity-up')?.addEventListener('click', () => {
             this.webcamOpacity = Math.min(1, this.webcamOpacity + 0.1);
-            video.style.opacity = this.webcamOpacity;
+            if (this.webcamVisible) {
+                video.style.opacity = this.webcamOpacity;
+            }
         });
     }
     
@@ -923,5 +1099,15 @@ window.isPhantomBusy = function() {
            window.phantomChessboard.enabled && 
            window.phantomChessboard.isBusy();
 };
+
+// 🆕 Au chargement, vérifier si on doit proposer une reconnexion
+document.addEventListener('DOMContentLoaded', function() {
+    // Petit délai pour laisser le temps à l'UI de se charger
+    setTimeout(() => {
+        if (window.phantomChessboard) {
+            window.phantomChessboard.showReconnectPrompt();
+        }
+    }, 1500);
+});
 
 console.log('🎯 Phantom.js chargé - Version avec file d\'attente et blocage UI');
