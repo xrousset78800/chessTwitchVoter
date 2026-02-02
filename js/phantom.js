@@ -61,6 +61,10 @@ class PhantomChessboard {
         this.MOVE_TIMEOUT_MS = 30000; // 30 secondes max par mouvement
         this.savedTimerState = null; // Pour la pause du timer de vote
         
+        // 🆕 Webcam
+        this.webcamStream = null;
+        this.webcamOpacity = 0.5;
+        
         console.log('🎯 PhantomChessboard initialisé (avec file d\'attente)');
     }
     
@@ -292,7 +296,7 @@ class PhantomChessboard {
                 
                 // Déterminer la couleur qui joue (inversée pour le Phantom)
                 const fenParts = fen.split(' ');
-                const colorToPlay = (fenParts[1] === 'b') ? 'B' : 'W';
+                const colorToPlay = (fenParts.length > 1 && fenParts[1] === 'b') ? 'W' : 'B';
                 
                 // Envoyer via GAME_START avec la matrice
                 await this.sendCommand(this.OP_CODES.GAME_START, matrix + ',' + colorToPlay);
@@ -415,6 +419,9 @@ class PhantomChessboard {
             this.log('✅ Connecté!', 'success');
             this.updateUI(true);
             
+            // 🆕 Lancer la webcam
+            this.startWebcam();
+            
             return true;
         } catch (error) {
             this.log(`❌ Erreur: ${error.message}`, 'error');
@@ -430,6 +437,10 @@ class PhantomChessboard {
         this.hideBlockingOverlay();
         this.moveQueue = [];
         this.isMoving = false;
+        
+        // 🆕 Arrêter la webcam
+        this.stopWebcam();
+        
         this.updateUI(false);
     }
     
@@ -620,6 +631,198 @@ class PhantomChessboard {
             logElement.scrollTop = logElement.scrollHeight;
         }
     }
+    
+    // ========== WEBCAM ==========
+    
+    /**
+     * 🆕 Démarre la webcam et l'affiche en overlay sur l'échiquier
+     */
+    async startWebcam() {
+        try {
+            // Vérifier si déjà active
+            if (this.webcamStream) {
+                this.log('📷 Webcam déjà active', 'info');
+                return true;
+            }
+            
+            this.log('📷 Démarrage webcam...', 'info');
+            
+            // Demander l'accès à la webcam
+            this.webcamStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: 'environment' // Caméra arrière si disponible
+                },
+                audio: false
+            });
+            
+            // Créer l'overlay vidéo
+            this.createWebcamOverlay();
+            
+            // Connecter le stream à la vidéo
+            const video = document.getElementById('phantom-webcam-video');
+            if (video) {
+                video.srcObject = this.webcamStream;
+                video.play();
+            }
+            
+            this.log('📷 Webcam active', 'success');
+            return true;
+            
+        } catch (error) {
+            this.log(`📷 Erreur webcam: ${error.message}`, 'error');
+            console.error('Erreur webcam:', error);
+            return false;
+        }
+    }
+    
+    /**
+     * 🆕 Arrête la webcam
+     */
+    stopWebcam() {
+        if (this.webcamStream) {
+            this.webcamStream.getTracks().forEach(track => track.stop());
+            this.webcamStream = null;
+            this.log('📷 Webcam arrêtée', 'info');
+        }
+        
+        // Supprimer l'overlay
+        const overlay = document.getElementById('phantom-webcam-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+    
+    /**
+     * 🆕 Crée l'overlay vidéo sur l'échiquier
+     */
+    createWebcamOverlay() {
+        // Supprimer si existe déjà
+        const existing = document.getElementById('phantom-webcam-overlay');
+        if (existing) existing.remove();
+        
+        // Trouver l'échiquier
+        const boardContainer = document.getElementById('myBoard') || 
+                               document.getElementById('board') || 
+                               document.querySelector('.board-container') ||
+                               document.querySelector('[class*="board"]');
+        
+        if (!boardContainer) {
+            this.log('⚠️ Échiquier non trouvé pour overlay webcam', 'warn');
+            return;
+        }
+        
+        // S'assurer que le conteneur est positionné
+        const computedStyle = window.getComputedStyle(boardContainer);
+        if (computedStyle.position === 'static') {
+            boardContainer.style.position = 'relative';
+        }
+        
+        // Créer l'overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'phantom-webcam-overlay';
+        overlay.innerHTML = `
+            <video id="phantom-webcam-video" autoplay playsinline muted></video>
+            <div class="phantom-webcam-controls">
+                <button id="phantom-webcam-toggle" title="Afficher/Masquer">👁️</button>
+                <button id="phantom-webcam-opacity-down" title="Moins transparent">➖</button>
+                <button id="phantom-webcam-opacity-up" title="Plus transparent">➕</button>
+            </div>
+        `;
+        
+        boardContainer.appendChild(overlay);
+        
+        // Ajouter les styles
+        if (!document.getElementById('phantom-webcam-styles')) {
+            const style = document.createElement('style');
+            style.id = 'phantom-webcam-styles';
+            style.textContent = `
+                #phantom-webcam-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 50;
+                }
+                
+                #phantom-webcam-overlay video {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    opacity: 0.5;
+                    transition: opacity 0.3s ease;
+                }
+                
+                #phantom-webcam-overlay.hidden video {
+                    opacity: 0;
+                }
+                
+                .phantom-webcam-controls {
+                    position: absolute;
+                    bottom: 10px;
+                    right: 10px;
+                    display: flex;
+                    gap: 5px;
+                    pointer-events: auto;
+                }
+                
+                .phantom-webcam-controls button {
+                    width: 32px;
+                    height: 32px;
+                    border: none;
+                    border-radius: 6px;
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background 0.2s;
+                }
+                
+                .phantom-webcam-controls button:hover {
+                    background: rgba(102, 126, 234, 0.8);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Ajouter les event listeners
+        this.setupWebcamControls();
+    }
+    
+    /**
+     * 🆕 Configure les contrôles de la webcam
+     */
+    setupWebcamControls() {
+        const overlay = document.getElementById('phantom-webcam-overlay');
+        const video = document.getElementById('phantom-webcam-video');
+        
+        if (!overlay || !video) return;
+        
+        // Opacité initiale
+        this.webcamOpacity = 0.5;
+        
+        // Toggle visibilité
+        document.getElementById('phantom-webcam-toggle')?.addEventListener('click', () => {
+            overlay.classList.toggle('hidden');
+        });
+        
+        // Diminuer opacité
+        document.getElementById('phantom-webcam-opacity-down')?.addEventListener('click', () => {
+            this.webcamOpacity = Math.max(0.1, this.webcamOpacity - 0.1);
+            video.style.opacity = this.webcamOpacity;
+        });
+        
+        // Augmenter opacité
+        document.getElementById('phantom-webcam-opacity-up')?.addEventListener('click', () => {
+            this.webcamOpacity = Math.min(1, this.webcamOpacity + 0.1);
+            video.style.opacity = this.webcamOpacity;
+        });
+    }
+    
+    // ========== UI ==========
     
     updateUI(connected) {
         // Utiliser le paramètre ou l'état interne
