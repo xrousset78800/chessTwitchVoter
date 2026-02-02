@@ -172,21 +172,25 @@ class PhantomChessboard {
         if (typeof intervalId !== 'undefined' && intervalId !== null) {
             this.savedTimerState = {
                 intervalId: intervalId,
-                voterTimer: typeof voterTimer !== 'undefined' ? voterTimer : 0
+                voterTimer: typeof voterTimer !== 'undefined' ? voterTimer : 0,
+                wasActive: true
             };
             clearInterval(intervalId);
             intervalId = null;
             this.log(`⏸️ Timer en pause (${this.savedTimerState.voterTimer}s restantes)`, 'info');
         } else {
+            // Pas de timer actif, on note qu'il ne faudra pas en relancer un
+            this.savedTimerState = { wasActive: false };
             this.log('⏸️ Pas de timer actif à mettre en pause', 'info');
         }
     }
     
     /**
-     * 🆕 Reprend le timer de vote
+     * 🆕 Reprend le timer de vote (seulement s'il était actif avant)
      */
     resumeVoteTimer() {
-        if (this.savedTimerState && this.savedTimerState.voterTimer > 0) {
+        // Ne reprendre que si le timer était actif avant la pause
+        if (this.savedTimerState && this.savedTimerState.wasActive && this.savedTimerState.voterTimer > 0) {
             // Restaurer voterTimer
             if (typeof voterTimer !== 'undefined') {
                 voterTimer = this.savedTimerState.voterTimer;
@@ -199,9 +203,31 @@ class PhantomChessboard {
                 }, 1000);
                 this.log(`▶️ Timer repris: ${this.savedTimerState.voterTimer}s restantes`, 'info');
             }
-            
-            this.savedTimerState = null;
         }
+        this.savedTimerState = null;
+    }
+    
+    /**
+     * 🆕 Synchronise la position actuelle au Phantom (appelé à la connexion)
+     */
+    syncCurrentPosition() {
+        if (typeof chess === 'undefined') {
+            this.log('⚠️ Pas de partie en cours', 'info');
+            return;
+        }
+        
+        const currentFen = chess.fen();
+        const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+        
+        // Vérifier si on est à la position initiale
+        if (currentFen.startsWith(initialFen)) {
+            this.log('📋 Position initiale, synchronisation légère', 'info');
+        } else {
+            this.log('📋 Partie en cours détectée, synchronisation...', 'info');
+        }
+        
+        // Lancer la synchronisation (le timer sera mis en pause automatiquement par showBlockingOverlay)
+        this.syncPosition(currentFen);
     }
     
     // ========== GESTION DE LA FILE D'ATTENTE ==========
@@ -424,6 +450,9 @@ class PhantomChessboard {
             
             // 🆕 Lancer la webcam
             this.startWebcam();
+            
+            // 🆕 Synchroniser le FEN en cours si une partie est active
+            this.syncCurrentPosition();
             
             return true;
         } catch (error) {
