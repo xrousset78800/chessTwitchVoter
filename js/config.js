@@ -256,12 +256,21 @@ function resetGameWithPhantom() {
     console.log('🎉 Reset complet terminé !');
 }
 
-// Hook reset après reload
+// Hook reset après reload - SEULEMENT si pas en mode puzzle
 $(document).ready(function() {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.toString()) {
+    const vs = urlParams.get('vs');
+    const probMode = urlParams.get('probMode');
+    const gameMode = urlParams.get('gameMode');
+    
+    // Ne pas reset en mode puzzle (vs=puzzle, probMode=on, ou gameMode=probMode)
+    const isPuzzleMode = (vs === 'puzzle') || (probMode === 'on') || (gameMode === 'probMode');
+    
+    if (urlParams.toString() && !isPuzzleMode) {
         console.log('📄 Configuration détectée, reset automatique dans 1s...');
         setTimeout(resetGameWithPhantom, 1000);
+    } else if (isPuzzleMode) {
+        console.log('🧩 Mode puzzle détecté, pas de reset automatique');
     }
 });
 
@@ -377,21 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-$('#phantom-game-end').on('click', async function(e) {
-    e.preventDefault();
-    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
-        await window.phantomChessboard.sendGameEnd();
-    }
-});
 
-// Game Start
-$('#phantom-game-start').on('click', async function(e) {
-    e.preventDefault();
-    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
-        const fen = (typeof chess !== 'undefined') ? chess.fen() : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-        await window.phantomChessboard.syncPosition(fen);
-    }
-});
 /*
 REFAIRE LA TODO
 */
