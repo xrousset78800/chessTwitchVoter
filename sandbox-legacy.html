@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitchess</title>
+    
+    <!-- CSS : Chessboard.js officiel -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+    
+    <!-- CSS : Notre système modulaire -->
+    <link rel="stylesheet" href="css2/main.css">
+    
+    <!-- Fonts et icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
+    <base href="./">
+</head>
+
+<body data-team="w">
+    <!-- Header principal -->
+    <header class="main-header">
+        <h1 data-lang="fr-FR">Twitchess</h1>
+        <!-- Statuts du jeu -->
+        <h5 id="gameTitle"></h5>
+        <h3 data-lang="fr-FR" data-team="w">Trait aux blancs</h3>
+        <h3 data-lang="fr-FR" data-team="b">Trait aux noirs</h3>
+        <h4 data-lang="en-EN" class="status"></h4>
+        <!-- Pièces disponibles -->
+        <div class="sidebar-section">
+            <h3 class="sidebar-section-title">Coups disponibles</h3>
+            <div class="available-pieces">
+                <ul id="availableList">
+                    <ul id="availableListP"></ul>
+                    <ul id="availableListB"></ul>
+                    <ul id="availableListN"></ul>
+                    <ul id="availableListR"></ul>
+                    <ul id="availableListQ"></ul>
+                    <ul id="availableListK"></ul>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Layout principal -->
+    <main class="main-content">
+        <!-- Section échiquier -->
+        <section class="board-section">
+            <div id="board_wrapper">
+                <canvas id="primary_canvas" width="630" height="630"></canvas>
+                <canvas id="drawing_canvas" width="630" height="630"></canvas>
+                <div id="myBoard" style="width: 630px;"></div>
+            </div>
+
+                            <div class="votes">                    
+                    <!-- Liste des votes -->
+                    <ol class="prefixed styled"></ol>
+                    
+                    <!-- Graphique des votes -->
+                    <div class="chart-container">
+                        <canvas id="chartPoll" width="600" height="150"></canvas>
+                    </div>
+                    
+                    <!-- Graphique D3 alternatif -->
+                    <div id="chart"></div>
+                </div>
+        </section>
+
+        <!-- Sidebar avec informations -->
+        <aside class="sidebar game-info">
+            <!-- Historique des coups -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-section-title">Historique</h3>
+                <div class="poll prefixed styled">
+                    <ol></ol>
+                </div>
+            </div>
+        </aside>
+        <div id="chat-container" class="chat-container" style="display: none;">
+            <div class="chat-header">
+                <span>💬 Chat de partie</span>
+                <span id="chat-team-indicator"></span>
+            </div>
+            <div class="chat-messages"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Message..." />
+                <button id="chat-send" class="chat-send-btn">Envoyer</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Section problèmes d'échecs -->
+    <section id="probleminfo" class="problem-section">
+        <div class="problem-details">
+            <h2 class="omg-win">GG !</h2>
+            <h2 class="omg-lose">Nope !</h2>
+            <div style="position: absolute;top: 5px; right: 10px; ">
+                <span data-attempt="">0</span> / <span data-length="">0</span>
+            </div>
+            <div class="problem-meta">
+                <h3>TAGS</h3>                
+                <span data-opening-tags=""></span>
+            </div>
+            <div class="problem-stats">
+                <h3>SOLUTION TOTALE</h3>
+                <span data-omgSolution=""></span>
+                <h3>SOLUTION</h3>
+                <span data-solution=""></span>                
+                <h3>FEN</h3>
+                <span data-fen=""></span>
+                <h3>ELO</h3>
+                <span data-prob-elo=""></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timer affiché -->
+    <div id="timer-display" class="timer-display">
+            <div class="countdown">
+        <svg viewBox="0 0 100 100">
+            <circle r="45" cx="50" cy="50" fill="transparent" stroke="#333" stroke-width="3"/>
+            <circle r="45" cx="50" cy="50" fill="transparent" stroke="#667eea" stroke-width="3"
+                    stroke-dasharray="283" stroke-dashoffset="0"
+                    stroke-linecap="round" transform="rotate(-90 50 50)"/>
+                    <span id="timer-value">00:00</span>
+        </svg>
+    </div>
+        
+    </div>
+    <div id="toast-container"></div>
+    <!-- Timer circulaire classique (existant, gardé pour compatibilité) -->
+
+
+    <!-- Modal de configuration -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+        <form id="configForm">
+            <span class="close">&times;</span>
+            <h2>Configuration</h2>
+            <fieldset class="twitch">
+                <legend>Connexion avec la chaine Twitch</legend>
+                <label for="defaultChannel">Enter twitch channel&nbsp;</label>
+                <input type="text" id="defaultChannel" name="defaultChannel" >
+                <span class="tooltip-icon" data-tooltip="Chaine twitch avec laquelle se connecter">?</span>
+            </fieldset>
+            <fieldset>
+                <legend>Mode Vote !</legend> 
+                <input type="checkbox" data-mode="timerMode" id="timerMode" name="timerMode">
+                <label for="timerMode">Activer le mode vote</label>
+                <span class="tooltip-icon" data-tooltip="Active le timer et la fonction de vote">?</span>
+                <div data-time-mode>
+                    <label for="InitialvoterTimer">Temps d'un tour</label>
+                    <input type="number" id="InitialvoterTimer" name="InitialvoterTimer" min="0"> s
+                    <span class="tooltip-icon" data-tooltip="Durée d'un tour de vote pour une partie">?</span>
+                    <br>                
+                    <label for="timerWheelAnimation">Animation de la roue </label>
+                    <input type="number" id="timerWheelAnimation" name="timerWheelAnimation" min="0"> s
+                    <span class="tooltip-icon" data-tooltip="Durée de l'animation de la roue">?</span>
+                    <br>
+                    <input type="checkbox" id="limitToOneVote" name="limitToOneVote">
+                    <label for="limitToOneVote">Vote unique</label>
+                    <span class="tooltip-icon" data-tooltip="Chaque viewer ne peut voter qu'une seule fois par tour">?</span>
+                    <br>
+                    <input type="checkbox" id="majorityMode" name="majorityMode">               
+                    <label for="majorityMode">Majorité ? / (sinon tirage au sort)</label>
+                    <span class="tooltip-icon" data-tooltip="Si coché, la majorité sur le vote est joué automatiquement. Sinon il y aura toujours un tirage au sort">?</span>
+
+                </div>
+            </fieldset>                 
+            <fieldset class="gameMode">
+                <legend>Mode de jeu</legend>            
+                <input type="radio" id="yoloMode" name="gameMode" value="normal">
+                <label for="yoloMode">Jouer en mode YOLO (sandbox)</label>
+                <span class="tooltip-icon" data-tooltip="Gros bordel, tout le monde peut voter pour tout le monde au sein d'une chaine. Utile pour tester">?</span>
+                <br>
+                <input type="radio" id="probMode" name="gameMode" value="probMode">
+                <label for="probMode">Jouer en mode problèmes</label>
+                <span class="tooltip-icon" data-tooltip="Jouer en mode probèmes !">?</span>
+                <div data-game-mode="probMode">
+                    <fieldset class="theme-filter-section">
+                            <legend>Filtrage par thèmes</legend>
+                            
+                            <div class="filter-controls">
+                                <button type="button" class="btn btn-secondary" onclick="selectAllThemes()">
+                                    Tout sélectionner
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="clearThemeFilter()">
+                                    Effacer la sélection
+                                </button>
+                            </div>
+                            
+                            <div class="problem-count" id="problemCount">
+                                <span id="availableProblems">-</span>
+                            </div>
+                            
+                            <div class="theme-list" id="themeList">
+                                <!-- Les thèmes seront générés dynamiquement -->
+                            </div>
+                            
+                            <div class="selected-themes" id="selectedThemes" style="display: none;">
+                                <div id="selectedThemesTags"></div>
+                            </div>
+                            </fieldset>
+                        </div>
+                <br>
+                <input type="radio" id="mod1vViewers" name="gameMode" value="mod1vViewers">
+                <label for="mod1vViewers">Seul contre tous</label>
+                <span class="tooltip-icon" data-tooltip="Sur une chaine, une personne séléctionnée contre tout les autres">?</span>
+                <div data-game-mode="mod1vViewers">
+                    <label for="mod1vViewersPlayer">Pseudo du joueur&nbsp;</label>
+                    <input type="text" id="mod1vViewersPlayer" name="mod1vViewersPlayer" >
+                    </div>
+                    <br>
+                <input type="radio" id="mod1v1" name="gameMode" value="mod1v1">
+                <label for="mod1v1">Un contre un</label>
+                <span class="tooltip-icon" data-tooltip="Chaque viewer ne peut voter qu'une seule fois par tour">?</span>
+                <div data-game-mode="mod1v1">
+                    <label for="oneVsOneModeList0">Pseudo du Joueur1&nbsp;</label><input type="text" id="oneVsOneModeList0" name="oneVsOneModeList0">
+                    <br>
+                    <label for="oneVsOneModeList1">Pseudo du Joueur2&nbsp;</label><input type="text" id="oneVsOneModeList1" name="oneVsOneModeList1">
+                </div>
+                <br>
+                <input type="radio" id="modStreamerChatvStreamerChat" name="gameMode" value="modStreamerChatvStreamerChat">
+                <label for="modStreamerChatvStreamerChat">Chat contre Chat (WIP !)</label>
+                <span class="tooltip-icon" data-tooltip="Les chats des 2 streams s'affrontent en votant (penser à activer le vote)">?</span>
+                <div data-game-mode="modStreamerChatvStreamerChat" class="multiplayer-setup">
+                    <div class="multiplayer-tabs">
+                        <div class="multiplayer-tab create active" data-tab="create">
+                            <i class="fas fa-crown"></i>
+                            <h3>Créer une partie</h3>
+                            <p>Hébergez et invitez un autre streameur</p>
+                        </div>
+                        <div class="multiplayer-tab join" data-tab="join">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <h3>Rejoindre une partie</h3>
+                            <p>Connectez-vous avec un code</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenu -->
+                    <div class="multiplayer-content">
+                        <!-- Panneau Créer -->
+                        <div id="create-panel" class="multiplayer-panel active">
+                            <div class="form-group">
+                                <label for="hostStreamerName">
+                                    <i class="fab fa-twitch"></i> Votre nom de streameur
+                                </label>
+                                <input type="text" id="hostStreamerName" name="streamerChatvStreamerChat0" class="form-control" placeholder="VotreNomTwitch">
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary" id="createGameBtn">
+                                <i class="fas fa-plus"></i> Créer la partie
+                            </button>
+                            
+                            <!-- Panneau de partie créée -->
+                            <div id="gameCreatedInfo" class="game-created" style="display: none;">
+                                <h4>✅ Partie créée !</h4>
+                                
+                                <div style="margin: 15px 0;">
+                                    <span>Code de partie :</span>
+                                    <div class="game-code" id="gameCode">XXXX</div>
+                                </div>
+                                
+                                <div style="margin: 15px 0;">
+                                    <span>Statut :</span>
+                                    <span class="status status-waiting" id="gameStatus">En attente...</span>
+                                </div>
+                                
+                                <div class="url-section">
+                                    <label>Votre URL (Blancs) :</label>
+                                    <div class="url-box">
+                                        <span id="hostUrl">-</span>
+                                        <button class="btn-copy" data-target="hostUrl">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <button class="btn-blank" data-target="hostUrl">
+                                            <i class="fas fa-link"></i>
+                                        </button>                                             
+                                    </div>
+                                </div>
+                                
+                                <div class="url-section">
+                                    <label>URL pour l'adversaire (Noirs) :</label>
+                                    <div class="url-box">
+                                        <span id="guestUrl">-</span>
+                                        <button class="btn-copy" data-target="guestUrl">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <button class="btn-blank" data-target="guestUrl">
+                                            <i class="fas fa-link"></i>
+                                        </button>                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panneau Rejoindre -->
+                        <div id="join-panel" class="multiplayer-panel">
+                            <div class="form-group">
+                                <label for="guestStreamerName">
+                                    <i class="fab fa-twitch"></i> Votre nom de streameur
+                                </label>
+                                <input type="text" id="guestStreamerName" name="streamerChatvStreamerChat1" class="form-control" placeholder="VotreNomTwitch">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="gameCodeInput">
+                                    <i class="fas fa-key"></i> Code de la partie
+                                </label>
+                                <input type="text" id="gameCodeInput" class="form-control game-code-input" placeholder="XXXX" maxlength="4">
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary" id="joinGameBtn">
+                                <i class="fas fa-sign-in-alt"></i> Rejoindre
+                            </button>
+                            
+                            <!-- Panneau de partie rejointe -->
+                            <div id="gameJoinedInfo" class="game-joined" style="display: none;">
+                                <h4>✅ Connecté !</h4>
+                                
+                                <div style="margin: 15px 0;">
+                                    <span>Statut :</span>
+                                    <span class="status status-connected">Prêt</span>
+                                </div>
+                                
+                                <div class="url-section">
+                                    <label>Votre URL (Noirs) :</label>
+                                    <div class="url-box">
+                                        <span id="playerUrl">-</span>
+                                        <button class="btn-copy" data-target="playerUrl">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <input disabled="disabled" type="radio" id="modViewersvViewers" name="gameMode" value="modViewersvViewers">
+                <label for="modViewersvViewers"><s>Tous contre tous (id pair/impair)</s></label>
+                <span class="tooltip-icon" data-tooltip="Sur une même chaine, les ID pairs/impairs s'affrontent">?</span>
+                <br>
+                <input disabled="disabled" type="radio" id="modPuzzleRush" name="gameMode" value="modPuzzleRush">
+                <label for="modPuzzleRush"><s>Puzzle rush ?</s></label>
+                <span class="tooltip-icon" data-tooltip="Puzzle rush en double chaine twitch ?">?</span>
+            </fieldset>    
+                <fieldset>
+                    <legend>Restrictions d'accès</legend>
+                    <input type="checkbox" id="followMode" name="followMode">
+                    <label for="followMode">Mode followers uniquement</label>
+                    <span class="tooltip-icon" data-tooltip="Seuls les followers de la chaine peuvent voter">?</span>
+                    <br>
+                    <input type="checkbox" id="subMode" name="subMode">
+                    <label for="subMode">Mode abonnés uniquement</label>
+                    <span class="tooltip-icon" data-tooltip="Seuls les abonnés de la chaine peuvent voter">?</span>
+                    <br>
+                    <small style="color: #aaa; font-size: 12px;">
+                        Note: Les modérateurs, VIPs et le broadcaster peuvent toujours jouer
+                    </small>
+                </fieldset>
+            <fieldset>
+                <legend>Autres options</legend> 
+                <label for="pauseAfterWinLose">Durée de la pause</label>
+                <input type="number" id="pauseAfterWinLose" name="pauseAfterWinLose" min="0"> s
+                <span class="tooltip-icon" data-tooltip="Durée de la pause entre les parties ou les problèmes avant de relancer automatiquement">?</span>  
+                <br>              
+                <input type="checkbox" id="noBg" name="noBg">
+                <label for="noBg">Supprimer le background (test sur OBS ?)</label>
+                <span class="tooltip-icon" data-tooltip="Fond vert en option pour intégration OBS (WIP)">?</span>
+                <br>
+                <input type="checkbox" id="phantomChess" name="gameMode" value="phantomChess">
+                <label for="phantomChess">Phantom chess integration ?</label>
+                <span class="tooltip-icon" data-tooltip="Intégration de l'échiquier automatique phantomChess (WIP)">?</span>
+                <!-- Panneau de contrôle Phantom (visible si checkbox cochée) -->
+                <div id="phantomControlPanel">
+                    
+                    <!-- Status de connexion -->
+                    <div id="phantom-status">
+                        ❌ Déconnecté
+                    </div>
+                    
+                    <!-- Boutons de contrôle -->
+                    <div class="phantom-buttons">
+                        <button type="button" id="phantom-connect" class="phantom-btn">
+                            🔗 Connecter
+                        </button>
+                        <button type="button" id="phantom-disconnect" class="phantom-btn" disabled>
+                            🔌 Déconnecter
+                        </button>
+                        <button type="button" id="phantom-calibrate" class="phantom-btn secondary" disabled>
+                            🔧 Calibrer
+                        </button>
+                        <button type="button" id="phantom-test" class="phantom-btn secondary" disabled>
+                            🧪 Test Sync
+                        </button>
+                        <button type="button" id="phantom-undo" class="phantom-btn secondary" disabled>
+                            ↩️ Undo
+                        </button>
+                        <button type="button" id="phantom-game-end" class="phantom-btn secondary" disabled>
+                            🏁 Game End
+                        </button>
+                    </div>
+                    <div class="phantom-controls">
+                        <!-- Vitesse -->
+                        <div class="phantom-control-group">
+                            <label for="phantom-speed">⚡ Vitesse du mécanisme</label>
+                            <div class="phantom-slider-container">
+                                <input type="range" id="phantom-speed" min="1" max="5" step="1" disabled>
+                            </div>
+                        </div>
+                        
+                        <!-- Volume -->
+                        <div class="phantom-control-group">
+                            <label for="phantom-volume">🔊 Volume des sons</label>
+                            <div class="phantom-slider-container">
+                                <input type="range" id="phantom-volume" min="0" max="100" disabled>
+                            </div>
+                        </div>
+                    </div>                    
+                    <!-- Informations batterie -->
+                    <div id="phantom-battery">
+                        🔋 ---%
+                    </div>
+                    
+                    <!-- Option de synchronisation automatique -->
+                    <div class="phantom-autosync">
+                        <input type="checkbox" id="phantom-auto-sync" checked>
+                        <label for="phantom-auto-sync">Synchronisation automatique des coups</label>
+                    </div>
+                    <!-- Message d'information -->
+                    <div class="phantom-info">
+                        ℹ️ L'échiquier Phantom se synchronisera automatiquement après chaque coup joué
+                    </div>
+                </div>                
+            </fieldset>
+
+        <button type="submit" class="form-btn">Sauvegarde + reload<i class="fas fa-save"></i></button>
+    </form>
+        </div>
+    </div>
+
+    <!-- Bouton d'ouverture de la configuration -->
+    <button id="openFormButton" class="config-button">
+        <i class="fas fa-cog"></i>
+    </button>
+
+
+    <!-- Librairies principales -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" 
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" 
+            crossorigin="anonymous"></script>
+    
+    <!-- Librairies d'échecs -->
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    
+    <!-- Librairies de graphiques -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.1.0/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+    
+    <!-- Twitch -->
+    <script src="js/tmi.min.js"></script>
+    <script src="twitchToken.js"></script>    
+    <script src="js/config.js"></script>
+    <script src="js/multi.js"></script>
+    <script src="js/handleChatMessage.js"></script>
+    <script src="js/client.js"></script>
+    <script src="js/ready.js"></script>
+    <script src="js/phantom.js"></script>
+    <script src="js/chessVoterApp.js"></script>
+</body>
+</html>
