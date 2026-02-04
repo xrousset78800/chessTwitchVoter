@@ -1,0 +1,293 @@
+/* ============================================
+   SANDBOX PAGE
+   ============================================ */
+
+.sandbox {
+    padding: calc(var(--nav-height) + 20px) 20px 40px;
+    min-height: 100vh;
+}
+
+/* Header */
+.sandbox__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.sandbox__title-area {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.sandbox__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.sandbox__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Main layout */
+.sandbox__content {
+    display: grid;
+    grid-template-columns: 1fr var(--sidebar-width);
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Board area */
+.sandbox__main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Board container with webcam overlay */
+.board-wrapper {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border-subtle);
+    padding: 20px;
+    overflow: hidden;
+}
+
+.board-container {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+/* Chessboard overrides */
+#myBoard {
+    width: 100% !important;
+}
+
+.board-b72b1 {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+/* Webcam overlay */
+.webcam-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    pointer-events: none;
+    z-index: 5;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity var(--transition-medium);
+}
+
+.webcam-overlay.is-visible {
+    opacity: var(--webcam-opacity, 0.3);
+}
+
+.webcam-overlay video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Webcam controls */
+.webcam-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-sm);
+    margin-top: 12px;
+}
+
+.webcam-controls__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.webcam-controls__opacity {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.webcam-controls__opacity-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.webcam-controls__opacity-value {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    min-width: 40px;
+}
+
+/* Sidebar */
+.sandbox__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: calc(100vh - var(--nav-height) - 80px);
+    overflow-y: auto;
+}
+
+/* Mode selector */
+.mode-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.mode-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-subtle);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    text-align: center;
+}
+
+.mode-option:hover {
+    border-color: var(--accent-purple);
+}
+
+.mode-option.is-active {
+    border-color: var(--accent-purple);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.mode-option__icon {
+    font-size: 24px;
+}
+
+.mode-option__label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Mode-specific options */
+.mode-options {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    margin-top: 12px;
+}
+
+.mode-options.is-visible {
+    display: flex;
+}
+
+/* Player inputs */
+.player-input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.player-input__label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    min-width: 80px;
+}
+
+.player-input__field {
+    flex: 1;
+}
+
+/* History panel */
+.history-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.history-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+}
+
+.history-row:last-child {
+    border-bottom: none;
+}
+
+.history-row__number {
+    color: var(--text-muted);
+}
+
+.history-row__move {
+    padding: 4px 8px;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.history-row__move:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Conditional sections */
+.conditional-section {
+    display: none;
+}
+
+.conditional-section.is-visible {
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .sandbox__content {
+        grid-template-columns: 1fr;
+    }
+    
+    .sandbox__sidebar {
+        max-height: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .sandbox__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .sandbox__actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .mode-selector {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

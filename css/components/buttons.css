@@ -1,0 +1,613 @@
+/* ============================================
+   COMPONENTS - Buttons, Inputs, Toggles, etc.
+   ============================================ */
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    transition: var(--transition-fast);
+    white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+    border-color: var(--accent-purple);
+    background: var(--bg-card-hover);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn--primary {
+    background: var(--gradient-hero);
+    border: none;
+    color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn--danger {
+    border-color: var(--accent-red);
+}
+
+.btn--danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.btn--ghost {
+    background: transparent;
+    border-color: transparent;
+}
+
+.btn--ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn--sm {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+}
+
+.btn--lg {
+    padding: 16px 32px;
+    font-size: 1.125rem;
+}
+
+.btn--icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+}
+
+.btn--icon.btn--sm {
+    width: 32px;
+    height: 32px;
+}
+
+/* Connect Buttons */
+.connect-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 32px;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: var(--transition-medium);
+    min-width: 240px;
+}
+
+.connect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+}
+
+.connect-btn--twitch {
+    border-color: var(--twitch-purple);
+}
+
+.connect-btn--twitch:hover {
+    background: rgba(145, 70, 255, 0.1);
+    box-shadow: 0 0 30px rgba(145, 70, 255, 0.3);
+}
+
+.connect-btn--twitch.is-connected {
+    background: rgba(145, 70, 255, 0.2);
+}
+
+.connect-btn--phantom {
+    border-color: var(--phantom-blue);
+}
+
+.connect-btn--phantom:hover {
+    background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+}
+
+.connect-btn--phantom.is-connected {
+    background: rgba(0, 212, 255, 0.2);
+}
+
+.connect-btn__icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.connect-btn__status {
+    margin-left: auto;
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.connect-btn.is-connected .connect-btn__status {
+    background: var(--accent-green);
+    color: #000;
+}
+
+/* Action Cards */
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 50px;
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    transition: var(--transition-medium);
+    min-width: 200px;
+    text-align: center;
+}
+
+.action-card:hover {
+    border-color: var(--accent-purple);
+    background: var(--bg-card-hover);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
+}
+
+.action-card__icon {
+    width: 70px;
+    height: 70px;
+    border-radius: var(--radius-md);
+    background: var(--gradient-hero);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+}
+
+.action-card__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.action-card__desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+.input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition-fast);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.input::placeholder {
+    color: var(--text-muted);
+}
+
+.input--sm {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+}
+
+.input--inline {
+    width: auto;
+    min-width: 80px;
+}
+
+/* Number Input */
+.input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.input[type="number"]::-webkit-outer-spin-button,
+.input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Select */
+.select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238888a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+/* ============================================
+   TOGGLE
+   ============================================ */
+.toggle {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    background: var(--border-subtle);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+}
+
+.toggle.is-active {
+    background: var(--accent-purple);
+}
+
+.toggle.is-active::after {
+    transform: translateX(22px);
+}
+
+.toggle--sm {
+    width: 36px;
+    height: 20px;
+}
+
+.toggle--sm::after {
+    width: 14px;
+    height: 14px;
+}
+
+.toggle--sm.is-active::after {
+    transform: translateX(16px);
+}
+
+/* ============================================
+   CHECKBOX & RADIO
+   ============================================ */
+.checkbox,
+.radio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox__input,
+.radio__input {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-subtle);
+    background: var(--bg-input);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.checkbox__input {
+    border-radius: var(--radius-xs);
+}
+
+.radio__input {
+    border-radius: 50%;
+}
+
+.checkbox__input:checked,
+.radio__input:checked {
+    border-color: var(--accent-purple);
+    background: var(--accent-purple);
+}
+
+.checkbox__input:checked::after {
+    content: '✓';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.radio__input:checked::after {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    margin: 4px;
+    background: white;
+    border-radius: 50%;
+}
+
+/* ============================================
+   RANGE SLIDER
+   ============================================ */
+.range {
+    width: 100%;
+    height: 6px;
+    background: var(--border-subtle);
+    border-radius: var(--radius-full);
+    appearance: none;
+    cursor: pointer;
+}
+
+.range::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent-purple);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.range::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--accent-purple);
+}
+
+.range::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--accent-purple);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* ============================================
+   BADGE
+   ============================================ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge--success {
+    background: var(--accent-green);
+    color: #000;
+}
+
+.badge--warning {
+    background: var(--accent-orange);
+    color: #000;
+}
+
+.badge--danger {
+    background: var(--accent-red);
+    color: #fff;
+}
+
+.badge--info {
+    background: var(--accent-blue);
+    color: #fff;
+}
+
+.badge--purple {
+    background: var(--accent-purple);
+    color: #fff;
+}
+
+/* ============================================
+   STATUS DOT
+   ============================================ */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.status-dot.is-connected {
+    background: var(--accent-green);
+    box-shadow: 0 0 10px var(--accent-green);
+}
+
+.status-dot--twitch.is-connected {
+    background: var(--twitch-purple);
+    box-shadow: 0 0 10px var(--twitch-purple);
+}
+
+.status-dot--phantom.is-connected {
+    background: var(--phantom-blue);
+    box-shadow: 0 0 10px var(--phantom-blue);
+}
+
+/* Pulsing animation for live */
+.status-dot--live {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ============================================
+   PANEL / CARD
+   ============================================ */
+.panel {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+.panel__header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panel__content {
+    padding: 20px;
+}
+
+.panel__footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-subtle);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Collapsible panel */
+.panel--collapsible .panel__header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.panel--collapsible .panel__header::after {
+    content: '';
+    margin-left: auto;
+    border: solid var(--text-secondary);
+    border-width: 0 2px 2px 0;
+    padding: 3px;
+    transform: rotate(45deg);
+    transition: var(--transition-fast);
+}
+
+.panel--collapsible.is-collapsed .panel__header::after {
+    transform: rotate(-135deg);
+}
+
+.panel--collapsible.is-collapsed .panel__content {
+    display: none;
+}
+
+/* ============================================
+   FORM GROUP
+   ============================================ */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.form-row:last-child {
+    border-bottom: none;
+}
+
+.form-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ============================================
+   TOOLTIP
+   ============================================ */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-fast);
+    z-index: var(--z-dropdown);
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state__icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state__title {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.empty-state__desc {
+    font-size: 0.9rem;
+}

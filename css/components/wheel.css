@@ -1,0 +1,267 @@
+/* ============================================
+   VOTING WHEEL - Design amélioré
+   ============================================ */
+
+.wheel-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    aspect-ratio: 1;
+}
+
+/* Canvas de la roue */
+.wheel-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 
+        0 0 0 8px var(--bg-card),
+        0 0 0 12px var(--border-subtle),
+        0 0 40px rgba(139, 92, 246, 0.3),
+        inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Indicateur/Flèche */
+.wheel-pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 40px solid var(--accent-purple);
+    filter: drop-shadow(0 4px 8px rgba(139, 92, 246, 0.5));
+    z-index: 10;
+}
+
+.wheel-pointer::after {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -10px;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-purple);
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--accent-purple);
+}
+
+/* Centre de la roue */
+.wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: var(--gradient-hero);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 
+        0 0 20px rgba(139, 92, 246, 0.5),
+        inset 0 2px 10px rgba(255, 255, 255, 0.2);
+    z-index: 5;
+}
+
+/* Animation de rotation */
+.wheel-canvas.is-spinning {
+    animation: wheel-spin var(--spin-duration, 5s) cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+@keyframes wheel-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(var(--spin-degrees, 1800deg));
+    }
+}
+
+/* Glow effect pendant le spin */
+.wheel-container.is-spinning .wheel-canvas {
+    box-shadow: 
+        0 0 0 8px var(--bg-card),
+        0 0 0 12px var(--accent-purple),
+        0 0 60px rgba(139, 92, 246, 0.5),
+        0 0 100px rgba(139, 92, 246, 0.3),
+        inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   VOTE LIST (à côté de la roue)
+   ============================================ */
+
+.vote-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.vote-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    transition: var(--transition-fast);
+}
+
+.vote-item:hover {
+    border-color: var(--accent-purple);
+}
+
+.vote-item__color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.vote-item__move {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    flex: 1;
+}
+
+.vote-item__count {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.vote-item__bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent-purple);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    transition: width 0.3s ease;
+}
+
+/* Winner highlight */
+.vote-item.is-winner {
+    border-color: var(--accent-green);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.vote-item.is-winner .vote-item__move {
+    color: var(--accent-green);
+}
+
+/* ============================================
+   TIMER DISPLAY
+   ============================================ */
+
+.timer-display {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.timer-display__svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.timer-display__bg {
+    fill: none;
+    stroke: var(--border-subtle);
+    stroke-width: 6;
+}
+
+.timer-display__progress {
+    fill: none;
+    stroke: var(--accent-purple);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.timer-display__progress.is-warning {
+    stroke: var(--accent-orange);
+}
+
+.timer-display__progress.is-danger {
+    stroke: var(--accent-red);
+}
+
+.timer-display__value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+/* ============================================
+   VOTING PANEL (combined)
+   ============================================ */
+
+.voting-panel {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 24px;
+    padding: 24px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+}
+
+.voting-panel__wheel-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.voting-panel__info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.voting-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.voting-panel__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.voting-panel__total {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .voting-panel {
+        grid-template-columns: 1fr;
+    }
+    
+    .wheel-container {
+        max-width: 280px;
+    }
+}

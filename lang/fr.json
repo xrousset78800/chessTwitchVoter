@@ -1,0 +1,160 @@
+{
+  "app": {
+    "name": "Phantom Twitchess",
+    "tagline": "Connecte ton échiquier Phantom et ton compte Twitch pour des parties interactives avec ta communauté"
+  },
+  "nav": {
+    "new": "Nouveau",
+    "browse": "Parcourir",
+    "settings": "Paramètres"
+  },
+  "connections": {
+    "twitch": "Twitch",
+    "phantom": "Phantom",
+    "connect": "Connecter",
+    "disconnect": "Déconnecter",
+    "connected": "Connecté",
+    "notConnected": "Non connecté",
+    "connecting": "Connexion...",
+    "searchingPhantom": "Recherche du Phantom...",
+    "connectionError": "Erreur de connexion",
+    "disconnected": "Déconnecté",
+    "reconnectPrompt": "Voulez-vous reconnecter \"{device}\" ?"
+  },
+  "landing": {
+    "title": "PHANTOM<br>TWITCHESS",
+    "connectTwitch": "Connecter Twitch",
+    "connectPhantom": "Connecter Phantom"
+  },
+  "actions": {
+    "sandbox": "Sandbox",
+    "sandboxDesc": "Mode libre avec toutes les options",
+    "battle": "Bataille Twitch",
+    "battleDesc": "Chat vs Chat en direct",
+    "browse": "Parcourir",
+    "browseDesc": "Voir les parties en cours"
+  },
+  "sandbox": {
+    "title": "Sandbox",
+    "back": "Retour",
+    "save": "Sauvegarder",
+    "reset": "Reset",
+    "undo": "Annuler",
+    "flip": "Retourner",
+    "syncPhantom": "Sync Phantom",
+    "gameEnd": "Game End"
+  },
+  "modes": {
+    "title": "Mode de jeu",
+    "yolo": "YOLO (libre)",
+    "yoloDesc": "Tout le monde peut voter pour tout le monde",
+    "problems": "Problèmes",
+    "problemsDesc": "Résous des puzzles d'échecs",
+    "oneVsAll": "Seul contre tous",
+    "oneVsAllDesc": "Un joueur contre le chat",
+    "oneVsOne": "Un contre un",
+    "oneVsOneDesc": "Duel entre deux joueurs",
+    "chatVsChat": "Chat vs Chat",
+    "chatVsChatDesc": "Deux chats s'affrontent"
+  },
+  "voting": {
+    "title": "Système de vote",
+    "enableTimer": "Activer le timer",
+    "turnDuration": "Durée d'un tour",
+    "wheelAnimation": "Animation de la roue",
+    "singleVote": "Vote unique par viewer",
+    "majorityMode": "Mode majorité",
+    "majorityDesc": "Si désactivé, tirage au sort avec la roue",
+    "seconds": "s"
+  },
+  "restrictions": {
+    "title": "Restrictions d'accès",
+    "followersOnly": "Followers uniquement",
+    "subsOnly": "Abonnés uniquement",
+    "note": "Les modérateurs, VIPs et le broadcaster peuvent toujours jouer"
+  },
+  "phantom": {
+    "title": "Paramètres Phantom",
+    "status": "Statut",
+    "battery": "Batterie",
+    "speed": "Vitesse mécanisme",
+    "autoSync": "Synchronisation automatique",
+    "autoCastling": "Auto Roque",
+    "autoEnPassant": "Auto En Passant",
+    "snapToCenter": "Snap au centre",
+    "autoCorrect": "Correction automatique",
+    "moving": "Déplacement en cours...",
+    "movesInQueue": "coups en attente"
+  },
+  "webcam": {
+    "title": "Webcam",
+    "enable": "Activer l'overlay",
+    "opacity": "Opacité",
+    "placeholder": "Connecte ton Phantom pour activer la webcam"
+  },
+  "history": {
+    "title": "Historique",
+    "noMoves": "Aucun coup joué"
+  },
+  "players": {
+    "player1": "Joueur 1",
+    "player2": "Joueur 2",
+    "soloPlayer": "Joueur seul",
+    "chat": "Chat",
+    "whites": "Blancs",
+    "blacks": "Noirs"
+  },
+  "problems": {
+    "themes": "Thèmes",
+    "selectAll": "Tout sélectionner",
+    "clearSelection": "Effacer",
+    "available": "problèmes disponibles"
+  },
+  "configs": {
+    "title": "Mes configurations",
+    "empty": "Aucune configuration sauvegardée",
+    "save": "Sauvegarder la configuration",
+    "namePrompt": "Nom de la configuration",
+    "namePlaceholder": "Ma config préférée...",
+    "saved": "Configuration \"{name}\" sauvegardée",
+    "loaded": "Configuration \"{name}\" chargée",
+    "deleted": "Configuration supprimée",
+    "cancel": "Annuler",
+    "confirm": "Sauvegarder",
+    "deleteConfirm": "Supprimer cette configuration ?"
+  },
+  "browse": {
+    "title": "Parties en cours",
+    "noGames": "Aucune partie en cours",
+    "beFirst": "Sois le premier à lancer une Bataille Twitch !",
+    "live": "EN DIRECT",
+    "spectators": "spectateurs",
+    "moves": "coups",
+    "watch": "Regarder"
+  },
+  "sharedPhantom": {
+    "title": "Phantom partagé",
+    "available": "Disponible",
+    "inUse": "En cours d'utilisation",
+    "useIt": "Utiliser le Phantom partagé",
+    "queue": "File d'attente",
+    "yourTurn": "C'est votre tour !"
+  },
+  "wheel": {
+    "spinning": "La roue tourne...",
+    "winner": "Gagnant"
+  },
+  "toast": {
+    "moveUndone": "Coup annulé: {move}",
+    "noMoveToUndo": "Aucun coup à annuler",
+    "boardReset": "Échiquier réinitialisé",
+    "gameEndSent": "Game End envoyé",
+    "syncSent": "Synchronisation envoyée",
+    "enterName": "Entrez un nom"
+  },
+  "errors": {
+    "bluetoothNotSupported": "Bluetooth non supporté par ce navigateur",
+    "phantomNotConnected": "Phantom non connecté",
+    "twitchNotConnected": "Twitch non connecté"
+  }
+}
