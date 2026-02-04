@@ -386,6 +386,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+$('#phantom-game-end').on('click', async function(e) {
+    e.preventDefault();
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        await window.phantomChessboard.sendGameEnd();
+    }
+});
 
 /*
 REFAIRE LA TODO

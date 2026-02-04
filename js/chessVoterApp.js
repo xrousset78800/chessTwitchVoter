@@ -889,18 +889,20 @@ function showCurrentmax(poll) {
 function voteResult(poll) {
     console.log("voteResult appelé avec", poll.length, "votes");
     
+    // ========== NOUVEAU : Vérifier si le mode actuel nécessite un vote ==========
+    if (shouldSkipVoting()) {
+        console.log("Mode sans vote détecté - le coup est joué directement par le joueur");
+        // Ne rien faire ici, le coup a déjà été joué via play()
+        return;
+    }
+    
     if(Object.entries(poll).length > 0) {
         // ✅ Il y a des votes
         console.log("on a des votes");
         
-        // ========== SÉPARATION COMPLÈTE DES LOGIQUES ==========
-        // Le choix majorité/roue est INDÉPENDANT du mode problème/normal
-        
         if(majorityMode) {
-            // Mode majorité : coup le plus voté, peu importe le mode de jeu
             selectMoveByMajority(poll);
         } else {
-            // Mode roue : animation + tirage au sort, peu importe le mode de jeu
             selectMoveByWheel(poll);
         }
         
@@ -908,6 +910,38 @@ function voteResult(poll) {
         // ❌ Pas de votes
         handleNoVotes();
     }
+}
+/**
+ * Vérifie si c'est le tour du joueur désigné (en mode 1vsAll)
+ * @returns {boolean}
+ */
+function isDesignatedPlayerTurn() {
+    // teamToPlay: 0 = blancs, 1 = noirs
+    // Le joueur désigné joue les blancs (teamToPlay === 0)
+    // Le chat joue les noirs (teamToPlay === 1)
+    return teamToPlay === 0;
+}
+
+/**
+ * Détermine si le mode de jeu actuel nécessite un vote ou non
+ * @returns {boolean} true si le vote doit être ignoré (jeu direct)
+ */
+function shouldSkipVoting() {
+    // Mode 1v1 : pas de vote, les deux joueurs jouent directement
+    if (gameMode === 'mod1v1') {
+        return true;
+    }
+    
+    // Mode 1vsAll : le joueur seul joue automatiquement (pas de vote pour lui)
+    if (gameMode === 'mod1vViewers') {
+        // Si c'est le tour du joueur seul, pas de vote
+        const isPlayerTurn = isDesignatedPlayerTurn();
+        if (isPlayerTurn) {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 // ========== SÉLECTION PAR MAJORITÉ ==========
@@ -1060,15 +1094,46 @@ function playBotMoveAndContinue() {
 
 // ========== GESTION QUAND AUCUN VOTE ==========
 function handleNoVotes() {
-    if(gameMode === "probMode") {
+    if (gameMode === "probMode") {
         console.log("Game over - pas de votes en mode problème");
         $("body").addClass('omg-lose');
-        // Appel direct sans attendre - globalReloadProblem gère déjà le timer
         globalReloadProblem(false);
-    } else {
-        // Mode normal sans votes - coup aléatoire selon le mode de sélection
-        playRandomMoveInNormalMode();
+        return;
     }
+    
+    // ========== NOUVEAU : En mode 1v1 ou 1vsAll sans votes ==========
+    if (gameMode === 'mod1v1') {
+        // En 1v1 sans vote, on attend simplement le prochain coup
+        console.log("Mode 1v1 : en attente du coup du joueur");
+        // Relancer le timer si activé
+        if (timerMode) {
+            $("body").addClass("showTimer");
+            startTimer(InitialvoterTimer, true);
+            voteOpen = true;
+        }
+        return;
+    }
+    
+    if (gameMode === 'mod1vViewers') {
+        if (isDesignatedPlayerTurn()) {
+            // C'est le tour du joueur seul, on attend son coup
+            console.log(`Mode 1vsAll : en attente du coup de @${mod1vViewersPlayer}`);
+            if (timerMode) {
+                $("body").addClass("showTimer");
+                startTimer(InitialvoterTimer, true);
+                voteOpen = true;
+            }
+            return;
+        } else {
+            // C'est le tour du chat sans votes : coup aléatoire
+            console.log("Mode 1vsAll (tour du chat) : pas de votes, coup aléatoire");
+            playRandomMoveInNormalMode();
+            return;
+        }
+    }
+    
+    // Mode normal sans votes - coup aléatoire
+    playRandomMoveInNormalMode();
 }
 
 function playRandomMoveInNormalMode() {
@@ -1374,199 +1439,169 @@ function moveAction(move, isFromNetwork = false) {
     }
 }
 
+
 function play(target, context, args) {
-	if(!voteOpen) { 
-		console.log("not vote open")
-	}else{
-		moves = chess.moves();
-		if (args.length == 1) {
-			let move = args[0];
-			
-
-			switch(gameMode) {
-			    case 'mod1vViewers':
-							if(context.username === mod1vViewersPlayer && teamToPlay == 1) {
-								//client.say(target, `Nope, it's viewers turn`);
-								return false;
-							}
-							if(context.username !== mod1vViewersPlayer && teamToPlay == 0) {
-								//client.say(target, `Nope, it's @${mod1vViewersPlayer} turn`);
-								return false;
-							}		
-							console.log(context.username+ "vote : "+ move);
-			        break;
-			    case 'mod1v1':
-							console.log("mod1v1");
-							if(context.username === oneVsOneModeList0 && teamToPlay == 1) {
-								//client.say(target, `Nope, it's @${oneVsOneModeList1} turn`);
-								return false;
-							}
-							if(context.username === oneVsOneModeList1 && teamToPlay == 0) {
-								//client.say(target, `Nope, it's @${oneVsOneModeList0} turn`);
-								return false;
-							}
-
-			        break;
-			    case 'modViewersvViewers':
-			    		//hack
-							if(!context['user-id']) {
-								context['user-id'] = 0;
-							}
-
-							if(context['user-id'] % 2 == 0 && teamToPlay == 1) {
-								//client.say(target, `Nope, Black to play`);
-								//console.log("nope");
-								return false;
-							}
-							if(context['user-id'] % 2 == 1 && teamToPlay == 0) {
-								//client.say(target, `Nope, White to play`);
-								//console.log("nope");
-								return false;
-							}		
-			        break;
-                case 'modStreamerChatvStreamerChat':
-                    let playerTeam = getTeamByChannel(target, context);
-                    if(playerTeam !== teamToPlay) {
-                        console.log(`Vote rejeté: ${context.username} vote depuis le mauvais chat. Équipe ${playerTeam} vs équipe attendue ${teamToPlay}`);
-                        return false; // Pas le bon chat pour cette équipe
-                    }
-                    console.log(`Vote accepté: ${context.username} vote pour l'équipe ${playerTeam} depuis ${target}`);
-                    break;
-			    default:
-			}
-
-			// Fonction pour vérifier si l'utilisateur est le propriétaire de la chaîne
-			function isChannelOwner(context, target) {
-				// Récupérer le nom du canal sans le #
-				let channelName = target.replace('#', '').toLowerCase();
-				return context.username.toLowerCase() === channelName;
-			}
-			
-			// Vérification du mode followers
-			if(followMode == true) {
-				// Le propriétaire de la chaîne peut toujours jouer
-				if(isChannelOwner(context, target)) {
-					console.log("Channel owner can always play:", context.username);
-				} else {
-					// Vérifier si l'utilisateur a le badge follower
-					let isFollower = context.badges && context.badges.follower;
-					// Vérifier si c'est un abonné, VIP, modérateur ou broadcaster (ils ont toujours accès)
-					let hasSpecialAccess = (context.badges && (
-						context.badges.subscriber || 
-						context.badges.vip || 
-						context.badges.moderator || 
-						context.badges.broadcaster
-					)) || context['user-type'] === 'mod' || context.mod;
-					
-					if(!isFollower && !hasSpecialAccess) {
-						console.log("User is not a follower:", context.username);
-						//client.say(target, `@${context.username} Seuls les followers peuvent jouer !`);
-						return false;
-					}
-				}
-			}
-
-			// Vérification du mode abonnés
-			if(subMode == true) {
-				// Le propriétaire de la chaîne peut toujours jouer
-				if(isChannelOwner(context, target)) {
-					console.log("Channel owner can always play:", context.username);
-				} else {
-					// Vérifier si l'utilisateur a le badge subscriber
-					let isSubscriber = context.badges && context.badges.subscriber;
-					// Vérifier si c'est un VIP, modérateur ou broadcaster (ils ont toujours accès)
-					let hasSpecialAccess = (context.badges && (
-						context.badges.vip || 
-						context.badges.moderator || 
-						context.badges.broadcaster
-					)) || context['user-type'] === 'mod' || context.mod;
-					
-					if(!isSubscriber && !hasSpecialAccess) {
-						console.log("User is not a subscriber:", context.username);
-						//client.say(target, `@${context.username} Seuls les abonnés peuvent jouer !`);
-						return false;
-					}
-				}
-			}
-
-			// Move invalide ?
-			if(moves.includes(move) !== true && moves.includes(move+"#") !== true && moves.includes(move+"+") !== true){
-				//client.say(target, `Invalid move`);
-				//console.log("Invalid move");
-				showAvailableMoves(target, chess, context);
-				return false;
-			}
-    if (window.multiplayerMode && window.multiplayerManager && !isFromNetwork) {
-        window.multiplayerManager.sendMove(move);
+    if(!voteOpen) { 
+        console.log("not vote open");
+        return;
     }
-			// FUNCTION MOVE
-			//client.say(target, `@${context.username} vote for ${move}`);
-			
-			// Move = resetTimeOut  + nouveau coup		
-            if(timerMode) {
-				addMoveToPoll(context.username, move);
-			} else {
-				moveAction(move);
-                if(timerMode && (gameMode === 'mod1v1' || gameMode === 'mod1vViewers')) {
-                    $("body").addClass("showTimer");
-                    startTimer(InitialvoterTimer, true);
-                    voteOpen = true;
-                }
-				if(gameMode == "probMode") {
-					let verif = verifPbm();
-					if(verif == false) {
-						//Nope, erreur
-						let status = 'Erreur !';
-						console.log("faute dans le pb mode pas timer");
-						
-						var tmp = $("[data-solution]").text();
-						$("[data-square]").removeClass("highlight-black");
-						$("[data-square="+tmp.slice(0,2)+"]").addClass("highlight-black");
-						$("[data-square="+tmp.slice(2,4)+"]").addClass("highlight-black");		
-						
-
-						chess.move({from:tmp.slice(0,2), to:tmp.slice(2,4)});
-						board.position(chess);
-
-						globalReloadProblem(false);
-					} else {
-						//On vérifie si c'est la fin du problème
-						console.log("Correct, on continue par le move du bot");
-
-						if ($("[data-attempt]").attr("data-attempt") == $("[data-length]").attr("data-length")) {
-
-							globalReloadProblem(true);
-					  } else {
-							setTimeout(function() {
-								let move = playPbm();
-									moveAction(move);
-									var moves = chess.moves();
-									refreshBoard(chess);
-							}, 2000);
-					  }
-					}
-				} else {
-                    if(checkforChemate()) {
-                        $("body").addClass('omg-win');
-                        startTimer(pauseAfterWinLose, false);
-                        setTimeout(function() {
-                        $("body").removeClass('omg-win');
-                            loadNewgame();
-                        }, pauseAfterWinLose*1000);
-                    }
-                }
-/*
-				*/
-
-
-			}
-		} else {
-			//client.say(target, `Syntaxe : !p XXXX `);
-			//console.log("Syntax error : !p _MOVE_");
-		}
-	}
+    
+    moves = chess.moves();
+    
+    if (args.length == 1) {
+        let move = args[0];
+        
+        // Valider le coup
+        if(!isValidMove(move, moves)) {
+            showAvailableMoves(target, chess, context);
+            return false;
+        }
+        
+        // ========== NOUVEAU : Vérification des droits de jeu selon le mode ==========
+        const canPlay = checkPlayerPermission(context, target);
+        if (!canPlay.allowed) {
+            console.log(`Vote rejeté: ${canPlay.reason}`);
+            return false;
+        }
+        
+        // ========== NOUVEAU : Mode sans vote (1v1 ou tour du joueur en 1vsAll) ==========
+        if (shouldPlayDirectly(context)) {
+            console.log(`🎯 Mode direct: ${context.username} joue ${move}`);
+            moveAction(move);
+            
+            // En mode 1v1 ou 1vsAll, redémarrer le timer pour le prochain tour
+            if (timerMode && (gameMode === 'mod1v1' || gameMode === 'mod1vViewers')) {
+                handleDirectMoveCompletion();
+            }
+            
+            // Vérifier fin de partie
+            if (checkforChemate()) {
+                handleGameEnd();
+            }
+            
+            return true;
+        }
+        
+        // ========== Mode avec vote (comportement original) ==========
+        if(timerMode) {
+            addMoveToPoll(context.username, move);
+        } else {
+            // Mode sans timer : coup direct
+            moveAction(move);
+            handlePostMoveLogic();
+        }
+        
+        // Envoyer en multiplayer si nécessaire
+        if (window.multiplayerMode && window.multiplayerManager && !isFromNetwork) {
+            window.multiplayerManager.sendMove(move);
+        }
+    }
+}
+/**
+ * Vérifie si le coup est valide
+ */
+function isValidMove(move, moves) {
+    return moves.includes(move) || 
+           moves.includes(move + "#") || 
+           moves.includes(move + "+");
 }
 
+/**
+ * Vérifie si le joueur a le droit de jouer selon le mode
+ * @returns {Object} {allowed: boolean, reason: string}
+ */
+function checkPlayerPermission(context, target) {
+    switch(gameMode) {
+        case 'mod1vViewers':
+            // Le joueur désigné joue quand c'est son tour
+            if (context.username === mod1vViewersPlayer) {
+                if (teamToPlay === 1) {
+                    return { allowed: false, reason: `C'est le tour du chat` };
+                }
+                return { allowed: true };
+            } else {
+                // Les viewers jouent quand c'est le tour du chat
+                if (teamToPlay === 0) {
+                    return { allowed: false, reason: `C'est le tour de @${mod1vViewersPlayer}` };
+                }
+                return { allowed: true };
+            }
+            
+        case 'mod1v1':
+            // Joueur 0 joue les blancs, Joueur 1 joue les noirs
+            if (context.username === oneVsOneModeList0 && teamToPlay === 1) {
+                return { allowed: false, reason: `C'est le tour de @${oneVsOneModeList1}` };
+            }
+            if (context.username === oneVsOneModeList1 && teamToPlay === 0) {
+                return { allowed: false, reason: `C'est le tour de @${oneVsOneModeList0}` };
+            }
+            // Seuls les deux joueurs désignés peuvent jouer
+            if (context.username !== oneVsOneModeList0 && context.username !== oneVsOneModeList1) {
+                return { allowed: false, reason: `Seuls @${oneVsOneModeList0} et @${oneVsOneModeList1} peuvent jouer` };
+            }
+            return { allowed: true };
+            
+        case 'modStreamerChatvStreamerChat':
+            let playerTeam = getTeamByChannel(target, context);
+            if (playerTeam !== teamToPlay) {
+                return { allowed: false, reason: `Vote depuis le mauvais chat` };
+            }
+            return { allowed: true };
+            
+        default:
+            // Mode normal/sandbox : tout le monde peut jouer
+            return { allowed: true };
+    }
+}
+
+/**
+ * Détermine si le coup doit être joué directement (sans vote)
+ */
+function shouldPlayDirectly(context) {
+    // Mode 1v1 : toujours direct
+    if (gameMode === 'mod1v1') {
+        return true;
+    }
+    
+    // Mode 1vsAll : direct seulement pour le joueur désigné
+    if (gameMode === 'mod1vViewers') {
+        return context.username === mod1vViewersPlayer;
+    }
+    
+    // Autres modes avec timer désactivé : coup direct
+    if (!timerMode) {
+        return true;
+    }
+    
+    return false;
+}
+
+/**
+ * Gère la fin d'un coup direct (1v1 ou joueur en 1vsAll)
+ */
+function handleDirectMoveCompletion() {
+    // Basculer le tour
+    // teamToPlay est déjà mis à jour dans moveAction()
+    
+    // Relancer le timer pour le prochain joueur/tour
+    $("body").addClass("showTimer");
+    startTimer(InitialvoterTimer, true);
+    voteOpen = true;
+    
+    console.log(`⏱️ Timer relancé - Tour: ${teamToPlay === 0 ? 'Blancs' : 'Noirs'}`);
+}
+
+/**
+ * Gère la fin de partie
+ */
+function handleGameEnd() {
+    $("body").addClass('omg-win');
+    startTimer(pauseAfterWinLose, false);
+    setTimeout(function() {
+        $("body").removeClass('omg-win');
+        loadNewgame();
+    }, pauseAfterWinLose * 1000);
+}
 function refreshPlayerDisplay() {
     updatePlayerDisplay();
 }
@@ -1691,6 +1726,105 @@ function updatePlayerDisplay() {
         whiteHeader.find('.player-info').addClass('current-player');
     } else {
         blackHeader.find('.player-info').addClass('current-player');
+    }
+}
+function updateGameModeDisplay() {
+    const modeIndicator = document.getElementById('gameModeIndicator');
+    if (!modeIndicator) return;
+    
+    let modeText = '';
+    let modeClass = '';
+    
+    switch(gameMode) {
+        case 'mod1v1':
+            modeText = `⚔️ ${oneVsOneModeList0} vs ${oneVsOneModeList1}`;
+            modeClass = 'mode-duel';
+            break;
+        case 'mod1vViewers':
+            modeText = `👤 ${mod1vViewersPlayer} vs Chat`;
+            modeClass = 'mode-1vall';
+            break;
+        case 'modStreamerChatvStreamerChat':
+            modeText = `🎭 Chat vs Chat`;
+            modeClass = 'mode-chatvschat';
+            break;
+        case 'probMode':
+            modeText = `🧩 Problèmes`;
+            modeClass = 'mode-puzzle';
+            break;
+        default:
+            modeText = `🎯 Sandbox`;
+            modeClass = 'mode-sandbox';
+    }
+    
+    modeIndicator.textContent = modeText;
+    modeIndicator.className = `game-mode-indicator ${modeClass}`;
+}
+
+// ============================================================================
+// MODIFICATION 6 : Fonction utilitaire pour afficher le joueur actuel
+// ============================================================================
+
+function getCurrentPlayerName() {
+    switch(gameMode) {
+        case 'mod1v1':
+            return teamToPlay === 0 ? oneVsOneModeList0 : oneVsOneModeList1;
+        case 'mod1vViewers':
+            return teamToPlay === 0 ? mod1vViewersPlayer : 'Chat';
+        case 'modStreamerChatvStreamerChat':
+            return teamToPlay === 0 ? streamerChatvStreamerChat0 : streamerChatvStreamerChat1;
+        default:
+            return teamToPlay === 0 ? 'Blancs' : 'Noirs';
+    }
+}
+
+function updateGameModeDisplay() {
+    const modeIndicator = document.getElementById('gameModeIndicator');
+    if (!modeIndicator) return;
+    
+    let modeText = '';
+    let modeClass = '';
+    
+    switch(gameMode) {
+        case 'mod1v1':
+            modeText = `⚔️ ${oneVsOneModeList0} vs ${oneVsOneModeList1}`;
+            modeClass = 'mode-duel';
+            break;
+        case 'mod1vViewers':
+            modeText = `👤 ${mod1vViewersPlayer} vs Chat`;
+            modeClass = 'mode-1vall';
+            break;
+        case 'modStreamerChatvStreamerChat':
+            modeText = `🎭 Chat vs Chat`;
+            modeClass = 'mode-chatvschat';
+            break;
+        case 'probMode':
+            modeText = `🧩 Problèmes`;
+            modeClass = 'mode-puzzle';
+            break;
+        default:
+            modeText = `🎯 Sandbox`;
+            modeClass = 'mode-sandbox';
+    }
+    
+    modeIndicator.textContent = modeText;
+    modeIndicator.className = `game-mode-indicator ${modeClass}`;
+}
+
+// ============================================================================
+// MODIFICATION 6 : Fonction utilitaire pour afficher le joueur actuel
+// ============================================================================
+
+function getCurrentPlayerName() {
+    switch(gameMode) {
+        case 'mod1v1':
+            return teamToPlay === 0 ? oneVsOneModeList0 : oneVsOneModeList1;
+        case 'mod1vViewers':
+            return teamToPlay === 0 ? mod1vViewersPlayer : 'Chat';
+        case 'modStreamerChatvStreamerChat':
+            return teamToPlay === 0 ? streamerChatvStreamerChat0 : streamerChatvStreamerChat1;
+        default:
+            return teamToPlay === 0 ? 'Blancs' : 'Noirs';
     }
 }
 
@@ -2625,10 +2759,20 @@ document.addEventListener('DOMContentLoaded', function() {
     setupMultiplayerTabs();
     setupMultiplayerButtons();
     setupCopyButtons();
-    
     // Détection du mode multiplayer
     detectMultiplayerMode();
     console.log('✅ Gestionnaires DOM initialisés');
+    updateGameModeDisplay();
+    
+    // Log du mode actif
+    console.log(`🎮 Mode de jeu: ${gameMode}`);
+    if (gameMode === 'mod1v1') {
+        console.log(`   Joueurs: ${oneVsOneModeList0} (⬜) vs ${oneVsOneModeList1} (⬛)`);
+        console.log(`   Vote: DÉSACTIVÉ - jeu direct`);
+    } else if (gameMode === 'mod1vViewers') {
+        console.log(`   Joueur: ${mod1vViewersPlayer}`);
+        console.log(`   Vote: ACTIVÉ pour le chat uniquement`);
+    }    
 });
 
 // ========== Export pour utilisation externe ==========
