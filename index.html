@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phantom Twitchess Arena</title>
+    <title>Phantom Chess Arena</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -951,22 +951,43 @@
                     <a class="mode-card" data-navigate="/sandbox">
                         <span class="mode-card-badge new">Disponible</span>
                         <div class="mode-card-icon">🧪</div>
-                        <h3 class="mode-card-title">Sandbox</h3>
-                        <p class="mode-card-desc">Mode libre pour tester et configurer. Idéal pour préparer tes parties et tester la synchronisation Phantom.</p>
+                        <h3 class="mode-card-title">Sandbox (YOLO)</h3>
+                        <p class="mode-card-desc">Mode libre pour tester. Tout le monde peut voter pour tout le monde. Idéal pour configurer et tester.</p>
+                    </a>
+
+                    <a class="mode-card" data-navigate="/sandbox?mode=probMode">
+                        <span class="mode-card-badge new">Disponible</span>
+                        <div class="mode-card-icon">🧩</div>
+                        <h3 class="mode-card-title">Problèmes</h3>
+                        <p class="mode-card-desc">Résous des puzzles d'échecs avec ton chat. Plus de 70 000 problèmes avec filtrage par thème.</p>
+                    </a>
+
+                    <a class="mode-card" data-navigate="/sandbox?mode=mod1vViewers">
+                        <span class="mode-card-badge new">Disponible</span>
+                        <div class="mode-card-icon">👤</div>
+                        <h3 class="mode-card-title">Seul contre tous</h3>
+                        <p class="mode-card-desc">Un joueur désigné affronte tout le chat. Le joueur joue immédiatement, le chat vote.</p>
+                    </a>
+
+                    <a class="mode-card" data-navigate="/sandbox?mode=mod1v1">
+                        <span class="mode-card-badge new">Disponible</span>
+                        <div class="mode-card-icon">⚔️</div>
+                        <h3 class="mode-card-title">Un contre un</h3>
+                        <p class="mode-card-desc">Duel entre deux joueurs désignés. Pas de vote, chaque joueur tape son coup directement.</p>
+                    </a>
+
+                    <a class="mode-card" data-navigate="/sandbox?mode=modStreamerChatvStreamerChat">
+                        <span class="mode-card-badge soon">WIP</span>
+                        <div class="mode-card-icon">🎭</div>
+                        <h3 class="mode-card-title">Chat vs Chat</h3>
+                        <p class="mode-card-desc">Les chats de deux streamers s'affrontent ! Crée ou rejoins une partie avec un code.</p>
                     </a>
 
                     <div class="mode-card disabled">
                         <span class="mode-card-badge soon">Bientôt</span>
-                        <div class="mode-card-icon">⚔️</div>
-                        <h3 class="mode-card-title">Bataille Twitch</h3>
-                        <p class="mode-card-desc">Chat vs Chat ! Deux équipes s'affrontent via les votes du chat Twitch.</p>
-                    </div>
-
-                    <div class="mode-card disabled">
-                        <span class="mode-card-badge soon">Bientôt</span>
-                        <div class="mode-card-icon">🧩</div>
-                        <h3 class="mode-card-title">Problèmes</h3>
-                        <p class="mode-card-desc">Résous des puzzles d'échecs avec ton chat. Plus de 70 000 problèmes disponibles.</p>
+                        <div class="mode-card-icon">🚀</div>
+                        <h3 class="mode-card-title">Puzzle Rush</h3>
+                        <p class="mode-card-desc">Mode compétitif : enchaîne les puzzles le plus rapidement possible !</p>
                     </div>
                 </div>
 
@@ -996,8 +1017,14 @@
                         <button class="btn" id="btn-reset-board">
                             <i class="fas fa-undo"></i> Reset
                         </button>
+                        <button class="btn" id="btn-undo-move">
+                            <i class="fas fa-step-backward"></i> Undo
+                        </button>
                         <button class="btn" id="btn-sync-phantom" disabled>
                             <i class="fas fa-sync"></i> Sync Phantom
+                        </button>
+                        <button class="btn btn-danger" id="btn-game-end" disabled>
+                            <i class="fas fa-stop"></i> Game End
                         </button>
                         <button class="btn btn-primary" id="btn-save-config">
                             <i class="fas fa-save"></i> Sauvegarder
@@ -1448,27 +1475,68 @@
         },
 
         fenToMatrix(fen) {
-            const [position] = fen.split(' ');
+            const position = fen.split(' ')[0];
             const rows = position.split('/');
             
-            // Créer matrice 10x10 avec bordures vides
-            let matrix = Array(10).fill(null).map(() => Array(10).fill('.'));
-            
-            // Remplir le plateau 8x8 au centre (indices 1-8)
-            for (let rank = 0; rank < 8; rank++) {
-                let file = 1;
-                for (const char of rows[rank]) {
-                    if (isNaN(char)) {
-                        matrix[rank + 1][file] = char;
-                        file++;
+            // Parser le FEN en tableau 8x8
+            const board = [];
+            for (const row of rows) {
+                let boardRow = '';
+                for (const char of row) {
+                    if (/\d/.test(char)) {
+                        boardRow += '.'.repeat(parseInt(char));
                     } else {
-                        file += parseInt(char);
+                        boardRow += char;
                     }
                 }
+                board.push(boardRow.padEnd(8, '.'));
             }
             
-            // Convertir en string
-            return matrix.map(row => row.join('')).join('');
+            // ROTATION 90° HORAIRE pour le Phantom
+            // Chaque colonne du FEN devient une ligne de la matrice
+            // L'ordre dans chaque ligne va du rang 8 au rang 1
+            const rotated = [];
+            for (let col = 0; col < 8; col++) {
+                let newRow = '';
+                for (let row = 0; row < 8; row++) {
+                    newRow += board[row][col];
+                }
+                rotated.push(newRow);
+            }
+            
+            // Construire la matrice 10x10 avec bordures (cimetière)
+            let matrix = '..........'; // Première ligne (cimetière haut)
+            for (const row of rotated) {
+                matrix += '.' + row + '.';
+            }
+            matrix += '..........'; // Dernière ligne (cimetière bas)
+            
+            return matrix;
+        },
+
+        formatMatrix(matrix) {
+            let display = '   0 1 2 3 4 5 6 7 8 9\n';
+            for (let row = 0; row < 10; row++) {
+                display += `${row}  ${matrix.slice(row * 10, (row + 1) * 10).split('').join(' ')}\n`;
+            }
+            return display;
+        },
+
+        async sendGameEnd() {
+            if (!this.gameCharacteristic) return false;
+            Toast.show('Envoi GAME_END...', 'info');
+            const success = await this.sendCommand(this.OP_CODES.GAME_END, '');
+            if (success) {
+                Toast.show('Game End envoyé', 'success');
+            }
+            return success;
+        },
+
+        async sendTakeBack(count, fen, side) {
+            if (!this.gameCharacteristic) return false;
+            const data = `${count},${fen},${side}`;
+            Toast.show('Envoi TAKE_BACK...', 'info');
+            return await this.sendCommand(5, data); // OpCode 5 = TAKE_BACK
         },
 
         async syncPosition(fen) {
@@ -1515,6 +1583,7 @@
         updateUI(connected) {
             const statusEl = document.getElementById('phantom-connection-status');
             const syncBtn = document.getElementById('btn-sync-phantom');
+            const gameEndBtn = document.getElementById('btn-game-end');
             const navStatus = document.querySelector('#phantom-status .status-dot');
             const navText = document.querySelector('#phantom-status .status-text');
             const btnStatus = document.querySelector('#btn-connect-phantom .connect-btn-status');
@@ -1523,6 +1592,7 @@
             if (connected) {
                 if (statusEl) statusEl.innerHTML = `<span style="color: var(--accent-green);">✅ Connecté: ${this.device?.name || 'Phantom'}</span>`;
                 if (syncBtn) syncBtn.disabled = false;
+                if (gameEndBtn) gameEndBtn.disabled = false;
                 if (navStatus) navStatus.classList.add('connected');
                 if (navText) navText.textContent = this.device?.name || 'Phantom';
                 if (btnStatus) btnStatus.textContent = this.device?.name || 'Connecté';
@@ -1530,6 +1600,7 @@
             } else {
                 if (statusEl) statusEl.innerHTML = `<span style="color: var(--text-muted);">Non connecté</span>`;
                 if (syncBtn) syncBtn.disabled = true;
+                if (gameEndBtn) gameEndBtn.disabled = true;
                 if (navStatus) navStatus.classList.remove('connected');
                 if (navText) navText.textContent = 'Phantom';
                 if (btnStatus) btnStatus.textContent = 'Non connecté';
@@ -1826,18 +1897,40 @@
             // Speed slider
             document.getElementById('phantom-speed')?.addEventListener('change', async (e) => {
                 AppState.settings.phantomSpeed = parseInt(e.target.value);
-                // Envoyer au Phantom si connecté
-                if (AppState.connections.phantom.connected) {
-                    // PhantomManager.setSpeed(AppState.settings.phantomSpeed);
-                }
             });
 
             // Boutons sandbox
             document.getElementById('btn-reset-board')?.addEventListener('click', () => ChessManager.reset());
             document.getElementById('btn-flip-board')?.addEventListener('click', () => ChessManager.flip());
+            
+            // Undo
+            document.getElementById('btn-undo-move')?.addEventListener('click', () => {
+                const move = chess.undo();
+                if (move) {
+                    if (board) board.position(chess.fen());
+                    ChessManager.updateMoveHistory();
+                    Toast.show(`Coup annulé: ${move.san}`, 'success');
+                    
+                    // Sync avec Phantom si connecté
+                    if (AppState.connections.phantom.connected && AppState.settings.autoSync) {
+                        PhantomManager.syncPosition(chess.fen());
+                    }
+                } else {
+                    Toast.show('Aucun coup à annuler', 'warning');
+                }
+            });
+            
+            // Sync Phantom
             document.getElementById('btn-sync-phantom')?.addEventListener('click', () => {
                 if (AppState.connections.phantom.connected) {
                     PhantomManager.syncPosition(chess.fen());
+                }
+            });
+            
+            // Game End
+            document.getElementById('btn-game-end')?.addEventListener('click', async () => {
+                if (AppState.connections.phantom.connected) {
+                    await PhantomManager.sendGameEnd();
                 }
             });
         }
