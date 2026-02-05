@@ -427,7 +427,19 @@ class PhantomChessboard {
             // Caractéristiques optionnelles
             try {
                 this.characteristics.speed = await this.service.getCharacteristic(this.UUID_MECHANISM_SPEED);
-            } catch (e) { }
+                // Lire la vitesse actuelle
+                const speedValue = await this.characteristics.speed.readValue();
+                const currentSpeed = parseInt(new TextDecoder().decode(speedValue));
+                this.log(`⚡ Vitesse actuelle: ${currentSpeed}/5`, 'info');
+                
+                // Mettre à jour le slider si présent
+                const speedSlider = document.getElementById('phantom-speed');
+                const speedValueEl = document.getElementById('phantom-speed-value');
+                if (speedSlider) speedSlider.value = currentSpeed;
+                if (speedValueEl) speedValueEl.textContent = currentSpeed;
+            } catch (e) { 
+                this.log('⚠️ Vitesse non disponible', 'warn');
+            }
             
             try {
                 this.characteristics.sound = await this.service.getCharacteristic(this.UUID_SOUND_SETTINGS);

@@ -685,6 +685,37 @@ function updateConnectionUI() {
     }
 }
 
+
+document.getElementById('phantom-speed-slider')?.addEventListener('input', (e) => {
+    const speed = parseInt(e.target.value);
+    document.getElementById('phantom-speed-value').textContent = speed;
+});
+
+document.getElementById('phantom-speed-slider')?.addEventListener('change', async (e) => {
+    const speed = parseInt(e.target.value);
+    console.log(`⚡ Modification vitesse: ${speed}`);
+    
+    if (window.phantom?.isConnected) {
+        await window.phantom.setSpeed(speed);
+        Toast.success(`Vitesse réglée à ${speed}`);
+    }
+});
+
+// Écouter l'événement de connexion Phantom pour mettre à jour l'UI
+window.addEventListener('phantomConnected', async () => {
+    if (window.phantom) {
+        const speed = await window.phantom.getSpeed();
+        const slider = document.getElementById('phantom-speed-slider');
+        const valueEl = document.getElementById('phantom-speed-value');
+        
+        if (slider) slider.value = speed;
+        if (valueEl) valueEl.textContent = speed;
+        
+        console.log(`⚡ Vitesse actuelle du Phantom: ${speed}`);
+    }
+});
+
+
 // ============================================
 // INITIALISATION
 // ============================================
@@ -704,6 +735,12 @@ async function initApp() {
 
     // Restore connections
     await window.twitch?.restore();
+
+    window.twitch.onVote = (voteContext) => {
+        if (voting.isOpen) {
+            voting.addVote(voteContext.username, voteContext.move);
+        }
+    };    
     updateConnectionUI();
 
     console.log('✅ Phantom Twitchess prêt !');

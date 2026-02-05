@@ -506,6 +506,19 @@ body.no-bg .board-wrapper {
     background: var(--accent-blue);
 }
 
+body.randomWheel #chart {
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+
+body:not(.randomWheel) #chart {
+    display: none;
+}
+
 /* ============================================
    GAME STATE INDICATORS
    ============================================ */

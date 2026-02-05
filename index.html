@@ -146,7 +146,7 @@
                             <input type="text" id="voter-name" placeholder="Nom du votant" value="TestPlayer">
                             <div id="wheel-area"></div>
                             <div class="voting-panel__wheel-area">
-                                <div id="chart"></div>
+                                <div id="chart" class="wheel-chart"></div>
                             </div>
                             <div class="voting-panel__info">
                                 <div class="voting-panel__header">
@@ -413,9 +413,14 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
 
     <!-- App (ES Modules) -->
     <script src="js/phantom.js" type="module"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/phantom-form.js"></script>
+    
     <script src="js/app.js" type="module"></script>
 </body>
 </html>

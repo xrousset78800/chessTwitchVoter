@@ -602,15 +602,6 @@ $('button[data-side]').on('click', async function() {
             const connected = await window.phantomChessboard.connect();
             updateConnectionStatus(connected);
 
-(async () => {
-    await phantom.connect();
-    await phantom.setBLEMode();
-    await phantom.setFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
-    await phantom.gameStart();
-    await phantom.move("e2", "e4");
-})();
-
-            
         } else {
             log('❌ phantomChessboard non disponible', 'error');
         }

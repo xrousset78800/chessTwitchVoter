@@ -31,3 +31,4 @@ jobs:
             **/vendor/**
             **/node_modules/**
             **/.env
+            **/twitchToken.js

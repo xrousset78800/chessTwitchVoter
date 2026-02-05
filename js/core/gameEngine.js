@@ -559,11 +559,50 @@ class GameEngine {
     showWheelAnimation(results, winningMove) {
         document.body.classList.add('randomWheel');
         
-        // TODO: Intégrer l'animation de roue D3.js ici
-        console.log('🎡 Animation roue...');
+        // Convertir les résultats au format attendu par randomWheel()
+        const poll = [];
+        const colorPalette = [
+            '#f2ff93','#dc90e8','#88e600','#e5c0ff','#01d04b','#ff9cc9',
+            '#37ff85','#ffaca6','#08c55c','#ffa837','#85f9ff','#e5c700',
+            '#a8d7ff','#84c600','#67b8c3','#fff55e','#01c2a0','#d5a517'
+        ];
         
+        // Construire le poll à partir des votes
+        const allVotes = voting.getAllVotes();
+        allVotes.forEach((vote, index) => {
+            poll.push({
+                player: vote.player,
+                move: vote.move,
+                color: vote.color || colorPalette[index % colorPalette.length]
+            });
+        });
+        
+        // Si pas assez de votes, ajouter des entrées pour chaque coup disponible
+        if (poll.length === 0) {
+            const moves = this.chess.moves();
+            moves.forEach((move, index) => {
+                poll.push({
+                    player: 'random',
+                    move: move.replace(/[+#]/, ''),
+                    color: colorPalette[index % colorPalette.length]
+                });
+            });
+        }
+        
+        console.log('🎡 Lancement de la roue avec', poll.length, 'options');
+        
+        // Appeler la vraie fonction randomWheel() de D3.js
+        // Elle retourne le coup sélectionné mais on utilise winningMove déjà calculé
+        try {
+            randomWheel(poll, this.chess.turn());
+        } catch (error) {
+            console.error('❌ Erreur animation roue:', error);
+        }
+        
+        // Après l'animation, exécuter le coup
         setTimeout(() => {
             document.body.classList.remove('randomWheel');
+            $('#chart').html(''); // Nettoyer le chart D3
             this.executeMove(winningMove);
         }, this.config.wheelDuration * 1000);
     }
@@ -865,8 +904,8 @@ class GameEngine {
      * Sync avec le Phantom si connecté
      */
     syncPhantom() {
-        if (window.phantom?.isConnected) {
-            window.phantom.syncPosition(this.chess.fen());
+        if (window.phantomChessboard ?.isConnected) {
+            window.phantomChessboard .syncPosition(this.chess.fen());
         }
     }
 
