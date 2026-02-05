@@ -192,21 +192,23 @@ img, video {
     z-index: var(--z-base);
     min-height: 100vh;
 }
+/* ============================================
+   PAGES - Navigation SPA
+   ============================================ */
+
 .page {
     display: none;
     opacity: 0;
     visibility: hidden;
-    transition: opacity var(--transition-medium);
 }
 
-/* Seule la page active est visible */
 .page.is-active {
     display: block;
     opacity: 1;
     visibility: visible;
+    animation: pageIn 0.3s ease-out;
 }
 
-/* Animation d'entrée optionnelle */
 @keyframes pageIn {
     from {
         opacity: 0;
@@ -218,8 +220,315 @@ img, video {
     }
 }
 
-.page.is-active {
-    animation: pageIn 0.3s ease-out;
+/* ============================================
+   TIMER DISPLAY
+   ============================================ */
+
+.showTimer .countdown {
+    display: grid;
+    place-items: center;
+}
+
+.countdown {
+    display: none;
+    width: 120px;
+    height: 120px;
+    position: relative;
+}
+
+/* Variables CSS pour l'animation */
+@property --t {
+    syntax: "<number>";
+    initial-value: 30;
+    inherits: true;
+}
+
+@property --q {
+    syntax: "<number>";
+    initial-value: 30;
+    inherits: true;
+}
+
+.countdown svg {
+    width: 100%;
+    height: 100%;
+}
+
+.countdown circle:first-child {
+    fill: none;
+    stroke: #333;
+    stroke-width: 4;
+    opacity: 0.3;
+}
+
+.countdown circle:last-child {
+    --k: calc(var(--t) / var(--q));
+    fill: none;
+    stroke: color-mix(in hsl shorter hue, #8a9b0f calc(var(--k) * 100%), #940a3d);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: calc(var(--k) * 283) 283;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dasharray 0.1s linear;
+}
+
+.timer-critical .countdown {
+    animation: timerShake 0.3s ease-in-out infinite;
+}
+
+@keyframes timerShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+/* Timer textuel */
+#timer-value {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+}
+
+/* ============================================
+   VOTING PANEL
+   ============================================ */
+
+.voting-panel {
+    display: none;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.voting-panel.is-visible {
+    display: block;
+}
+
+.voting-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.voting-panel__title {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.voting-panel__total {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Vote items */
+.vote-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.vote-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--color);
+}
+
+.vote-move {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+.vote-count {
+    background: var(--color);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.vote-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--color);
+    opacity: 0.15;
+    transition: width 0.3s ease;
+}
+
+/* ============================================
+   AVAILABLE MOVES
+   ============================================ */
+
+#availableList ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+#availableList li {
+    list-style: none;
+}
+
+#availableList button {
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+#availableList button:hover {
+    background: var(--accent-purple);
+    border-color: var(--accent-purple);
+    transform: translateY(-2px);
+}
+
+#availableList li.most-voted button {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: #000;
+    font-weight: 700;
+}
+
+/* ============================================
+   BOUTON APPLIQUER
+   ============================================ */
+
+.btn--lg {
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.btn--primary.btn--lg {
+    background: var(--gradient-hero);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.btn--primary.btn--lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+.sandbox__actions-separator {
+    width: 1px;
+    height: 30px;
+    background: var(--border-subtle);
+    margin: 0 8px;
+}
+
+/* ============================================
+   MODE NO-BG (pour OBS)
+   ============================================ */
+
+body.no-bg {
+    background: transparent !important;
+}
+
+body.no-bg .bg-grid,
+body.no-bg .bg-glow,
+body.no-bg .nav,
+body.no-bg .sandbox__sidebar {
+    display: none !important;
+}
+
+body.no-bg .board-wrapper {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast--success {
+    background: var(--accent-green);
+}
+
+.toast--error {
+    background: var(--accent-red);
+}
+
+.toast--warning {
+    background: var(--accent-orange);
+}
+
+.toast--info {
+    background: var(--accent-blue);
+}
+
+/* ============================================
+   GAME STATE INDICATORS
+   ============================================ */
+
+body.omg-win .board-wrapper {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+}
+
+body.omg-lose .board-wrapper {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+}
+
+body.randomWheel .sandbox__main {
+    pointer-events: none;
+}
+
+/* Turn indicator */
+body[data-turn="w"] .sandbox__title::after {
+    content: ' ⬜';
+}
+
+body[data-turn="b"] .sandbox__title::after {
+    content: ' ⬛';
 }
 /* ============================================
    SCROLLBAR

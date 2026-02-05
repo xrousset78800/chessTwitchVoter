@@ -112,6 +112,9 @@
                         <button class="btn btn--sm" id="btn-sync" disabled><i class="fas fa-sync"></i> Sync</button>
                         <button class="btn btn--sm btn--danger" id="btn-game-end" disabled><i class="fas fa-stop"></i> Game End</button>
                         <button class="btn btn--sm btn--primary" id="btn-save-config"><i class="fas fa-save"></i> Sauvegarder</button>
+                        <button class="btn btn--primary btn--lg" id="btn-apply-config">
+                            <i class="fas fa-play"></i> Appliquer
+                        </button>                        
                     </div>
                 </div>
 
@@ -181,9 +184,6 @@
                                         <span class="mode-option__label">Chat vs Chat</span>
                                     </div>
                                 </div>
-                                <button class="btn btn--primary btn--lg" id="btn-apply-config">
-                                    <i class="fas fa-play"></i> Appliquer
-                                </button>
                                 <!-- Mode: 1vsAll options -->
                                 <div class="mode-options" id="options-oneVsAll">
                                     <div class="player-input">
@@ -411,16 +411,8 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    <script src="https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js"></script>
 
-    <!-- App modules (loaded as regular scripts for simplicity) -->
-    <script src="js/utils/storage.js" type="module"></script>
-    <script src="js/utils/toast.js" type="module"></script>
-    <script src="js/utils/i18n.js" type="module"></script>
-    <script src="js/managers/phantom.js" type="module"></script>
-    <script src="js/managers/twitch.js" type="module"></script>
-    <script src="js/managers/chess.js" type="module"></script>
-    <script src="js/components/wheel.js" type="module"></script>
+    <!-- App (ES Modules) -->
     <script src="js/app.js" type="module"></script>
 </body>
 </html>
