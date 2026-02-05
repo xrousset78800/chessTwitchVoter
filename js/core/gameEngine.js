@@ -1,6 +1,7 @@
 /**
  * GAME ENGINE MODULE
  * Logique centrale du jeu d'échecs avec votes
+ * Compatible avec Chess.js 0.10.x (ancienne API)
  */
 
 import timer from './timer.js';
@@ -35,6 +36,9 @@ class GameEngine {
         this.onMove = null;
         this.onGameEnd = null;
         this.onTurnChange = null;
+        
+        // Nom du votant pour les tests
+        this.currentVoterName = 'TestPlayer';
         
         // Sons
         this.sounds = {
@@ -83,11 +87,348 @@ class GameEngine {
             onVoteAdded: (vote, results) => this.onVoteAdded(vote, results)
         });
         
+        // Créer le panneau des coups disponibles
+        this.createMovesPanel();
+        
         // Resize handler
         window.addEventListener('resize', () => this.board?.resize());
         
         console.log('✅ GameEngine initialisé');
         return this;
+    }
+
+    /**
+     * Crée le panneau latéral des coups disponibles
+     */
+    createMovesPanel() {
+        // Vérifier si le panneau existe déjà
+        if (document.getElementById('moves-panel')) return;
+        
+        const panel = document.createElement('div');
+        panel.id = 'moves-panel';
+        panel.className = 'moves-panel';
+        panel.innerHTML = `
+            <div class="moves-panel__header">
+                <h3>♟️ Coups disponibles</h3>
+                <div class="voter-input">
+                    <label for="voter-name">Votant :</label>
+                    <input type="text" id="voter-name" value="TestPlayer" placeholder="Nom du joueur">
+                </div>
+            </div>
+            <div class="moves-panel__timer">
+                <div id="timer-display" class="timer-display">
+                    <span id="timer-value">--:--</span>
+                </div>
+                <div class="timer-controls">
+                    <button id="btn-start-timer" class="btn btn--small btn--primary">
+                        <i class="fas fa-play"></i> Démarrer Timer
+                    </button>
+                    <button id="btn-stop-timer" class="btn btn--small btn--danger" style="display:none;">
+                        <i class="fas fa-stop"></i> Stop
+                    </button>
+                </div>
+            </div>
+            <div class="moves-panel__list">
+                <div id="availableList" class="available-moves">
+                    <ul id="availableListP" data-piece="P" class="moves-group"><span class="piece-icon">♙</span></ul>
+                    <ul id="availableListN" data-piece="N" class="moves-group"><span class="piece-icon">♘</span></ul>
+                    <ul id="availableListB" data-piece="B" class="moves-group"><span class="piece-icon">♗</span></ul>
+                    <ul id="availableListR" data-piece="R" class="moves-group"><span class="piece-icon">♖</span></ul>
+                    <ul id="availableListQ" data-piece="Q" class="moves-group"><span class="piece-icon">♕</span></ul>
+                    <ul id="availableListK" data-piece="K" class="moves-group"><span class="piece-icon">♔</span></ul>
+                    <ul id="availableListO" data-piece="O" class="moves-group"><span class="piece-icon">🏰</span></ul>
+                </div>
+            </div>
+            <div class="moves-panel__votes">
+                <h4>📊 Votes en cours</h4>
+                <div id="vote-list" class="vote-list"></div>
+                <div class="vote-total">Total: <span id="total-votes">0</span> votes</div>
+            </div>
+        `;
+        
+        // Ajouter les styles
+        this.injectPanelStyles();
+        
+        // Insérer après l'échiquier
+        const boardWrapper = document.getElementById('board_wrapper') || 
+                            document.getElementById('myBoard')?.parentElement;
+        if (boardWrapper) {
+            boardWrapper.parentElement.insertBefore(panel, boardWrapper.nextSibling);
+        } else {
+            document.body.appendChild(panel);
+        }
+        
+        // Event listeners
+        document.getElementById('voter-name')?.addEventListener('input', (e) => {
+            this.currentVoterName = e.target.value || 'Anonymous';
+        });
+        
+        document.getElementById('btn-start-timer')?.addEventListener('click', () => {
+            this.startTimerManually();
+        });
+        
+        document.getElementById('btn-stop-timer')?.addEventListener('click', () => {
+            this.stopTimerManually();
+        });
+    }
+
+    /**
+     * Injecte les styles CSS pour le panneau
+     */
+    injectPanelStyles() {
+        if (document.getElementById('moves-panel-styles')) return;
+        
+        const styles = document.createElement('style');
+        styles.id = 'moves-panel-styles';
+        styles.textContent = `
+            .moves-panel {
+                position: fixed;
+                left: 20px;
+                top: 100px;
+                width: 280px;
+                max-height: calc(100vh - 120px);
+                background: linear-gradient(145deg, #1a1a2e, #16213e);
+                border-radius: 12px;
+                padding: 16px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+                overflow-y: auto;
+                z-index: 1000;
+                color: #fff;
+                font-family: 'Segoe UI', sans-serif;
+            }
+            
+            .moves-panel__header h3 {
+                margin: 0 0 12px 0;
+                font-size: 1.1rem;
+                color: #ffd700;
+            }
+            
+            .voter-input {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+            
+            .voter-input label {
+                font-size: 0.85rem;
+                color: #aaa;
+            }
+            
+            .voter-input input {
+                flex: 1;
+                padding: 6px 10px;
+                border: 1px solid #333;
+                border-radius: 6px;
+                background: #0d1117;
+                color: #fff;
+                font-size: 0.9rem;
+            }
+            
+            .moves-panel__timer {
+                background: #0d1117;
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 12px;
+                text-align: center;
+            }
+            
+            .timer-display {
+                font-size: 2rem;
+                font-weight: bold;
+                color: #4ade80;
+                font-family: 'Courier New', monospace;
+                margin-bottom: 8px;
+            }
+            
+            .timer-display.timer-urgent {
+                color: #ef4444;
+                animation: pulse 0.5s ease-in-out infinite;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            
+            .timer-controls {
+                display: flex;
+                gap: 8px;
+                justify-content: center;
+            }
+            
+            .timer-controls .btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .available-moves {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .moves-group {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 4px;
+                padding: 4px;
+                margin: 0;
+                list-style: none;
+                background: rgba(255,255,255,0.03);
+                border-radius: 6px;
+                min-height: 32px;
+            }
+            
+            .moves-group:empty,
+            .moves-group:not(:has(li)) {
+                display: none;
+            }
+            
+            .moves-group .piece-icon {
+                font-size: 1.2rem;
+                width: 24px;
+                opacity: 0.7;
+            }
+            
+            .moves-group li {
+                list-style: none;
+            }
+            
+            .moves-group button {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+                background: #2d3748;
+                color: #fff;
+                border: 1px solid #4a5568;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-family: 'Courier New', monospace;
+            }
+            
+            .moves-group button:hover {
+                background: #4a5568;
+                border-color: #ffd700;
+                transform: translateY(-1px);
+            }
+            
+            .moves-group li.most-voted button {
+                background: #ffd700;
+                color: #000;
+                border-color: #ffd700;
+                font-weight: bold;
+            }
+            
+            .moves-panel__votes {
+                margin-top: 16px;
+                padding-top: 12px;
+                border-top: 1px solid #333;
+            }
+            
+            .moves-panel__votes h4 {
+                margin: 0 0 8px 0;
+                font-size: 0.95rem;
+                color: #aaa;
+            }
+            
+            .vote-list {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                max-height: 150px;
+                overflow-y: auto;
+            }
+            
+            .vote-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 8px;
+                background: rgba(255,255,255,0.05);
+                border-radius: 4px;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .vote-item .vote-bar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                background: var(--color, #4a5568);
+                opacity: 0.2;
+                z-index: 0;
+            }
+            
+            .vote-item .vote-move {
+                font-family: 'Courier New', monospace;
+                font-weight: bold;
+                z-index: 1;
+            }
+            
+            .vote-item .vote-count {
+                margin-left: auto;
+                font-size: 0.85rem;
+                color: #aaa;
+                z-index: 1;
+            }
+            
+            .vote-total {
+                margin-top: 8px;
+                text-align: right;
+                font-size: 0.85rem;
+                color: #888;
+            }
+            
+            /* Responsive */
+            @media (max-width: 1200px) {
+                .moves-panel {
+                    position: static;
+                    width: 100%;
+                    max-height: none;
+                    margin-top: 20px;
+                }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+
+    /**
+     * Démarre le timer manuellement
+     */
+    startTimerManually() {
+        console.log('⏱️ Démarrage manuel du timer');
+        this.config.timerEnabled = true;
+        voting.open();
+        timer.start(this.config.timerDuration);
+        
+        // Mettre à jour les boutons
+        const startBtn = document.getElementById('btn-start-timer');
+        const stopBtn = document.getElementById('btn-stop-timer');
+        if (startBtn) startBtn.style.display = 'none';
+        if (stopBtn) stopBtn.style.display = 'inline-flex';
+    }
+
+    /**
+     * Arrête le timer manuellement
+     */
+    stopTimerManually() {
+        console.log('⏱️ Arrêt manuel du timer');
+        timer.stop();
+        voting.close();
+        
+        // Mettre à jour les boutons
+        const startBtn = document.getElementById('btn-start-timer');
+        const stopBtn = document.getElementById('btn-stop-timer');
+        if (startBtn) startBtn.style.display = 'inline-flex';
+        if (stopBtn) stopBtn.style.display = 'none';
+        
+        // Traiter les votes si il y en a
+        if (voting.getTotalVotes() > 0) {
+            this.processVoteResult();
+        }
     }
 
     /**
@@ -120,6 +461,7 @@ class GameEngine {
         
         // Mettre à jour l'UI
         document.body.setAttribute('data-turn', this.currentTurn);
+        document.body.setAttribute('data-team', this.currentTurn);
         
         // Callback
         if (this.onTurnChange) {
@@ -129,12 +471,16 @@ class GameEngine {
         // Mettre à jour les coups disponibles
         this.updateAvailableMoves();
         
+        // Reset les votes pour le nouveau tour
+        voting.reset();
+        this.updateVotesUI([]);
+        
         // Si timer activé, démarrer le timer et ouvrir le vote
         if (this.config.timerEnabled) {
             voting.open();
             timer.start(this.config.timerDuration);
         } else {
-            // Mode sans timer : vote continu
+            // Mode sans timer : vote ouvert en permanence
             voting.open();
         }
     }
@@ -143,8 +489,23 @@ class GameEngine {
      * Appelé quand le timer tick
      */
     onTimerTick(remaining) {
-        // Mettre à jour l'UI si nécessaire
-        // console.log('⏱️', remaining, 'secondes');
+        // Mettre à jour l'affichage du timer
+        const timerValue = document.getElementById('timer-value');
+        const timerDisplay = document.getElementById('timer-display');
+        
+        if (timerValue) {
+            const minutes = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        if (timerDisplay) {
+            if (remaining <= 10) {
+                timerDisplay.classList.add('timer-urgent');
+            } else {
+                timerDisplay.classList.remove('timer-urgent');
+            }
+        }
     }
 
     /**
@@ -152,6 +513,12 @@ class GameEngine {
      */
     onTimerComplete() {
         console.log('⏱️ Temps écoulé!');
+        
+        // Mettre à jour les boutons
+        const startBtn = document.getElementById('btn-start-timer');
+        const stopBtn = document.getElementById('btn-stop-timer');
+        if (startBtn) startBtn.style.display = 'inline-flex';
+        if (stopBtn) stopBtn.style.display = 'none';
         
         // Fermer le vote
         voting.close();
@@ -168,13 +535,14 @@ class GameEngine {
         
         if (results.length === 0) {
             // Aucun vote : coup aléatoire
-            console.log('❌ Aucun vote reçu');
+            console.log('❌ Aucun vote reçu, coup aléatoire');
             this.playRandomMove();
             return;
         }
         
         // Sélectionner le gagnant
         const winningMove = voting.selectWinner();
+        console.log('🏆 Coup gagnant:', winningMove);
         
         if (this.config.majorityMode) {
             // Mode majorité : exécuter directement
@@ -260,19 +628,20 @@ class GameEngine {
 
     /**
      * Vérifie si la partie est terminée
+     * COMPATIBLE Chess.js 0.10.x (ancienne API)
      */
     checkGameEnd() {
-        if (this.chess.isGameOver()) {
+        if (this.chess.game_over()) {
             let result = null;
             
-            if (this.chess.isCheckmate()) {
+            if (this.chess.in_checkmate()) {
                 const winner = this.chess.turn() === 'w' ? 'Noirs' : 'Blancs';
                 result = { type: 'checkmate', winner };
                 console.log('👑 Échec et mat!', winner, 'gagnent');
-            } else if (this.chess.isDraw()) {
+            } else if (this.chess.in_draw()) {
                 result = { type: 'draw' };
                 console.log('🤝 Partie nulle');
-            } else if (this.chess.isStalemate()) {
+            } else if (this.chess.in_stalemate()) {
                 result = { type: 'stalemate' };
                 console.log('🤝 Pat');
             }
@@ -332,15 +701,27 @@ class GameEngine {
         // Grouper par première lettre (pièce)
         const groups = {};
         moves.forEach(move => {
-            const key = move[0].match(/[A-Z]/) ? move[0] : 'P'; // P pour pions
+            let key;
+            if (move.startsWith('O-O')) {
+                key = 'O'; // Roque
+            } else if (move[0].match(/[A-Z]/)) {
+                key = move[0]; // Pièce
+            } else {
+                key = 'P'; // Pion
+            }
             if (!groups[key]) groups[key] = [];
             groups[key].push(move.replace(/[+#]/, '')); // Retirer + et #
         });
         
-        // Vider les listes
+        // Vider les listes (garder l'icône)
         ['P', 'R', 'N', 'B', 'Q', 'K', 'O'].forEach(piece => {
             const list = document.getElementById('availableList' + piece);
-            if (list) list.innerHTML = '';
+            if (list) {
+                // Garder seulement le span.piece-icon
+                const icon = list.querySelector('.piece-icon');
+                list.innerHTML = '';
+                if (icon) list.appendChild(icon);
+            }
         });
         
         // Remplir les listes
@@ -366,12 +747,20 @@ class GameEngine {
      */
     onMoveClick(move) {
         if (!voting.isOpen) {
-            console.log('❌ Vote fermé');
+            console.log('⚠️ Vote fermé, exécution directe du coup');
+            this.executeMove(move);
             return;
         }
         
-        // Ajouter le vote (le nom du joueur sera 'click' pour les clics manuels)
-        voting.addVote('click', move);
+        // Récupérer le nom du votant
+        const voterName = this.currentVoterName || 
+                         document.getElementById('voter-name')?.value || 
+                         'Anonymous';
+        
+        console.log(`🗳️ Vote de ${voterName}: ${move}`);
+        
+        // Ajouter le vote
+        voting.addVote(voterName, move);
         
         // Si pas de timer, exécuter immédiatement
         if (!this.config.timerEnabled) {
@@ -403,16 +792,18 @@ class GameEngine {
      * Met à jour l'UI des votes
      */
     updateVotesUI(results) {
-        // TODO: Intégrer avec le graphique Chart.js
         const votesList = document.getElementById('vote-list');
         if (!votesList) return;
         
         const sortedResults = voting.getSortedResults();
         
-        votesList.innerHTML = sortedResults.map(r => `
-            <div class="vote-item" style="--color: ${r.color}">
+        // Couleurs pour les votes
+        const colors = ['#ffd700', '#c0c0c0', '#cd7f32', '#4a5568', '#2d3748'];
+        
+        votesList.innerHTML = sortedResults.map((r, i) => `
+            <div class="vote-item" style="--color: ${colors[i] || colors[4]}">
                 <span class="vote-move">${r.move}</span>
-                <span class="vote-count">${r.count}</span>
+                <span class="vote-count">${r.count} vote${r.count > 1 ? 's' : ''}</span>
                 <div class="vote-bar" style="width: ${r.percentage}%"></div>
             </div>
         `).join('');
@@ -452,12 +843,13 @@ class GameEngine {
 
     /**
      * Joue le son approprié
+     * COMPATIBLE Chess.js 0.10.x (ancienne API)
      */
     playMoveSound(move) {
         try {
-            if (this.chess.isCheckmate()) {
+            if (this.chess.in_checkmate()) {
                 this.sounds.mate.play();
-            } else if (this.chess.isCheck()) {
+            } else if (this.chess.in_check()) {
                 this.sounds.check.play();
             } else if (move.captured) {
                 this.sounds.capture.play();
@@ -480,9 +872,12 @@ class GameEngine {
 
     // ========== HANDLERS DRAG & DROP ==========
 
+    /**
+     * COMPATIBLE Chess.js 0.10.x (ancienne API)
+     */
     onDragStart(source, piece, position, orientation) {
         // Pas de drag si partie terminée
-        if (this.chess.isGameOver()) return false;
+        if (this.chess.game_over()) return false;
         
         // Pas de drag si ce n'est pas le tour de cette couleur
         const turn = this.chess.turn();
@@ -553,6 +948,7 @@ class GameEngine {
             this.board.position(fen);
             this.moveHistory = [];
             this.currentTurn = this.chess.turn();
+            this.updateAvailableMoves();
         }
         return valid;
     }
@@ -573,6 +969,7 @@ class GameEngine {
             this.board.position(this.chess.fen());
             this.moveHistory.pop();
             this.currentTurn = this.chess.turn();
+            this.updateAvailableMoves();
         }
         return move;
     }

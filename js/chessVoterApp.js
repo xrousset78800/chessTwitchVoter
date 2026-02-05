@@ -3044,9 +3044,3 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1000);
 });
-
-window.loadNewgame = loadNewgame;
-window.loadNewProblem = loadNewProblem;
-window.startTimer = startTimer;
-window.stopTimer = stopTimer;
-window.initializeGame = initializeGame;
