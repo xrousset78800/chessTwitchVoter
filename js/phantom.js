@@ -816,17 +816,19 @@ class PhantomChessboard {
         
         // Event listeners
         document.getElementById('phantom-reconnect-yes')?.addEventListener('click', async () => {
-            prompt.remove();
-            
-            // 🆕 Cocher la checkbox Phantom
-            const phantomCheckbox = document.getElementById('phantomChess');
-            if (phantomCheckbox && !phantomCheckbox.checked) {
-                phantomCheckbox.checked = true;
-                // Déclencher le change pour afficher le panneau
-                $(phantomCheckbox).trigger('change');
-            }
-            
-            await this.connect();
+           prompt.remove();
+           
+           // 1. D'abord connecter au Phantom
+           const success = await this.connect();
+           
+           // 2. SEULEMENT si la connexion réussit, afficher le panneau
+           if (success) {
+               const phantomCheckbox = document.getElementById('phantomChess');
+               if (phantomCheckbox && !phantomCheckbox.checked) {
+                   phantomCheckbox.checked = true;
+                   $(phantomCheckbox).trigger('change');
+               }
+           }
         });
         
         document.getElementById('phantom-reconnect-no')?.addEventListener('click', () => {

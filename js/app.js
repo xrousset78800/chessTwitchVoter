@@ -1,11 +1,14 @@
 /**
  * PHANTOM TWITCHESS - Main Application
  * Point d'entrée principal, Router, État global
+ * 
+ * MISE À JOUR : Intégration du mode Problèmes via problemsManager
  */
 
 import gameEngine from './core/gameEngine.js';
 import timer from './core/timer.js';
 import voting from './core/voting.js';
+import problemsManager from './core/problemManager.js';
 import twitch from './managers/twitch.js';
 
 // ============================================
@@ -26,7 +29,7 @@ const AppState = {
         timerEnabled: false,
         timerDuration: 25,
         wheelDuration: 5,
-        pauseAfterEnd: 15,
+        pauseAfterEnd: 5,
         singleVote: false,
         majorityMode: false,
         
@@ -53,7 +56,8 @@ const AppState = {
     
     // Problèmes
     problems: {
-        selectedThemes: []
+        selectedThemes: [],
+        isActive: false
     },
     
     // Configs sauvegardées
@@ -93,7 +97,8 @@ const Storage = {
         Storage.set(Storage.KEYS.CONFIG, {
             gameMode: AppState.gameMode,
             config: AppState.config,
-            players: AppState.players
+            players: AppState.players,
+            problems: AppState.problems
         });
     },
     
@@ -103,6 +108,7 @@ const Storage = {
             AppState.gameMode = saved.gameMode || 'sandbox';
             Object.assign(AppState.config, saved.config || {});
             Object.assign(AppState.players, saved.players || {});
+            Object.assign(AppState.problems, saved.problems || {});
             console.log('📦 Config chargée depuis localStorage');
         }
     },
@@ -115,6 +121,7 @@ const Storage = {
             gameMode: AppState.gameMode,
             config: { ...AppState.config },
             players: { ...AppState.players },
+            problems: { ...AppState.problems },
             fen: gameEngine.getFen()
         };
         
@@ -199,6 +206,7 @@ const Router = {
 // ============================================
 const SandboxPage = {
     initialized: false,
+    problemsInitialized: false,
 
     init() {
         if (!this.initialized) {
@@ -229,6 +237,220 @@ const SandboxPage = {
         this.updateConditionalUI();
     },
 
+    // ========== INITIALISATION MODE PROBLÈMES ==========
+    
+    async initProblemsMode() {
+        console.log('🧩 Initialisation du mode Problèmes...');
+        
+        // Charger les problèmes si pas encore fait
+        if (!problemsManager.isLoaded()) {
+            try {
+                Toast.info('Chargement des problèmes...');
+                await problemsManager.loadProblems('js/problemsV2.csv');
+                Toast.success(`${problemsManager.problems.length} problèmes chargés`);
+            } catch (error) {
+                console.error('Erreur chargement problèmes:', error);
+                Toast.error('Erreur chargement des problèmes');
+                return false;
+            }
+        }
+        
+        // Injecter les références chess/board
+        problemsManager.init({
+            chess: gameEngine.chess,
+            board: gameEngine.board,
+            config: {
+                pauseAfterEnd: AppState.config.pauseAfterEnd,
+                botMoveDelay: 1500
+            }
+        });
+        
+        // Configurer les callbacks
+        this.setupProblemsCallbacks();
+        
+        this.problemsInitialized = true;
+        return true;
+    },
+    
+    setupProblemsCallbacks() {
+        // Quand un problème est chargé
+        problemsManager.onProblemLoaded = (problem) => {
+            console.log('📋 Problème chargé:', problem.id, 'Rating:', problem.rating);
+            
+            // Mettre à jour l'UI
+            this.updateProblemUI(problem);
+            
+            // Sync Phantom si connecté
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.syncPosition(gameEngine.chess.fen());
+            }
+        };
+        
+        // Quand le bot joue
+        problemsManager.onBotMove = (move) => {
+            console.log('🤖 Bot joue:', move.san);
+            
+            // Mettre à jour l'échiquier visuel
+            gameEngine.board.position(gameEngine.chess.fen());
+            
+            // Mettre à jour l'historique
+            this.addMoveToHistory(move, 'bot');
+            
+            // Sync Phantom
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.syncPosition(gameEngine.chess.fen());
+            }
+            
+            // Activer les votes/input
+            this.enablePlayerInput();
+        };
+        
+        // Quand le joueur joue un coup correct
+        problemsManager.onCorrectMove = (move) => {
+            console.log('✅ Coup correct:', move.san);
+            
+            // Mettre à jour l'échiquier visuel
+            gameEngine.board.position(gameEngine.chess.fen());
+            
+            // Feedback visuel
+            this.showProblemFeedback('correct');
+            
+            // Mettre à jour l'historique
+            this.addMoveToHistory(move, 'player');
+            
+            // Sync Phantom
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.syncPosition(gameEngine.chess.fen());
+            }
+            
+            // Désactiver temporairement l'input (en attente du bot)
+            this.disablePlayerInput();
+        };
+        
+        // Quand le joueur se trompe
+        problemsManager.onWrongMove = (expectedSAN, expectedUCI) => {
+            console.log('❌ Mauvais coup! Attendu:', expectedSAN);
+            
+            // Feedback visuel
+            this.showProblemFeedback('wrong', expectedSAN);
+            
+            Toast.error(`Mauvais coup ! Le bon était ${expectedSAN}`);
+        };
+        
+        // Problème résolu
+        problemsManager.onProblemSolved = (problem) => {
+            console.log('🎉 Problème résolu!');
+            
+            // Animation de victoire
+            document.body.classList.add('omg-win');
+            Toast.success('🎉 Problème résolu !');
+            
+            // Charger le prochain après un délai
+            setTimeout(() => {
+                document.body.classList.remove('omg-win');
+                problemsManager.loadRandomProblem();
+            }, AppState.config.pauseAfterEnd * 1000);
+        };
+        
+        // Problème échoué
+        problemsManager.onProblemFailed = (problem) => {
+            console.log('💔 Problème échoué');
+            
+            // Animation d'échec
+            document.body.classList.add('omg-lose');
+            
+            // Charger le prochain après un délai
+            setTimeout(() => {
+                document.body.classList.remove('omg-lose');
+                problemsManager.loadRandomProblem();
+            }, AppState.config.pauseAfterEnd * 1000);
+        };
+        
+        // Changement d'état
+        problemsManager.onStateChange = (state) => {
+            this.updateProblemStateUI(state);
+        };
+    },
+    
+    // ========== UI HELPERS POUR PROBLÈMES ==========
+    
+    updateProblemUI(problem) {
+        // Mettre à jour les éléments data-* si présents
+        const updates = {
+            '[data-prob-id]': problem.id,
+            '[data-prob-elo]': problem.rating,
+            '[data-opening-tags]': problem.themes,
+            '[data-fen]': problem.fen,
+            '[data-length]': Math.ceil(problem.moves.length / 2)
+        };
+        
+        for (const [selector, value] of Object.entries(updates)) {
+            const el = document.querySelector(selector);
+            if (el) {
+                el.textContent = value;
+            }
+        }
+        
+        // Afficher le panneau problème si caché
+        const problemPanel = document.getElementById('problem-panel');
+        if (problemPanel) {
+            problemPanel.classList.add('is-visible');
+        }
+    },
+    
+    updateProblemStateUI(state) {
+        // Mettre à jour le compteur de coups
+        const attemptEl = document.querySelector('[data-attempt]');
+        if (attemptEl) {
+            attemptEl.textContent = state.playerMoves;
+        }
+        
+        // Indiquer le tour
+        document.body.classList.toggle('player-turn', state.isPlayerTurn);
+        document.body.classList.toggle('bot-turn', !state.isPlayerTurn);
+    },
+    
+    addMoveToHistory(move, player) {
+        const historyEl = document.querySelector('.move-history, .poll ol, #move-history');
+        if (!historyEl) return;
+        
+        const moveEl = document.createElement('span');
+        moveEl.className = player === 'bot' ? 'move-bot' : 'move-player';
+        moveEl.textContent = move.san + ' ';
+        
+        historyEl.appendChild(moveEl);
+    },
+    
+    showProblemFeedback(type, message = '') {
+        // Créer un élément de feedback temporaire
+        const existing = document.getElementById('problem-feedback');
+        if (existing) existing.remove();
+        
+        const feedback = document.createElement('div');
+        feedback.id = 'problem-feedback';
+        feedback.className = `problem-feedback problem-feedback--${type}`;
+        feedback.innerHTML = type === 'correct' 
+            ? '<span class="feedback-icon">✓</span>' 
+            : `<span class="feedback-icon">✗</span><span class="feedback-text">${message}</span>`;
+        
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => feedback.remove(), 2000);
+    },
+    
+    enablePlayerInput() {
+        document.body.classList.add('accepting-moves');
+        voting.open();
+        
+        // En mode problème, les coups se font par drag&drop ou vote
+        // Le gameEngine va intercepter les coups via onDrop
+    },
+    
+    disablePlayerInput() {
+        document.body.classList.remove('accepting-moves');
+        voting.close();
+    },
+
     setupEventListeners() {
         // ========== BOUTONS DE CONTRÔLE ==========
         
@@ -239,12 +461,22 @@ const SandboxPage = {
         
         // Reset
         document.getElementById('btn-reset')?.addEventListener('click', () => {
-            gameEngine.reset();
-            Toast.success('Échiquier réinitialisé');
+            if (AppState.gameMode === 'problems' && problemsManager.isActive) {
+                // En mode problème, charger un nouveau problème
+                problemsManager.loadRandomProblem();
+                Toast.info('Nouveau problème chargé');
+            } else {
+                gameEngine.reset();
+                Toast.success('Échiquier réinitialisé');
+            }
         });
         
         // Undo
         document.getElementById('btn-undo')?.addEventListener('click', () => {
+            if (AppState.gameMode === 'problems') {
+                Toast.warning('Undo désactivé en mode problèmes');
+                return;
+            }
             const move = gameEngine.undo();
             if (move) {
                 Toast.success(`Annulé: ${move.san}`);
@@ -286,6 +518,13 @@ const SandboxPage = {
                 option.classList.add('is-active');
                 AppState.gameMode = option.dataset.mode;
                 this.updateModeOptions();
+                
+                // Précharger les problèmes si mode problèmes sélectionné
+                if (option.dataset.mode === 'problems' && !problemsManager.isLoaded()) {
+                    problemsManager.loadProblems('js/problemsV2.csv').then(() => {
+                        this.populateThemesSelect();
+                    });
+                }
             });
         });
 
@@ -344,6 +583,21 @@ const SandboxPage = {
         document.getElementById('chat-2')?.addEventListener('blur', (e) => {
             AppState.players.chat2 = e.target.value;
         });
+        
+        // ========== SÉLECTION THÈMES PROBLÈMES ==========
+        document.getElementById('problem-themes')?.addEventListener('change', (e) => {
+            const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+            AppState.problems.selectedThemes = selected;
+            
+            // Mettre à jour le filtre dans problemsManager
+            problemsManager.clearThemes();
+            selected.forEach(theme => problemsManager.toggleTheme(theme));
+            
+            // Afficher le nombre de problèmes disponibles
+            const count = problemsManager.getFilteredProblems().length;
+            const countEl = document.getElementById('problem-count');
+            if (countEl) countEl.textContent = `${count} problèmes`;
+        });
 
         // ========== MODAL SAUVEGARDE ==========
         document.getElementById('btn-confirm-save')?.addEventListener('click', () => {
@@ -358,6 +612,26 @@ const SandboxPage = {
                 Toast.error('Veuillez entrer un nom');
             }
         });
+        
+        // ========== INTERCEPTION DES COUPS EN MODE PROBLÈME ==========
+        // Override du onDrop de gameEngine pour le mode problèmes
+        const originalOnDrop = gameEngine.onDrop.bind(gameEngine);
+        gameEngine.onDrop = (source, target, piece, newPos, oldPos, orientation) => {
+            // Si mode problèmes actif, déléguer au problemsManager
+            if (AppState.gameMode === 'problems' && problemsManager.isActive) {
+                const move = source + target;
+                const result = problemsManager.validateAndPlayMove(move);
+                
+                if (!result.valid) {
+                    return 'snapback';
+                }
+                
+                return result.correct ? undefined : 'snapback';
+            }
+            
+            // Sinon comportement normal
+            return originalOnDrop(source, target, piece, newPos, oldPos, orientation);
+        };
     },
 
     setupToggle(id, callback) {
@@ -369,15 +643,80 @@ const SandboxPage = {
             });
         }
     },
+    
+    /**
+     * Remplit le select des thèmes avec les thèmes disponibles
+     */
+    populateThemesSelect() {
+        const select = document.getElementById('problem-themes');
+        if (!select) return;
+        
+        const stats = problemsManager.themeStats;
+        const sortedThemes = Object.entries(stats)
+            .sort((a, b) => b[1] - a[1]) // Trier par nombre de problèmes
+            .slice(0, 30); // Limiter aux 30 premiers
+        
+        select.innerHTML = sortedThemes.map(([theme, count]) => 
+            `<option value="${theme}">${theme} (${count})</option>`
+        ).join('');
+    },
 
     /**
      * APPLIQUE LA CONFIG ET DÉMARRE LE JEU
      */
-    applyConfig() {
+    async applyConfig() {
         console.log('🎮 Application de la configuration...');
+        console.log('📋 Mode sélectionné:', AppState.gameMode);
         
         // Sauvegarder dans localStorage
         Storage.saveConfig();
+        
+        // Appliquer noBg
+        document.body.classList.toggle('no-bg', AppState.config.noBg);
+        
+        // ========== MODE PROBLÈMES ==========
+        if (AppState.gameMode === 'problems') {
+            console.log('🧩 Activation du mode Problèmes...');
+            
+            // Initialiser le mode problèmes si nécessaire
+            if (!this.problemsInitialized) {
+                const success = await this.initProblemsMode();
+                if (!success) {
+                    Toast.error('Erreur initialisation mode problèmes');
+                    return;
+                }
+            }
+            
+            // Appliquer les thèmes sélectionnés
+            problemsManager.clearThemes();
+            AppState.problems.selectedThemes.forEach(theme => {
+                problemsManager.toggleTheme(theme);
+            });
+            
+            // Mettre à jour la config
+            problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+            
+            // Marquer le mode comme actif
+            AppState.problems.isActive = true;
+            
+            // Charger le premier problème
+            problemsManager.loadRandomProblem();
+            
+            Toast.success('🧩 Mode Problèmes activé !');
+            
+            console.log('✅ Mode Problèmes configuré:', {
+                themes: Array.from(problemsManager.selectedThemes),
+                problemCount: problemsManager.getFilteredProblems().length
+            });
+            
+            return;
+        }
+        
+        // ========== AUTRES MODES ==========
+        
+        // Désactiver le mode problèmes si on change de mode
+        AppState.problems.isActive = false;
+        problemsManager.reset();
         
         // Mettre à jour la config du GameEngine
         gameEngine.setConfig({
@@ -389,8 +728,8 @@ const SandboxPage = {
             singleVote: AppState.config.singleVote
         });
         
-        // Appliquer noBg
-        document.body.classList.toggle('no-bg', AppState.config.noBg);
+        // Configurer le mode de jeu
+        gameEngine.mode = AppState.gameMode;
         
         // Démarrer le jeu
         gameEngine.startGame();
@@ -545,8 +884,11 @@ const SandboxPage = {
         AppState.gameMode = config.gameMode;
         Object.assign(AppState.config, config.config);
         Object.assign(AppState.players, config.players);
+        if (config.problems) {
+            Object.assign(AppState.problems, config.problems);
+        }
 
-        if (config.fen) {
+        if (config.fen && config.gameMode !== 'problems') {
             gameEngine.loadFen(config.fen);
         }
 
@@ -599,24 +941,27 @@ const Toast = {
     },
 
     show(message, type = 'info', duration = 3000) {
-        if (!this.container) this.init();
-
         const toast = document.createElement('div');
         toast.className = `toast toast--${type}`;
-        toast.textContent = message;
+        toast.innerHTML = `
+            <span class="toast__message">${message}</span>
+            <button class="toast__close">&times;</button>
+        `;
+
+        toast.querySelector('.toast__close').addEventListener('click', () => {
+            toast.remove();
+        });
 
         this.container.appendChild(toast);
 
-        setTimeout(() => toast.classList.add('is-visible'), 10);
-
         setTimeout(() => {
-            toast.classList.remove('is-visible');
+            toast.classList.add('toast--fade-out');
             setTimeout(() => toast.remove(), 300);
         }, duration);
     },
 
     success(msg) { this.show(msg, 'success'); },
-    error(msg) { this.show(msg, 'error'); },
+    error(msg) { this.show(msg, 'error', 5000); },
     warning(msg) { this.show(msg, 'warning'); },
     info(msg) { this.show(msg, 'info'); }
 };
@@ -625,17 +970,17 @@ const Toast = {
 // MODALS
 // ============================================
 function setupModals() {
+    document.querySelectorAll('.modal__close, [data-close-modal]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.modal-overlay')?.classList.remove('is-active');
+        });
+    });
+
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 overlay.classList.remove('is-active');
             }
-        });
-    });
-
-    document.querySelectorAll('[data-close-modal]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.closest('.modal-overlay')?.classList.remove('is-active');
         });
     });
 }
@@ -647,7 +992,7 @@ function setupConnectionHandlers() {
     document.querySelectorAll('[data-action="connect-twitch"]').forEach(btn => {
         btn.addEventListener('click', async () => {
             try {
-                await window.twitch?.connect();
+                await twitch?.connect();
                 updateConnectionUI();
                 Toast.success('Twitch connecté !');
             } catch (e) {
@@ -686,7 +1031,9 @@ function updateConnectionUI() {
     }
 }
 
-
+// ============================================
+// PHANTOM SPEED CONTROL
+// ============================================
 document.getElementById('phantom-speed')?.addEventListener('input', (e) => {
     const speed = parseInt(e.target.value);
     document.getElementById('phantom-speed-value').textContent = speed;
@@ -702,7 +1049,6 @@ document.getElementById('phantom-speed')?.addEventListener('change', async (e) =
     }
 });
 
-// Écouter l'événement de connexion Phantom pour mettre à jour l'UI
 window.addEventListener('phantomConnected', async () => {
     if (window.phantomChessboard) {
         const speed = await window.phantomChessboard.getSpeed();
@@ -715,7 +1061,6 @@ window.addEventListener('phantomConnected', async () => {
         console.log(`⚡ Vitesse actuelle du Phantom: ${speed}`);
     }
 });
-
 
 // ============================================
 // INITIALISATION
@@ -740,6 +1085,14 @@ async function initApp() {
     // Écouter les votes Twitch
     if (twitch) {
         twitch.onVote = (voteContext) => {
+            // En mode problèmes, envoyer le vote au problemsManager
+            if (AppState.gameMode === 'problems' && problemsManager.isActive) {
+                const result = problemsManager.validateAndPlayMove(voteContext.move);
+                console.log(`🗳️ Vote Twitch en mode problème: ${voteContext.move}`, result);
+                return;
+            }
+            
+            // Sinon comportement normal
             if (voting.isOpen) {
                 voting.addVote(voteContext.username, voteContext.move);
             }
@@ -770,4 +1123,4 @@ async function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 // Exports
-export { AppState, Router, SandboxPage, BrowsePage, Toast, Storage, gameEngine, timer, voting };
+export { AppState, Router, SandboxPage, BrowsePage, Toast, Storage, gameEngine, timer, voting, problemsManager };
