@@ -9,10 +9,13 @@ class Timer {
         this.remaining = 0;          // Temps restant
         this.intervalId = null;      // ID de l'interval
         this.isRunning = false;
+        this.isPaused = false;       // Nouveau: état de pause
         
         // Callbacks
         this.onTick = null;          // Appelé chaque seconde
         this.onComplete = null;      // Appelé quand le timer atteint 0
+        this.onPause = null;         // Appelé quand le timer est mis en pause
+        this.onResume = null;        // Appelé quand le timer reprend
         
         // Éléments DOM
         this.countdownEl = null;
@@ -29,6 +32,8 @@ class Timer {
         
         if (options.onTick) this.onTick = options.onTick;
         if (options.onComplete) this.onComplete = options.onComplete;
+        if (options.onPause) this.onPause = options.onPause;
+        if (options.onResume) this.onResume = options.onResume;
         
         console.log('⏱️ Timer initialisé:', this.duration, 'secondes');
         return this;
@@ -47,6 +52,7 @@ class Timer {
         
         this.remaining = this.duration;
         this.isRunning = true;
+        this.isPaused = false;
         
         // Mettre à jour l'affichage initial
         this.updateDisplay();
@@ -70,6 +76,9 @@ class Timer {
      * Appelé chaque seconde
      */
     tick() {
+        // Ne pas décrémenter si en pause
+        if (this.isPaused) return;
+        
         this.remaining--;
         
         // Mettre à jour l'affichage
@@ -110,11 +119,13 @@ class Timer {
         }
         
         this.isRunning = false;
+        this.isPaused = false;
         document.body.classList.remove('showTimer');
         
-        // Retirer la classe urgence
+        // Retirer la classe urgence et pause
         if (this.countdownEl) {
             this.countdownEl.classList.remove('timer-critical');
+            this.countdownEl.classList.remove('timer-paused');
         }
     }
 
@@ -122,11 +133,20 @@ class Timer {
      * Met en pause le timer
      */
     pause() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
+        if (!this.isRunning || this.isPaused) return;
+        
+        this.isPaused = true;
+        
+        // Ajouter une indication visuelle de pause
+        if (this.countdownEl) {
+            this.countdownEl.classList.add('timer-paused');
         }
-        this.isRunning = false;
+        
+        // Callback
+        if (this.onPause) {
+            this.onPause(this.remaining);
+        }
+        
         console.log('⏸️ Timer en pause:', this.remaining, 'secondes restantes');
     }
 
@@ -134,11 +154,21 @@ class Timer {
      * Reprend le timer
      */
     resume() {
-        if (!this.isRunning && this.remaining > 0) {
-            this.isRunning = true;
-            this.intervalId = setInterval(() => this.tick(), 1000);
-            console.log('▶️ Timer repris:', this.remaining, 'secondes restantes');
+        if (!this.isRunning || !this.isPaused) return;
+        
+        this.isPaused = false;
+        
+        // Retirer l'indication visuelle de pause
+        if (this.countdownEl) {
+            this.countdownEl.classList.remove('timer-paused');
         }
+        
+        // Callback
+        if (this.onResume) {
+            this.onResume(this.remaining);
+        }
+        
+        console.log('▶️ Timer repris:', this.remaining, 'secondes restantes');
     }
 
     /**
@@ -152,6 +182,11 @@ class Timer {
             const minutes = Math.floor(seconds / 60);
             const secs = seconds % 60;
             this.timerValueEl.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            // Ajouter indicateur de pause
+            if (this.isPaused) {
+                this.timerValueEl.textContent += ' ⏸';
+            }
         }
         
         // Affichage circulaire (variables CSS)
@@ -159,8 +194,8 @@ class Timer {
             this.countdownEl.style.setProperty('--t', seconds);
             this.countdownEl.style.setProperty('--s', seconds);
             
-            // Animation urgence pour les dernières secondes
-            if (seconds <= 5) {
+            // Animation urgence pour les dernières secondes (sauf si en pause)
+            if (seconds <= 5 && !this.isPaused) {
                 this.countdownEl.classList.add('timer-critical');
             } else {
                 this.countdownEl.classList.remove('timer-critical');
@@ -180,6 +215,13 @@ class Timer {
      */
     getRemaining() {
         return this.remaining;
+    }
+    
+    /**
+     * Retourne si le timer est en pause
+     */
+    getIsPaused() {
+        return this.isPaused;
     }
 }
 

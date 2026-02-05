@@ -519,6 +519,23 @@ body:not(.randomWheel) #chart {
     display: none;
 }
 
+.countdown.timer-paused circle:last-child {
+    stroke: var(--accent-orange) !important;
+    animation: none !important;
+}
+
+.countdown.timer-paused {
+    opacity: 0.7;
+}
+
+#timer-value {
+    transition: color 0.2s ease;
+}
+
+.timer-paused + #timer-value,
+.countdown.timer-paused ~ #timer-value {
+    color: var(--accent-orange);
+}
 /* ============================================
    GAME STATE INDICATORS
    ============================================ */

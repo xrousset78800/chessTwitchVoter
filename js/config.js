@@ -393,6 +393,14 @@ $('#phantom-game-end').on('click', async function(e) {
     }
 });
 
+// Game Start
+$('#phantom-game-start').on('click', async function(e) {
+    e.preventDefault();
+    if (window.phantomChessboard && window.phantomChessboard.isConnected) {
+        const fen = (typeof chess !== 'undefined') ? chess.fen() : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+        await window.phantomChessboard.syncPosition(fen);
+    }
+});
 /*
 REFAIRE LA TODO
 */

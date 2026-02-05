@@ -87,6 +87,21 @@ class GameEngine {
             onVoteAdded: (vote, results) => this.onVoteAdded(vote, results)
         });
         
+
+        window.addEventListener('phantomMoveStart', () => {
+            if (this.config.timerEnabled && timer.isRunning) {
+                console.log('⏸️ Pause timer - Phantom en mouvement');
+                timer.pause();
+            }
+        });
+        
+        window.addEventListener('phantomMoveComplete', () => {
+            if (this.config.timerEnabled && timer.isRunning && timer.isPaused) {
+                console.log('▶️ Reprise timer - Phantom terminé');
+                timer.resume();
+            }
+        });        
+
         // Créer le panneau des coups disponibles
         this.createMovesPanel();
         
@@ -184,6 +199,7 @@ class GameEngine {
             .moves-panel {
                 position: fixed;
                 left: 20px;
+                height: 80%;
                 top: 100px;
                 width: 280px;
                 max-height: calc(100vh - 120px);

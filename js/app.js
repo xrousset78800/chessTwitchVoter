@@ -6,6 +6,7 @@
 import gameEngine from './core/gameEngine.js';
 import timer from './core/timer.js';
 import voting from './core/voting.js';
+import twitch from './managers/twitch.js';
 
 // ============================================
 // ÉTAT GLOBAL
@@ -686,26 +687,26 @@ function updateConnectionUI() {
 }
 
 
-document.getElementById('phantom-speed-slider')?.addEventListener('input', (e) => {
+document.getElementById('phantom-speed')?.addEventListener('input', (e) => {
     const speed = parseInt(e.target.value);
     document.getElementById('phantom-speed-value').textContent = speed;
 });
 
-document.getElementById('phantom-speed-slider')?.addEventListener('change', async (e) => {
+document.getElementById('phantom-speed')?.addEventListener('change', async (e) => {
     const speed = parseInt(e.target.value);
     console.log(`⚡ Modification vitesse: ${speed}`);
     
-    if (window.phantom?.isConnected) {
-        await window.phantom.setSpeed(speed);
+    if (window.phantomChessboard?.isConnected) {
+        await window.phantomChessboard.setSpeed(speed);
         Toast.success(`Vitesse réglée à ${speed}`);
     }
 });
 
 // Écouter l'événement de connexion Phantom pour mettre à jour l'UI
 window.addEventListener('phantomConnected', async () => {
-    if (window.phantom) {
-        const speed = await window.phantom.getSpeed();
-        const slider = document.getElementById('phantom-speed-slider');
+    if (window.phantomChessboard) {
+        const speed = await window.phantomChessboard.getSpeed();
+        const slider = document.getElementById('phantom-speed');
         const valueEl = document.getElementById('phantom-speed-value');
         
         if (slider) slider.value = speed;
@@ -734,13 +735,32 @@ async function initApp() {
     Router.init();
 
     // Restore connections
-    await window.twitch?.restore();
+    await twitch?.restore();
 
-    window.twitch.onVote = (voteContext) => {
-        if (voting.isOpen) {
-            voting.addVote(voteContext.username, voteContext.move);
+    // Écouter les votes Twitch
+    if (twitch) {
+        twitch.onVote = (voteContext) => {
+            if (voting.isOpen) {
+                voting.addVote(voteContext.username, voteContext.move);
+            }
+        };
+    }
+
+    // Écouter les événements Phantom pour pause/resume du timer
+    window.addEventListener('phantomMoveStart', () => {
+        if (AppState.config.timerEnabled && timer.isRunning) {
+            console.log('⏸️ Pause timer - Phantom en mouvement');
+            timer.pause();
         }
-    };    
+    });
+    
+    window.addEventListener('phantomMoveComplete', () => {
+        if (AppState.config.timerEnabled && timer.isRunning && timer.isPaused) {
+            console.log('▶️ Reprise timer - Phantom terminé');
+            timer.resume();
+        }
+    });
+
     updateConnectionUI();
 
     console.log('✅ Phantom Twitchess prêt !');
