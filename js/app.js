@@ -259,16 +259,16 @@ const SandboxPage = {
         
         // Sync Phantom
         document.getElementById('btn-sync')?.addEventListener('click', () => {
-            if (window.phantom?.isConnected) {
-                window.phantom.syncPosition(gameEngine.getFen());
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.syncPosition(gameEngine.getFen());
                 Toast.info('Synchronisation envoyée');
             }
         });
         
         // Game End Phantom
         document.getElementById('btn-game-end')?.addEventListener('click', async () => {
-            if (window.phantom?.isConnected) {
-                await window.phantom.sendGameEnd();
+            if (window.phantomChessboard?.isConnected) {
+                await window.phantomChessboard.sendGameEnd();
                 Toast.success('Game End envoyé');
             }
         });
@@ -473,7 +473,7 @@ const SandboxPage = {
 
     updateConditionalUI() {
         const twitchConnected = window.twitch?.isConnected;
-        const phantomConnected = window.phantom?.isConnected;
+        const phantomConnected = window.phantomChessboard?.isConnected;
 
         document.querySelectorAll('.twitch-only').forEach(el => {
             el.classList.toggle('is-visible', twitchConnected);
@@ -658,7 +658,7 @@ function setupConnectionHandlers() {
     document.querySelectorAll('[data-action="connect-phantom"]').forEach(btn => {
         btn.addEventListener('click', async () => {
             try {
-                await window.phantom?.connect();
+                await window.phantomChessboard?.connect();
                 updateConnectionUI();
                 Toast.success('Phantom connecté !');
             } catch (e) {
@@ -670,7 +670,7 @@ function setupConnectionHandlers() {
 
 function updateConnectionUI() {
     const twitchConnected = window.twitch?.isConnected;
-    const phantomConnected = window.phantom?.isConnected;
+    const phantomConnected = window.phantomChessboard?.isConnected;
 
     document.querySelectorAll('.status-dot--twitch').forEach(dot => {
         dot.classList.toggle('is-connected', twitchConnected);
