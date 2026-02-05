@@ -572,68 +572,122 @@ class GameEngine {
     /**
      * Affiche l'animation de la roue
      */
+    /**
+     * Affiche l'animation de la roue
+     */
     showWheelAnimation(results, winningMove) {
         document.body.classList.add('randomWheel');
         
-        // Convertir les résultats au format attendu par randomWheel()
-        const poll = [];
-        const colorPalette = [
+        // Palette de couleurs (identique à chessVoterApp.js)
+        const colorArray = [
             '#f2ff93','#dc90e8','#88e600','#e5c0ff','#01d04b','#ff9cc9',
             '#37ff85','#ffaca6','#08c55c','#ffa837','#85f9ff','#e5c700',
-            '#a8d7ff','#84c600','#67b8c3','#fff55e','#01c2a0','#d5a517'
+            '#a8d7ff','#84c600','#67b8c3','#fff55e','#01c2a0','#d5a517',
+            '#02dbae','#df9f4d','#89ff89','#ffe7dd','#7cbc5f','#ffdfa1',
+            '#97ffe0','#a9b174','#bbffa4','#79b8a3','#e6ffcf','#98b391'
         ];
         
-        // Construire le poll à partir des votes
+        // Construire le poll
+        const poll = [];
         const allVotes = voting.getAllVotes();
-        allVotes.forEach((vote, index) => {
-            poll.push({
-                player: vote.player,
-                move: vote.move,
-                color: vote.color || colorPalette[index % colorPalette.length]
-            });
-        });
         
-        // Si pas assez de votes, ajouter des entrées pour chaque coup disponible
-        if (poll.length === 0) {
+        if (allVotes.length > 0) {
+            // Il y a des votes : les utiliser
+            allVotes.forEach((vote) => {
+                poll.push({
+                    player: vote.player,
+                    move: vote.move.replace(/[+#]/, ''),
+                    color: vote.color || colorArray[Math.floor(Math.random() * colorArray.length)]
+                });
+            });
+        } else {
+            // PAS DE VOTES : créer le poll avec TOUS les coups disponibles + couleur aléatoire
             const moves = this.chess.moves();
-            moves.forEach((move, index) => {
+            moves.forEach((move) => {
+                const color = colorArray[Math.floor(Math.random() * colorArray.length)];
                 poll.push({
                     player: 'random',
                     move: move.replace(/[+#]/, ''),
-                    color: colorPalette[index % colorPalette.length]
+                    color: color
                 });
             });
         }
         
         console.log('🎡 Lancement de la roue avec', poll.length, 'options');
         
-        // Appeler la vraie fonction randomWheel() de D3.js
-        // Elle retourne le coup sélectionné mais on utilise winningMove déjà calculé
+        // Appeler randomWheel() qui retourne le coup sélectionné par la roue
+        let selectedMove = null;
         try {
-            randomWheel(poll, this.chess.turn());
+            selectedMove = randomWheel(poll, this.chess.turn());
+            console.log('🎯 Coup sélectionné par la roue:', selectedMove);
         } catch (error) {
             console.error('❌ Erreur animation roue:', error);
+            selectedMove = winningMove; // Fallback
         }
         
-        // Après l'animation, exécuter le coup
+        // Après l'animation, exécuter LE COUP SÉLECTIONNÉ PAR LA ROUE (pas winningMove)
+        const self = this;
         setTimeout(() => {
             document.body.classList.remove('randomWheel');
-            $('#chart').html(''); // Nettoyer le chart D3
-            this.executeMove(winningMove);
+            $('#chart').html('');
+            
+            // Utiliser le coup de la roue, ou le fallback si erreur
+            const moveToPlay = selectedMove || winningMove;
+            console.log('▶️ Exécution du coup:', moveToPlay);
+            self.executeMove(moveToPlay);
         }, this.config.wheelDuration * 1000);
     }
 
     /**
      * Joue un coup aléatoire
      */
-    playRandomMove() {
+     playRandomMove() {
         const moves = this.chess.moves();
         if (moves.length === 0) return;
         
-        const randomMove = moves[Math.floor(Math.random() * moves.length)];
-        console.log('🎲 Coup aléatoire:', randomMove);
-        
-        this.executeMove(randomMove);
+        // Si mode majorité, exécuter directement un coup aléatoire
+        if (this.config.majorityMode) {
+            const randomMove = moves[Math.floor(Math.random() * moves.length)];
+            console.log('🎲 Coup aléatoire:', randomMove);
+            this.executeMove(randomMove);
+        } else {
+            // Mode roue : créer un poll avec TOUS les coups + couleur aléatoire
+            const colorArray = [
+                '#f2ff93','#dc90e8','#88e600','#e5c0ff','#01d04b','#ff9cc9',
+                '#37ff85','#ffaca6','#08c55c','#ffa837','#85f9ff','#e5c700',
+                '#a8d7ff','#84c600','#67b8c3','#fff55e','#01c2a0','#d5a517'
+            ];
+            
+            const poll = [];
+            moves.forEach((move) => {
+                const color = colorArray[Math.floor(Math.random() * colorArray.length)];
+                poll.push({
+                    player: 'random',
+                    move: move.replace(/[+#]/, ''),
+                    color: color
+                });
+            });
+            
+            document.body.classList.add('randomWheel');
+            
+            // La roue fait le tirage et retourne le coup
+            let selectedMove = null;
+            try {
+                selectedMove = randomWheel(poll, this.chess.turn());
+                console.log('🎯 Coup sélectionné par la roue:', selectedMove);
+            } catch (error) {
+                console.error('❌ Erreur animation roue:', error);
+                selectedMove = moves[Math.floor(Math.random() * moves.length)];
+            }
+            
+            const self = this;
+            setTimeout(() => {
+                document.body.classList.remove('randomWheel');
+                $('#chart').html('');
+                console.log('▶️ Exécution du coup:', selectedMove);
+                self.executeMove(selectedMove);
+            }, this.config.wheelDuration * 1000);
+        }
     }
 
     /**
@@ -1043,171 +1097,163 @@ function randomWheel(poll, turn) {
 
 $('#chart').html('');
     var padding = {top:0, right:20, bottom:0, left:0},
-            w = 400 - padding.left - padding.right,
-            h = 400 - padding.top  - padding.bottom,
-            r = Math.min(w, h)/2,
-            rotation = 0,
-            oldrotation = 0,
-            picked = 100000,
-            oldpick = [],
-            data = [],
-            col = 'black',
-            //color = colorArray;//category20c()
-            //color = d3.scale.category20();//category20c()
+        w = 400 - padding.left - padding.right,
+        h = 400 - padding.top  - padding.bottom,
+        r = Math.min(w, h)/2,
+        rotation = 0,
+        oldrotation = 0,
+        picked = 100000,
+        oldpick = [],
+        data = [],
+        col = 'black',
+        colorImage = (turn === 'b') ? 'b' : 'w',
+        player = poll[0].player,
+        color = '#146894';
 
-            player = poll[0].player;
-            for(var i=0; i < poll.length; i++){
-            data.push({label: poll[i].move, value: poll[i].move, color: poll[i].color});
-            color = poll[i].color;
+    for(var i=0; i < poll.length; i++){
+        data.push({label: poll[i].move, value: poll[i].move, color: poll[i].color});
+        color = poll[i].color;
+    }
+
+    var svg = d3.select('#chart')
+        .append("svg")
+        .data([data])
+        .attr("width",  w + padding.left + padding.right)
+        .attr("height", h + padding.top + padding.bottom);
+    var container = svg.append("g")
+        .attr("class", "chartholder")
+        .attr("transform", "translate(" + (w/2 + padding.left) + "," + (h/2 + padding.top) + ")");
+    var vis = container
+        .append("g");
+        
+    var pie = d3.layout.pie().sort(null).value(function(d){return 1;});
+    // declare an arc generator function
+    var arc = d3.svg.arc().outerRadius(r);
+    // select paths, use arc generator to draw
+    var arcs = vis.selectAll("g.slice")
+        .data(pie)
+        .enter()
+        .append("g")
+        .attr("class", "slice");
+        
+    arcs.append("path")
+        .attr("fill", function(d, i){ return d.data.color+'ee'; })
+        .attr("d", function (d) { return arc(d); });
+    // add the text
+
+    arcs.append("text").attr("transform", function(d){
+            d.innerRadius = 0;
+            d.outerRadius = r;
+            d.angle = (d.startAngle + d.endAngle)/2;
+            return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius -20) +")";
+        })
+            .attr('x', -10)
+            .attr('y', 3)
+            .attr("text-anchor", "end")
+        .text( function(d, i) {
+            return data[i].label;
+         });
+
+    if(turn=='b') {
+        colorImage = 'b'
+    }
+    else{
+        colorImage = 'w'
+    }
+
+            arcs.append("image")
+                  .attr({
+                    "xlink:href": function(d) {
+                        let piece = 'P';
+
+                    if (d.data.label.slice(0, 1) == "Q" || 
+                         d.data.label.slice(0, 1) == "K" || 
+                         d.data.label.slice(0, 1) == "R" || 
+                         d.data.label.slice(0, 1) == "B" ||
+                         d.data.label.slice(0, 1) == "N" ) {
+                        piece = d.data.label.slice(0, 1);
+                    }
+            return "./img/chesspieces/wikipedia/"+colorImage+piece+".png";
+         },
+                    width: 20,
+                    height: 20
+                  })
+                  .attr("text-anchor", "end")
+                  .attr('y', -15)
+                  .attr("transform", function(d){
+            d.innerRadius = 0;
+            d.outerRadius = r;
+            d.angle = (d.startAngle + d.endAngle)/2;
+            return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius - 30) +")";
+        })
+
+    container.on("click", spin);
+    function spin(d){
+        container.on("click", null);
+        //all slices have been seen, all done
+        //console.log("OldPick: " + oldpick.length, "Data length: " + data.length);
+        if(oldpick.length == data.length){
+            console.log("done");
+
+            return;
         }
+        var  dataSize = data.length,
+                    ps       = 360/dataSize,
+             pieslice = Math.round(1440/dataSize),
+             rng      = Math.floor((Math.random() * 1440) + 360);
+        
+        let rngmin = rng - ((ps / 2)-1);
+        let rngmax = rng + ((ps / 2)-1);
 
-        var svg = d3.select('#chart')
-            .append("svg")
-            .data([data])
-            .attr("width",  w + padding.left + padding.right)
-            .attr("height", h + padding.top + padding.bottom);
-        var container = svg.append("g")
-            .attr("class", "chartholder")
-            .attr("transform", "translate(" + (w/2 + padding.left) + "," + (h/2 + padding.top) + ")");
-        var vis = container
-            .append("g");
-            
-        var pie = d3.layout.pie().sort(null).value(function(d){return 1;});
-        // declare an arc generator function
-        var arc = d3.svg.arc().outerRadius(r);
-        // select paths, use arc generator to draw
-        var arcs = vis.selectAll("g.slice")
-            .data(pie)
-            .enter()
-            .append("g")
-            .attr("class", "slice");
-            
-        arcs.append("path")
-            .attr("fill", function(d, i){ return d.data.color+'ee'; })
-            .attr("d", function (d) { return arc(d); });
-        // add the text
-
-        arcs.append("text").attr("transform", function(d){
-                d.innerRadius = 0;
-                d.outerRadius = r;
-                d.angle = (d.startAngle + d.endAngle)/2;
-                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius -20) +")";
-            })
-                .attr('x', -10)
-                .attr('y', 3)
-                .attr("text-anchor", "end")
-            .text( function(d, i) {
-                return data[i].label;
-             });
-
-        if(turn=='b') {
-            colorImage = 'b'
-        }
-        else{
-            colorImage = 'w'
-        }
-
-                arcs.append("image")
-                      .attr({
-                        "xlink:href": function(d) {
-                            let piece = 'P';
-
-                        if (d.data.label.slice(0, 1) == "Q" || 
-                             d.data.label.slice(0, 1) == "K" || 
-                             d.data.label.slice(0, 1) == "R" || 
-                             d.data.label.slice(0, 1) == "B" ||
-                             d.data.label.slice(0, 1) == "N" ) {
-                            piece = d.data.label.slice(0, 1);
-                        }
-                return "./img/chesspieces/wikipedia/"+colorImage+piece+".png";
-             },
-                        width: 20,
-                        height: 20
-                      })
-                      .attr("text-anchor", "end")
-                      .attr('y', -15)
-                      .attr("transform", function(d){
-                d.innerRadius = 0;
-                d.outerRadius = r;
-                d.angle = (d.startAngle + d.endAngle)/2;
-                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")translate(" + (d.outerRadius - 30) +")";
-            })
-
-        container.on("click", spin);
-        function spin(d){
-            container.on("click", null);
-            //all slices have been seen, all done
-            //console.log("OldPick: " + oldpick.length, "Data length: " + data.length);
-            if(oldpick.length == data.length){
-                console.log("done");
-
-                return;
-            }
-            var  dataSize = data.length,
-                        ps       = 360/dataSize,
-                 pieslice = Math.round(1440/dataSize),
-                 rng      = Math.floor((Math.random() * 1440) + 360);
-            
-            let rngmin = rng - ((ps / 2)-1);
-            let rngmax = rng + ((ps / 2)-1);
-
-            let random =  Math.floor(Math.random() * (rngmax - rngmin + 1) + rngmin);
+        let random =  Math.floor(Math.random() * (rngmax - rngmin + 1) + rngmin);
 //                      console.log(random);
 //                      console.log(rng);
 //                      console.log(rngmin);
 //                      console.log(rngmax);
 
-            rotation = random;
+        rotation = random;
 
-            picked = Math.round(dataSize - (rotation % 360)/ps);
-            picked = picked >= dataSize ? (picked % dataSize) : picked;
-            if(oldpick.indexOf(picked) !== -1){
-                d3.select(this).call(spin);
-                return;
-            } else {
-                oldpick.push(picked);
-            }
-
-            rotation += 90 - (Math.round(ps/2));
-
-            //console.log(rotation);
-            vis.transition()
-                .duration(timerWheelAnimation * 1000)
-                .attrTween("transform", rotTween)
-                .each("end", function(){
-                    oldrotation = rotation;
-                    /* Get the result value from object "data" */
-                });
-        }
-        //make arrow
-
-        if(turn=='b') {
-            col = 'white'
-        }
-        else{
-            col = 'black'
+        picked = Math.round(dataSize - (rotation % 360)/ps);
+        picked = picked >= dataSize ? (picked % dataSize) : picked;
+        if(oldpick.indexOf(picked) !== -1){
+            d3.select(this).call(spin);
+            return;
+        } else {
+            oldpick.push(picked);
         }
 
-        svg.append("g")
-            .attr("transform", "translate(" + (w + padding.left + padding.right) + "," + ((h/2)+padding.top) + ")")
-            .append("path")
-            .attr("d", "M-" + (r*.15) + ",0L0," + (r*.05) + "L0,-" + (r*.05) + "Z")
-            .style({"fill":col});
-        //draw spin circle
-        container.append("circle")
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", 15)
-            .style({"fill":"#ffffffff","cursor":"pointer"});       
+        rotation += 90 - (Math.round(ps/2));
 
-        function rotTween(to) {
-          var i = d3.interpolate(oldrotation % 360, rotation);
-          return function(t) {
-            return "rotate(" + i(t) + ")";
-          };
-        }
-        spin(data);
-        return data[picked].value;
+        //console.log(rotation);
+        vis.transition()
+            .duration(timerWheelAnimation * 1000)
+            .attrTween("transform", rotTween)
+            .each("end", function(){
+                oldrotation = rotation;
+                /* Get the result value from object "data" */
+            });
+    }
+
+    svg.append("g")
+        .attr("transform", "translate(" + (w + padding.left + padding.right) + "," + ((h/2)+padding.top) + ")")
+        .append("path")
+        .attr("d", "M-" + (r*.15) + ",0L0," + (r*.05) + "L0,-" + (r*.05) + "Z")
+        .style({"fill":col});
+    //draw spin circle
+    container.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 15)
+        .style({"fill":"#ffffffff","cursor":"pointer"});       
+
+    function rotTween(to) {
+      var i = d3.interpolate(oldrotation % 360, rotation);
+      return function(t) {
+        return "rotate(" + i(t) + ")";
+      };
+    }
+    spin(data);
+    return data[picked].value;
 }
 
 // Instance singleton

@@ -28,7 +28,7 @@ const AppState = {
         wheelDuration: 5,
         pauseAfterEnd: 15,
         singleVote: false,
-        majorityMode: true,
+        majorityMode: false,
         
         // Restrictions Twitch
         followersOnly: false,
