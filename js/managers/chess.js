@@ -9,7 +9,7 @@ class ChessManager {
         this.board = null;  // Chessboard.js instance
         this.boardElement = 'myBoard';
         this.initialized = false;
-        
+        this.lastFen = null;
         // History
         this.moveHistory = [];
         
@@ -34,7 +34,9 @@ class ChessManager {
             pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
             onDragStart: this.onDragStart.bind(this),
             onDrop: this.onDrop.bind(this),
-            onSnapEnd: this.onSnapEnd.bind(this)
+            onSnapEnd: this.onSnapEnd.bind(this),
+            sparePieces: false,
+            moveSpeed: 'fast'
         };
 
         // Créer l'échiquier
@@ -71,34 +73,24 @@ class ChessManager {
      * Handler: drop d'une pièce
      */
     onDrop(source, target) {
-        // Tenter le coup
-        const move = this.chess.move({
+        const move = chess.move({
             from: source,
             to: target,
-            promotion: 'q' // Toujours promouvoir en dame
+            promotion: 'q'
         });
-
-        // Coup illégal
-        if (move === null) return 'snapback';
-
-        // Coup valide
-        this.moveHistory.push(move);
-        this.updateHistoryUI();
-
-        // Callback
-        if (this.onMove) {
-            this.onMove(move, this.chess.fen());
+        
+        if (move === null) {
+            return 'snapback';
         }
-
-        // Sync Phantom si connecté
-        if (window.phantom?.isConnected && window.phantom?.settings?.autoSync) {
-            window.phantom.syncPosition(this.chess.fen());
+        
+        updateMovesList();
+        updateAvailableMoves();
+        checkGameStatus();
+        
+        // Seulement si nécessaire (prise en passant, roque, promotion)
+        if (move.flags.includes('e') || move.flags.includes('k') || move.flags.includes('q')) {
+            board.position(chess.fen());
         }
-
-        // Vérifier fin de partie
-        this.checkGameEnd();
-
-        return true;
     }
 
     /**

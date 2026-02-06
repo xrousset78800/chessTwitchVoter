@@ -560,6 +560,158 @@ body[data-turn="w"] .sandbox__title::after {
 body[data-turn="b"] .sandbox__title::after {
     content: ' ⬛';
 }
+
+
+#myBoard .square-55d63 {
+    transition: background-color 0.2s ease;
+}
+
+#myBoard img {
+    /* Éviter le flash lors du changement */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+
+.history-row.is-selected {
+    background: rgba(99, 102, 241, 0.2);
+    border-left: 3px solid #6366f1;
+}
+
+/* Indicateur de coup spécial (échec, mat, roque) */
+.history-row__move.is-check::after {
+    content: '+';
+    color: #fbbf24;
+    margin-left: 2px;
+}
+
+.history-row__move.is-checkmate::after {
+    content: '#';
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.history-row__move.is-castle {
+    color: #a78bfa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .history-row {
+        font-size: 0.85rem;
+        padding: 5px 6px;
+    }
+    
+    .history-row__number {
+        min-width: 24px;
+        margin-right: 8px;
+    }
+}
+.voting-eligibility {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.voting-eligibility__label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.voting-eligibility__value {
+    font-size: 0.95rem;
+    color: #fff;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Icône selon le mode */
+.voting-eligibility__value::before {
+    content: '👥';
+    font-size: 1.2rem;
+}
+
+/* Couleurs selon le mode de jeu */
+#voting-indicator.mode-yolo {
+    color: #ffd700;
+}
+
+#voting-indicator.mode-yolo::before {
+    content: '🎲';
+}
+
+#voting-indicator.mode-oneVsOne,
+#voting-indicator.mode-oneVsAll {
+    color: #ff6b6b;
+}
+
+#voting-indicator.mode-oneVsOne::before,
+#voting-indicator.mode-oneVsAll::before {
+    content: '⚔️';
+}
+
+#voting-indicator.mode-problems {
+    color: #4ecdc4;
+}
+
+#voting-indicator.mode-problems::before {
+    content: '🧩';
+}
+
+#voting-indicator.mode-chatVsChat {
+    color: #a78bfa;
+}
+
+#voting-indicator.mode-chatVsChat::before {
+    content: '🎭';
+}
+
+/* Animation de changement */
+.voting-eligibility__value {
+    transition: color 0.3s ease;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.voting-eligibility.is-active {
+    border-color: rgba(255, 215, 0, 0.3);
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.voting-eligibility.is-active .voting-eligibility__value {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .voting-eligibility {
+        padding: 10px;
+        margin: 10px 0;
+    }
+    
+    .voting-eligibility__label {
+        font-size: 0.7rem;
+    }
+    
+    .voting-eligibility__value {
+        font-size: 0.9rem;
+    }
+}
 /* ============================================
    SCROLLBAR
    ============================================ */

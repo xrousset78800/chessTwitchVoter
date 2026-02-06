@@ -514,11 +514,18 @@ const SandboxPage = {
         // ========== MODE DE JEU ==========
         document.querySelectorAll('.mode-option').forEach(option => {
             option.addEventListener('click', () => {
+
+
+
                 document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('is-active'));
                 option.classList.add('is-active');
                 AppState.gameMode = option.dataset.mode;
                 this.updateModeOptions();
-                
+
+                if (gameEngine.updateVotingIndicator) {
+                    gameEngine.updateVotingIndicator();
+                }                
+
                 // Précharger les problèmes si mode problèmes sélectionné
                 if (option.dataset.mode === 'problems' && !problemsManager.isLoaded()) {
                     problemsManager.loadProblems('js/problemsV2.csv').then(() => {
@@ -673,7 +680,11 @@ const SandboxPage = {
         
         // Appliquer noBg
         document.body.classList.toggle('no-bg', AppState.config.noBg);
-        
+
+        if (gameEngine.updateVotingIndicator) {
+            gameEngine.updateVotingIndicator();
+        }        
+
         // ========== MODE PROBLÈMES ==========
         if (AppState.gameMode === 'problems') {
             console.log('🧩 Activation du mode Problèmes...');
@@ -742,6 +753,9 @@ const SandboxPage = {
             timer: AppState.config.timerEnabled,
             duration: AppState.config.timerDuration
         });
+        if (gameEngine.updateVotingIndicator) {
+            gameEngine.updateVotingIndicator();
+        }
     },
 
     syncUIFromState() {
@@ -893,6 +907,10 @@ const SandboxPage = {
         }
 
         this.syncUIFromState();
+
+        if (gameEngine.updateVotingIndicator) {
+            gameEngine.updateVotingIndicator();
+        }
         Toast.success(`Config "${config.name}" chargée`);
     }
 };

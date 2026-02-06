@@ -123,26 +123,38 @@ class GameEngine {
         panel.id = 'moves-panel';
         panel.className = 'moves-panel';
         panel.innerHTML = `
+        <div class="moves-panel" id="moves-panel">
             <div class="moves-panel__header">
-                <h3>♟️ Coups disponibles</h3>
+                <h3 data-i18n="voting.title">Coups disponibles</h3>
+                
+                <!-- Indicateur de votants -->
+                <div class="voting-eligibility">
+                    <div class="voting-eligibility__label" data-i18n="voting.eligible.title">Qui peut voter</div>
+                    <div class="voting-eligibility__value" id="voting-indicator">
+                        ${this.getEligibleVoters()}
+                    </div>
+                </div>
+                
                 <div class="voter-input">
-                    <label for="voter-name">Votant :</label>
-                    <input type="text" id="voter-name" value="TestPlayer" placeholder="Nom du joueur">
+                    <label for="voter-name" data-i18n="voter.name">Nom du votant</label>
+                    <input type="text" id="voter-name" placeholder="Anonymous">
                 </div>
             </div>
+            
+            <!-- Section Timer -->
             <div class="moves-panel__timer">
-                <div id="timer-display" class="timer-display">
-                    <span id="timer-value">--:--</span>
-                </div>
+                <div class="timer-display" id="timer-display">--:--</div>
                 <div class="timer-controls">
                     <button id="btn-start-timer" class="btn btn--small btn--primary">
-                        <i class="fas fa-play"></i> Démarrer Timer
+                        <i class="fas fa-play"></i> <span data-i18n="timer.start">Démarrer Timer</span>
                     </button>
                     <button id="btn-stop-timer" class="btn btn--small btn--danger" style="display:none;">
-                        <i class="fas fa-stop"></i> Stop
+                        <i class="fas fa-stop"></i> <span data-i18n="timer.stop">Stop</span>
                     </button>
                 </div>
             </div>
+            
+            <!-- Liste des coups disponibles -->
             <div class="moves-panel__list">
                 <div id="availableList" class="available-moves">
                     <ul id="availableListP" data-piece="P" class="moves-group"><span class="piece-icon">♙</span></ul>
@@ -154,12 +166,19 @@ class GameEngine {
                     <ul id="availableListO" data-piece="O" class="moves-group"><span class="piece-icon">🏰</span></ul>
                 </div>
             </div>
+            
+            <!-- Votes en cours -->
             <div class="moves-panel__votes">
-                <h4>📊 Votes en cours</h4>
+                <h4 data-i18n="voting.votesInProgress">📊 Votes en cours</h4>
                 <div id="vote-list" class="vote-list"></div>
-                <div class="vote-total">Total: <span id="total-votes">0</span> votes</div>
+                <div class="vote-total">
+                    <span data-i18n="voting.totalVotes">Total</span>: 
+                    <span id="total-votes">0</span> 
+                    <span data-i18n="voting.votes">votes</span>
+                </div>
             </div>
-        `;
+        </div>
+    `;
         
         // Ajouter les styles
         this.injectPanelStyles();
@@ -407,6 +426,50 @@ class GameEngine {
                     margin-top: 20px;
                 }
             }
+            .voting-eligibility {
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+                padding: 12px;
+                margin: 12px 0;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .voting-eligibility__label {
+                font-size: 0.75rem;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 6px;
+                font-weight: 500;
+            }
+
+            .voting-eligibility__value {
+                font-size: 0.95rem;
+                color: #fff;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .voting-eligibility__value::before {
+                content: '👥';
+                font-size: 1.2rem;
+            }
+
+            #voting-indicator.mode-yolo { color: #ffd700; }
+            #voting-indicator.mode-yolo::before { content: '🎲'; }
+
+            #voting-indicator.mode-oneVsOne,
+            #voting-indicator.mode-oneVsAll { color: #ff6b6b; }
+            #voting-indicator.mode-oneVsOne::before,
+            #voting-indicator.mode-oneVsAll::before { content: '⚔️'; }
+
+            #voting-indicator.mode-problems { color: #4ecdc4; }
+            #voting-indicator.mode-problems::before { content: '🧩'; }
+
+            #voting-indicator.mode-chatVsChat { color: #a78bfa; }
+            #voting-indicator.mode-chatVsChat::before { content: '🎭'; }
         `;
         document.head.appendChild(styles);
     }
@@ -811,53 +874,72 @@ class GameEngine {
         const groups = {};
         moves.forEach(move => {
             let key;
+            
+            // Roque
             if (move.startsWith('O-O')) {
-                key = 'O'; // Roque
-            } else if (move[0].match(/[A-Z]/)) {
-                key = move[0]; // Pièce
-            } else {
-                key = 'P'; // Pion
+                key = 'O';
             }
+            // Pions (pas de lettre majuscule)
+            else if (move[0] === move[0].toLowerCase()) {
+                key = 'P';
+            }
+            // Autres pièces (première lettre)
+            else {
+                key = move[0];
+            }
+            
             if (!groups[key]) groups[key] = [];
-            groups[key].push(move.replace(/[+#]/, '')); // Retirer + et #
+            groups[key].push(move);
         });
         
-        // Vider les listes (garder l'icône)
-        ['P', 'R', 'N', 'B', 'Q', 'K', 'O'].forEach(piece => {
-            const list = document.getElementById('availableList' + piece);
-            if (list) {
-                // Garder seulement le span.piece-icon
-                const icon = list.querySelector('.piece-icon');
-                list.innerHTML = '';
-                if (icon) list.appendChild(icon);
-            }
-        });
+        // Ordre des pièces
+        const order = ['P', 'N', 'B', 'R', 'Q', 'K', 'O'];
         
-        // Remplir les listes
-        Object.entries(groups).forEach(([piece, pieceMoves]) => {
-            const list = document.getElementById('availableList' + piece) || 
-                         document.getElementById('availableListP');
+        // Réinitialiser toutes les listes
+        order.forEach(piece => {
+            const list = document.getElementById(`availableList${piece}`);
             if (!list) return;
             
-            pieceMoves.forEach(move => {
-                const li = document.createElement('li');
-                const btn = document.createElement('button');
-                btn.className = 'button-56';
-                btn.textContent = move;
-                btn.addEventListener('click', () => this.onMoveClick(move));
-                li.appendChild(btn);
-                list.appendChild(li);
-            });
+            // Garder l'icône de pièce
+            const icon = list.querySelector('.piece-icon');
+            list.innerHTML = '';
+            if (icon) list.appendChild(icon);
+            
+            // Ajouter les coups
+            if (groups[piece]) {
+                groups[piece].forEach(move => {
+                    const li = document.createElement('li');
+                    const btn = document.createElement('button');
+                    btn.textContent = move;
+                    btn.onclick = () => this.handleMoveClick(move);
+                    li.appendChild(btn);
+                    list.appendChild(li);
+                });
+            }
         });
+        
+        console.log('📋 Coups disponibles mis à jour:', moves.length, 'coups');
     }
 
     /**
      * Appelé quand on clique sur un coup
      */
     onMoveClick(move) {
-        if (!voting.isOpen) {
-            console.log('⚠️ Vote fermé, exécution directe du coup');
+        console.log('👆 Coup cliqué:', move);
+        
+        // ========== CAS 1: PAS DE TIMER → JOUER IMMÉDIATEMENT ==========
+        if (!this.config.timerEnabled) {
+            console.log('⚡ Pas de timer → Exécution immédiate du coup:', move);
             this.executeMove(move);
+            this.updateAvailableMoves();
+            return;
+        }
+        
+        // ========== CAS 2: AVEC TIMER → SYSTÈME DE VOTE ==========
+        
+        // Vérifier qu'on peut voter
+        if (!voting.isOpen) {
+            console.log('❌ Vote fermé');
             return;
         }
         
@@ -871,11 +953,42 @@ class GameEngine {
         // Ajouter le vote
         voting.addVote(voterName, move);
         
-        // Si pas de timer, exécuter immédiatement
-        if (!this.config.timerEnabled) {
-            voting.close();
-            this.processVoteResult();
+        // Le timer se chargera d'exécuter le coup gagnant à la fin
+    }
+    
+    executeMove(move) {
+        console.log('🎯 Exécution du coup:', move);
+        
+        // Faire le coup sur l'objet Chess
+        const result = this.chess.move(move);
+        
+        if (!result) {
+            console.error('❌ Coup invalide:', move);
+            return false;
         }
+        
+        console.log('✅ Coup joué:', result.san);
+        
+        // Mettre à jour l'échiquier visuel
+        this.board.position(this.chess.getFen());
+        
+        // Sync avec Phantom si connecté
+        if (window.phantomChessboard?.isConnected && this.config.phantomAutoSync) {
+            window.phantomChessboard.syncPosition(this.chess.getFen());
+        }
+        
+        // Mettre à jour l'historique
+        this.chess.updateHistoryUI();
+        
+        // Vérifier fin de partie
+        const gameStatus = this.chess.checkGameEnd();
+        if (gameStatus) {
+            this.handleGameEnd(gameStatus);
+            return true;
+        }
+        
+        // Continuer le jeu
+        return true;
     }
 
     /**
@@ -927,27 +1040,67 @@ class GameEngine {
     /**
      * Met à jour l'historique des coups
      */
-    updateHistoryUI(move) {
-        const container = document.querySelector('.poll ol') || 
-                         document.getElementById('history-list');
+    updateHistoryUI() {
+        const container = document.getElementById('history-list');
         if (!container) return;
-        
-        const moveNum = Math.ceil(this.moveHistory.length / 2);
-        const isWhite = move.color === 'w';
-        
-        if (isWhite) {
-            // Nouveau tour, créer une nouvelle ligne
-            const li = document.createElement('li');
-            li.dataset.moveNum = moveNum;
-            li.innerHTML = `<span class="w" data-fen="${this.chess.fen()}">${move.san}</span>`;
-            container.prepend(li);
-        } else {
-            // Ajouter au tour existant
-            const lastLi = container.querySelector('li:first-child');
-            if (lastLi) {
-                lastLi.innerHTML += `<span class="b" data-fen="${this.chess.fen()}">${move.san}</span>`;
-            }
+
+        if (this.moveHistory.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <p data-i18n="history.noMoves">${window.i18n?.t('history.noMoves') || 'Aucun coup joué'}</p>
+                </div>
+            `;
+            return;
         }
+
+        // Générer l'historique au format classique: 1. e4 - e5
+        let html = '';
+        const moves = [...this.moveHistory];
+        
+        // Grouper par paires (blancs + noirs)
+        for (let i = 0; i < moves.length; i += 2) {
+            const moveNum = Math.floor(i / 2) + 1;
+            const whiteMove = moves[i];
+            const blackMove = moves[i + 1];
+            
+            // Détecter échec/mat/roque
+            const whiteMoveClass = this.getMoveClass(whiteMove);
+            const blackMoveClass = blackMove ? this.getMoveClass(blackMove) : '';
+            
+            html += `
+                <div class="history-row" data-move-index="${i}">
+                    <span class="history-row__number">${moveNum}.</span>
+                    <span class="history-row__move ${whiteMoveClass}">${whiteMove.san}</span>
+                    ${blackMove ? `
+                        <span class="history-row__move history-row__move--black ${blackMoveClass}">${blackMove.san}</span>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+        
+        // Scroll automatique vers le dernier coup
+      
+        container.scrollTop = container.scrollHeight;
+    }
+
+    getMoveClass(move) {
+        if (!move) return '';
+        
+        const classes = [];
+        
+        if (move.san.includes('#')) {
+            classes.push('is-checkmate');
+        } else if (move.san.includes('+')) {
+            classes.push('is-check');
+        }
+        
+        if (move.san === 'O-O' || move.san === 'O-O-O') {
+            classes.push('is-castle');
+        }
+        
+        return classes.join(' ');
     }
 
     /**
@@ -1082,7 +1235,37 @@ class GameEngine {
         }
         return move;
     }
-
+    getEligibleVoters() {
+        const mode = window.AppState?.gameMode || this.mode || 'yolo';
+        
+        switch(mode) {
+            case 'yolo':
+                return window.i18n?.t('voting.eligible.chat') || 'Chat Twitch';
+            
+            case 'oneVsOne':
+            case 'oneVsAll':
+                return window.i18n?.t('voting.eligible.opponent') || 'Adversaire uniquement';
+            
+            case 'problems':
+                return window.i18n?.t('voting.eligible.player') || 'Joueur actif';
+            
+            case 'chatVsChat':
+                return window.i18n?.t('voting.eligible.teams') || 'Équipes Twitch';
+            
+            default:
+                return window.i18n?.t('voting.eligible.undefined') || 'Non défini';
+        }
+    }
+    updateVotingIndicator() {
+        const indicator = document.getElementById('voting-indicator');
+        if (!indicator) return;
+        
+        const eligibleText = this.getEligibleVoters();
+        indicator.textContent = eligibleText;
+        
+        const mode = window.AppState?.gameMode || this.mode || 'yolo';
+        indicator.className = `voting-indicator mode-${mode}`;
+    }
     /**
      * Reset la partie
      */
