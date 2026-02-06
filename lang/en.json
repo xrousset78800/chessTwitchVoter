@@ -109,7 +109,7 @@
       "opponent": "Opponent",
       "player": "Active Player",
       "teams": "Twitch Teams",
-      "undefined": "Undefined"
+      "undefined": "Undefined (= anyone)"
     },
     "votesInProgress": "Current votes",
     "totalVotes": "Voters",

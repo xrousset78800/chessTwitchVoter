@@ -109,7 +109,7 @@
       "opponent": "Adversaire",
       "player": "Joueur actif",
       "teams": "Équipes Twitch",
-      "undefined": "Non défini"
+      "undefined": "Non défini (= premier qui vote)"
     },
     "votesInProgress": "Votes en cours",
     "totalVotes":"Votants",

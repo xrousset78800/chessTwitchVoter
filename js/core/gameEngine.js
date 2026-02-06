@@ -931,24 +931,24 @@ class GameEngine {
         return move;
     }
     getEligibleVoters() {
-        const mode = window.AppState?.gameMode || this.mode || 'yolo';
+        const mode = window.AppState?.gameMode || this.mode;
         
         switch(mode) {
             case 'yolo':
-                return window.i18n?.t('voting.eligible.chat') || 'Chat Twitch';
+                return window.i18n.t('voting.eligible.chat');
             
             case 'oneVsOne':
             case 'oneVsAll':
-                return window.i18n?.t('voting.eligible.opponent') || 'Adversaire uniquement';
+                return window.i18n.t('voting.eligible.opponent');
             
             case 'problems':
-                return window.i18n?.t('voting.eligible.player') || 'Joueur actif';
+                return window.i18n.t('voting.eligible.player');
             
             case 'chatVsChat':
-                return window.i18n?.t('voting.eligible.teams') || 'Équipes Twitch';
+                return window.i18n.t('voting.eligible.teams');
             
             default:
-                return window.i18n?.t('voting.eligible.undefined') || 'Non défini';
+                return window.i18n.t('voting.eligible.undefined');
         }
     }
     updateVotingIndicator() {
