@@ -145,3 +145,25 @@
         display: none;
     }
 }
+.nav__lang-option {
+    padding: 4px 8px;
+    border-radius: var(--radius-xs, 4px);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted, #8888a0);
+    transition: var(--transition-fast, all 0.15s ease);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.nav__lang-option:hover:not(.is-active) {
+    color: var(--text-primary, #e8e8f0);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav__lang-option:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+}

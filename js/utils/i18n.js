@@ -12,6 +12,7 @@ class I18n {
 
     async init() {
         await this.loadLanguage(this.currentLang);
+        this.setupLanguageSelector();
         this.updateDOM();
         this.loaded = true;
     }
@@ -99,7 +100,15 @@ class I18n {
             el.classList.toggle('is-active', el.dataset.lang === this.currentLang);
         });
     }
-
+    setupLanguageSelector() {
+        document.querySelectorAll('[data-lang]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lang = btn.dataset.lang;
+                this.setLanguage(lang);
+            });
+        });
+    }
     /**
      * Get current language
      */
@@ -110,6 +119,4 @@ class I18n {
 
 // Create global instance
 window.i18n = new I18n();
-
-// Export for modules
-export default window.i18n;
+window.i18n.init();

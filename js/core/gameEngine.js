@@ -136,7 +136,7 @@ class GameEngine {
                 </div>
                 
                 <div class="voter-input">
-                    <label for="voter-name" data-i18n="voter.name">Nom du votant</label>
+                    <label for="voter-name" data-i18n="voting.name">Nom du votant</label>
                     <input type="text" id="voter-name" placeholder="Anonymous">
                 </div>
             </div>

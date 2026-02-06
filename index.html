@@ -46,8 +46,8 @@
             
             <div class="nav__status">
                 <div class="nav__lang">
-                    <span class="nav__lang-option is-active" data-lang="fr">FR</span>
-                    <span class="nav__lang-option" data-lang="en">EN</span>
+                    <button class="nav__lang-option is-active" data-lang="fr" type="button">FR</button>
+                    <button class="nav__lang-option" data-lang="en" type="button">EN</button>
                 </div>
                 
                 <div class="nav__status-badge" data-action="connect-twitch" title="Twitch">
@@ -73,13 +73,13 @@
                 <div class="landing__connections">
                     <button class="connect-btn connect-btn--twitch" data-action="connect-twitch">
                         <span class="connect-btn__icon"><i class="fab fa-twitch"></i></span>
-                        <span>Connecter Twitch</span>
-                        <span class="connect-btn__status" data-twitch-status>Non connecté</span>
+                        <span data-i18n="twitch.connect">Connecter Twitch</span>
+                        <span data-i18n="twitch.not-connected" class="connect-btn__status" data-twitch-status>Non connecté</span>
                     </button>
                     <button class="connect-btn connect-btn--phantom" data-action="connect-phantom">
                         <span class="connect-btn__icon">♟</span>
-                        <span>Connecter Phantom</span>
-                        <span class="connect-btn__status" data-phantom-status>Non connecté</span>
+                        <span data-i18n="phantom.connect">Connecter Phantom</span>
+                        <span class="connect-btn__status" data-i18n="phantom.not-connected" data-phantom-status>Non connecté</span>
                     </button>
                 </div>
 
@@ -87,12 +87,12 @@
                     <a class="action-card" data-navigate="/sandbox">
                         <div class="action-card__icon">🧪</div>
                         <span class="action-card__title">Sandbox</span>
-                        <span class="action-card__desc">Mode libre avec toutes les options</span>
+                        <span data-i18n="sandbox.description" class="action-card__desc">Mode libre avec toutes les options</span>
                     </a>
                     <a class="action-card" data-navigate="/browse">
                         <div class="action-card__icon">⚔️</div>
-                        <span class="action-card__title">Bataille Twitch</span>
-                        <span class="action-card__desc">Chat vs Chat en direct</span>
+                        <span data-i18n="twitchbattle.name" class="action-card__title">Bataille Twitch</span>
+                        <span data-i18n="twitchbattle.description" class="action-card__desc">Chat vs Chat en direct</span>
                     </a>
                 </div>
             </div>
@@ -107,13 +107,13 @@
                         <h1 class="sandbox__title">🧪 Sandbox</h1>
                     </div>
                     <div class="sandbox__actions">
-                        <button class="btn btn--sm" id="btn-flip"><i class="fas fa-sync-alt"></i> Retourner</button>
-                        <button class="btn btn--sm" id="btn-reset"><i class="fas fa-undo"></i> Reset</button>
-                        <button class="btn btn--sm" id="btn-undo"><i class="fas fa-step-backward"></i> Undo</button>
-                        <button class="btn btn--sm" id="btn-sync" disabled><i class="fas fa-sync"></i> Sync</button>
-                        <button class="btn btn--sm btn--danger" id="btn-game-end" disabled><i class="fas fa-stop"></i> Game End</button>
-                        <button class="btn btn--sm btn--primary" id="btn-save-config"><i class="fas fa-save"></i> Sauvegarder</button>
-                        <button class="btn btn--primary btn--lg" id="btn-apply-config">
+                        <button data-i18n="actions.reverse" class="btn btn--sm" id="btn-flip"><i class="fas fa-sync-alt"></i> Retourner</button>
+                        <button data-i18n="actions.reset" class="btn btn--sm" id="btn-reset"><i class="fas fa-undo"></i> Reset</button>
+                        <button data-i18n="actions.undo" class="btn btn--sm" id="btn-undo"><i class="fas fa-step-backward"></i> Undo</button>
+                        <button data-i18n="actions.sync" class="btn btn--sm" id="btn-sync" disabled><i class="fas fa-sync"></i> Sync</button>
+                        <button data-i18n="actions.gameEnd" class="btn btn--sm btn--danger" id="btn-game-end" disabled><i class="fas fa-stop"></i> Game End</button>
+                        <button data-i18n="actions.save" class="btn btn--sm btn--primary" id="btn-save-config"><i class="fas fa-save"></i> Sauvegarder</button>
+                        <button data-i18n="actions.apply" class="btn btn--primary btn--lg" id="btn-apply-config">
                             <i class="fas fa-play"></i> Appliquer
                         </button>                        
                     </div>
@@ -142,7 +142,7 @@
                     <div class="sandbox__sidebar">
                         <!-- Mode selector -->
                         <div class="panel">
-                            <div class="panel__header"><i class="fas fa-gamepad"></i> Mode de jeu</div>
+                            <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
                             <div class="panel__content">
                                 <div class="mode-selector">
                                     <div class="mode-option is-active" data-mode="yolo">
@@ -169,7 +169,7 @@
                                 <!-- Mode: 1vsAll options -->
                                 <div class="mode-options" id="options-oneVsAll">
                                     <div class="player-input">
-                                        <span class="player-input__label">Joueur seul</span>
+                                        <span data-i18n="gameMode.1vall.title" class="player-input__label">Joueur seul</span>
                                         <input type="text" class="input input--sm player-input__field" id="player-solo" placeholder="Pseudo...">
                                     </div>
                                 </div>
@@ -177,11 +177,11 @@
                                 <!-- Mode: 1vs1 options -->
                                 <div class="mode-options" id="options-oneVsOne">
                                     <div class="player-input">
-                                        <span class="player-input__label">Joueur 1 ⬜</span>
+                                        <span class="player-input__label" data-i18n="gameMode.1v1.player1">Joueur 1 ⬜</span>
                                         <input type="text" class="input input--sm player-input__field" id="player-1" placeholder="Pseudo...">
                                     </div>
                                     <div class="player-input">
-                                        <span class="player-input__label">Joueur 2 ⬛</span>
+                                        <span class="player-input__label" data-i18n="gameMode.1v1.player2">Joueur 2 ⬛</span>
                                         <input type="text" class="input input--sm player-input__field" id="player-2" placeholder="Pseudo...">
                                     </div>
                                 </div>
@@ -189,11 +189,11 @@
                                 <!-- Mode: ChatVsChat options -->
                                 <div class="mode-options" id="options-chatVsChat">
                                     <div class="player-input">
-                                        <span class="player-input__label">Chat 1 ⬜</span>
+                                        <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer1">Chat 1 ⬜</span>
                                         <input type="text" class="input input--sm player-input__field" id="chat-1" placeholder="Channel...">
                                     </div>
                                     <div class="player-input">
-                                        <span class="player-input__label">Chat 2 ⬛</span>
+                                        <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer2">Chat 2 ⬛</span>
                                         <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Channel...">
                                     </div>
                                 </div>
@@ -201,12 +201,9 @@
                                 <!-- Mode: Problems options -->
                                 <div class="mode-options" id="options-problems">
                                     <div class="form-group">
-                                        <label class="form-label">Thèmes</label>
+                                        <label data-i18n="gameMode.problems.themes" class="form-label">Thèmes</label>
                                         <select class="input select" id="problem-themes" multiple>
-                                            <option value="mate">Mat</option>
-                                            <option value="fork">Fourchette</option>
-                                            <option value="pin">Clouage</option>
-                                            <option value="skewer">Enfilade</option>
+
                                         </select>
                                     </div>
                                 </div>
@@ -215,79 +212,79 @@
 
                         <!-- Voting options -->
                         <div class="panel">
-                            <div class="panel__header"><i class="fas fa-vote-yea"></i> Système de vote</div>
+                            <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
                             <div class="panel__content">
                                 <div class="form-row">
-                                    <span>Activer le timer</span>
+                                    <span data-i18n="gameMode.voteOptions.activateTimer">Activer le timer</span>
                                     <div class="toggle" id="toggle-voting"></div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Durée du tour</span>
+                                    <span data-i18n="gameMode.voteOptions.turnDuration">Durée du tour</span>
                                     <div class="flex items-center gap-sm">
                                         <input type="number" class="input input--sm input--inline" id="timer-duration" value="25" min="5" max="120" style="width:60px">
                                         <span>s</span>
                                     </div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Animation roue</span>
+                                    <span data-i18n="gameMode.voteOptions.wheelAnimation">Animation roue</span>
                                     <div class="flex items-center gap-sm">
                                         <input type="number" class="input input--sm input--inline" id="wheel-duration" value="5" min="1" max="15" style="width:60px">
                                         <span>s</span>
                                     </div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Vote unique</span>
+                                    <span data-i18n="gameMode.voteOptions.voteUnique">Vote unique</span>
                                     <div class="toggle" id="toggle-single-vote"></div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Mode majorité</span>
+                                    <span data-i18n="gameMode.voteOptions.voteMajority">Mode majorité</span>
                                     <div class="toggle" id="toggle-majority"></div>
                                 </div>
-                                <p class="form-hint">Si désactivé, tirage au sort avec la roue</p>
+                                <p data-i18n="gameMode.voteOptions.majorityHint" class="form-hint">Si désactivé, tirage au sort avec la roue</p>
                             </div>
                         </div>
 
                         <!-- Twitch restrictions (only when connected) -->
                         <div class="panel conditional-section twitch-only">
-                            <div class="panel__header"><i class="fab fa-twitch"></i> Restrictions</div>
+                            <div class="panel__header" data-i18n="gameMode.twitchOptions.restrictions"><i class="fab fa-twitch"></i> Restrictions</div>
                             <div class="panel__content">
                                 <div class="form-row">
-                                    <span>Followers uniquement</span>
+                                    <span data-i18n="gameMode.twitchOptions.followMode">Followers uniquement</span>
                                     <div class="toggle" id="toggle-followers"></div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Abonnés uniquement</span>
+                                    <span data-i18n="gameMode.twitchOptions.subMode">>Abonnés uniquement</span>
                                     <div class="toggle" id="toggle-subs"></div>
                                 </div>
-                                <p class="form-hint">Mods, VIPs et broadcaster passent toujours</p>
+                                <p class="form-hint" data-i18n="gameMode.twitchOptions.hint">>Mods, VIPs et broadcaster passent toujours</p>
                             </div>
                         </div>
 
                         <!-- Phantom settings (only when connected) -->
                         <div class="panel conditional-section phantom-only">
-                            <div class="panel__header"><i class="fas fa-chess-board"></i> Paramètres Phantom</div>
+                            <div class="panel__header" data-i18n="gameMode.phantom.title">><i class="fas fa-chess-board"></i> Paramètres Phantom</div>
                             <div class="panel__content">
                                 <div class="form-row">
-                                    <span>Batterie</span>
+                                    <span data-i18n="gameMode.phantom.battery">Batterie</span>
                                     <span id="phantom-battery">---%</span>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Vitesse mécanisme</label>
+                                    <label class="form-label" data-i18n="gameMode.phantom.speed">Vitesse mécanisme</label>
                                     <div class="flex items-center gap-sm">
                                         <input type="range" class="range" id="phantom-speed" min="1" max="5" value="3" style="flex:1">
                                         <span id="phantom-speed-value">3</span>
                                     </div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Auto-sync</span>
+                                    <span data-i18n="gameMode.phantom.autosync">Auto-sync</span>
                                     <div class="toggle is-active" id="toggle-auto-sync"></div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Auto Roque</span>
+                                    <span data-i18n="gameMode.phantom.autoO-O-O">Auto Roque</span>
                                     <div class="toggle is-active" id="toggle-castling"></div>
                                 </div>
                                 <div class="form-row">
-                                    <span>Snap au centre</span>
+                                    <span data-i18n="gameMode.phantom.snapOption">Snap au centre</span>
                                     <div class="toggle is-active" id="toggle-snap"></div>
                                 </div>
                             </div>
@@ -295,20 +292,20 @@
 
                         <!-- History -->
                         <div class="panel">
-                            <div class="panel__header"><i class="fas fa-history"></i> Historique</div>
+                            <div class="panel__header" data-i18n="game.history.title"><i class="fas fa-history"></i> Historique</div>
                             <div class="panel__content">
                                 <div class="history-list" id="history-list">
-                                    <div class="empty-state"><p>Aucun coup joué</p></div>
+                                    <div class="empty-state"><p data-i18n="game.history.no-moves">Aucun coup joué</p></div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Saved configs -->
                         <div class="panel">
-                            <div class="panel__header"><i class="fas fa-folder"></i> Configurations</div>
+                            <div class="panel__header" data-i18n="game.configuration.title"><i class="fas fa-folder"></i> Configurations</div>
                             <div class="panel__content">
                                 <div id="configs-list">
-                                    <div class="empty-state"><p>Aucune configuration</p></div>
+                                    <div class="empty-state"><p data-i18n="game.configuration.no-config">Aucune configuration</p></div>
                                 </div>
                             </div>
                         </div>
@@ -321,20 +318,20 @@
         <div class="page" id="page-browse">
             <div class="browse">
                 <div class="browse__header">
-                    <h1 class="browse__title">Parties en cours</h1>
-                    <p class="browse__desc">Rejoins une Bataille Twitch ou regarde en spectateur</p>
+                    <h1 class="browse__title" data-i18n="browse.games.inprogress">Parties en cours</h1>
+                    <p class="browse__desc" data-i18n="browse.games.inprogress_description">Rejoins une Bataille Twitch ou regarde en spectateur</p>
                 </div>
 
                 <!-- Shared Phantom section -->
                 <div class="shared-phantom">
                     <div class="shared-phantom__header">
-                        <span class="shared-phantom__title">
+                        <span class="shared-phantom__title" data-i18n="browse.games.myphantomPreview">
                             <span class="shared-phantom__title-icon">♟</span>
                             Phantom Partagé
                         </span>
                         <div class="shared-phantom__status">
                             <span class="status-dot is-connected"></span>
-                            <span class="badge badge--success">Disponible</span>
+                            <span class="badge badge--success" data-i18n="browse.games.myphantomPreview.available">Disponible</span>
                         </div>
                     </div>
                     <div class="shared-phantom__content">
@@ -342,15 +339,15 @@
                             <video id="shared-phantom-video" autoplay playsinline muted></video>
                         </div>
                         <div class="shared-phantom__info">
-                            <p class="shared-phantom__desc">
+                            <p class="shared-phantom__desc" data-i18n="browse.games.myphantomPreview.description">
                                 Utilise le Phantom partagé pour tester sans avoir ton propre échiquier ! 
                                 Premier arrivé, premier servi.
                             </p>
                             <div class="shared-phantom__queue">
                                 <i class="fas fa-users"></i>
-                                <span>0 en attente</span>
+                                <span data-i18n="browse.games.myphantomPreview.queue">0 en attente</span>
                             </div>
-                            <button class="btn btn--primary" id="btn-use-shared-phantom">
+                            <button class="btn btn--primary" id="btn-use-shared-phantom" data-i18n="browse.games.myphantomPreview.useit">
                                 <i class="fas fa-play"></i> Utiliser le Phantom partagé
                             </button>
                         </div>
@@ -368,18 +365,18 @@
     <div class="modal-overlay" id="modal-save">
         <div class="modal">
             <div class="modal__header">
-                <h2 class="modal__title">💾 Sauvegarder la configuration</h2>
+                <h2 class="modal__title" data-i18n="modalsave.title">💾 Sauvegarder la configuration</h2>
                 <button class="modal__close" data-close-modal>&times;</button>
             </div>
             <div class="modal__body">
                 <div class="form-group">
-                    <label class="form-label">Nom de la configuration</label>
+                    <label class="form-label" data-i18n="modalsave.config.name">Nom de la configuration</label>
                     <input type="text" class="input" id="config-name" placeholder="Ma config préférée...">
                 </div>
             </div>
             <div class="modal__footer">
                 <button class="btn" data-close-modal>Annuler</button>
-                <button class="btn btn--primary" id="btn-confirm-save">Sauvegarder</button>
+                <button class="btn btn--primary" id="btn-confirm-save" data-i18n="modalsave.config.save">Sauvegarder</button>
             </div>
         </div>
     </div>
@@ -395,6 +392,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="js/tmi.min.js"></script>
+    <script src="js/utils/i18n.js"></script>
 
     <!-- App (ES Modules) -->
     <script src="js/phantom.js"></script>
