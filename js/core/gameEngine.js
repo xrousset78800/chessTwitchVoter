@@ -640,7 +640,7 @@ class GameEngine {
                     const li = document.createElement('li');
                     const btn = document.createElement('button');
                     btn.textContent = move;
-                    btn.onclick = () => this.handleMoveClick(move);
+                    btn.onclick = () => this.onMoveClick(move);
                     li.appendChild(btn);
                     list.appendChild(li);
                 });
@@ -707,10 +707,10 @@ class GameEngine {
         }
         
         // Mettre à jour l'historique
-        this.chess.updateHistoryUI();
+        this.updateHistoryUI();
         
         // Vérifier fin de partie
-        const gameStatus = this.chess.checkGameEnd();
+        const gameStatus = this.checkGameEnd();
         if (gameStatus) {
             this.handleGameEnd(gameStatus);
             return true;
