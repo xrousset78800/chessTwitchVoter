@@ -1,0 +1,70 @@
+/**
+ * CSS Sprites pour les pièces d'échecs
+ * Remplace les balises <img> par des backgrounds pour plus de fluidité
+ */
+
+/* Masquer les images par défaut et utiliser des backgrounds */
+.piece-417db {
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Pièces blanches *//*
+.wP { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/wP.png') !important; }
+.wN { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/wN.png') !important; }
+.wB { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/wB.png') !important; }
+.wR { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/wR.png') !important; }
+.wQ { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png') !important; }
+.wK { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/wK.png') !important; }
+
+
+.bP { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/bP.png') !important; }
+.bN { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/bN.png') !important; }
+.bB { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/bB.png') !important; }
+.bR { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/bR.png') !important; }
+.bQ { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/bQ.png') !important; }
+.bK { background-image: url('https://chessboardjs.com/img/chesspieces/wikipedia/bK.png') !important; }
+*/
+/* Rendre les images transparentes pour afficher le background */
+.piece-417db  {
+
+}
+
+/* Optimisation : désactiver le drag sur les images */
+img.piece-417db  {
+    user-drag: none;
+    -webkit-user-drag: none;
+    user-select: none;
+    -webkit-user-select: none;
+    /*opacity: 0 !important;*/
+    pointer-events: none !important;
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+
+/* Préchargement des images en background */
+body::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    z-index: -1;
+    background-image: 
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/wP.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/wN.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/wB.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/wR.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/wQ.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/wK.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/bP.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/bN.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/bB.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/bR.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/bQ.png'),
+        url('https://chessboardjs.com/img/chesspieces/wikipedia/bK.png');
+}

@@ -514,6 +514,7 @@ class GameEngine {
         this.syncPhantom();
         
         console.log('✅ Coup joué:', move.san);
+        console.log('plop');
         
         // Vérifier fin de partie
         if (this.checkGameEnd()) {
@@ -683,41 +684,6 @@ class GameEngine {
         voting.addVote(voterName, move);
         
         // Le timer se chargera d'exécuter le coup gagnant à la fin
-    }
-
-    executeMove(move) {
-        console.log('🎯 Exécution du coup:', move);
-        
-        // Faire le coup sur l'objet Chess
-        const result = this.chess.move(move);
-        
-        if (!result) {
-            console.error('❌ Coup invalide:', move);
-            return false;
-        }
-        
-        console.log('✅ Coup joué:', result.san);
-        
-        // Mettre à jour l'échiquier visuel
-        this.board.position(this.chess.fen());
-        
-        // Sync avec Phantom si connecté
-        if (window.phantomChessboard?.isConnected && this.config.phantomAutoSync) {
-            window.phantomChessboard.syncPosition(this.chess.fen());
-        }
-        
-        // Mettre à jour l'historique
-        this.updateHistoryUI();
-        
-        // Vérifier fin de partie
-        const gameStatus = this.checkGameEnd();
-        if (gameStatus) {
-            this.handleGameEnd(gameStatus);
-            return true;
-        }
-        
-        // Continuer le jeu
-        return true;
     }
 
     /**
