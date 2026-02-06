@@ -228,6 +228,135 @@ class Timer {
 // Instance singleton
 const timer = new Timer();
 
+(function() {
+    'use strict';
+
+    // Attendre que le DOM soit prêt
+    document.addEventListener('DOMContentLoaded', function() {
+        initBoardTimer();
+    });
+
+    function initBoardTimer() {
+        // Trouver le conteneur de l'échiquier
+        const boardWrapper = document.querySelector('.board-wrapper') || 
+                            document.getElementById('board_wrapper');
+        
+        if (!boardWrapper) {
+            console.warn('⚠️ Board wrapper non trouvé, réessai dans 500ms');
+            setTimeout(initBoardTimer, 500);
+            return;
+        }
+
+        // Vérifier si le timer n'existe pas déjà
+        if (document.querySelector('.board-timer-container')) {
+            console.log('✅ Timer container déjà présent');
+            return;
+        }
+
+        // Créer le conteneur du timer
+        const timerContainer = document.createElement('div');
+        timerContainer.className = 'board-timer-container';
+        timerContainer.innerHTML = `
+            <div class="countdown" id="countdown">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45"></circle>
+                    <circle cx="50" cy="50" r="45"></circle>
+                </svg>
+            </div>
+            <div id="timer-value">--:--</div>
+            <button class="timer-pause-btn" id="timer-pause-btn" style="display: none;">
+                <i class="fas fa-pause"></i>
+                <span>Pause</span>
+            </button>
+        `;
+
+        // S'assurer que le parent est en position relative
+        boardWrapper.style.position = 'relative';
+        
+        // Insérer le timer dans le board-wrapper
+        boardWrapper.appendChild(timerContainer);
+
+        console.log('✅ Timer repositionné en haut à droite de l\'échiquier');
+
+        // Initialiser le bouton pause/reprise
+        initPauseButton();
+    }
+
+    function initPauseButton() {
+        const pauseBtn = document.getElementById('timer-pause-btn');
+        if (!pauseBtn) return;
+
+        pauseBtn.addEventListener('click', function() {
+            // Accéder au timer global si disponible
+            if (typeof timer !== 'undefined') {
+                if (timer.isPaused) {
+                    timer.resume();
+                    updatePauseButton(false);
+                } else {
+                    timer.pause();
+                    updatePauseButton(true);
+                }
+            } else {
+                console.warn('⚠️ Timer global non disponible');
+            }
+        });
+
+        // Écouter les changements d'état du timer
+        document.addEventListener('timerStateChanged', function(e) {
+            if (e.detail && e.detail.isRunning) {
+                pauseBtn.style.display = 'flex';
+                updatePauseButton(e.detail.isPaused);
+            } else {
+                pauseBtn.style.display = 'none';
+            }
+        });
+    }
+
+    function updatePauseButton(isPaused) {
+        const pauseBtn = document.getElementById('timer-pause-btn');
+        if (!pauseBtn) return;
+
+        const icon = pauseBtn.querySelector('i');
+        const text = pauseBtn.querySelector('span');
+
+        if (isPaused) {
+            icon.className = 'fas fa-play';
+            text.textContent = 'Reprendre';
+            pauseBtn.style.background = 'rgba(255, 152, 0, 0.2)';
+            pauseBtn.style.borderColor = 'rgba(255, 152, 0, 0.4)';
+        } else {
+            icon.className = 'fas fa-pause';
+            text.textContent = 'Pause';
+            pauseBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+            pauseBtn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        }
+    }
+
+    // Exposer une fonction pour mettre à jour l'affichage du timer
+    window.updateBoardTimerDisplay = function(seconds) {
+        const timerValue = document.getElementById('timer-value');
+        const countdown = document.getElementById('countdown');
+        
+        if (!timerValue || !countdown) return;
+
+        // Formater l'affichage MM:SS
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        // Mettre à jour les variables CSS pour le cercle
+        countdown.style.setProperty('--t', seconds);
+        countdown.style.setProperty('--s', seconds);
+
+        // Ajouter la classe urgence pour les dernières secondes
+        if (seconds <= 5) {
+            countdown.classList.add('timer-critical');
+        } else {
+            countdown.classList.remove('timer-critical');
+        }
+    };
+
+})();
 // Export
 export { Timer, timer };
 export default timer;

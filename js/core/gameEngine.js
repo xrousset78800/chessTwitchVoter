@@ -140,20 +140,7 @@ class GameEngine {
                     <input type="text" id="voter-name" placeholder="Anonymous">
                 </div>
             </div>
-            
-            <!-- Section Timer -->
-            <div class="moves-panel__timer">
-                <div class="timer-display" id="timer-display">--:--</div>
-                <div class="timer-controls">
-                    <button id="btn-start-timer" class="btn btn--small btn--primary">
-                        <i class="fas fa-play"></i> <span data-i18n="timer.start">Démarrer Timer</span>
-                    </button>
-                    <button id="btn-stop-timer" class="btn btn--small btn--danger" style="display:none;">
-                        <i class="fas fa-stop"></i> <span data-i18n="timer.stop">Stop</span>
-                    </button>
-                </div>
-            </div>
-            
+                    
             <!-- Liste des coups disponibles -->
             <div class="moves-panel__list">
                 <div id="availableList" class="available-moves">
@@ -214,264 +201,6 @@ class GameEngine {
         
         const styles = document.createElement('style');
         styles.id = 'moves-panel-styles';
-        styles.textContent = `
-            .moves-panel {
-                position: fixed;
-                left: 20px;
-                height: 80%;
-                top: 100px;
-                width: 280px;
-                max-height: calc(100vh - 120px);
-                background: linear-gradient(145deg, #1a1a2e, #16213e);
-                border-radius: 12px;
-                padding: 16px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-                overflow-y: auto;
-                z-index: 1000;
-                color: #fff;
-                font-family: 'Segoe UI', sans-serif;
-            }
-            
-            .moves-panel__header h3 {
-                margin: 0 0 12px 0;
-                font-size: 1.1rem;
-                color: #ffd700;
-            }
-            
-            .voter-input {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 12px;
-            }
-            
-            .voter-input label {
-                font-size: 0.85rem;
-                color: #aaa;
-            }
-            
-            .voter-input input {
-                flex: 1;
-                padding: 6px 10px;
-                border: 1px solid #333;
-                border-radius: 6px;
-                background: #0d1117;
-                color: #fff;
-                font-size: 0.9rem;
-            }
-            
-            .moves-panel__timer {
-                background: #0d1117;
-                border-radius: 8px;
-                padding: 12px;
-                margin-bottom: 12px;
-                text-align: center;
-            }
-            
-            .timer-display {
-                font-size: 2rem;
-                font-weight: bold;
-                color: #4ade80;
-                font-family: 'Courier New', monospace;
-                margin-bottom: 8px;
-            }
-            
-            .timer-display.timer-urgent {
-                color: #ef4444;
-                animation: pulse 0.5s ease-in-out infinite;
-            }
-            
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
-            
-            .timer-controls {
-                display: flex;
-                gap: 8px;
-                justify-content: center;
-            }
-            
-            .timer-controls .btn {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-            }
-            
-            .available-moves {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-            }
-            
-            .moves-group {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                gap: 4px;
-                padding: 4px;
-                margin: 0;
-                list-style: none;
-                background: rgba(255,255,255,0.03);
-                border-radius: 6px;
-                min-height: 32px;
-            }
-            
-            .moves-group:empty,
-            .moves-group:not(:has(li)) {
-                display: none;
-            }
-            
-            .moves-group .piece-icon {
-                font-size: 1.2rem;
-                width: 24px;
-                opacity: 0.7;
-            }
-            
-            .moves-group li {
-                list-style: none;
-            }
-            
-            .moves-group button {
-                padding: 4px 8px;
-                font-size: 0.8rem;
-                background: #2d3748;
-                color: #fff;
-                border: 1px solid #4a5568;
-                border-radius: 4px;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-family: 'Courier New', monospace;
-            }
-            
-            .moves-group button:hover {
-                background: #4a5568;
-                border-color: #ffd700;
-                transform: translateY(-1px);
-            }
-            
-            .moves-group li.most-voted button {
-                background: #ffd700;
-                color: #000;
-                border-color: #ffd700;
-                font-weight: bold;
-            }
-            
-            .moves-panel__votes {
-                margin-top: 16px;
-                padding-top: 12px;
-                border-top: 1px solid #333;
-            }
-            
-            .moves-panel__votes h4 {
-                margin: 0 0 8px 0;
-                font-size: 0.95rem;
-                color: #aaa;
-            }
-            
-            .vote-list {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                max-height: 150px;
-                overflow-y: auto;
-            }
-            
-            .vote-item {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 6px 8px;
-                background: rgba(255,255,255,0.05);
-                border-radius: 4px;
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .vote-item .vote-bar {
-                position: absolute;
-                left: 0;
-                top: 0;
-                height: 100%;
-                background: var(--color, #4a5568);
-                opacity: 0.2;
-                z-index: 0;
-            }
-            
-            .vote-item .vote-move {
-                font-family: 'Courier New', monospace;
-                font-weight: bold;
-                z-index: 1;
-            }
-            
-            .vote-item .vote-count {
-                margin-left: auto;
-                font-size: 0.85rem;
-                color: #aaa;
-                z-index: 1;
-            }
-            
-            .vote-total {
-                margin-top: 8px;
-                text-align: right;
-                font-size: 0.85rem;
-                color: #888;
-            }
-            
-            /* Responsive */
-            @media (max-width: 1200px) {
-                .moves-panel {
-                    position: static;
-                    width: 100%;
-                    max-height: none;
-                    margin-top: 20px;
-                }
-            }
-            .voting-eligibility {
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 8px;
-                padding: 12px;
-                margin: 12px 0;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            .voting-eligibility__label {
-                font-size: 0.75rem;
-                color: #888;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 6px;
-                font-weight: 500;
-            }
-
-            .voting-eligibility__value {
-                font-size: 0.95rem;
-                color: #fff;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .voting-eligibility__value::before {
-                content: '👥';
-                font-size: 1.2rem;
-            }
-
-            #voting-indicator.mode-yolo { color: #ffd700; }
-            #voting-indicator.mode-yolo::before { content: '🎲'; }
-
-            #voting-indicator.mode-oneVsOne,
-            #voting-indicator.mode-oneVsAll { color: #ff6b6b; }
-            #voting-indicator.mode-oneVsOne::before,
-            #voting-indicator.mode-oneVsAll::before { content: '⚔️'; }
-
-            #voting-indicator.mode-problems { color: #4ecdc4; }
-            #voting-indicator.mode-problems::before { content: '🧩'; }
-
-            #voting-indicator.mode-chatVsChat { color: #a78bfa; }
-            #voting-indicator.mode-chatVsChat::before { content: '🎭'; }
-        `;
-        document.head.appendChild(styles);
     }
 
     /**
@@ -955,7 +684,7 @@ class GameEngine {
         
         // Le timer se chargera d'exécuter le coup gagnant à la fin
     }
-    
+
     executeMove(move) {
         console.log('🎯 Exécution du coup:', move);
         
@@ -970,11 +699,11 @@ class GameEngine {
         console.log('✅ Coup joué:', result.san);
         
         // Mettre à jour l'échiquier visuel
-        this.board.position(this.chess.getFen());
+        this.board.position(this.chess.fen());
         
         // Sync avec Phantom si connecté
         if (window.phantomChessboard?.isConnected && this.config.phantomAutoSync) {
-            window.phantomChessboard.syncPosition(this.chess.getFen());
+            window.phantomChessboard.syncPosition(this.chess.fen());
         }
         
         // Mettre à jour l'historique
