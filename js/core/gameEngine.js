@@ -640,7 +640,7 @@ class GameEngine {
                 groups[piece].forEach(move => {
                     const li = document.createElement('li');
                     const btn = document.createElement('button');
-                    btn.textContent = move;
+                    btn.textContent = move.replace("#", "");
                     btn.onclick = () => this.onMoveClick(move);
                     li.appendChild(btn);
                     list.appendChild(li);

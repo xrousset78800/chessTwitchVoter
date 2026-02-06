@@ -382,7 +382,7 @@ img, video {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 5px;
 }
 
 #availableList li {
@@ -390,7 +390,7 @@ img, video {
 }
 
 #availableList button {
-    padding: 8px 12px;
+    padding: 3px 10px;
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
