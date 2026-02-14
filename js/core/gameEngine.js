@@ -556,13 +556,13 @@ class GameEngine {
         panel.innerHTML = `
             <div class="moves-panel__header">Coups disponibles</div>
             <div class="moves-panel__content">
-                <ul id="availableListP" class="moves-list"><span class="piece-icon">♙</span></ul>
-                <ul id="availableListN" class="moves-list"><span class="piece-icon">♞</span></ul>
-                <ul id="availableListB" class="moves-list"><span class="piece-icon">♝</span></ul>
-                <ul id="availableListR" class="moves-list"><span class="piece-icon">♜</span></ul>
-                <ul id="availableListQ" class="moves-list"><span class="piece-icon">♛</span></ul>
-                <ul id="availableListK" class="moves-list"><span class="piece-icon">♚</span></ul>
-                <ul id="availableListO" class="moves-list"><span class="piece-icon">⬚</span></ul>
+                <ul id="availableListP" class="moves-group"><span class="piece-icon">♙</span></ul>
+                <ul id="availableListN" class="moves-group"><span class="piece-icon">♞</span></ul>
+                <ul id="availableListB" class="moves-group"><span class="piece-icon">♝</span></ul>
+                <ul id="availableListR" class="moves-group"><span class="piece-icon">♜</span></ul>
+                <ul id="availableListQ" class="moves-group"><span class="piece-icon">♛</span></ul>
+                <ul id="availableListK" class="moves-group"><span class="piece-icon">♚</span></ul>
+                <ul id="availableListO" class="moves-group"><span class="piece-icon">⬚</span></ul>
             </div>
         `;
         
