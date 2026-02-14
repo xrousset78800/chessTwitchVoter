@@ -165,7 +165,10 @@ img, video {
     pointer-events: none;
     z-index: 0;
 }
-
+.highlight-last-move {
+    background-color: rgba(255, 235, 59, 0.4) !important;
+    box-shadow: inset 0 0 0 3px rgba(255, 235, 59, 0.8) !important;
+}
 .bg-glow {
     position: fixed;
     width: 600px;

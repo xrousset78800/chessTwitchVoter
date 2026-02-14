@@ -595,6 +595,19 @@ showWheelAnimation(results, winningMove) {
         
         return results[0].move;
     }
+    
+    highlightLastMove(from, to) {
+        // Retirer les anciens highlights
+        document.querySelectorAll('.highlight-last-move')
+            .forEach(el => el.classList.remove('highlight-last-move'));
+        
+        // Ajouter le highlight sur les cases from et to
+        const fromSquare = document.querySelector(`[data-square="${from}"]`);
+        const toSquare = document.querySelector(`[data-square="${to}"]`);
+        
+        if (fromSquare) fromSquare.classList.add('highlight-last-move');
+        if (toSquare) toSquare.classList.add('highlight-last-move');
+    }
 
     executeMove(moveStr) {
         const move = this.chess.move(moveStr);
@@ -602,6 +615,7 @@ showWheelAnimation(results, winningMove) {
         if (move) {
             this.board.position(this.chess.fen());
             this.moveHistory.push(move);
+            this.highlightLastMove(move.from, move.to);            
             this.playMoveSound(move);
             this.updateHistoryUI(move);
             this.syncPhantom();

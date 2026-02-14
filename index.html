@@ -148,7 +148,14 @@
                         </div>
                     </div>    
                     <!-- Sidebar -->
-                    <div class="sandbox__sidebar">                    
+                    <div class="sandbox__sidebar">   
+                        <div class="panel">
+                            <div class="panel__header" data-i18n="game.history.title"><i class="fas fa-history"></i> Historique</div>
+                            <div class="panel__content">
+                                <div class="history-list" id="history-list">
+                                </div>
+                            </div>
+                        </div>
                         <!-- Mode selector -->
                         <div class="panel">
                             <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
@@ -303,16 +310,6 @@
                                 <div class="form-row">
                                     <span data-i18n="gameMode.phantom.snapOption">Snap au centre</span>
                                     <div class="toggle is-active" id="toggle-snap"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- History -->
-                        <div class="panel">
-                            <div class="panel__header" data-i18n="game.history.title"><i class="fas fa-history"></i> Historique</div>
-                            <div class="panel__content">
-                                <div class="history-list" id="history-list">
-                                    <div class="empty-state"><p data-i18n="game.history.no-moves">Aucun coup joué</p></div>
                                 </div>
                             </div>
                         </div>
