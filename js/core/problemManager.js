@@ -1,129 +1,108 @@
 /**
- * 🧩 PROBLEMS MANAGER
+ * 🧩 PROBLEMS MANAGER v3 - CORRECTIONS COMPLÈTES
  * 
- * Module autonome pour la gestion des puzzles d'échecs.
- * Reprend la logique de chessVoterApp.js en version propre et modulaire.
- * 
- * S'intègre avec gameEngine.js et le système de votes.
+ * CORRECTIONS:
+ * - Pas de modale, utilise le timer existant
+ * - Pas de double timer (clearInterval correct)
+ * - Reset des highlights quand on change de mode
+ * - Mise à jour des coups disponibles
  */
 
 class ProblemsManager {
     constructor() {
         // État
-        this.problems = [];           // Tous les problèmes chargés
-        this.currentProblem = null;   // Problème en cours
-        this.attemptIndex = 0;        // Index du coup actuel dans la solution
-        this.isActive = false;        // Mode problème actif
+        this.problems = [];
+        this.currentProblem = null;
+        this.attemptIndex = 0;
+        this.isActive = false;
+        
+        // Timer de pause entre problèmes
+        this.pauseTimerId = null;
         
         // Filtres
         this.selectedThemes = new Set();
-        this.themeStats = {};         // { theme: count }
+        this.themeStats = {};
         
-        // Références externes (injectées)
-        this.chess = null;            // Instance Chess.js
-        this.board = null;            // Instance Chessboard.js
+        // Références externes
+        this.chess = null;
+        this.board = null;
         
         // Configuration
         this.config = {
             csvPath: 'js/problemsV2.csv',
-            pauseAfterEnd: 5,         // Secondes avant prochain problème
-            botMoveDelay: 1500        // Délai avant coup du bot (ms)
+            pauseAfterEnd: 5,
+            botMoveDelay: 1200
         };
         
         // Callbacks
-        this.onProblemLoaded = null;  // (problem) => {}
-        this.onCorrectMove = null;    // () => {}
-        this.onWrongMove = null;      // (correctMove) => {}
-        this.onProblemSolved = null;  // (problem) => {}
-        this.onProblemFailed = null;  // (problem) => {}
-        this.onBotMove = null;        // (move) => {}
-        this.onStateChange = null;    // (state) => {}
+        this.onProblemLoaded = null;
+        this.onCorrectMove = null;
+        this.onWrongMove = null;
+        this.onProblemSolved = null;
+        this.onProblemFailed = null;
+        this.onBotMove = null;
+        this.onStateChange = null;
         
         // Sons
-        this.sounds = {
-            move: null,
-            capture: null,
-            check: null,
-            success: null,
-            fail: null
-        };
+        this.sounds = {};
         
-        console.log('🧩 ProblemsManager initialisé');
+        console.log('🧩 ProblemsManager v3 initialisé');
     }
-    
+
     // ========== INITIALISATION ==========
-    
-    /**
-     * Initialise le manager avec les références nécessaires
-     */
+
     init(options = {}) {
         if (options.chess) this.chess = options.chess;
         if (options.board) this.board = options.board;
         if (options.config) Object.assign(this.config, options.config);
         
-        // Charger les sons
         this.loadSounds();
-        
-        console.log('🧩 ProblemsManager initialisé avec config:', this.config);
+        console.log('🧩 ProblemsManager configuré, pauseAfterEnd:', this.config.pauseAfterEnd);
     }
-    
-    /**
-     * Charge les sons
-     */
+
     loadSounds() {
         try {
-            this.sounds.move = new Audio('mp3/move.mp3');
-            this.sounds.capture = new Audio('mp3/take.mp3');
-            this.sounds.check = new Audio('mp3/check.mp3');
-            this.sounds.success = new Audio('mp3/mate.wav');
-            this.sounds.fail = new Audio('mp3/check.mp3');
+            this.sounds = {
+                move: new Audio('mp3/move.mp3'),
+                capture: new Audio('mp3/take.mp3'),
+                check: new Audio('mp3/check.mp3'),
+                success: new Audio('mp3/mate.wav'),
+                fail: new Audio('mp3/check.mp3')
+            };
         } catch (e) {
-            console.warn('🧩 Sons non chargés:', e);
+            console.warn('🧩 Sons non chargés');
         }
     }
-    
-    // ========== CHARGEMENT DES PROBLÈMES ==========
-    
-    /**
-     * Charge les problèmes depuis le CSV
-     */
+
+    // ========== CHARGEMENT CSV ==========
+
     async loadProblems(csvPath = null) {
         const path = csvPath || this.config.csvPath;
-        console.log('🧩 Chargement des problèmes depuis:', path);
+        console.log('🧩 Chargement:', path);
         
         try {
             const response = await fetch(path);
             const data = await response.text();
-            
             const lines = data.split('\n').filter(line => line.trim());
             const parsed = lines.map(line => this.parseCSVLine(line));
             
-            // Ignorer l'en-tête, filtrer les lignes valides
-            this.problems = parsed.slice(1).filter(row => row.length >= 8);
-            
+            this.problems = parsed.slice(1).filter(row => row.length >= 3);
             console.log(`✅ ${this.problems.length} problèmes chargés`);
             
-            // Analyser les thèmes
             this.analyzeThemes();
-            
             return this.problems.length;
-            
         } catch (error) {
-            console.error('❌ Erreur chargement problèmes:', error);
+            console.error('❌ Erreur chargement:', error);
             throw error;
         }
     }
-    
-    /**
-     * Parse une ligne CSV (gère les guillemets)
-     */
+
     parseCSVLine(line) {
         const result = [];
         let current = '';
         let inQuotes = false;
         
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
+        for (const char of line) {
             if (char === '"') {
                 inQuotes = !inQuotes;
             } else if (char === ',' && !inQuotes) {
@@ -134,13 +113,9 @@ class ProblemsManager {
             }
         }
         result.push(current.trim());
-        
         return result;
     }
-    
-    /**
-     * Analyse les thèmes disponibles
-     */
+
     analyzeThemes() {
         this.themeStats = {};
         
@@ -156,19 +131,12 @@ class ProblemsManager {
                 }
             }
         }
-        
-        console.log(`🎨 ${Object.keys(this.themeStats).length} thèmes analysés`);
     }
-    
+
     // ========== FILTRAGE ==========
-    
-    /**
-     * Retourne les problèmes filtrés par thèmes
-     */
+
     getFilteredProblems() {
-        if (this.selectedThemes.size === 0) {
-            return this.problems;
-        }
+        if (this.selectedThemes.size === 0) return this.problems;
         
         return this.problems.filter(problem => {
             const themesStr = (problem[7] || '').replace(/^"|"$/g, '');
@@ -179,10 +147,7 @@ class ProblemsManager {
             return themes.some(t => this.selectedThemes.has(t));
         });
     }
-    
-    /**
-     * Sélectionne/désélectionne un thème
-     */
+
     toggleTheme(theme) {
         if (this.selectedThemes.has(theme)) {
             this.selectedThemes.delete(theme);
@@ -190,27 +155,21 @@ class ProblemsManager {
             this.selectedThemes.add(theme);
         }
     }
-    
-    /**
-     * Sélectionne tous les thèmes
-     */
+
     selectAllThemes() {
         this.selectedThemes = new Set(Object.keys(this.themeStats));
     }
-    
-    /**
-     * Efface la sélection de thèmes
-     */
+
     clearThemes() {
         this.selectedThemes.clear();
     }
-    
-    // ========== GESTION DES PROBLÈMES ==========
-    
-    /**
-     * Charge un nouveau problème aléatoire
-     */
+
+    // ========== CHARGEMENT PROBLÈME ==========
+
     loadRandomProblem() {
+        // ⭐ IMPORTANT: Annuler tout timer de pause en cours
+        this.cancelPauseTimer();
+        
         const filtered = this.getFilteredProblems();
         
         if (filtered.length === 0) {
@@ -218,211 +177,325 @@ class ProblemsManager {
             return null;
         }
         
-        // Sélection aléatoire
         const problem = filtered[Math.floor(Math.random() * filtered.length)];
         return this.loadProblem(problem);
     }
-    
-    /**
-     * Charge un problème spécifique
-     * @param {Array} problem - [id, fen, moves, rating, ...]
-     */
+
     loadProblem(problem) {
         if (!problem || problem.length < 3) {
-            console.error('❌ Problème invalide:', problem);
+            console.error('❌ Problème invalide');
             return null;
         }
-        
+
+        // ⭐ Reset les highlights avant de charger
+        this.clearHighlights();
+
         this.currentProblem = {
             id: problem[0],
             fen: problem[1],
-            solution: problem[2],          // "e3g3 f7f4 e5f4 f8f4"
-            moves: problem[2].split(' '),  // ["e3g3", "f7f4", "e5f4", "f8f4"]
+            solution: problem[2],
+            moves: problem[2].trim().split(/\s+/),
             rating: parseInt(problem[3]) || 0,
             themes: problem[7] || '',
             url: problem[8] || ''
         };
-        
+
         this.attemptIndex = 0;
         this.isActive = true;
-        
-        console.log('🧩 Problème chargé:', this.currentProblem.id, 
-                    'Rating:', this.currentProblem.rating,
-                    'Moves:', this.currentProblem.moves.length);
-        
+
+        console.log('🧩 ═══════════════════════════════════════');
+        console.log('🧩 Problème:', this.currentProblem.id);
+        console.log('🧩 Rating:', this.currentProblem.rating);
+        console.log('🧩 Solution:', this.currentProblem.moves.join(' → '));
+        console.log('🧩 ═══════════════════════════════════════');
+
         // Initialiser l'échiquier
         if (this.chess) {
             this.chess.load(this.currentProblem.fen);
         }
-        
-        // Déterminer l'orientation
+
+        // Orientation
         const orientation = this.chess?.turn() === 'b' ? 'white' : 'black';
+        
         if (this.board) {
             this.board.position(this.currentProblem.fen, false);
             this.board.orientation(orientation);
         }
-        
+
         // Callback
         if (this.onProblemLoaded) {
             this.onProblemLoaded(this.currentProblem);
         }
-        
-        // Jouer le premier coup (coup du bot)
+
+        this.emitStateChange();
+
+        // Masquer le timer (on ne l'utilise que pour la pause)
+        document.body.classList.remove('showTimer');
+        this.hideTimerMessage();
+
+        // Mettre à jour les coups disponibles
+        this.updateAvailableMoves();
+
+        // Jouer le premier coup (bot) après un délai
         setTimeout(() => {
             this.playBotMove();
-        }, 500);
-        
+        }, 800);
+
         return this.currentProblem;
     }
-    
+
     // ========== LOGIQUE DE JEU ==========
-    
-    /**
-     * Joue le coup du bot (le coup attendu à l'index actuel)
-     */
+
     playBotMove() {
         if (!this.isActive || !this.currentProblem) return null;
         
-        const moveStr = this.currentProblem.moves[this.attemptIndex];
-        if (!moveStr) return null;
-        
-        const move = this.parseMove(moveStr);
-        if (!move) return null;
-        
-        // Jouer le coup
-        const result = this.chess?.move(move);
-        if (!result) {
-            console.error('❌ Coup bot invalide:', moveStr);
+        if (this.attemptIndex % 2 !== 0) {
+            console.warn('🧩 Ce n\'est pas le tour du bot');
             return null;
         }
-        
-        // Mettre à jour l'échiquier
+
+        const moveUCI = this.currentProblem.moves[this.attemptIndex];
+        if (!moveUCI) {
+            console.log('🧩 Fin de la solution, problème résolu !');
+            this.handleProblemSolved();
+            return null;
+        }
+
+        console.log(`🤖 Bot joue (index ${this.attemptIndex}):`, moveUCI);
+
+        const moveObj = this.uciToMoveObject(moveUCI);
+        if (!moveObj) {
+            console.error('❌ UCI invalide:', moveUCI);
+            return null;
+        }
+
+        const result = this.chess?.move(moveObj);
+        if (!result) {
+            console.error('❌ Coup bot illégal:', moveUCI, moveObj);
+            return null;
+        }
+
         if (this.board) {
             this.board.position(this.chess.fen());
         }
-        
-        // Highlight
-        this.highlightSquares(moveStr.slice(0, 2), moveStr.slice(2, 4), 'bot');
-        
-        // Son
-        this.playMoveSound(result);
-        
-        // Incrémenter l'index
+
+        this.highlightSquares(moveObj.from, moveObj.to, 'bot');
+        this.playSound(result);
+
         this.attemptIndex++;
-        
-        console.log('🤖 Bot joue:', result.san);
-        
-        // Callback
+
+        console.log(`✅ Bot a joué: ${result.san} (index maintenant: ${this.attemptIndex})`);
+
         if (this.onBotMove) {
             this.onBotMove(result);
         }
-        
-        // Notifier le changement d'état
+
+        // ⭐ Mettre à jour les coups disponibles après le coup du bot
+        this.updateAvailableMoves();
+
         this.emitStateChange();
-        
+
+        if (this.attemptIndex >= this.currentProblem.moves.length) {
+            this.handleProblemSolved();
+        }
+
         return result;
     }
-    
-    /**
-     * Vérifie et joue le coup du joueur
-     * @param {string} move - Coup en notation SAN (ex: "Nf3") ou UCI (ex: "g1f3")
-     * @returns {Object} { valid: boolean, correct: boolean, move?: ChessMove }
-     */
+
     validateAndPlayMove(move) {
         if (!this.isActive || !this.currentProblem) {
             return { valid: false, correct: false, reason: 'Aucun problème actif' };
         }
-        
-        // Vérifier que c'est bien le tour du joueur (index impair)
-        if (this.attemptIndex % 2 === 0) {
+
+        if (this.attemptIndex % 2 !== 1) {
+            console.warn('🧩 Ce n\'est pas le tour du joueur, index:', this.attemptIndex);
             return { valid: false, correct: false, reason: 'C\'est le tour du bot' };
         }
-        
-        // Obtenir le coup attendu
-        const expectedMoveStr = this.currentProblem.moves[this.attemptIndex];
-        if (!expectedMoveStr) {
+
+        const expectedUCI = this.currentProblem.moves[this.attemptIndex];
+        if (!expectedUCI) {
             return { valid: false, correct: false, reason: 'Fin de la solution' };
         }
+
+        console.log(`👤 Joueur tente (index ${this.attemptIndex}):`, move);
+        console.log(`🎯 Coup attendu:`, expectedUCI);
+
+        let playedUCI = this.normalizeToUCI(move);
         
-        // Essayer de jouer le coup
-        let playedMove;
-        try {
-            playedMove = this.chess.move(move);
-            if (!playedMove) {
-                return { valid: false, correct: false, reason: 'Coup illégal' };
-            }
-        } catch (e) {
-            return { valid: false, correct: false, reason: 'Coup invalide' };
+        if (!playedUCI) {
+            return { valid: false, correct: false, reason: 'Format de coup invalide' };
         }
-        
-        // Vérifier si c'est le bon coup
-        const playedUCI = playedMove.from + playedMove.to + (playedMove.promotion || '');
-        const isCorrect = playedUCI === expectedMoveStr;
-        
+
+        console.log(`📊 Comparaison: joué="${playedUCI}" vs attendu="${expectedUCI}"`);
+
+        const isCorrect = this.compareUCI(playedUCI, expectedUCI);
+
         if (isCorrect) {
-            // ✅ Coup correct
-            this.attemptIndex++;
+            const moveObj = this.uciToMoveObject(expectedUCI);
+            const result = this.chess?.move(moveObj);
             
-            // Mettre à jour l'échiquier
+            if (!result) {
+                console.error('❌ Coup devrait être légal mais échoue');
+                return { valid: false, correct: false, reason: 'Erreur interne' };
+            }
+
             if (this.board) {
                 this.board.position(this.chess.fen());
             }
-            
-            // Highlight
-            this.highlightSquares(playedMove.from, playedMove.to, 'player');
-            
-            // Son
-            this.playMoveSound(playedMove);
-            
-            console.log('✅ Coup correct:', playedMove.san);
-            
-            // Callback
+
+            this.highlightSquares(moveObj.from, moveObj.to, 'player');
+            this.playSound(result);
+
+            this.attemptIndex++;
+
+            console.log(`✅ Correct! ${result.san} (index maintenant: ${this.attemptIndex})`);
+
             if (this.onCorrectMove) {
-                this.onCorrectMove(playedMove);
+                this.onCorrectMove(result);
             }
-            
-            // Vérifier si le problème est terminé
+
+            this.emitStateChange();
+
+            // ⭐ Mettre à jour les coups disponibles
+            this.updateAvailableMoves();
+
             if (this.attemptIndex >= this.currentProblem.moves.length) {
                 this.handleProblemSolved();
             } else {
-                // Jouer le prochain coup du bot après un délai
                 setTimeout(() => {
                     this.playBotMove();
                 }, this.config.botMoveDelay);
             }
-            
-            this.emitStateChange();
-            
-            return { valid: true, correct: true, move: playedMove };
-            
+
+            return { valid: true, correct: true, move: result };
+
         } else {
-            // ❌ Mauvais coup - annuler
-            this.chess.undo();
-            
-            const expectedMove = this.parseMove(expectedMoveStr);
-            const expectedSAN = this.getMoveAsSAN(expectedMoveStr);
-            
-            console.log('❌ Mauvais coup:', playedMove.san, '- Attendu:', expectedSAN);
-            
-            // Callback
+            console.log(`❌ Mauvais coup: ${playedUCI} ≠ ${expectedUCI}`);
+
+            const expectedSAN = this.uciToSAN(expectedUCI);
+
             if (this.onWrongMove) {
-                this.onWrongMove(expectedSAN, expectedMoveStr);
+                this.onWrongMove(expectedSAN, expectedUCI);
             }
-            
-            // Highlight le coup correct
-            this.highlightSquares(expectedMoveStr.slice(0, 2), expectedMoveStr.slice(2, 4), 'correct');
-            
-            // Gérer l'échec
+
+            const correctMove = this.uciToMoveObject(expectedUCI);
+            if (correctMove) {
+                this.highlightSquares(correctMove.from, correctMove.to, 'correct');
+            }
+
             this.handleProblemFailed();
-            
-            return { valid: true, correct: false, move: playedMove, expected: expectedSAN };
+
+            return { valid: true, correct: false, expected: expectedSAN };
         }
     }
-    
-    /**
-     * Parse un coup UCI en objet move
-     */
-    parseMove(uci) {
+
+    // ========== MISE À JOUR COUPS DISPONIBLES ==========
+
+    updateAvailableMoves() {
+        // Utiliser le gameEngine si disponible
+        if (window.gameEngine?.updateAvailableMoves) {
+            window.gameEngine.updateAvailableMoves();
+            return;
+        }
+
+        // Sinon, mise à jour manuelle
+        const moves = this.chess?.moves() || [];
+        const groups = {};
+        
+        moves.forEach(move => {
+            let key;
+            if (move.startsWith('O-O')) {
+                key = 'O';
+            } else if (move[0] === move[0].toLowerCase()) {
+                key = 'P';
+            } else {
+                key = move[0];
+            }
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(move);
+        });
+        
+        const order = ['P', 'N', 'B', 'R', 'Q', 'K', 'O'];
+        
+        order.forEach(piece => {
+            const list = document.getElementById(`availableList${piece}`);
+            if (!list) return;
+            
+            const icon = list.querySelector('.piece-icon');
+            list.innerHTML = '';
+            if (icon) list.appendChild(icon);
+            
+            if (groups[piece]) {
+                groups[piece].forEach(move => {
+                    const li = document.createElement('li');
+                    const btn = document.createElement('button');
+                    btn.textContent = move.replace("#", "");
+                    btn.onclick = () => {
+                        const result = this.validateAndPlayMove(move);
+                        console.log('🧩 Clic sur coup:', move, result);
+                    };
+                    li.appendChild(btn);
+                    list.appendChild(li);
+                });
+            }
+        });
+        
+        console.log('📋 Coups disponibles mis à jour:', moves.length, 'coups');
+    }
+
+    // ========== UTILITAIRES DE CONVERSION ==========
+
+    normalizeToUCI(move) {
+        if (!move) return null;
+
+        if (typeof move === 'object' && move.from && move.to) {
+            return move.from + move.to + (move.promotion || '');
+        }
+
+        const str = String(move).trim().toLowerCase();
+
+        const uciMatch = str.match(/^([a-h][1-8])-?([a-h][1-8])([qrbn])?$/);
+        if (uciMatch) {
+            return uciMatch[1] + uciMatch[2] + (uciMatch[3] || '');
+        }
+
+        if (/^(o-o-o|0-0-0)$/i.test(str)) {
+            const turn = this.chess?.turn();
+            return turn === 'w' ? 'e1c1' : 'e8c8';
+        }
+        if (/^(o-o|0-0)$/i.test(str)) {
+            const turn = this.chess?.turn();
+            return turn === 'w' ? 'e1g1' : 'e8g8';
+        }
+
+        try {
+            const result = this.chess?.move(str);
+            if (result) {
+                const uci = result.from + result.to + (result.promotion || '');
+                this.chess.undo();
+                return uci;
+            }
+        } catch (e) {}
+
+        return null;
+    }
+
+    compareUCI(played, expected) {
+        played = played.toLowerCase().replace('-', '');
+        expected = expected.toLowerCase().replace('-', '');
+
+        if (played === expected) return true;
+
+        if (played.length === 4 && expected.length === 5) {
+            if (played === expected.slice(0, 4) && expected[4] === 'q') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    uciToMoveObject(uci) {
         if (!uci || uci.length < 4) return null;
         
         return {
@@ -431,73 +504,166 @@ class ProblemsManager {
             promotion: uci.length > 4 ? uci[4] : undefined
         };
     }
-    
-    /**
-     * Convertit un coup UCI en SAN
-     */
-    getMoveAsSAN(uci) {
-        const move = this.parseMove(uci);
-        if (!move) return uci;
+
+    uciToSAN(uci) {
+        const moveObj = this.uciToMoveObject(uci);
+        if (!moveObj) return uci;
         
-        // Tester le coup pour obtenir le SAN
         try {
-            const result = this.chess.move(move);
+            const result = this.chess?.move(moveObj);
             if (result) {
+                const san = result.san;
                 this.chess.undo();
-                return result.san;
+                return san;
             }
         } catch (e) {}
         
         return uci;
     }
-    
+
     // ========== FIN DE PROBLÈME ==========
-    
-    /**
-     * Gère la résolution réussie du problème
-     */
+
     handleProblemSolved() {
-        console.log('🎉 Problème résolu!');
+        console.log('🎉 PROBLÈME RÉSOLU !');
+        
         this.isActive = false;
         
-        // Son de succès
-        this.sounds.success?.play();
+        try {
+            this.sounds.success?.play();
+        } catch {}
         
-        // Callback
         if (this.onProblemSolved) {
             this.onProblemSolved(this.currentProblem);
         }
         
         this.emitStateChange();
+        
+        // ⭐ Utiliser le timer inline pour la pause
+        this.startPauseTimer('solved');
     }
-    
-    /**
-     * Gère l'échec du problème
-     */
+
     handleProblemFailed() {
-        console.log('💔 Problème échoué');
+        console.log('💔 PROBLÈME ÉCHOUÉ');
+        
         this.isActive = false;
         
-        // Son d'échec
-        this.sounds.fail?.play();
+        try {
+            this.sounds.fail?.play();
+        } catch {}
         
-        // Callback
         if (this.onProblemFailed) {
             this.onProblemFailed(this.currentProblem);
         }
         
         this.emitStateChange();
+        
+        // ⭐ Utiliser le timer inline pour la pause
+        this.startPauseTimer('failed');
     }
-    
+
+    // ========== TIMER DE PAUSE INLINE ==========
+
+    startPauseTimer(status) {
+        const pauseDuration = this.config.pauseAfterEnd || 5;
+        let remaining = pauseDuration;
+        
+        // Afficher le message dans le timer
+        this.showTimerMessage(status, remaining);
+        
+        // Afficher le timer
+        document.body.classList.add('showTimer');
+        
+        // Mettre à jour le countdown circulaire
+        const countdown = document.querySelector('.countdown');
+        if (countdown) {
+            countdown.style.setProperty('--q', pauseDuration);
+            countdown.style.setProperty('--t', remaining);
+        }
+        
+        // ⭐ IMPORTANT: Annuler tout timer précédent
+        this.cancelPauseTimer();
+        
+        // Démarrer le countdown
+        this.pauseTimerId = setInterval(() => {
+            remaining--;
+            
+            // Mettre à jour l'affichage
+            this.showTimerMessage(status, remaining);
+            
+            // Mettre à jour le cercle
+            if (countdown) {
+                countdown.style.setProperty('--t', remaining);
+            }
+            
+            // Fin du timer
+            if (remaining <= 0) {
+                this.cancelPauseTimer();
+                document.body.classList.remove('showTimer');
+                this.hideTimerMessage();
+                this.loadRandomProblem();
+            }
+        }, 1000);
+        
+        console.log(`⏱️ Pause de ${pauseDuration}s avant prochain problème`);
+    }
+
+    cancelPauseTimer() {
+        if (this.pauseTimerId) {
+            clearInterval(this.pauseTimerId);
+            this.pauseTimerId = null;
+            console.log('⏱️ Timer de pause annulé');
+        }
+    }
+
+    skipPause() {
+        this.cancelPauseTimer();
+        document.body.classList.remove('showTimer');
+        this.hideTimerMessage();
+        this.loadRandomProblem();
+    }
+
+    showTimerMessage(status, seconds) {
+        const timerValue = document.getElementById('timer-value');
+        if (!timerValue) return;
+        
+        const icon = status === 'solved' ? '🎉' : '💔';
+        const text = status === 'solved' ? 'Résolu!' : 'Raté!';
+        
+        timerValue.innerHTML = `
+            <div class="problem-timer-message problem-timer-message--${status}">
+                <span class="problem-timer-icon">${icon}</span>
+                <span class="problem-timer-text">${text}</span>
+                <span class="problem-timer-countdown">${seconds}s</span>
+            </div>
+        `;
+        
+        // Ajouter un bouton skip si pas déjà présent
+        let skipBtn = document.getElementById('problem-skip-btn');
+        if (!skipBtn) {
+            skipBtn = document.createElement('button');
+            skipBtn.id = 'problem-skip-btn';
+            skipBtn.className = 'btn btn--sm btn--ghost problem-skip-btn';
+            skipBtn.innerHTML = '<i class="fas fa-forward"></i> Suivant';
+            skipBtn.onclick = () => this.skipPause();
+            timerValue.parentElement?.appendChild(skipBtn);
+        }
+    }
+
+    hideTimerMessage() {
+        const timerValue = document.getElementById('timer-value');
+        if (timerValue) {
+            timerValue.innerHTML = '';
+        }
+        
+        // Retirer le bouton skip
+        document.getElementById('problem-skip-btn')?.remove();
+    }
+
     // ========== UI HELPERS ==========
-    
-    /**
-     * Highlight des cases
-     */
+
     highlightSquares(from, to, type = 'player') {
         // Retirer les anciens highlights
-        document.querySelectorAll('.highlight-player, .highlight-bot, .highlight-correct')
-            .forEach(el => el.classList.remove('highlight-player', 'highlight-bot', 'highlight-correct'));
+        this.clearHighlights();
         
         const className = `highlight-${type}`;
         
@@ -507,89 +673,61 @@ class ProblemsManager {
         if (fromSquare) fromSquare.classList.add(className);
         if (toSquare) toSquare.classList.add(className);
     }
-    
-    /**
-     * Joue le son approprié
-     */
-    playMoveSound(move) {
+
+    clearHighlights() {
+        document.querySelectorAll('.highlight-player, .highlight-bot, .highlight-correct')
+            .forEach(el => el.classList.remove('highlight-player', 'highlight-bot', 'highlight-correct'));
+    }
+
+    playSound(move) {
         try {
-            if (this.chess.in_checkmate()) {
+            if (this.chess?.in_checkmate?.() || this.chess?.isCheckmate?.()) {
                 this.sounds.success?.play();
-            } else if (this.chess.in_check()) {
+            } else if (this.chess?.in_check?.() || this.chess?.inCheck?.()) {
                 this.sounds.check?.play();
             } else if (move.captured) {
                 this.sounds.capture?.play();
             } else {
                 this.sounds.move?.play();
             }
-        } catch (e) {}
+        } catch {}
     }
-    
-    /**
-     * Émet un événement de changement d'état
-     */
+
     emitStateChange() {
         if (this.onStateChange) {
             this.onStateChange(this.getState());
         }
     }
-    
+
     // ========== GETTERS ==========
-    
-    /**
-     * Retourne l'état actuel
-     */
+
     getState() {
         return {
             isActive: this.isActive,
             currentProblem: this.currentProblem,
             attemptIndex: this.attemptIndex,
             totalMoves: this.currentProblem?.moves.length || 0,
-            playerMoves: Math.floor(this.attemptIndex / 2),
             isPlayerTurn: this.attemptIndex % 2 === 1,
             problemCount: this.problems.length,
             filteredCount: this.getFilteredProblems().length
         };
     }
-    
-    /**
-     * Retourne les informations du problème actuel (pour l'UI)
-     */
-    getProblemInfo() {
-        if (!this.currentProblem) return null;
-        
-        return {
-            id: this.currentProblem.id,
-            rating: this.currentProblem.rating,
-            themes: this.currentProblem.themes,
-            url: this.currentProblem.url,
-            fen: this.currentProblem.fen,
-            moveCount: Math.ceil(this.currentProblem.moves.length / 2),
-            currentMove: Math.floor(this.attemptIndex / 2) + 1
-        };
-    }
-    
-    /**
-     * Retourne le coup attendu (pour debug/hints)
-     */
-    getExpectedMove() {
-        if (!this.isActive || !this.currentProblem) return null;
-        
-        const moveStr = this.currentProblem.moves[this.attemptIndex];
-        return moveStr ? this.getMoveAsSAN(moveStr) : null;
-    }
-    
-    /**
-     * Vérifie si les problèmes sont chargés
-     */
+
     isLoaded() {
         return this.problems.length > 0;
     }
-    
-    /**
-     * Reset le manager
-     */
+
     reset() {
+        // ⭐ Annuler le timer de pause
+        this.cancelPauseTimer();
+        
+        // ⭐ Reset les highlights
+        this.clearHighlights();
+        
+        // Masquer le timer
+        document.body.classList.remove('showTimer');
+        this.hideTimerMessage();
+        
         this.currentProblem = null;
         this.attemptIndex = 0;
         this.isActive = false;
@@ -597,14 +735,7 @@ class ProblemsManager {
     }
 }
 
-// ========== EXPORT ==========
-
-// Instance globale
+// ========== INSTANCE GLOBALE ==========
 window.problemsManager = new ProblemsManager();
-
-// Export ES Module si disponible
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ProblemsManager;
-}
 
 export default window.problemsManager;

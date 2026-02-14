@@ -1,0 +1,837 @@
+.problem-end-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.problem-end-modal__content {
+    background: var(--bg-card, #1a1a2e);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    border: 2px solid var(--border-subtle, #333);
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.problem-end-modal--solved .problem-end-modal__content {
+    border-color: var(--accent-green, #4ade80);
+    box-shadow: 0 0 40px rgba(74, 222, 128, 0.3);
+}
+
+.problem-end-modal--failed .problem-end-modal__content {
+    border-color: var(--accent-red, #ef4444);
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.3);
+}
+
+.problem-end-modal__icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.problem-end-modal__title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: var(--text-primary, #fff);
+}
+
+.problem-end-modal--solved .problem-end-modal__title {
+    color: var(--accent-green, #4ade80);
+}
+
+.problem-end-modal--failed .problem-end-modal__title {
+    color: var(--accent-red, #ef4444);
+}
+
+.problem-end-modal__subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary, #aaa);
+    margin: 0 0 24px 0;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+.problem-end-modal__timer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1rem;
+    color: var(--text-muted, #888);
+    margin-bottom: 20px;
+}
+
+.problem-end-modal__countdown {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-purple, #a78bfa);
+    font-family: 'Orbitron', 'JetBrains Mono', monospace;
+    min-width: 40px;
+}
+
+.problem-end-modal__skip {
+    padding: 12px 24px;
+    font-size: 1rem;
+}
+
+/* ============================================
+   FEEDBACK VISUEL PROBLÈME
+   ============================================ */
+
+.problem-feedback {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    z-index: 9999;
+    animation: feedbackPop 0.3s ease;
+    pointer-events: none;
+}
+
+@keyframes feedbackPop {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.problem-feedback--correct {
+    background: var(--accent-green, #4ade80);
+    color: #000;
+}
+
+.problem-feedback--wrong {
+    background: var(--accent-red, #ef4444);
+    color: #fff;
+}
+
+.problem-feedback--solved {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #000;
+}
+
+.problem-feedback--failed {
+    background: var(--accent-red, #ef4444);
+    color: #fff;
+}
+
+.feedback-icon {
+    margin-right: 8px;
+}
+
+.feedback-text {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* ============================================
+   COUPS DISPONIBLES - DESIGN RESTAURÉ
+   ============================================ */
+
+.moves-panel {
+    background: linear-gradient(180deg, #1a1a2e, #16213e);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.moves-panel__header {
+    margin-bottom: 16px;
+}
+
+.moves-panel__header h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+    color: #ffd700;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.voting-eligibility {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
+.voting-eligibility__label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.voting-eligibility__value {
+    font-size: 0.9rem;
+    color: #fff;
+    margin-top: 4px;
+}
+
+.voter-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.voter-input label {
+    font-size: 0.85rem;
+    color: #aaa;
+    white-space: nowrap;
+}
+
+.voter-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #0d1117;
+    color: #fff;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.voter-input input:focus {
+    outline: none;
+    border-color: #ffd700;
+}
+
+/* Timer dans le panneau */
+.moves-panel__timer {
+    background: #0d1117;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.timer-display {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #4ade80;
+    font-family: 'Orbitron', 'Courier New', monospace;
+    margin-bottom: 8px;
+}
+
+.timer-display.timer-urgent {
+    color: #ef4444;
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.timer-controls .btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
+/* Liste des coups disponibles */
+.moves-panel__list {
+    margin-bottom: 16px;
+}
+
+.available-moves {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.moves-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    margin: 0;
+    list-style: none;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    min-height: 36px;
+    transition: background 0.2s;
+}
+
+.moves-group:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Cacher les groupes vides */
+.moves-group:empty,
+.moves-group:not(:has(li)) {
+    display: none;
+}
+
+.moves-group .piece-icon {
+    font-size: 1.4rem;
+    width: 28px;
+    opacity: 0.8;
+    text-align: center;
+}
+
+.moves-group li {
+    list-style: none;
+}
+
+.moves-group button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    background: #2d3748;
+    color: #fff;
+    border: 1px solid #4a5568;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-weight: 500;
+}
+
+.moves-group button:hover {
+    background: #4a5568;
+    border-color: #ffd700;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+.moves-group button:active {
+    transform: translateY(0);
+}
+
+/* Coup le plus voté */
+.moves-group li.most-voted button {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #000;
+    border-color: #ffd700;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+/* Section votes */
+.moves-panel__votes {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #333;
+}
+
+.moves-panel__votes h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.95rem;
+    color: #aaa;
+}
+
+.vote-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.vote-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.vote-move {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: #ffd700;
+    min-width: 50px;
+}
+
+.vote-count {
+    background: #4a5568;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.vote-bar {
+    flex: 1;
+    height: 4px;
+    background: #4a5568;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.vote-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #ffd700, #ffaa00);
+    width: var(--percentage, 0%);
+    transition: width 0.3s ease;
+}
+
+.vote-total {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #333;
+    font-size: 0.85rem;
+    color: #888;
+    text-align: right;
+}
+
+.vote-total span:last-child {
+    font-weight: 600;
+    color: #ffd700;
+}
+
+/* ============================================
+   HIGHLIGHT CASES ÉCHIQUIER
+   ============================================ */
+
+.highlight-player {
+    background-color: rgba(74, 222, 128, 0.4) !important;
+    box-shadow: inset 0 0 0 3px #4ade80 !important;
+}
+
+.highlight-bot {
+    background-color: rgba(99, 102, 241, 0.4) !important;
+    box-shadow: inset 0 0 0 3px #6366f1 !important;
+}
+
+.highlight-correct {
+    background-color: rgba(255, 215, 0, 0.4) !important;
+    box-shadow: inset 0 0 0 3px #ffd700 !important;
+    animation: pulseHighlight 1s infinite;
+}
+
+@keyframes pulseHighlight {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ============================================
+   ÉTATS DU BODY POUR PROBLÈMES
+   ============================================ */
+
+body.problem-correct .board-wrapper {
+    animation: flashGreen 0.3s ease;
+}
+
+body.problem-wrong .board-wrapper {
+    animation: flashRed 0.3s ease;
+}
+
+@keyframes flashGreen {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 30px rgba(74, 222, 128, 0.6); }
+}
+
+@keyframes flashRed {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.6); }
+}
+
+/* ============================================
+   INPUT PAUSE PROBLÈMES
+   ============================================ */
+
+#problem-pause {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+}
+/**
+ * ========================================
+ * CSS - Timer inline problèmes + corrections
+ * ========================================
+ * À ajouter dans css/main.css
+ */
+
+/* ============================================
+   MESSAGE TIMER PROBLÈME (inline)
+   ============================================ */
+
+.problem-timer-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+}
+
+.problem-timer-icon {
+    font-size: 2rem;
+    animation: bounce 0.5s ease;
+}
+
+.problem-timer-text {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.problem-timer-countdown {
+    font-size: 1.5rem;
+    font-family: 'Orbitron', 'JetBrains Mono', monospace;
+    font-weight: 700;
+}
+
+.problem-timer-message--solved .problem-timer-text,
+.problem-timer-message--solved .problem-timer-countdown {
+    color: var(--accent-green, #4ade80);
+}
+
+.problem-timer-message--failed .problem-timer-text,
+.problem-timer-message--failed .problem-timer-countdown {
+    color: var(--accent-red, #ef4444);
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* Bouton skip */
+.problem-skip-btn {
+    margin-top: 8px !important;
+    padding: 6px 16px !important;
+    font-size: 0.85rem !important;
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.problem-skip-btn:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+/* ============================================
+   HIGHLIGHTS ÉCHIQUIER
+   ============================================ */
+
+.highlight-player {
+    background-color: rgba(74, 222, 128, 0.5) !important;
+    box-shadow: inset 0 0 0 3px #4ade80 !important;
+}
+
+.highlight-bot {
+    background-color: rgba(99, 102, 241, 0.5) !important;
+    box-shadow: inset 0 0 0 3px #6366f1 !important;
+}
+
+.highlight-correct {
+    background-color: rgba(255, 215, 0, 0.5) !important;
+    box-shadow: inset 0 0 0 3px #ffd700 !important;
+    animation: pulseHighlight 1s infinite;
+}
+
+@keyframes pulseHighlight {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ============================================
+   COUPS DISPONIBLES - FIX COMPLET
+   ============================================ */
+
+/* Container principal */
+.moves-panel {
+    position: fixed;
+    left: 20px;
+    top: 100px;
+    width: 280px;
+    max-height: calc(100vh - 120px);
+    background: linear-gradient(145deg, #1a1a2e, #16213e);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    overflow-y: auto;
+    z-index: 1000;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.moves-panel__header {
+    margin-bottom: 16px;
+}
+
+.moves-panel__header h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+    color: #ffd700;
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* Liste des coups */
+.moves-panel__list {
+    margin-bottom: 16px;
+}
+
+.available-moves,
+#availableList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Groupes de pièces */
+.moves-group,
+#availableList ul,
+#availableListP,
+#availableListN,
+#availableListB,
+#availableListR,
+#availableListQ,
+#availableListK,
+#availableListO {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    margin: 0;
+    list-style: none;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    min-height: 36px;
+    transition: background 0.2s;
+}
+
+.moves-group:hover,
+#availableList ul:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Cacher les groupes vides */
+.moves-group:empty,
+.moves-group:not(:has(li)),
+#availableList ul:empty,
+#availableList ul:not(:has(li)),
+#availableListP:empty,
+#availableListN:empty,
+#availableListB:empty,
+#availableListR:empty,
+#availableListQ:empty,
+#availableListK:empty,
+#availableListO:empty,
+#availableListP:not(:has(li)),
+#availableListN:not(:has(li)),
+#availableListB:not(:has(li)),
+#availableListR:not(:has(li)),
+#availableListQ:not(:has(li)),
+#availableListK:not(:has(li)),
+#availableListO:not(:has(li)) {
+    display: none !important;
+}
+
+/* Icône de pièce */
+.moves-group .piece-icon,
+#availableList .piece-icon {
+    font-size: 1.4rem;
+    width: 28px;
+    opacity: 0.8;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Items */
+.moves-group li,
+#availableList li {
+    list-style: none;
+}
+
+/* Boutons de coup */
+.moves-group button,
+#availableList button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    background: #2d3748;
+    color: #fff;
+    border: 1px solid #4a5568;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-weight: 500;
+}
+
+.moves-group button:hover,
+#availableList button:hover {
+    background: #4a5568;
+    border-color: #ffd700;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+.moves-group button:active,
+#availableList button:active {
+    transform: translateY(0);
+}
+
+/* Coup le plus voté */
+.moves-group li.most-voted button,
+#availableList li.most-voted button {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #000;
+    border-color: #ffd700;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+/* ============================================
+   VOTING INPUT
+   ============================================ */
+
+.voter-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.voter-input label {
+    font-size: 0.85rem;
+    color: #aaa;
+    white-space: nowrap;
+}
+
+.voter-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #0d1117;
+    color: #fff;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.voter-input input:focus {
+    outline: none;
+    border-color: #ffd700;
+}
+
+/* ============================================
+   VOTING ELIGIBILITY
+   ============================================ */
+
+.voting-eligibility {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
+.voting-eligibility__label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.voting-eligibility__value {
+    font-size: 0.9rem;
+    color: #fff;
+    margin-top: 4px;
+}
+
+/* ============================================
+   SECTION VOTES
+   ============================================ */
+
+.moves-panel__votes {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #333;
+}
+
+.moves-panel__votes h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.95rem;
+    color: #aaa;
+}
+
+.vote-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.vote-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.vote-move {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: #ffd700;
+    min-width: 50px;
+}
+
+.vote-count {
+    background: #4a5568;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.vote-total {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #333;
+    font-size: 0.85rem;
+    color: #888;
+    text-align: right;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1200px) {
+    .moves-panel {
+        position: static;
+        width: 100%;
+        max-height: none;
+        margin-top: 20px;
+    }
+}

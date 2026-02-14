@@ -3,6 +3,7 @@
  * Point d'entrée principal, Router, État global
  * 
  * MISE À JOUR : Intégration du mode Problèmes via problemsManager
+ * FIX: Structure corrigée - initProblemsMode intégré dans SandboxPage
  */
 
 import gameEngine from './core/gameEngine.js';
@@ -242,12 +243,10 @@ const SandboxPage = {
     async initProblemsMode() {
         console.log('🧩 Initialisation du mode Problèmes...');
         
-        // Charger les problèmes si pas encore fait
+        // 1. Charger les problèmes si nécessaire
         if (!problemsManager.isLoaded()) {
             try {
-                Toast.info('Chargement des problèmes...');
                 await problemsManager.loadProblems('js/problemsV2.csv');
-                Toast.success(`${problemsManager.problems.length} problèmes chargés`);
             } catch (error) {
                 console.error('Erreur chargement problèmes:', error);
                 Toast.error('Erreur chargement des problèmes');
@@ -255,115 +254,80 @@ const SandboxPage = {
             }
         }
         
-        // Injecter les références chess/board
+        // 2. Injecter les références chess et board
         problemsManager.init({
             chess: gameEngine.chess,
             board: gameEngine.board,
             config: {
-                pauseAfterEnd: AppState.config.pauseAfterEnd,
-                botMoveDelay: 1500
+                pauseAfterEnd: AppState.config.pauseAfterEnd || 5,
+                botMoveDelay: 1200
             }
         });
         
-        // Configurer les callbacks
+        // 3. Configurer les callbacks
         this.setupProblemsCallbacks();
         
+        // 4. Remplir le menu des thèmes
+        this.populateThemesSelect();
+        
         this.problemsInitialized = true;
+        
         return true;
     },
+
+    // ========== CALLBACKS PROBLÈMES ==========
     
     setupProblemsCallbacks() {
-        // Quand un problème est chargé
+        // Problème chargé
         problemsManager.onProblemLoaded = (problem) => {
-            console.log('📋 Problème chargé:', problem.id, 'Rating:', problem.rating);
-            
-            // Mettre à jour l'UI
+            console.log('📋 Problème chargé:', problem.id);
             this.updateProblemUI(problem);
-            
-            // Sync Phantom si connecté
-            if (window.phantomChessboard?.isConnected) {
-                window.phantomChessboard.syncPosition(gameEngine.chess.fen());
-            }
+            this.syncPhantom();
         };
         
-        // Quand le bot joue
+        // Bot joue
         problemsManager.onBotMove = (move) => {
-            console.log('🤖 Bot joue:', move.san);
-            
-            // Mettre à jour l'échiquier visuel
-            gameEngine.board.position(gameEngine.chess.fen());
-            
-            // Mettre à jour l'historique
+            console.log('🤖 Bot:', move.san);
             this.addMoveToHistory(move, 'bot');
-            
-            // Sync Phantom
-            if (window.phantomChessboard?.isConnected) {
-                window.phantomChessboard.syncPosition(gameEngine.chess.fen());
-            }
-            
-            // Activer les votes/input
-            this.enablePlayerInput();
+            this.syncPhantom();
         };
         
-        // Quand le joueur joue un coup correct
+        // Joueur correct
         problemsManager.onCorrectMove = (move) => {
-            console.log('✅ Coup correct:', move.san);
-            
-            // Mettre à jour l'échiquier visuel
-            gameEngine.board.position(gameEngine.chess.fen());
-            
-            // Feedback visuel
+            console.log('✅ Correct:', move.san);
             this.showProblemFeedback('correct');
-            
-            // Mettre à jour l'historique
             this.addMoveToHistory(move, 'player');
-            
-            // Sync Phantom
-            if (window.phantomChessboard?.isConnected) {
-                window.phantomChessboard.syncPosition(gameEngine.chess.fen());
-            }
-            
-            // Désactiver temporairement l'input (en attente du bot)
-            this.disablePlayerInput();
+            this.syncPhantom();
         };
         
-        // Quand le joueur se trompe
+        // Joueur erreur
         problemsManager.onWrongMove = (expectedSAN, expectedUCI) => {
-            console.log('❌ Mauvais coup! Attendu:', expectedSAN);
-            
-            // Feedback visuel
+            console.log('❌ Erreur! Attendu:', expectedSAN);
             this.showProblemFeedback('wrong', expectedSAN);
-            
             Toast.error(`Mauvais coup ! Le bon était ${expectedSAN}`);
         };
         
         // Problème résolu
         problemsManager.onProblemSolved = (problem) => {
-            console.log('🎉 Problème résolu!');
-            
-            // Animation de victoire
-            document.body.classList.add('omg-win');
+            console.log('🎉 Résolu!');
+            this.showProblemFeedback('solved');
             Toast.success('🎉 Problème résolu !');
             
-            // Charger le prochain après un délai
+            // Charger le suivant après délai
             setTimeout(() => {
-                document.body.classList.remove('omg-win');
                 problemsManager.loadRandomProblem();
-            }, AppState.config.pauseAfterEnd * 1000);
+            }, (AppState.config.pauseAfterEnd || 5) * 1000);
         };
         
         // Problème échoué
         problemsManager.onProblemFailed = (problem) => {
-            console.log('💔 Problème échoué');
+            console.log('💔 Échoué');
+            this.showProblemFeedback('failed');
             
-            // Animation d'échec
-            document.body.classList.add('omg-lose');
-            
-            // Charger le prochain après un délai
+            // Charger le suivant après délai
             setTimeout(() => {
-                document.body.classList.remove('omg-lose');
                 problemsManager.loadRandomProblem();
-            }, AppState.config.pauseAfterEnd * 1000);
+            }, (AppState.config.pauseAfterEnd || 5) * 1000);
         };
         
         // Changement d'état
@@ -375,7 +339,6 @@ const SandboxPage = {
     // ========== UI HELPERS POUR PROBLÈMES ==========
     
     updateProblemUI(problem) {
-        // Mettre à jour les éléments data-* si présents
         const updates = {
             '[data-prob-id]': problem.id,
             '[data-prob-elo]': problem.rating,
@@ -386,26 +349,24 @@ const SandboxPage = {
         
         for (const [selector, value] of Object.entries(updates)) {
             const el = document.querySelector(selector);
-            if (el) {
-                el.textContent = value;
-            }
+            if (el) el.textContent = value;
         }
         
         // Afficher le panneau problème si caché
         const problemPanel = document.getElementById('problem-panel');
-        if (problemPanel) {
-            problemPanel.classList.add('is-visible');
-        }
+        if (problemPanel) problemPanel.classList.add('is-visible');
+        
+        // Vider l'historique
+        const historyEl = document.querySelector('.move-history, .poll ol, #move-history');
+        if (historyEl) historyEl.innerHTML = '';
     },
     
     updateProblemStateUI(state) {
-        // Mettre à jour le compteur de coups
         const attemptEl = document.querySelector('[data-attempt]');
         if (attemptEl) {
-            attemptEl.textContent = state.playerMoves;
+            attemptEl.textContent = Math.floor(state.attemptIndex / 2);
         }
         
-        // Indiquer le tour
         document.body.classList.toggle('player-turn', state.isPlayerTurn);
         document.body.classList.toggle('bot-turn', !state.isPlayerTurn);
     },
@@ -417,11 +378,16 @@ const SandboxPage = {
         const moveEl = document.createElement('span');
         moveEl.className = player === 'bot' ? 'move-bot' : 'move-player';
         moveEl.textContent = move.san + ' ';
-        
         historyEl.appendChild(moveEl);
     },
     
     showProblemFeedback(type, message = '') {
+        // Retirer les anciens feedbacks
+        document.body.classList.remove('problem-correct', 'problem-wrong', 'problem-solved', 'problem-failed');
+        
+        // Ajouter le nouveau
+        document.body.classList.add(`problem-${type}`);
+        
         // Créer un élément de feedback temporaire
         const existing = document.getElementById('problem-feedback');
         if (existing) existing.remove();
@@ -429,26 +395,35 @@ const SandboxPage = {
         const feedback = document.createElement('div');
         feedback.id = 'problem-feedback';
         feedback.className = `problem-feedback problem-feedback--${type}`;
-        feedback.innerHTML = type === 'correct' 
-            ? '<span class="feedback-icon">✓</span>' 
-            : `<span class="feedback-icon">✗</span><span class="feedback-text">${message}</span>`;
+        
+        switch (type) {
+            case 'correct':
+                feedback.innerHTML = '<span class="feedback-icon">✓</span>';
+                break;
+            case 'wrong':
+                feedback.innerHTML = `<span class="feedback-icon">✗</span><span class="feedback-text">${message}</span>`;
+                break;
+            case 'solved':
+                feedback.innerHTML = '<span class="feedback-icon">🎉</span><span class="feedback-text">Résolu !</span>';
+                break;
+            case 'failed':
+                feedback.innerHTML = '<span class="feedback-icon">💔</span>';
+                break;
+        }
         
         document.body.appendChild(feedback);
         
-        setTimeout(() => feedback.remove(), 2000);
+        setTimeout(() => {
+            feedback.remove();
+            document.body.classList.remove(`problem-${type}`);
+        }, 2000);
     },
     
-    enablePlayerInput() {
-        document.body.classList.add('accepting-moves');
-        voting.open();
-        
-        // En mode problème, les coups se font par drag&drop ou vote
-        // Le gameEngine va intercepter les coups via onDrop
-    },
-    
-    disablePlayerInput() {
-        document.body.classList.remove('accepting-moves');
-        voting.close();
+    syncPhantom() {
+        const fen = gameEngine.chess?.fen?.() || problemsManager.chess?.fen?.();
+        if (fen && window.phantomChessboard?.isConnected) {
+            window.phantomChessboard.syncPosition(fen);
+        }
     },
 
     setupEventListeners() {
@@ -462,7 +437,6 @@ const SandboxPage = {
         // Reset
         document.getElementById('btn-reset')?.addEventListener('click', () => {
             if (AppState.gameMode === 'problems' && problemsManager.isActive) {
-                // En mode problème, charger un nouveau problème
                 problemsManager.loadRandomProblem();
                 Toast.info('Nouveau problème chargé');
             } else {
@@ -470,7 +444,12 @@ const SandboxPage = {
                 Toast.success('Échiquier réinitialisé');
             }
         });
-        
+        document.getElementById('problem-pause')?.addEventListener('change', (e) => {
+            AppState.config.pauseAfterEnd = parseInt(e.target.value) || 5;
+            if (window.problemsManager) {
+                window.problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+            }
+        });
         // Undo
         document.getElementById('btn-undo')?.addEventListener('click', () => {
             if (AppState.gameMode === 'problems') {
@@ -514,9 +493,6 @@ const SandboxPage = {
         // ========== MODE DE JEU ==========
         document.querySelectorAll('.mode-option').forEach(option => {
             option.addEventListener('click', () => {
-
-
-
                 document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('is-active'));
                 option.classList.add('is-active');
                 AppState.gameMode = option.dataset.mode;
@@ -596,11 +572,9 @@ const SandboxPage = {
             const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
             AppState.problems.selectedThemes = selected;
             
-            // Mettre à jour le filtre dans problemsManager
             problemsManager.clearThemes();
             selected.forEach(theme => problemsManager.toggleTheme(theme));
             
-            // Afficher le nombre de problèmes disponibles
             const count = problemsManager.getFilteredProblems().length;
             const countEl = document.getElementById('problem-count');
             if (countEl) countEl.textContent = `${count} problèmes`;
@@ -621,23 +595,29 @@ const SandboxPage = {
         });
         
         // ========== INTERCEPTION DES COUPS EN MODE PROBLÈME ==========
-        // Override du onDrop de gameEngine pour le mode problèmes
-        const originalOnDrop = gameEngine.onDrop.bind(gameEngine);
+        this.setupProblemsInterception();
+    },
+
+    setupProblemsInterception() {
+        const originalOnDrop = gameEngine.onDrop?.bind(gameEngine);
+        
         gameEngine.onDrop = (source, target, piece, newPos, oldPos, orientation) => {
             // Si mode problèmes actif, déléguer au problemsManager
             if (AppState.gameMode === 'problems' && problemsManager.isActive) {
                 const move = source + target;
                 const result = problemsManager.validateAndPlayMove(move);
                 
-                if (!result.valid) {
+                if (!result.valid || !result.correct) {
                     return 'snapback';
                 }
                 
-                return result.correct ? undefined : 'snapback';
+                return; // Le board est déjà mis à jour par problemsManager
             }
             
             // Sinon comportement normal
-            return originalOnDrop(source, target, piece, newPos, oldPos, orientation);
+            if (originalOnDrop) {
+                return originalOnDrop(source, target, piece, newPos, oldPos, orientation);
+            }
         };
     },
 
@@ -651,17 +631,14 @@ const SandboxPage = {
         }
     },
     
-    /**
-     * Remplit le select des thèmes avec les thèmes disponibles
-     */
     populateThemesSelect() {
         const select = document.getElementById('problem-themes');
         if (!select) return;
         
         const stats = problemsManager.themeStats;
         const sortedThemes = Object.entries(stats)
-            .sort((a, b) => b[1] - a[1]) // Trier par nombre de problèmes
-            .slice(0, 30); // Limiter aux 30 premiers
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 30);
         
         select.innerHTML = sortedThemes.map(([theme, count]) => 
             `<option value="${theme}">${theme} (${count})</option>`
@@ -722,7 +699,9 @@ const SandboxPage = {
             
             return;
         }
-        
+        if (AppState.gameMode !== 'problems') {
+            problemsManager.reset(); // ⬅️ Reset les highlights et timer
+        }
         // ========== AUTRES MODES ==========
         
         // Désactiver le mode problèmes si on change de mode
@@ -753,6 +732,7 @@ const SandboxPage = {
             timer: AppState.config.timerEnabled,
             duration: AppState.config.timerDuration
         });
+        
         if (gameEngine.updateVotingIndicator) {
             gameEngine.updateVotingIndicator();
         }
@@ -927,7 +907,7 @@ const BrowsePage = {
         const container = document.getElementById('games-list');
         if (!container) return;
 
-        // Mock data
+        // Mock data - à remplacer par Socket.IO
         const games = [];
 
         if (games.length === 0) {
