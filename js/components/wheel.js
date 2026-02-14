@@ -133,7 +133,7 @@ class VotingWheel {
         const width = this.canvas.width;
         const height = this.canvas.height;
         const centerX = width / 2;
-        const centerY = height / 3;
+        const centerY = height / 2;
         const radius = Math.min(width, height) / 2 - 10;
 
         // Clear
@@ -176,22 +176,33 @@ class VotingWheel {
 
             // Texte du coup
             const midAngle = startAngle + sliceAngle / 2;
-            const textRadius = radius * 0.65;
+            const textRadius = radius * 0.85;
             const textX = centerX + Math.cos(midAngle) * textRadius;
             const textY = centerY + Math.sin(midAngle) * textRadius;
+
+            // Icône de pièce
+            const pieceIcons = { 'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘' };
+            const firstChar = vote.move.charAt(0).toUpperCase();
+            const pieceIcon = pieceIcons[firstChar] || '♙';
 
             ctx.save();
             ctx.translate(textX, textY);
             ctx.rotate(midAngle + Math.PI / 2);
+            
+            ctx.shadowColor = 'rgba(0,0,0,0.7)';
+            ctx.shadowBlur = 4;
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 16px "JetBrains Mono", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            
-            // Ombre pour le texte
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.shadowBlur = 4;
-            ctx.fillText(vote.move, 0, 0);
+
+            // Texte au-dessus (vers le bord)
+            ctx.font = 'bold 12px "JetBrains Mono", monospace';
+            ctx.fillText(vote.move, 0, -10);
+
+            // Pièce en dessous (vers le centre)
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText(pieceIcon, 0, 10);
+
             ctx.restore();
 
             startAngle = endAngle;
