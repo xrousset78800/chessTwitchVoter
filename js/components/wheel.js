@@ -133,7 +133,7 @@ class VotingWheel {
         const width = this.canvas.width;
         const height = this.canvas.height;
         const centerX = width / 2;
-        const centerY = height / 2;
+        const centerY = height / 3;
         const radius = Math.min(width, height) / 2 - 10;
 
         // Clear

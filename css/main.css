@@ -57,6 +57,11 @@
     --nav-height: 70px;
     --sidebar-width: 380px;
     
+    --wheel-size: 400px;
+    --wheel-inner-size: calc(var(--wheel-size) * 0.65); 
+    --wheel-center-size: calc(var(--wheel-size) * 0.20);
+
+
     /* Z-index layers */
     --z-base: 1;
     --z-dropdown: 10;

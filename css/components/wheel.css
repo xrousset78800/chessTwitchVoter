@@ -4,16 +4,15 @@
 
 .wheel-container {
     position: relative;
-    width: 100%;
-    max-width: 400px;
+    width: var(--wheel-size);
+    height: var(--wheel-size);
     margin: 0 auto;
-    aspect-ratio: 1;
 }
 
 /* Canvas de la roue */
 .wheel-canvas {
-    width: 100%;
-    height: 100%;
+    width: var(--wheel-inner-size) !important;
+    height: var(--wheel-inner-size) !important;
     border-radius: 50%;
     box-shadow: 
         0 0 0 8px var(--bg-card),
@@ -55,15 +54,15 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80px;
-    height: 80px;
+    width: var(--wheel-center-size);
+    height: var(--wheel-center-size);
+    font-size: calc(var(--wheel-center-size) * 0.35);
     background: var(--gradient-hero);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.5rem;
     font-weight: 700;
     color: white;
     box-shadow: 
@@ -288,11 +287,10 @@ body.randomWheel #wheel-area,
 
 /* Taille de la roue en overlay */
 #wheel-area .wheel-container {
-    width: 280px;
-    height: 280px;
+    width: var(--wheel-size);
+    height: var(--wheel-size);
     background: rgba(10, 10, 20, 0.95);
     border-radius: 50%;
-    padding: 15px;
     box-shadow: 
         0 10px 40px rgba(0, 0, 0, 0.5),
         0 0 0 3px var(--accent-purple, #8b5cf6),
@@ -300,15 +298,15 @@ body.randomWheel #wheel-area,
 }
 
 #wheel-area .wheel-canvas {
-    width: 250px !important;
-    height: 250px !important;
+    width: var(--wheel-size) !important;
+    height: var(--wheel-size) !important;
 }
 
 /* Centre de la roue */
 #wheel-area .wheel-center {
-    width: 60px;
-    height: 60px;
-    font-size: 1.2rem;
+    width: var(--wheel-center-size);
+    height: var(--wheel-center-size);
+    font-size: calc(var(--wheel-center-size) * 0.35);
 }
 
 /* Animation d'entrée */
@@ -336,23 +334,6 @@ body.randomWheel #wheel-area {
         0 0 120px rgba(139, 92, 246, 0.3);
 }
 
-/* Badge "Tirage en cours" */
-#wheel-area::before {
-    content: '🎡 Tirage en cours...';
-    position: absolute;
-    top: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent-purple, #8b5cf6);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
 
 body.randomWheel #wheel-area::before,
 #wheel-area.is-spinning::before {
