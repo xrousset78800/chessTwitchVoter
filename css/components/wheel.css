@@ -22,33 +22,33 @@
         inset 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
-/* Indicateur/Flèche */
+/* Curseur/Flèche à DROITE de la roue */
 .wheel-pointer {
     position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    right: -20px;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-top: 40px solid var(--accent-purple);
-    filter: drop-shadow(0 4px 8px rgba(139, 92, 246, 0.5));
+    border-top: 20px solid transparent;
+    border-bottom: 20px solid transparent;
+    border-right: 40px solid var(--accent-purple, #8b5cf6);
+    filter: drop-shadow(-4px 0 8px rgba(139, 92, 246, 0.5));
     z-index: 10;
 }
 
+/* Petit cercle décoratif sur la pointe */
 .wheel-pointer::after {
     content: '';
     position: absolute;
-    top: -50px;
-    left: -10px;
+    top: -10px;
+    right: -50px;
     width: 20px;
     height: 20px;
-    background: var(--accent-purple);
+    background: var(--accent-purple, #8b5cf6);
     border-radius: 50%;
-    box-shadow: 0 0 20px var(--accent-purple);
+    box-shadow: 0 0 20px var(--accent-purple, #8b5cf6);
 }
-
 /* Centre de la roue */
 .wheel-center {
     position: absolute;
@@ -263,5 +263,126 @@
     
     .wheel-container {
         max-width: 280px;
+    }
+}
+
+#wheel-area {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8) translateY(20px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Afficher la roue quand le vote est actif ou pendant l'animation */
+body.showTimer #wheel-area,
+body.randomWheel #wheel-area,
+#wheel-area.is-visible {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1) translateY(0);
+}
+
+/* Taille de la roue en overlay */
+#wheel-area .wheel-container {
+    width: 280px;
+    height: 280px;
+    background: rgba(10, 10, 20, 0.95);
+    border-radius: 50%;
+    padding: 15px;
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 3px var(--accent-purple, #8b5cf6),
+        0 0 60px rgba(139, 92, 246, 0.3);
+}
+
+#wheel-area .wheel-canvas {
+    width: 250px !important;
+    height: 250px !important;
+}
+
+/* Centre de la roue */
+#wheel-area .wheel-center {
+    width: 60px;
+    height: 60px;
+    font-size: 1.2rem;
+}
+
+/* Animation d'entrée */
+@keyframes wheelSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5) translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+body.randomWheel #wheel-area {
+    animation: wheelSlideIn 0.4s ease-out;
+}
+
+/* Glow pendant le spin */
+#wheel-area.is-spinning .wheel-container {
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 3px var(--accent-purple),
+        0 0 80px rgba(139, 92, 246, 0.5),
+        0 0 120px rgba(139, 92, 246, 0.3);
+}
+
+/* Badge "Tirage en cours" */
+#wheel-area::before {
+    content: '🎡 Tirage en cours...';
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-purple, #8b5cf6);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+body.randomWheel #wheel-area::before,
+#wheel-area.is-spinning::before {
+    opacity: 1;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    #wheel-area {
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    #wheel-area .wheel-container {
+        width: 200px;
+        height: 200px;
+        padding: 10px;
+    }
+    
+    #wheel-area .wheel-canvas {
+        width: 180px !important;
+        height: 180px !important;
+    }
+    
+    #wheel-area .wheel-center {
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
     }
 }

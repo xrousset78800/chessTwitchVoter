@@ -241,7 +241,7 @@ class VotingWheel {
         // La roue doit s'arrêter avec le gagnant en haut (angle -PI/2)
         // On fait plusieurs tours + l'angle nécessaire
         const spins = 5 + Math.random() * 3; // 5-8 tours
-        const targetAngle = spins * 2 * Math.PI - winnerMidAngle - Math.PI / 2;
+        const targetAngle = spins * 2 * Math.PI - winnerMidAngle;
 
         // Animation
         const startTime = Date.now();

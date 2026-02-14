@@ -8,6 +8,7 @@
 
 import timer from './timer.js';
 import voting from './voting.js';
+import VotingWheel from '../components/wheel.js';
 
 class GameEngine {
     constructor() {
@@ -88,6 +89,11 @@ class GameEngine {
             majorityMode: this.config.majorityMode,
             onVoteAdded: (vote, results) => this.onVoteAdded(vote, results)
         });
+
+        if (document.getElementById('wheel-area')) {
+            this.votingWheel = new VotingWheel('wheel-area');
+            console.log('🎡 VotingWheel initialisée');
+        }
 
         window.addEventListener('phantomMoveStart', () => {
             if (this.config.timerEnabled && timer.isRunning) {
@@ -339,6 +345,11 @@ class GameEngine {
             voting.reset();
             voting.open();
             timer.start(this.config.timerDuration);
+            
+            // Reset la roue
+            if (this.votingWheel) {
+                this.votingWheel.clear();
+            }
         }
         
         this.updateAvailableMoves();
@@ -360,42 +371,223 @@ class GameEngine {
 
     // ========== VOTES ==========
 
-    onVoteAdded(vote, results) {
-        console.log('🗳️ Vote ajouté:', vote);
-        this.updateVotesUI(results);
+onVoteAdded(vote, results) {
+    console.log('🗳️ Vote ajouté:', vote.player, '→', vote.move);
+    
+    // Récupérer les résultats triés depuis VotingSystem (source de vérité)
+    const sortedResults = voting.getSortedResults();
+    
+    // Mettre à jour l'UI des votes
+    this.updateVotesUI(sortedResults);
+    
+    // Reconstruire la roue depuis les données de voting (pas de addVote individuel)
+    if (this.votingWheel) {
+        this.syncWheelFromVoting();
     }
+    
+    this.highlightMostVoted();
+}
 
-    processVoteResult() {
-        const results = voting.getResults();
+/**
+ * Synchronise VotingWheel avec les données de VotingSystem
+ */
+syncWheelFromVoting() {
+    if (!this.votingWheel) return;
+    
+    // Clear la roue
+    this.votingWheel.votes.clear();
+    
+    // Reconstruire depuis voting.votes (le tableau brut)
+    const allVotes = voting.getAllVotes();
+    
+    allVotes.forEach((vote, index) => {
+        if (!this.votingWheel.votes.has(vote.move)) {
+            this.votingWheel.votes.set(vote.move, { count: 0, voters: new Map() });
+        }
         
-        if (results.length === 0) {
-            console.log('❌ Aucun vote, tour sauté');
-            this.currentTurn = this.currentTurn === 'w' ? 'b' : 'w';
-            this.startTurn();
+        const voteData = this.votingWheel.votes.get(vote.move);
+        voteData.count++;
+        
+        // Tracker le voter (pour l'affichage, pas pour bloquer)
+        const voterCount = voteData.voters.get(vote.player) || 0;
+        voteData.voters.set(vote.player, voterCount + 1);
+    });
+    
+    // Redessiner
+    this.votingWheel.draw();
+    this.votingWheel.updateVoteList();
+}
+highlightMostVoted() {
+    const results = voting.getSortedResults();
+    if (results.length === 0) return;
+    
+    const topMove = results[0].move;
+    
+    // Retirer l'ancienne surbrillance
+    document.querySelectorAll('.moves-group li').forEach(li => {
+        li.classList.remove('most-voted');
+    });
+    
+    // Ajouter la surbrillance au coup le plus voté
+    document.querySelectorAll('.moves-group button').forEach(btn => {
+        if (btn.textContent === topMove || btn.textContent === topMove.replace('#', '').replace('+', '')) {
+            btn.parentElement.classList.add('most-voted');
+        }
+    });
+}
+    processVoteResult() {
+        const results = voting.getSortedResults();
+        
+        // ========== CAS 1: AUCUN VOTE → COUP ALÉATOIRE ==========
+        if (!results || results.length === 0) {
+            console.warn('⚠️ Aucun vote reçu');
+            this.playRandomMove();
             return;
         }
-
-        let selectedMove;
         
+        // Récupérer le coup gagnant (le plus voté)
+        const winningMove = results[0].move;
+        console.log('🏆 Coup gagnant:', winningMove, 'avec', results[0].count, 'vote(s)');
+        
+        // ========== CAS 2: MODE MAJORITÉ → EXÉCUTION DIRECTE ==========
         if (this.config.majorityMode) {
-            // Mode majorité : prendre le coup avec le plus de votes
-            selectedMove = results[0].move;
-        } else {
-            // Mode roue : animation + sélection aléatoire pondérée
-            // TODO: Implémenter l'animation de roue
-            selectedMove = this.selectRandomWeighted(results);
+            this.executeMove(winningMove);
+            return;
         }
-
-        console.log('🎯 Coup sélectionné:', selectedMove);
-        this.executeMove(selectedMove);
+        
+        // ========== CAS 3: MODE ROUE → ANIMATION ==========
+        console.log('🎡 Mode roue - Animation...');
+        this.showWheelAnimation(results, winningMove);
     }
 
+    /**
+     * Joue un coup aléatoire (quand pas de votes)
+     */
+playRandomMove() {
+    const moves = this.chess.moves();
+    
+    if (moves.length === 0) {
+        console.log('❌ Pas de coups disponibles');
+        return;
+    }
+    
+    console.log('🎲 Aucun vote - Tirage au sort parmi', moves.length, 'coups');
+    
+    // Mode majorité : coup aléatoire direct (pas d'animation)
+    if (this.config.majorityMode) {
+        const randomMove = moves[Math.floor(Math.random() * moves.length)];
+        console.log('🎲 Coup aléatoire (direct):', randomMove);
+        this.executeMove(randomMove);
+        return;
+    }
+    
+    // Mode roue : créer des "faux votes" pour tous les coups disponibles
+    console.log('🎡 Mode roue - Animation avec tous les coups...');
+    
+    const colorPalette = [
+        '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', 
+        '#f59e0b', '#ef4444', '#ec4899', '#6366f1',
+        '#14b8a6', '#f97316', '#84cc16', '#a855f7'
+    ];
+    
+    // Créer un résultat avec tous les coups (1 vote chacun = chances égales)
+    const randomResults = moves.map((move, i) => ({
+        move: move,
+        count: 1,
+        color: colorPalette[i % colorPalette.length],
+        percentage: Math.round(100 / moves.length)
+    }));
+    
+    // Tirer au sort le gagnant
+    const randomMove = moves[Math.floor(Math.random() * moves.length)];
+    
+    // Remplir la roue avec tous les coups
+    if (this.votingWheel) {
+        this.votingWheel.clear();
+        moves.forEach((move, i) => {
+            // Ajouter chaque coup une fois
+            this.votingWheel.votes.set(move, { count: 1, voters: new Map([['random', 1]]) });
+        });
+        this.votingWheel.draw();
+    }
+    
+    // Activer le visuel
+    document.body.classList.add('randomWheel');
+    
+    // Lancer l'animation
+    this.showWheelAnimation(randomResults, randomMove);
+}
+
+showWheel() {
+    const wheelArea = document.getElementById('wheel-area');
+    if (wheelArea) {
+        wheelArea.classList.add('is-visible');
+    }
+}
+
+/**
+ * Masque la roue
+ */
+hideWheel() {
+    const wheelArea = document.getElementById('wheel-area');
+    if (wheelArea) {
+        wheelArea.classList.remove('is-visible', 'is-spinning');
+    }
+}
+
+        /**
+     * Affiche l'animation de la roue et exécute le coup gagnant
+     * @param {Array} results - [{move, count, color, percentage}, ...]
+     * @param {string} winningMove - Le coup qui sera joué
+     */
+showWheelAnimation(results, winningMove) {
+    const wheelDuration = (this.config.wheelDuration || 5) * 1000;
+    
+    // Mettre à jour l'affichage des votes
+    this.updateVotesUI(results);
+    
+    // Utiliser VotingWheel si disponible
+    if (this.votingWheel) {
+        this.showWheel();
+        document.getElementById('wheel-area')?.classList.add('is-spinning');
+        console.log('🎡 Lancement de l\'animation de roue');
+        document.body.classList.add('randomWheel');
+        
+        // La roue a déjà les votes (via onVoteAdded)
+        // Définir le callback de fin
+        this.votingWheel.onSpinEnd = (winner) => {
+            console.log('🎯 Roue terminée, gagnant:', winner);
+            document.body.classList.remove('randomWheel');
+            this.executeMove(winner);
+            this.hideWheel();
+        };
+        
+        // Lancer le spin
+        this.votingWheel.spin(wheelDuration);
+        return;
+    }
+    
+    // Fallback si pas de roue : sélection directe après délai
+    console.log('⚠️ Pas de VotingWheel, exécution directe après délai');
+    setTimeout(() => {
+        document.body.classList.remove('randomWheel');
+        this.executeMove(winningMove);
+    }, wheelDuration);
+}
+
+
+
     selectRandomWeighted(results) {
-        const totalVotes = results.reduce((sum, r) => sum + r.votes, 0);
+        if (!results || results.length === 0) {
+            return null;
+        }
+        
+        // Calculer le total des votes
+        const totalVotes = results.reduce((sum, r) => sum + (r.count || 1), 0);
         let random = Math.random() * totalVotes;
         
         for (const result of results) {
-            random -= result.votes;
+            random -= (result.count || 1);
             if (random <= 0) {
                 return result.move;
             }
@@ -449,18 +641,55 @@ class GameEngine {
         }
     }
 
-    updateVotesUI(results) {
-        const container = document.getElementById('votes-list');
-        if (!container) return;
-
-        container.innerHTML = results.map(r => `
-            <div class="vote-item">
-                <span class="vote-move">${r.move}</span>
-                <span class="vote-count">${r.votes}</span>
-                <div class="vote-bar" style="width: ${r.percentage}%"></div>
-            </div>
-        `).join('');
+updateVotesUI(results) {
+    const votesList = document.getElementById('vote-list') 
+                   || document.querySelector('.vote-list');
+    
+    if (!votesList) {
+        console.warn('⚠️ Aucun conteneur #vote-list trouvé');
+        return;
     }
+    
+    if (!results || results.length === 0) {
+        votesList.innerHTML = '<div class="no-votes">Aucun vote</div>';
+        return;
+    }
+    
+    // Calculer le total depuis les résultats
+    const total = results.reduce((sum, r) => sum + (r.count || 0), 0);
+    
+    votesList.innerHTML = results.map((r, index) => {
+        const percentage = total > 0 ? Math.round((r.count / total) * 100) : 0;
+        const color = r.color || this.getVoteColor(index);
+        
+        return `
+            <div class="vote-item" data-move="${r.move}" style="--color: ${color}">
+                <span class="vote-bar" style="width: ${percentage}%; background: ${color}"></span>
+                <span class="vote-move">${r.move}</span>
+                <span class="vote-count">${r.count} (${percentage}%)</span>
+            </div>
+        `;
+    }).join('');
+    
+    // Mettre à jour le total
+    const totalEl = document.getElementById('vote-total');
+    if (totalEl) {
+        totalEl.textContent = `Total: ${total} vote${total > 1 ? 's' : ''}`;
+    }
+    
+    console.log('📊 UI votes mise à jour:', results.length, 'coups,', total, 'votes');
+}
+
+/**
+ * Retourne une couleur pour un index de vote
+ */
+getVoteColor(index) {
+    const colors = [
+        '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', 
+        '#f59e0b', '#ef4444', '#ec4899', '#6366f1'
+    ];
+    return colors[index % colors.length];
+}
 
     updateAvailableMoves() {
         const moves = this.chess.moves();
