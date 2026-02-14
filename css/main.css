@@ -207,7 +207,6 @@ img, video {
     opacity: 1;
     visibility: visible;
     animation: pageIn 0.3s ease-out;
-    padding-top: var(--nav-height);    
 }
 
 @keyframes pageIn {

@@ -10,6 +10,7 @@
     min-height: calc(100vh - var(--nav-height));
     padding: 40px 20px;
     text-align: center;
+    padding-top: var(--nav-height);    
 }
 
 /* Hero section */

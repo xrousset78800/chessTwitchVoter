@@ -146,7 +146,7 @@
     /*display: flex;*/
     flex-direction: column;
     gap: 16px;
-    max-height: calc(100vh - var(--nav-height) - 80px);
+    max-height: calc(70vh);
     overflow-y: auto;
 }
 
