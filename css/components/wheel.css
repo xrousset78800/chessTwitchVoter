@@ -340,6 +340,14 @@ body.randomWheel #wheel-area::before,
     opacity: 1;
 }
 
+#votes-panel {
+    position: fixed;
+    bottom: 40px;
+    min-width: 290px;
+    z-index: 1001;
+    opacity: 0.85;
+    left: 20px;
+}
 /* ============================================
    RESPONSIVE
    ============================================ */
