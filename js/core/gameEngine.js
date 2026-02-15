@@ -548,12 +548,23 @@ showWheelAnimation(results, winningMove) {
     
     // Utiliser VotingWheel si disponible
     if (this.votingWheel) {
+        // ========== SYNCHRONISER LA ROUE AVEC LES VOTES ==========
+        this.votingWheel.clear();
+        results.forEach((result, index) => {
+            // Ajouter chaque coup avec son nombre de votes
+            this.votingWheel.votes.set(result.move, { 
+                count: result.count, 
+                voters: new Map([['system', result.count]]) 
+            });
+        });
+        this.votingWheel.draw();
+        console.log('🎡 Roue synchronisée avec', results.length, 'coups');
+        
         this.showWheel();
         document.getElementById('wheel-area')?.classList.add('is-spinning');
-        console.log('🎡 Lancement de l\'animation de roue');
+        console.log('🎡 Lancement de l\'animation de roue, durée:', wheelDuration, 'ms');
         document.body.classList.add('randomWheel');
         
-        // La roue a déjà les votes (via onVoteAdded)
         // Définir le callback de fin
         this.votingWheel.onSpinEnd = (winner) => {
             console.log('🎯 Roue terminée, gagnant:', winner);
@@ -563,7 +574,7 @@ showWheelAnimation(results, winningMove) {
         };
         
         // Lancer le spin
-        this.votingWheel.spin(wheelDuration);
+        this.votingWheel.spin(wheelDuration, winningMove);
         return;
     }
     

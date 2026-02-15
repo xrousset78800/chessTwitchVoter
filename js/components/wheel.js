@@ -218,15 +218,17 @@ class VotingWheel {
     /**
      * Faire tourner la roue
      */
-    spin(duration = 5000) {
+    spin(duration = 5000, predeterminedWinner = null) {
         if (this.isSpinning || this.votes.size === 0) return null;
 
         this.isSpinning = true;
         this.container.querySelector('.wheel-container').classList.add('is-spinning');
 
-        // Déterminer le gagnant (tirage au sort pondéré)
-        const winner = this.pickWeightedRandom();
+        // Utiliser le gagnant pré-déterminé ou faire un tirage
+        const winner = predeterminedWinner || this.pickWeightedRandom();
         this.winner = winner;
+        
+        console.log('🎡 Roue spin vers:', winner, predeterminedWinner ? '(pré-déterminé)' : '(tirage)');
 
         // Calculer l'angle final
         const sortedVotes = this.getSortedVotes();

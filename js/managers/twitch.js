@@ -606,6 +606,9 @@ class TwitchManager {
      * Déconnexion
      */
     async disconnect() {
+        // Désactiver auto-reconnect pour éviter la reconnexion immédiate
+        this.settings.autoReconnect = false;
+        
         if (this.client) {
             try {
                 await this.client.disconnect();
@@ -614,8 +617,15 @@ class TwitchManager {
         }
         
         this.isConnected = false;
+        this.channel = null;
         this.linkedChannels.clear();
         this.setState('disconnected');
+        
+        // Supprimer du localStorage pour éviter restore() auto
+        localStorage.removeItem('twitch_channel');
+        
+        // Réactiver auto-reconnect pour les futures connexions
+        this.settings.autoReconnect = true;
         
         window.dispatchEvent(new Event('twitchDisconnected'));
     }
