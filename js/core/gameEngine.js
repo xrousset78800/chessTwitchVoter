@@ -595,7 +595,7 @@ showWheelAnimation(results, winningMove) {
         
         return results[0].move;
     }
-    
+
     highlightLastMove(from, to) {
         // Retirer les anciens highlights
         document.querySelectorAll('.highlight-last-move')
@@ -791,28 +791,7 @@ getVoteColor(index) {
     // ========== PANEL ==========
 
     createMovesPanel() {
-        if (document.getElementById('moves-panel')) return;
-        
-        const panel = document.createElement('div');
-        panel.id = 'moves-panel';
-        panel.className = 'moves-panel';
-        panel.innerHTML = `
-            <div class="moves-panel__header">Coups disponibles</div>
-            <div class="moves-panel__content">
-                <ul id="availableListP" class="moves-group"><span class="piece-icon">♙</span></ul>
-                <ul id="availableListN" class="moves-group"><span class="piece-icon">♞</span></ul>
-                <ul id="availableListB" class="moves-group"><span class="piece-icon">♝</span></ul>
-                <ul id="availableListR" class="moves-group"><span class="piece-icon">♜</span></ul>
-                <ul id="availableListQ" class="moves-group"><span class="piece-icon">♛</span></ul>
-                <ul id="availableListK" class="moves-group"><span class="piece-icon">♚</span></ul>
-                <ul id="availableListO" class="moves-group"><span class="piece-icon">⬚</span></ul>
-            </div>
-        `;
-        
-        const sidebar = document.querySelector('.sandbox__sidebar');
-        if (sidebar) {
-            sidebar.insertBefore(panel, sidebar.firstChild);
-        }
+        return;
     }
 
     // ========== TIMER MANUEL ==========

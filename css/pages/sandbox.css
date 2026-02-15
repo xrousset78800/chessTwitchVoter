@@ -36,13 +36,91 @@
     flex-wrap: wrap;
 }
 
-/* Main layout */
+/* Main layout - 3 colonnes */
 .sandbox__content {
     display: grid;
-    grid-template-columns: 1fr var(--sidebar-width);
+    grid-template-columns: 200px 1fr var(--sidebar-width);
     gap: 24px;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
+}
+
+/* Panel coups à gauche */
+.sandbox__moves-panel {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    padding: 16px;
+    height: fit-content;
+    position: sticky;
+    top: calc(var(--nav-height) + 20px);
+}
+
+.moves-panel__header {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-purple);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.moves-panel__content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sandbox__moves-panel .moves-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    margin: 0;
+    list-style: none;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-sm);
+    min-height: 32px;
+}
+
+.sandbox__moves-panel .moves-group:empty,
+.sandbox__moves-panel .moves-group:not(:has(li)) {
+    display: none;
+}
+
+.sandbox__moves-panel .piece-icon {
+    font-size: 1.1rem;
+    width: 22px;
+    opacity: 0.7;
+}
+
+.sandbox__moves-panel .moves-group button {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.sandbox__moves-panel .moves-group button:hover {
+    background: var(--accent-purple);
+    border-color: var(--accent-purple);
+    transform: translateY(-1px);
+}
+
+.sandbox__moves-panel .moves-group li.most-voted button {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: #000;
+    font-weight: 600;
 }
 
 /* Board area */

@@ -990,11 +990,20 @@ function setupConnectionHandlers() {
     document.querySelectorAll('[data-action="connect-twitch"]').forEach(btn => {
         btn.addEventListener('click', async () => {
             try {
-                await twitch?.connect();
-                updateConnectionUI();
-                Toast.success('Twitch connecté !');
+                // Toggle: si connecté → déconnecter
+                if (twitch?.isConnected) {
+                    await twitch.disconnect();
+                    updateConnectionUI();
+                    Toast.info('Twitch déconnecté');
+                } else {
+                    await twitch.connect();
+                    updateConnectionUI();
+                    Toast.success('Twitch connecté !');
+                }
             } catch (e) {
-                Toast.error('Connexion Twitch échouée');
+                if (e.message !== 'Connexion annulée') {
+                    Toast.error('Connexion Twitch échouée');
+                }
             }
         });
     });
