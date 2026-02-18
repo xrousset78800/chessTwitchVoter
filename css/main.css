@@ -1171,3 +1171,11 @@ body.showTimer .board-timer-container {
     background: var(--accent-purple);
     color: white;
 }
+.countdown.timer-paused ~ #timer-value {
+    animation: timerWaitingPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes timerWaitingPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}

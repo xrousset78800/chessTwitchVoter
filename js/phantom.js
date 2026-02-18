@@ -70,98 +70,6 @@ class PhantomChessboard {
     
     // ========== GESTION DE L'OVERLAY UI ==========
     
-    /**
-     * Affiche l'overlay de blocage (petit, sur la zone de vote)
-     */
-    showBlockingOverlay(message = 'Déplacement en cours...', queueSize = 0) {
-        let overlay = document.getElementById('phantom-blocking-overlay');
-        
-        // 🆕 Mettre en pause le timer de vote
-        this.pauseVoteTimer();
-        
-        // Trouver la zone de vote pour positionner l'overlay
-        const voteZone = document.querySelector('.votes') || document.querySelector('.poll') || document.querySelector('#vote-container');
-        
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'phantom-blocking-overlay';
-            overlay.innerHTML = `
-                <div class="phantom-overlay-spinner"></div>
-                <div class="phantom-overlay-message"></div>
-                <div class="phantom-overlay-queue"></div>
-            `;
-            
-            // Insérer dans la zone de vote si trouvée, sinon dans le body
-            if (voteZone) {
-                voteZone.style.position = 'relative';
-                voteZone.appendChild(overlay);
-            } else {
-                document.body.appendChild(overlay);
-            }
-            
-            // Ajouter les styles si pas déjà présents
-            if (!document.getElementById('phantom-overlay-styles')) {
-                const style = document.createElement('style');
-                style.id = 'phantom-overlay-styles';
-                style.textContent = `
-                    #phantom-blocking-overlay {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        background: rgba(20, 20, 40, 0.85);
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        border-radius: 10px;
-                        z-index: 100;
-                    }
-                    .phantom-overlay-spinner {
-                        width: 30px;
-                        height: 30px;
-                        border: 3px solid rgba(102, 126, 234, 0.3);
-                        border-top-color: #667eea;
-                        border-radius: 50%;
-                        animation: phantom-spin 1s linear infinite;
-                        margin-bottom: 10px;
-                    }
-                    @keyframes phantom-spin {
-                        to { transform: rotate(360deg); }
-                    }
-                    .phantom-overlay-message {
-                        color: white;
-                        font-size: 0.95em;
-                        font-weight: 500;
-                        margin-bottom: 5px;
-                    }
-                    .phantom-overlay-queue {
-                        color: rgba(255, 255, 255, 0.7);
-                        font-size: 0.8em;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-        }
-        
-        overlay.querySelector('.phantom-overlay-message').textContent = message;
-        overlay.querySelector('.phantom-overlay-queue').textContent = 
-            queueSize > 1 ? `${queueSize} coups en attente...` : '';
-        overlay.style.display = 'flex';
-    }
-    
-    /**
-     * Cache l'overlay de blocage
-     */
-    hideBlockingOverlay() {
-        const overlay = document.getElementById('phantom-blocking-overlay');
-        if (overlay) {
-            overlay.style.display = 'none';
-        }
-        
-        // 🆕 Reprendre le timer de vote
-        this.resumeVoteTimer();
-    }
     
     /**
      * 🆕 Met en pause le timer de vote (compatible avec chessVoterApp.js)
@@ -268,10 +176,7 @@ class PhantomChessboard {
      * Traite la file d'attente coup par coup
      */
     async processQueue() {
-        if (this.moveQueue.length === 0) {
-            this.isMoving = false;
-            this.hideBlockingOverlay();
-            this.log('✅ File d\'attente vide', 'success');
+        if (this.isMoving || this.moveQueue.length === 0) {
             return;
         }
         
@@ -279,7 +184,9 @@ class PhantomChessboard {
         const fen = this.moveQueue.shift();
         const remaining = this.moveQueue.length;
         
-        this.showBlockingOverlay('Déplacement en cours...', remaining + 1);
+        // Émettre l'événement pour mettre le timer en pause (seulement au premier coup)
+        window.dispatchEvent(new CustomEvent('phantomMoveStart'));
+        
         this.log(`🎯 Traitement du coup (${remaining} restants)`, 'info');
         
         try {
@@ -293,7 +200,16 @@ class PhantomChessboard {
         // Petit délai entre les mouvements pour laisser le board se stabiliser
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Traiter le prochain coup
+        // Si la queue est vide, le Phantom a terminé tous ses mouvements
+        if (this.moveQueue.length === 0) {
+            this.isMoving = false;
+            // Émettre l'événement APRÈS que BLE_MOVE_DONE a été reçu
+            window.dispatchEvent(new CustomEvent('phantomMoveComplete'));
+            return;
+        }
+        
+        // Traiter le prochain coup (sans réémettre phantomMoveStart)
+        this.isMoving = false;
         this.processQueue();
     }
     
@@ -408,7 +324,6 @@ class PhantomChessboard {
             this.device.addEventListener('gattserverdisconnected', () => {
                 this.log('🔌 Déconnecté', 'warn');
                 this.isConnected = false;
-                this.hideBlockingOverlay();
                 this.moveQueue = [];
                 this.isMoving = false;
                 this.updateUI(false);
@@ -477,7 +392,6 @@ class PhantomChessboard {
             this.device.gatt.disconnect();
         }
         this.isConnected = false;
-        this.hideBlockingOverlay();
         this.moveQueue = [];
         this.isMoving = false;
         
@@ -578,7 +492,6 @@ class PhantomChessboard {
         this.moveQueue = [];
         this.isMoving = false;
         this.lastFenSent = null; // 🆕 Réinitialiser pour permettre un nouveau GAME_START propre
-        this.hideBlockingOverlay();
         return await this.sendCommand(this.OP_CODES.GAME_END);
     }
     
@@ -1081,7 +994,6 @@ class PhantomChessboard {
         this.log(enabled ? '🟢 Activé' : '🔴 Désactivé', 'info');
         
         if (!enabled) {
-            this.hideBlockingOverlay();
             this.moveQueue = [];
             this.isMoving = false;
         }

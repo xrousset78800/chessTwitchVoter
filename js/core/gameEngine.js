@@ -475,7 +475,6 @@ playRandomMove() {
     
     // Mode majorité : coup aléatoire direct (pas d'animation)
     if (this.config.majorityMode) {
-        const randomMove = moves[Math.floor(Math.random() * moves.length)];
         console.log('🎲 Coup aléatoire (direct):', randomMove);
         this.executeMove(randomMove);
         return;
@@ -515,7 +514,7 @@ playRandomMove() {
     document.body.classList.add('randomWheel');
     
     // Lancer l'animation
-    this.showWheelAnimation(randomResults, randomMove);
+    this.showWheelAnimation(randomResults);
 }
 
 showWheel() {
@@ -540,7 +539,7 @@ hideWheel() {
      * @param {Array} results - [{move, count, color, percentage}, ...]
      * @param {string} winningMove - Le coup qui sera joué
      */
-showWheelAnimation(results, winningMove) {
+showWheelAnimation(results) {
     const wheelDuration = (this.config.wheelDuration || 5) * 1000;
     
     // Mettre à jour l'affichage des votes
@@ -574,7 +573,7 @@ showWheelAnimation(results, winningMove) {
         };
         
         // Lancer le spin
-        this.votingWheel.spin(wheelDuration, winningMove);
+        this.votingWheel.spin(wheelDuration);
         return;
     }
     
@@ -716,56 +715,64 @@ getVoteColor(index) {
     return colors[index % colors.length];
 }
 
-    updateAvailableMoves() {
-        const moves = this.chess.moves();
+updateAvailableMoves() {
+    const moves = this.chess.moves();
+    const turn = this.chess.turn(); // 'w' ou 'b'
+    
+    // Icônes par couleur
+    const pieceIcons = {
+        w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' },
+        b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' }
+    };
+    
+    // Grouper les coups par pièce
+    const groups = { P: [], N: [], B: [], R: [], Q: [], K: [], O: [] };
+    
+    moves.forEach(move => {
+        const cleanMove = move.replace('#', '').replace('+', '');
+        const firstChar = move.charAt(0);
         
-        // Grouper par pièce
-        const groups = {};
+        if (move.startsWith('O-') || move.startsWith('0-')) {
+            groups.O.push(cleanMove);
+        } else if (['K', 'Q', 'R', 'B', 'N'].includes(firstChar)) {
+            groups[firstChar].push(cleanMove);
+        } else {
+            groups.P.push(cleanMove);
+        }
+    });
+    
+    // Mettre à jour chaque liste avec l'icône de la bonne couleur
+    ['P', 'N', 'B', 'R', 'Q', 'K', 'O'].forEach(piece => {
+        const list = document.getElementById(`availableList${piece}`);
+        if (!list) return;
         
-        moves.forEach(move => {
-            let key;
-            
-            // Roque
-            if (move.startsWith('O-O')) {
-                key = 'O';
-            }
-            // Pions
-            else if (move[0] === move[0].toLowerCase()) {
-                key = 'P';
-            }
-            // Autres pièces
-            else {
-                key = move[0];
-            }
-            
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(move);
-        });
+        // Garder l'icône existante
+        const icon = list.querySelector('.piece-icon');
+        list.innerHTML = '';
         
-        // Ordre des pièces
-        const order = ['P', 'N', 'B', 'R', 'Q', 'K', 'O'];
+        // Recréer l'icône avec la bonne couleur
+        if (piece !== 'O') {
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'piece-icon';
+            iconSpan.textContent = pieceIcons[turn][piece];
+            list.appendChild(iconSpan);
+        } else if (icon) {
+            list.appendChild(icon);
+        }
         
-        // Mettre à jour les listes
-        order.forEach(piece => {
-            const list = document.getElementById(`availableList${piece}`);
-            if (!list) return;
-            
-            const icon = list.querySelector('.piece-icon');
-            list.innerHTML = '';
-            if (icon) list.appendChild(icon);
-            
-            if (groups[piece]) {
-                groups[piece].forEach(move => {
-                    const li = document.createElement('li');
-                    const btn = document.createElement('button');
-                    btn.textContent = move.replace("#", "");
-                    btn.onclick = () => this.onMoveClick(move);
-                    li.appendChild(btn);
-                    list.appendChild(li);
-                });
-            }
-        });
-    }
+        // Ajouter les coups
+        if (groups[piece]) {
+            groups[piece].forEach(move => {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.textContent = move;
+                btn.onclick = () => this.onMoveClick(move);  // ← Correction ici
+                li.appendChild(btn);
+                list.appendChild(li);
+            });
+        }
+    });
+}
 
     onMoveClick(move) {
         console.log('👆 Coup cliqué:', move);

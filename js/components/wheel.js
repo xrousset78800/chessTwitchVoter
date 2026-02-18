@@ -20,7 +20,10 @@ class VotingWheel {
         
         // Callbacks
         this.onSpinEnd = null;
-        
+        this.pieceIcons = {
+            w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' },
+            b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' }
+        };
         this.init();
     }
 
@@ -119,16 +122,21 @@ class VotingWheel {
     /**
      * Obtenir les votes triés
      */
-    getSortedVotes() {
-        return Array.from(this.votes.entries())
-            .map(([move, data]) => ({ move, count: data.count }))
-            .sort((a, b) => b.count - a.count);
-    }
+getSortedVotes() {
+    return Array.from(this.votes.entries())
+        .map(([move, data]) => ({ move, count: data.count }))
+        .sort((a, b) => {
+            // Tri stable : si même count, garder l'ordre d'insertion
+            if (b.count === a.count) return 0;
+            return b.count - a.count;
+        });
+}
 
     /**
      * Dessiner la roue
      */
     draw() {
+    console.log('🎨 DRAW called - isSpinning:', this.isSpinning, '- spinVotes exists:', !!this.spinVotes);
         const ctx = this.ctx;
         const width = this.canvas.width;
         const height = this.canvas.height;
@@ -136,11 +144,19 @@ class VotingWheel {
         const centerY = height / 2;
         const radius = Math.min(width, height) / 2 - 10;
 
+
+        const turn = window.gameEngine?.chess?.turn() || 'w';
+        const pieceIcons = {
+            w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' },
+            b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' }
+        };
+
+
         // Clear
         ctx.clearRect(0, 0, width, height);
 
-        const sortedVotes = this.getSortedVotes();
-        const totalVotes = this.getTotalVotes();
+   const sortedVotes = this.isSpinning && this.spinVotes ? this.spinVotes : this.getSortedVotes();
+    const totalVotes = this.isSpinning && this.spinTotalVotes ? this.spinTotalVotes : this.getTotalVotes();
 
         if (sortedVotes.length === 0) {
             // Dessiner un cercle vide
@@ -181,9 +197,11 @@ class VotingWheel {
             const textY = centerY + Math.sin(midAngle) * textRadius;
 
             // Icône de pièce
-            const pieceIcons = { 'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘' };
+            const pieceKey = vote.move.charAt(0).toUpperCase();
+            const isNamedPiece = ['K', 'Q', 'R', 'B', 'N'].includes(pieceKey);
+            const piece = isNamedPiece ? pieceKey : 'P';
+            const pieceIcon = this.pieceIcons[turn][piece];
             const firstChar = vote.move.charAt(0).toUpperCase();
-            const pieceIcon = pieceIcons[firstChar] || '♙';
 
             ctx.save();
             ctx.translate(textX, textY);
@@ -218,114 +236,147 @@ class VotingWheel {
     /**
      * Faire tourner la roue
      */
-    spin(duration = 5000, predeterminedWinner = null) {
-        if (this.isSpinning || this.votes.size === 0) return null;
+spin(duration = 5000) {
+    if (this.isSpinning || this.votes.size === 0) return null;
+    this.isSpinning = true;
+    this.container.querySelector('.wheel-container').classList.add('is-spinning');
+    
+    // Utiliser le gagnant pré-déterminé ou faire un tirage
+    const winner = this.pickWeightedRandom();
+    this.winner = winner;
 
-        this.isSpinning = true;
-        this.container.querySelector('.wheel-container').classList.add('is-spinning');
+    const sortedVotes = this.getSortedVotes();
+    const totalVotes = this.getTotalVotes();
 
-        // Utiliser le gagnant pré-déterminé ou faire un tirage
-        const winner = predeterminedWinner || this.pickWeightedRandom();
-        this.winner = winner;
-        
-        console.log('🎡 Roue spin vers:', winner, predeterminedWinner ? '(pré-déterminé)' : '(tirage)');
+    this.spinVotes = [...sortedVotes];
+    this.spinTotalVotes = totalVotes;
 
-        // Calculer l'angle final
-        const sortedVotes = this.getSortedVotes();
-        const totalVotes = this.getTotalVotes();
-        
-        let winnerStartAngle = 0;
-        let winnerEndAngle = 0;
-        let currentAngle = 0;
 
-        for (const vote of sortedVotes) {
-            const sliceAngle = (vote.count / totalVotes) * 2 * Math.PI;
-            if (vote.move === winner) {
-                winnerStartAngle = currentAngle;
-                winnerEndAngle = currentAngle + sliceAngle;
-                break;
-            }
-            currentAngle += sliceAngle;
+    
+    let winnerStartAngle = 0;
+    let winnerEndAngle = 0;
+    let currentAngle = 0;
+
+    for (const vote of sortedVotes) {
+        const sliceAngle = (vote.count / totalVotes) * 2 * Math.PI;
+        if (vote.move === winner) {
+            winnerStartAngle = currentAngle;
+            winnerEndAngle = currentAngle + sliceAngle;
+
+
+            break;
         }
-
-        // Angle au milieu du segment gagnant
-        const winnerMidAngle = (winnerStartAngle + winnerEndAngle) / 2;
-        
-        // La roue doit s'arrêter avec le gagnant en haut (angle -PI/2)
-        // On fait plusieurs tours + l'angle nécessaire
-        const spins = 5 + Math.random() * 3; // 5-8 tours
-        const targetAngle = spins * 2 * Math.PI - winnerMidAngle;
-
-        // Animation
-        const startTime = Date.now();
-        const startRotation = this.currentRotation;
-
-        const animate = () => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Easing: ease-out cubic
-            const eased = 1 - Math.pow(1 - progress, 3);
-            
-            this.currentRotation = startRotation + targetAngle * eased;
-            this.draw();
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                this.finishSpin();
-            }
-        };
-
-        requestAnimationFrame(animate);
-        
-        return new Promise(resolve => {
-            this._spinResolve = resolve;
-        });
+        currentAngle += sliceAngle;
     }
+    
+    // Angle au milieu du segment gagnant
+    const winnerMidAngle = (winnerStartAngle + winnerEndAngle) / 2;
+
+    // Le curseur est à DROITE (angle 0)
+    // Pour que le segment gagnant soit à droite, on doit tourner de façon à ce que
+    // currentRotation + winnerMidAngle = 0 (ou multiple de 2π)
+    // Donc targetAngle = -winnerMidAngle + tours complets
+const spins = 5 + Math.random() * 3;
+const targetAngle = (spins * 2 * Math.PI) + winnerMidAngle - this.currentRotation;
+
+
+    // Animation
+    const startTime = Date.now();
+    const startRotation = this.currentRotation;
+    
+    const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing: ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        
+        this.currentRotation = startRotation + targetAngle * eased;
+        this.draw();
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            this.finishSpin();
+        }
+    };
+    
+    requestAnimationFrame(animate);
+    
+    return new Promise(resolve => {
+        this._spinResolve = resolve;
+    });
+}
 
     /**
      * Fin du spin
      */
     finishSpin() {
+
+            console.log('🏁 FINISH DEBUG:');
+    console.log('  - this.winner:', this.winner);
+    console.log('  - this.spinVotes:', this.spinVotes?.map(v => v.move));
+    console.log('  - this.votes (actuel):', Array.from(this.votes.keys()));
+    console.log('  - Sont-ils identiques?', JSON.stringify(this.spinVotes?.map(v => v.move)) === JSON.stringify(Array.from(this.votes.keys())));
+
         this.isSpinning = false;
         this.container.querySelector('.wheel-container').classList.remove('is-spinning');
         
-        // Afficher le gagnant au centre
-        this.centerEl.textContent = this.winner;
-        this.centerEl.style.fontSize = '1.2rem';
+        // Déterminer la pièce du coup gagnant avec la bonne couleur
+        const turn = window.gameEngine?.chess?.turn() || 'w';
+        const pieceKey = this.winner.charAt(0).toUpperCase();
+        const isNamedPiece = ['K', 'Q', 'R', 'B', 'N'].includes(pieceKey);
+        const piece = isNamedPiece ? pieceKey : 'P';
+        const pieceIcon = this.pieceIcons[turn][piece];
+        
+        // Afficher la pièce + le coup au centre
+        this.centerEl.innerHTML = `<span class="winner-piece">${pieceIcon}</span><span class="winner-move">${this.winner}</span>`;
+        this.centerEl.classList.add('winner-reveal');
 
         // Highlight le gagnant dans la liste
         this.highlightWinner();
+console.log('🏁 FINISH - currentRotation:', this.currentRotation, '(deg):', (this.currentRotation * 180 / Math.PI) % 360);
 
-        // Callback
-        if (this.onSpinEnd) {
-            this.onSpinEnd(this.winner);
-        }
+        // Délai de 2 secondes pour visualiser le résultat
+        setTimeout(() => {
+            this.centerEl.classList.remove('winner-reveal');
+            
+            // Callback
+            if (this.onSpinEnd) {
+                this.onSpinEnd(this.winner);
+            }
 
-        if (this._spinResolve) {
-            this._spinResolve(this.winner);
-            this._spinResolve = null;
-        }
+            if (this._spinResolve) {
+                this._spinResolve(this.winner);
+                this._spinResolve = null;
+            }
+        }, 2000);
+        this.spinVotes = null;
+        this.spinTotalVotes = null;
     }
 
     /**
      * Tirage au sort pondéré
      */
-    pickWeightedRandom() {
-        const totalVotes = this.getTotalVotes();
-        let random = Math.random() * totalVotes;
-        
-        for (const [move, data] of this.votes) {
-            random -= data.count;
-            if (random <= 0) {
-                return move;
-            }
+pickWeightedRandom() {
+    console.log('🎲 pickWeightedRandom appelé');
+    console.log('  - this.votes:', Array.from(this.votes.entries()).map(([k,v]) => `${k}:${v.count}`));
+    
+    const totalVotes = this.getTotalVotes();
+    let random = Math.random() * totalVotes;
+    
+    for (const [move, data] of this.votes) {
+        random -= data.count;
+        if (random <= 0) {
+            console.log('  - Résultat:', move);
+            return move;
         }
-        
-        // Fallback
-        return this.votes.keys().next().value;
     }
+    
+    const fallback = this.votes.keys().next().value;
+    console.log('  - Fallback:', fallback);
+    return fallback;
+}
 
     /**
      * Obtenir le coup majoritaire
