@@ -340,34 +340,41 @@ class GameEngine {
 
     // ========== TIMER ==========
 
-    startTurn() {
-        if (this.config.timerEnabled) {
-            voting.reset();
-            voting.open();
-            timer.start(this.config.timerDuration);
-            
-            // Reset la roue
-            if (this.votingWheel) {
-                this.votingWheel.clear();
-            }
-        }
-        
+startTurn() {
+    // Mode problèmes : le timer est géré par problemsManager
+    if (window.problemsManager?.isActive) {
         this.updateAvailableMoves();
-        
-        if (this.onTurnChange) {
-            this.onTurnChange(this.currentTurn);
-        }
+        if (this.onTurnChange) this.onTurnChange(this.currentTurn);
+        return;
     }
+
+    if (this.config.timerEnabled) {
+        voting.reset();
+        voting.open();
+        timer.start(this.config.timerDuration);
+        if (this.votingWheel) this.votingWheel.clear();
+    }
+
+    this.updateAvailableMoves();
+    if (this.onTurnChange) this.onTurnChange(this.currentTurn);
+}
 
     onTimerTick(remaining) {
         // Peut être utilisé pour des animations
     }
 
-    onTimerComplete() {
-        console.log('⏱️ Timer terminé !');
-        voting.close();
-        this.processVoteResult();
+onTimerComplete() {
+    console.log('⏱️ Timer terminé !');
+
+    // Mode problèmes : ne pas traiter ici, c'est le problemsManager qui gère
+    if (window.problemsManager?.isActive) {
+        console.log('⏱️ Timer ignoré (mode problèmes actif)');
+        return;
     }
+
+    voting.close();
+    this.processVoteResult();
+}
 
     // ========== VOTES ==========
 
@@ -770,29 +777,31 @@ updateAvailableMoves() {
     });
 }
 
-    onMoveClick(move) {
-        console.log('👆 Coup cliqué:', move);
+onMoveClick(move) {
+    console.log('👆 Coup cliqué:', move);
 
-        // Mode problèmes
-        if (window.problemsManager?.isActive) {
-            window.problemsManager.validateAndPlayMove(move);
-            return;
-        }
-
-        // Mode timer : simuler un vote
+    // Mode problèmes avec timer : passer par receiveVote
+    if (window.problemsManager?.isActive) {
         if (this.config.timerEnabled) {
-            if (voting.isOpen) {
-                voting.addVote(this.currentVoterName, move);
-            } else {
-                console.log('⚠️ Votes fermés');
-            }
-            return;
+            window.problemsManager.receiveVote(move);
+        } else {
+            window.problemsManager.validateAndPlayMove(move);
         }
-
-        // Sans timer : jouer directement
-        this.executeMove(move);
-        this.updateAvailableMoves();
+        return;
     }
+
+    // Mode normal avec timer : voter
+    if (this.config.timerEnabled) {
+        if (voting.isOpen) {
+            voting.addVote(this.currentVoterName, move);
+        }
+        return;
+    }
+
+    // Sans timer : jouer directement
+    this.executeMove(move);
+    this.updateAvailableMoves();
+}
 
     // ========== VOTING INDICATOR ==========
 

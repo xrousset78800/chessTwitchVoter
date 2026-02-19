@@ -316,14 +316,26 @@ if (this.attemptIndex >= this.currentProblem.moves.length) {
     }
 startPlayerTurn() {
     if (!this.isActive) return;
-    
+
     this.votesForCurrentTurn = [];
     this.cancelVotingTimer();
-    
+
+    // Reset complet de la roue
+    const wheel = window.gameEngine?.votingWheel;
+    if (wheel) {
+        wheel.isSpinning = false;       // forcer fin de spin si encore actif
+        wheel.spinVotes = null;
+        wheel.spinTotalVotes = null;
+        wheel.clear();                  // reset votes + currentRotation
+        wheel.draw();
+        window.gameEngine.hideWheel();
+        document.body.classList.remove('randomWheel');
+    }
+
     if (this.config.timerEnabled && this.config.timerDuration > 0) {
         const duration = this.config.timerDuration;
         let remaining = duration;
-        
+
         document.body.classList.add('showTimer');
         const countdown = document.querySelector('.countdown');
         if (countdown) {
@@ -332,20 +344,19 @@ startPlayerTurn() {
         }
         const timerValue = document.getElementById('timer-value');
         if (timerValue) timerValue.textContent = duration;
-        
+
         this.votingOpen = true;
         console.log(`⏱️ Problème : timer de ${duration}s ouvert`);
-        
+
         this.votingTimerId = setInterval(() => {
             remaining--;
             if (countdown) countdown.style.setProperty('--t', remaining);
             if (timerValue) timerValue.textContent = remaining;
-            
+
             if (remaining <= 0) {
                 this.cancelVotingTimer();
                 document.body.classList.remove('showTimer');
                 this.votingOpen = false;
-                console.log('⏱️ Timer problème expiré, résolution des votes');
                 this.resolveVotes();
             }
         }, 1000);
@@ -375,6 +386,9 @@ receiveVote(move) {
     this.votesForCurrentTurn.push(move);
     console.log(`🗳️ Vote enregistré: ${move} (total: ${this.votesForCurrentTurn.length})`);
     
+    // ✅ Mettre à jour la roue en temps réel
+    this.syncWheelDisplay();
+    
     // Sans timer : jouer directement le premier vote
     if (!this.config.timerEnabled) {
         this.votingOpen = false;
@@ -383,14 +397,30 @@ receiveVote(move) {
     
     return true;
 }
+syncWheelDisplay() {
+    const wheel = window.gameEngine?.votingWheel;
+    if (!wheel || wheel.isSpinning) return;
 
-resolveVotes() {
-    if (!this.votesForCurrentTurn || this.votesForCurrentTurn.length === 0) {
-        console.log('⚠️ Aucun vote reçu, timer relancé');
-        this.startPlayerTurn();
-        return;
+    const counts = {};
+    this.votesForCurrentTurn.forEach(v => counts[v] = (counts[v] || 0) + 1);
+
+    if (Object.keys(counts).length === 0) return;
+
+    wheel.votes.clear();
+    Object.entries(counts).forEach(([move, count]) => {
+        wheel.votes.set(move, { count, voters: new Map([['twitch', count]]) });
+    });
+
+    wheel.draw();
+    wheel.updateVoteList();
+
+    // Afficher la roue si pas encore visible
+    const wheelArea = document.getElementById('wheel-area');
+    if (wheelArea && !wheelArea.classList.contains('is-visible')) {
+        window.gameEngine.showWheel();
     }
-    
+}
+resolveVotes() {
     const counts = {};
     this.votesForCurrentTurn.forEach(v => counts[v] = (counts[v] || 0) + 1);
     
