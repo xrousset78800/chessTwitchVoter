@@ -369,6 +369,7 @@ startPlayerTurn() {
 cancelVotingTimer() {
     if (this.votingTimerId) {
         clearInterval(this.votingTimerId);
+        if (window.AppState) AppState._timerIds = AppState._timerIds?.filter(id => id !== this.votingTimerId) ?? []; // ← AJOUTER
         this.votingTimerId = null;
     }
 }
@@ -753,7 +754,7 @@ document.body.classList.remove('showTimer');
                 this.loadRandomProblem();
             }
         }, 1000);
-        
+        if (window.AppState) AppState._timerIds.push(this.votingTimerId);
         console.log(`⏱️ Pause de ${pauseDuration}s avant prochain problème`);
     }
 

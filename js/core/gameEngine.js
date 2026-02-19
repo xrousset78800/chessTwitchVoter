@@ -778,9 +778,20 @@ updateAvailableMoves() {
 }
 
 onMoveClick(move) {
-    console.log('👆 Coup cliqué:', move);
+    // Mode problèmes (chessVoterApp) avec timer : passer par addMoveToPoll
+    if (typeof gameMode !== 'undefined' && gameMode === 'probMode') {
+        if (typeof timerMode !== 'undefined' && timerMode && typeof voteOpen !== 'undefined' && voteOpen) {
+            if (typeof addMoveToPoll === 'function') {
+                addMoveToPoll('local', move);
+            }
+        } else if (typeof voteOpen !== 'undefined' && voteOpen) {
+            // Sans timer : jouer directement via chessVoterApp
+            if (typeof executeMove === 'function') executeMove(move);
+        }
+        return;
+    }
 
-    // Mode problèmes avec timer : passer par receiveVote
+    // Mode problemsManager (gameEngine natif) avec timer
     if (window.problemsManager?.isActive) {
         if (this.config.timerEnabled) {
             window.problemsManager.receiveVote(move);

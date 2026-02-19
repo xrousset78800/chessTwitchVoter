@@ -238,8 +238,43 @@ const SandboxPage = {
         this.updateConditionalUI();
     },
 
-    // ========== INITIALISATION MODE PROBLÈMES ==========
-    
+async applyConfigAfterReload() {
+    document.body.classList.toggle('no-bg', AppState.config.noBg);
+
+    if (gameEngine.updateVotingIndicator) gameEngine.updateVotingIndicator();
+
+    if (AppState.gameMode === 'problems') {
+        if (!this.problemsInitialized) {
+            const success = await this.initProblemsMode();
+            if (!success) { Toast.error('Erreur initialisation mode problèmes'); return; }
+        }
+        problemsManager.clearThemes();
+        AppState.problems.selectedThemes.forEach(t => problemsManager.toggleTheme(t));
+        problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+        AppState.problems.isActive = true;
+        problemsManager.loadRandomProblem();
+        Toast.success('🧩 Mode Problèmes activé !');
+        return;
+    }
+
+    problemsManager.reset();
+    AppState.problems.isActive = false;
+
+    // Mettre à jour la config du GameEngine (copié de l'applyConfig existant)
+    gameEngine.config.timerEnabled = AppState.config.timerEnabled;
+    gameEngine.config.timerDuration = AppState.config.timerDuration;
+    gameEngine.config.wheelDuration = AppState.config.wheelDuration;
+    gameEngine.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+    gameEngine.config.majorityMode = AppState.config.majorityMode;
+    gameEngine.config.singleVote = AppState.config.singleVote;
+
+    gameEngine.mode = AppState.gameMode;
+    gameEngine.startGame();
+    Toast.success('✅ Configuration appliquée !');
+
+    if (gameEngine.updateVotingIndicator) gameEngine.updateVotingIndicator();
+},
+
     async initProblemsMode() {
         console.log('🧩 Initialisation du mode Problèmes...');
         
@@ -295,7 +330,7 @@ const SandboxPage = {
             this.addMoveToHistory(move, 'bot');
             this.syncPhantom();
         };
-        
+
 problemsManager.onResolveWithWheel = (results, callback) => {
     if (!gameEngine.votingWheel) {
         // Pas de roue : pondéré direct
@@ -687,96 +722,67 @@ problemsManager.onResolveWithWheel = (results, callback) => {
     /**
      * APPLIQUE LA CONFIG ET DÉMARRE LE JEU
      */
-    async applyConfig() {
-        console.log('🎮 Application de la configuration...');
-        console.log('📋 Mode sélectionné:', AppState.gameMode);
-        
-        // Sauvegarder dans localStorage
-        Storage.saveConfig();
-        
-        // Appliquer noBg
-        document.body.classList.toggle('no-bg', AppState.config.noBg);
+async applyConfig() {
+    Storage.saveConfig();
+    sessionStorage.setItem('autoStart', '1');
+    window.location.reload();
+},
+fullReset() {
+    console.log('🔄 Full reset de l\'état applicatif...');
 
-        if (gameEngine.updateVotingIndicator) {
-            gameEngine.updateVotingIndicator();
-        }        
+    // 1. Stopper le timer
+    if (window.timer) {
+        timer.stop();
+    }
 
-        // ========== MODE PROBLÈMES ==========
-        if (AppState.gameMode === 'problems') {
-            console.log('🧩 Activation du mode Problèmes...');
-            
-            // Initialiser le mode problèmes si nécessaire
-            if (!this.problemsInitialized) {
-                const success = await this.initProblemsMode();
-                if (!success) {
-                    Toast.error('Erreur initialisation mode problèmes');
-                    return;
-                }
-            }
-            
-            // Appliquer les thèmes sélectionnés
-            problemsManager.clearThemes();
-            AppState.problems.selectedThemes.forEach(theme => {
-                problemsManager.toggleTheme(theme);
-            });
-            
-            // Mettre à jour la config
-            problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
-            
-            // Marquer le mode comme actif
-            AppState.problems.isActive = true;
-            
-            // Charger le premier problème
-            problemsManager.loadRandomProblem();
-            
-            Toast.success('🧩 Mode Problèmes activé !');
-            
-            console.log('✅ Mode Problèmes configuré:', {
-                themes: Array.from(problemsManager.selectedThemes),
-                problemCount: problemsManager.getFilteredProblems().length
-            });
-            
-            return;
+    // 2. Stopper le voting system (intervalles de vote)
+    if (window.voting) {
+        voting.stop?.();
+        voting.reset?.();
+        // Fallback si pas de méthode stop
+        if (voting.intervalId) {
+            clearInterval(voting.intervalId);
+            voting.intervalId = null;
         }
-        if (AppState.gameMode !== 'problems') {
-            problemsManager.reset(); // ⬅️ Reset les highlights et timer
+        if (voting.timeout) {
+            clearTimeout(voting.timeout);
+            voting.timeout = null;
         }
-        // ========== AUTRES MODES ==========
-        
-        // Désactiver le mode problèmes si on change de mode
-        AppState.problems.isActive = false;
-        problemsManager.reset();
-        
-        // Mettre à jour la config du GameEngine
-        gameEngine.setConfig({
-            timerEnabled: AppState.config.timerEnabled,
-            timerDuration: AppState.config.timerDuration,
-            wheelDuration: AppState.config.wheelDuration,
-            pauseAfterEnd: AppState.config.pauseAfterEnd,
-            majorityMode: AppState.config.majorityMode,
-            singleVote: AppState.config.singleVote
+        voting.votes = {};
+        voting.isActive = false;
+    }
+
+    // 3. Stopper la roue
+    if (window.VotingWheel?.instance || document.querySelector('.voting-wheel')) {
+        // Nettoyer l'animation en cours si besoin
+        const wheel = document.querySelector('.voting-wheel');
+        if (wheel) wheel.style.animation = 'none';
+    }
+
+    // 4. Reset du gameEngine
+    if (window.gameEngine) {
+        gameEngine.isRunning = false;
+        gameEngine.reset?.();
+    }
+
+    // 5. Reset du problemsManager si actif
+    if (window.problemsManager?.isActive) {
+        problemsManager.stop?.();
+        problemsManager.isActive = false;
+    }
+
+    // 6. Nettoyer tous les timers orphelins via les IDs connus
+    // (sécurité supplémentaire)
+    if (AppState._timerIds) {
+        AppState._timerIds.forEach(id => {
+            clearInterval(id);
+            clearTimeout(id);
         });
-        
-        // Configurer le mode de jeu
-        gameEngine.mode = AppState.gameMode;
-        
-        // Démarrer le jeu
-        gameEngine.startGame();
-        
-        // Notification
-        Toast.success('✅ Configuration appliquée !');
-        
-        console.log('✅ Config appliquée:', {
-            mode: AppState.gameMode,
-            timer: AppState.config.timerEnabled,
-            duration: AppState.config.timerDuration
-        });
-        
-        if (gameEngine.updateVotingIndicator) {
-            gameEngine.updateVotingIndicator();
-        }
-    },
+        AppState._timerIds = [];
+    }
 
+    console.log('✅ Full reset terminé');
+},
     syncUIFromState() {
         // Mode de jeu
         document.querySelectorAll('.mode-option').forEach(o => {
@@ -1144,7 +1150,11 @@ async function initApp() {
             }
         };
     }
-
+    if (sessionStorage.getItem('autoStart') === '1') {
+        sessionStorage.removeItem('autoStart');
+        // Attendre que SandboxPage soit init via le Router
+        setTimeout(() => SandboxPage.applyConfigAfterReload(), 100);
+    }
     // Écouter les événements Phantom pour pause/resume du timer
     window.addEventListener('phantomMoveStart', () => {
         if (AppState.config.timerEnabled && timer.isRunning) {

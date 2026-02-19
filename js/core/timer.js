@@ -68,6 +68,7 @@ class Timer {
         
         // Démarrer l'interval
         this.intervalId = setInterval(() => this.tick(), 1000);
+        if (window.AppState) AppState._timerIds.push(this.intervalId);
         
         console.log('▶️ Timer démarré:', this.duration, 'secondes');
     }
@@ -115,6 +116,7 @@ class Timer {
     stop() {
         if (this.intervalId) {
             clearInterval(this.intervalId);
+            if (window.AppState) AppState._timerIds = AppState._timerIds?.filter(id => id !== this.intervalId) ?? []; // ← AJOUTER
             this.intervalId = null;
         }
         
