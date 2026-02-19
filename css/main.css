@@ -56,7 +56,7 @@
     /* Spacing */
     --nav-height: 70px;
     --sidebar-width: 380px;
-    
+
     --wheel-size: 400px;
     --wheel-inner-size: calc(var(--wheel-size) * 0.65); 
     --wheel-center-size: calc(var(--wheel-size) * 0.20);
@@ -1178,4 +1178,7 @@ body.showTimer .board-timer-container {
 @keyframes timerWaitingPulse {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 1; }
+}
+.wheel-center.winner-reveal {
+    background: var(--winner-color, #10b981) !important;
 }

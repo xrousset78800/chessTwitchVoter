@@ -18,7 +18,11 @@ class ProblemsManager {
         
         // Timer de pause entre problèmes
         this.pauseTimerId = null;
-        
+        this.votingTimerId = null;
+        this.votingOpen = false;
+        this.votesForCurrentTurn = [];
+        this.onResolveWithWheel = null;
+
         // Filtres
         this.selectedThemes = new Set();
         this.themeStats = {};
@@ -31,7 +35,11 @@ class ProblemsManager {
         this.config = {
             csvPath: 'js/problemsV2.csv',
             pauseAfterEnd: 5,
-            botMoveDelay: 1200
+            botMoveDelay: 1200,
+            timerEnabled: false,
+            timerDuration: 25,
+            majorityMode: false,
+            wheelDuration: 5,
         };
         
         // Callbacks
@@ -295,13 +303,121 @@ class ProblemsManager {
 
         this.emitStateChange();
 
-        if (this.attemptIndex >= this.currentProblem.moves.length) {
-            this.handleProblemSolved();
-        }
+if (this.attemptIndex >= this.currentProblem.moves.length) {
+    this.handleProblemSolved();
+} else if (this.attemptIndex % 2 === 1) {
+    // Tour du joueur : ouvrir les votes/timer
+    setTimeout(() => {
+        this.startPlayerTurn();
+    }, 300);
+}
 
         return result;
     }
+startPlayerTurn() {
+    if (!this.isActive) return;
+    
+    this.votesForCurrentTurn = [];
+    this.cancelVotingTimer();
+    
+    if (this.config.timerEnabled && this.config.timerDuration > 0) {
+        const duration = this.config.timerDuration;
+        let remaining = duration;
+        
+        document.body.classList.add('showTimer');
+        const countdown = document.querySelector('.countdown');
+        if (countdown) {
+            countdown.style.setProperty('--q', duration);
+            countdown.style.setProperty('--t', duration);
+        }
+        const timerValue = document.getElementById('timer-value');
+        if (timerValue) timerValue.textContent = duration;
+        
+        this.votingOpen = true;
+        console.log(`⏱️ Problème : timer de ${duration}s ouvert`);
+        
+        this.votingTimerId = setInterval(() => {
+            remaining--;
+            if (countdown) countdown.style.setProperty('--t', remaining);
+            if (timerValue) timerValue.textContent = remaining;
+            
+            if (remaining <= 0) {
+                this.cancelVotingTimer();
+                document.body.classList.remove('showTimer');
+                this.votingOpen = false;
+                console.log('⏱️ Timer problème expiré, résolution des votes');
+                this.resolveVotes();
+            }
+        }, 1000);
+    } else {
+        this.votingOpen = true;
+        console.log('🗳️ Problème : votes ouverts (sans timer)');
+    }
+}
 
+cancelVotingTimer() {
+    if (this.votingTimerId) {
+        clearInterval(this.votingTimerId);
+        this.votingTimerId = null;
+    }
+}
+
+receiveVote(move) {
+    if (!this.votingOpen) {
+        console.log('🗳️ Vote rejeté : votes fermés');
+        return false;
+    }
+    if (!this.isActive || this.attemptIndex % 2 !== 1) {
+        console.log('🗳️ Vote rejeté : pas le tour du joueur');
+        return false;
+    }
+    
+    this.votesForCurrentTurn.push(move);
+    console.log(`🗳️ Vote enregistré: ${move} (total: ${this.votesForCurrentTurn.length})`);
+    
+    // Sans timer : jouer directement le premier vote
+    if (!this.config.timerEnabled) {
+        this.votingOpen = false;
+        this.validateAndPlayMove(move);
+    }
+    
+    return true;
+}
+
+resolveVotes() {
+    if (!this.votesForCurrentTurn || this.votesForCurrentTurn.length === 0) {
+        console.log('⚠️ Aucun vote reçu, timer relancé');
+        this.startPlayerTurn();
+        return;
+    }
+    
+    const counts = {};
+    this.votesForCurrentTurn.forEach(v => counts[v] = (counts[v] || 0) + 1);
+    
+    if (this.config.majorityMode) {
+        const winner = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+        console.log(`🏆 Résolution majorité: ${winner}`);
+        this.validateAndPlayMove(winner);
+    } else {
+        const results = Object.entries(counts).map(([move, count]) => ({ move, count }));
+        if (this.onResolveWithWheel) {
+            console.log('🎡 Délégation roue au gameEngine');
+            this.onResolveWithWheel(results, (winner) => {
+                this.validateAndPlayMove(winner);
+            });
+        } else {
+            // Fallback sans roue
+            const total = results.reduce((s, r) => s + r.count, 0);
+            let rand = Math.random() * total;
+            let winner = results[0].move;
+            for (const r of results) {
+                rand -= r.count;
+                if (rand <= 0) { winner = r.move; break; }
+            }
+            this.validateAndPlayMove(winner);
+        }
+    }
+}
     validateAndPlayMove(move) {
         if (!this.isActive || !this.currentProblem) {
             return { valid: false, correct: false, reason: 'Aucun problème actif' };
@@ -347,6 +463,10 @@ class ProblemsManager {
             this.playSound(result);
 
             this.attemptIndex++;
+this.votingOpen = false;
+this.cancelVotingTimer();
+document.body.classList.remove('showTimer');
+
 
             console.log(`✅ Correct! ${result.san} (index maintenant: ${this.attemptIndex})`);
 
@@ -720,7 +840,10 @@ class ProblemsManager {
     reset() {
         // ⭐ Annuler le timer de pause
         this.cancelPauseTimer();
-        
+        this.cancelVotingTimer();
+        this.votingOpen = false;
+        this.votesForCurrentTurn = [];
+
         // ⭐ Reset les highlights
         this.clearHighlights();
         
@@ -731,6 +854,7 @@ class ProblemsManager {
         this.currentProblem = null;
         this.attemptIndex = 0;
         this.isActive = false;
+
         this.emitStateChange();
     }
 }

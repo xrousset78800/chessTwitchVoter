@@ -260,7 +260,11 @@ const SandboxPage = {
             board: gameEngine.board,
             config: {
                 pauseAfterEnd: AppState.config.pauseAfterEnd || 5,
-                botMoveDelay: 1200
+                botMoveDelay: 1200,
+                timerEnabled: AppState.config.timerEnabled,
+                timerDuration: AppState.config.timerDuration,
+                majorityMode: AppState.config.majorityMode,
+                wheelDuration: AppState.config.wheelDuration
             }
         });
         
@@ -292,6 +296,41 @@ const SandboxPage = {
             this.syncPhantom();
         };
         
+problemsManager.onResolveWithWheel = (results, callback) => {
+    if (!gameEngine.votingWheel) {
+        // Pas de roue : pondéré direct
+        const total = results.reduce((s, r) => s + r.count, 0);
+        let rand = Math.random() * total;
+        let winner = results[0].move;
+        for (const r of results) {
+            rand -= r.count;
+            if (rand <= 0) { winner = r.move; break; }
+        }
+        callback(winner);
+        return;
+    }
+    
+    gameEngine.votingWheel.clear();
+    results.forEach(r => {
+        gameEngine.votingWheel.votes.set(r.move, {
+            count: r.count,
+            voters: new Map([['system', r.count]])
+        });
+    });
+    gameEngine.votingWheel.draw();
+    gameEngine.showWheel();
+    document.body.classList.add('randomWheel');
+    
+    const wheelDuration = (AppState.config.wheelDuration || 5) * 1000;
+    gameEngine.votingWheel.onSpinEnd = (winner) => {
+        document.body.classList.remove('randomWheel');
+        gameEngine.hideWheel();
+        callback(winner);
+    };
+    gameEngine.votingWheel.spin(wheelDuration);
+};
+
+
         // Joueur correct
         problemsManager.onCorrectMove = (move) => {
             console.log('✅ Correct:', move.san);
@@ -1094,8 +1133,8 @@ async function initApp() {
         twitch.onVote = (voteContext) => {
             // En mode problèmes, envoyer le vote au problemsManager
             if (AppState.gameMode === 'problems' && problemsManager.isActive) {
-                const result = problemsManager.validateAndPlayMove(voteContext.move);
-                console.log(`🗳️ Vote Twitch en mode problème: ${voteContext.move}`, result);
+                const accepted = problemsManager.receiveVote(voteContext.move);
+                console.log(`🗳️ Vote problème: ${voteContext.move} →`, accepted ? 'accepté' : 'ignoré');
                 return;
             }
             

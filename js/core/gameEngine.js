@@ -542,15 +542,12 @@ hideWheel() {
 showWheelAnimation(results) {
     const wheelDuration = (this.config.wheelDuration || 5) * 1000;
     
-    // Mettre à jour l'affichage des votes
     this.updateVotesUI(results);
     
-    // Utiliser VotingWheel si disponible
     if (this.votingWheel) {
-        // ========== SYNCHRONISER LA ROUE AVEC LES VOTES ==========
+        // Synchroniser la roue
         this.votingWheel.clear();
-        results.forEach((result, index) => {
-            // Ajouter chaque coup avec son nombre de votes
+        results.forEach((result) => {
             this.votingWheel.votes.set(result.move, { 
                 count: result.count, 
                 voters: new Map([['system', result.count]]) 
@@ -564,7 +561,6 @@ showWheelAnimation(results) {
         console.log('🎡 Lancement de l\'animation de roue, durée:', wheelDuration, 'ms');
         document.body.classList.add('randomWheel');
         
-        // Définir le callback de fin
         this.votingWheel.onSpinEnd = (winner) => {
             console.log('🎯 Roue terminée, gagnant:', winner);
             document.body.classList.remove('randomWheel');
@@ -572,16 +568,16 @@ showWheelAnimation(results) {
             this.hideWheel();
         };
         
-        // Lancer le spin
-        this.votingWheel.spin(wheelDuration);
+        // ✅ Passer le gagnant pré-déterminé à spin()
+        const forcedWinner = results[0].move;
+        this.votingWheel.spin(wheelDuration, forcedWinner);
         return;
     }
     
-    // Fallback si pas de roue : sélection directe après délai
-    console.log('⚠️ Pas de VotingWheel, exécution directe après délai');
+    // Fallback
     setTimeout(() => {
         document.body.classList.remove('randomWheel');
-        this.executeMove(winningMove);
+        this.executeMove(results[0].move);
     }, wheelDuration);
 }
 
@@ -776,25 +772,26 @@ updateAvailableMoves() {
 
     onMoveClick(move) {
         console.log('👆 Coup cliqué:', move);
-        
-        // ========== MODE PROBLÈMES ==========
+
+        // Mode problèmes
         if (window.problemsManager?.isActive) {
-            const result = window.problemsManager.validateAndPlayMove(move);
-            console.log('🧩 Résultat clic:', result);
+            window.problemsManager.validateAndPlayMove(move);
             return;
         }
-        
-        // ========== MODE NORMAL ==========
-        if (!this.config.timerEnabled) {
-            this.executeMove(move);
-            this.updateAvailableMoves();
+
+        // Mode timer : simuler un vote
+        if (this.config.timerEnabled) {
+            if (voting.isOpen) {
+                voting.addVote(this.currentVoterName, move);
+            } else {
+                console.log('⚠️ Votes fermés');
+            }
             return;
         }
-        
-        // Mode avec timer : ajouter un vote
-        if (voting.isOpen) {
-            voting.addVote(this.currentVoterName, move);
-        }
+
+        // Sans timer : jouer directement
+        this.executeMove(move);
+        this.updateAvailableMoves();
     }
 
     // ========== VOTING INDICATOR ==========
