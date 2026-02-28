@@ -316,62 +316,24 @@ if (this.attemptIndex >= this.currentProblem.moves.length) {
     }
 startPlayerTurn() {
     if (!this.isActive) return;
-
-    this.votesForCurrentTurn = [];
     this.cancelVotingTimer();
-
-    // Reset complet de la roue
-    const wheel = window.gameEngine?.votingWheel;
-    if (wheel) {
-        wheel.isSpinning = false;       // forcer fin de spin si encore actif
-        wheel.spinVotes = null;
-        wheel.spinTotalVotes = null;
-        wheel.clear();                  // reset votes + currentRotation
-        wheel.draw();
-        window.gameEngine.hideWheel();
-        document.body.classList.remove('randomWheel');
-    }
+    this._resetWheel();
 
     if (this.config.timerEnabled && this.config.timerDuration > 0) {
-        const duration = this.config.timerDuration;
-        let remaining = duration;
-
-        document.body.classList.add('showTimer');
-        const countdown = document.querySelector('.countdown');
-        if (countdown) {
-            countdown.style.setProperty('--q', duration);
-            countdown.style.setProperty('--t', duration);
-        }
-        const timerValue = document.getElementById('timer-value');
-        if (timerValue) timerValue.textContent = duration;
-
         this.votingOpen = true;
-        console.log(`⏱️ Problème : timer de ${duration}s ouvert`);
-
-        this.votingTimerId = setInterval(() => {
-            remaining--;
-            if (countdown) countdown.style.setProperty('--t', remaining);
-            if (timerValue) timerValue.textContent = remaining;
-
-            if (remaining <= 0) {
-                this.cancelVotingTimer();
-                document.body.classList.remove('showTimer');
-                this.votingOpen = false;
-                this.resolveVotes();
-            }
-        }, 1000);
+        window.timer.start(this.config.timerDuration);
+        window.timer.onComplete = () => {
+            this.votingOpen = false;
+            this.resolveVotes();
+        };
     } else {
         this.votingOpen = true;
-        console.log('🗳️ Problème : votes ouverts (sans timer)');
     }
 }
 
 cancelVotingTimer() {
-    if (this.votingTimerId) {
-        clearInterval(this.votingTimerId);
-        if (window.AppState) AppState._timerIds = AppState._timerIds?.filter(id => id !== this.votingTimerId) ?? []; // ← AJOUTER
-        this.votingTimerId = null;
-    }
+    timer.stop();
+    this.votingTimerId = null; // gardé pour compatibilité mais inutilisé
 }
 
 receiveVote(move) {
@@ -425,6 +387,13 @@ resolveVotes() {
     const counts = {};
     this.votesForCurrentTurn.forEach(v => counts[v] = (counts[v] || 0) + 1);
     
+
+    if (Object.keys(counts).length === 0) {
+        console.log('⏱️ Timer expiré sans vote → problème perdu');
+        this.handleProblemFailed();
+        return;
+    }
+
     if (this.config.majorityMode) {
         const winner = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
         console.log(`🏆 Résolution majorité: ${winner}`);
@@ -494,9 +463,22 @@ resolveVotes() {
             this.playSound(result);
 
             this.attemptIndex++;
-this.votingOpen = false;
-this.cancelVotingTimer();
-document.body.classList.remove('showTimer');
+            this.votingOpen = false;
+            this.cancelVotingTimer();
+            document.body.classList.remove('showTimer');
+            this.votesForCurrentTurn = [];
+
+            // Reset de la roue
+            const wheel = window.gameEngine?.votingWheel;
+            if (wheel) {
+                wheel.isSpinning = false;
+                wheel.spinVotes = null;
+                wheel.spinTotalVotes = null;
+                wheel.clear();
+                wheel.draw();
+                window.gameEngine.hideWheel();
+                document.body.classList.remove('randomWheel');
+            }
 
 
             console.log(`✅ Correct! ${result.san} (index maintenant: ${this.attemptIndex})`);
@@ -582,8 +564,13 @@ document.body.classList.remove('showTimer');
                     const btn = document.createElement('button');
                     btn.textContent = move.replace("#", "");
                     btn.onclick = () => {
-                        const result = this.validateAndPlayMove(move);
-                        console.log('🧩 Clic sur coup:', move, result);
+                        if (this.config.timerEnabled && this.votingOpen) {
+                            this.receiveVote(move);
+                            console.log('🗳️ Vote ajouté via clic:', move);
+                        } else {
+                            const result = this.validateAndPlayMove(move);
+                            console.log('🧩 Clic sur coup:', move, result);
+                        }
                     };
                     li.appendChild(btn);
                     list.appendChild(li);
@@ -603,13 +590,16 @@ document.body.classList.remove('showTimer');
             return move.from + move.to + (move.promotion || '');
         }
 
-        const str = String(move).trim().toLowerCase();
+        const str = String(move).trim();
+        const strLower = str;
 
-        const uciMatch = str.match(/^([a-h][1-8])-?([a-h][1-8])([qrbn])?$/);
+        // UCI : toujours en minuscules (ex: e2e4)
+        const uciMatch = strLower.match(/^([a-h][1-8])-?([a-h][1-8])([qrbn])?$/);
         if (uciMatch) {
             return uciMatch[1] + uciMatch[2] + (uciMatch[3] || '');
         }
 
+        // Roque
         if (/^(o-o-o|0-0-0)$/i.test(str)) {
             const turn = this.chess?.turn();
             return turn === 'w' ? 'e1c1' : 'e8c8';
@@ -620,6 +610,7 @@ document.body.classList.remove('showTimer');
         }
 
         try {
+            // SAN : conserver la casse originale (Bc3 ≠ bc3 pour chess.js)
             const result = this.chess?.move(str);
             if (result) {
                 const uci = result.from + result.to + (result.promotion || '');
@@ -673,105 +664,63 @@ document.body.classList.remove('showTimer');
     }
 
     // ========== FIN DE PROBLÈME ==========
-
-    handleProblemSolved() {
-        console.log('🎉 PROBLÈME RÉSOLU !');
-        
-        this.isActive = false;
-        
-        try {
-            this.sounds.success?.play();
-        } catch {}
-        
-        if (this.onProblemSolved) {
-            this.onProblemSolved(this.currentProblem);
-        }
-        
-        this.emitStateChange();
-        
-        // ⭐ Utiliser le timer inline pour la pause
-        this.startPauseTimer('solved');
+_resetWheel() {
+    this.votesForCurrentTurn = [];
+    const wheel = window.gameEngine?.votingWheel;
+    if (wheel) {
+        wheel.isSpinning = false;
+        wheel.spinVotes = null;
+        wheel.spinTotalVotes = null;
+        wheel.clear();
+        wheel.draw();
+        window.gameEngine.hideWheel();
+        document.body.classList.remove('randomWheel');
     }
+}
+handleProblemSolved() {
+    console.log('🎉 PROBLÈME RÉSOLU !');
+    this.isActive = false;
+    this._resetWheel();
+    try { this.sounds.success?.play(); } catch {}
+    if (this.onProblemSolved) this.onProblemSolved(this.currentProblem);
+    this.emitStateChange();
+    this.startPauseTimer('solved');
+}
 
-    handleProblemFailed() {
-        console.log('💔 PROBLÈME ÉCHOUÉ');
-        
-        this.isActive = false;
-        
-        try {
-            this.sounds.fail?.play();
-        } catch {}
-        
-        if (this.onProblemFailed) {
-            this.onProblemFailed(this.currentProblem);
-        }
-        
-        this.emitStateChange();
-        
-        // ⭐ Utiliser le timer inline pour la pause
-        this.startPauseTimer('failed');
-    }
+handleProblemFailed() {
+    console.log('💔 PROBLÈME ÉCHOUÉ');
+    this.isActive = false;
+    this._resetWheel();
+    try { this.sounds.fail?.play(); } catch {}
+    if (this.onProblemFailed) this.onProblemFailed(this.currentProblem);
+    this.emitStateChange();
+    this.startPauseTimer('failed');
+}
 
     // ========== TIMER DE PAUSE INLINE ==========
 
-    startPauseTimer(status) {
-        const pauseDuration = this.config.pauseAfterEnd || 5;
-        let remaining = pauseDuration;
-        
-        // Afficher le message dans le timer
-        this.showTimerMessage(status, remaining);
-        
-        // Afficher le timer
-        document.body.classList.add('showTimer');
-        
-        // Mettre à jour le countdown circulaire
-        const countdown = document.querySelector('.countdown');
-        if (countdown) {
-            countdown.style.setProperty('--q', pauseDuration);
-            countdown.style.setProperty('--t', remaining);
-        }
-        
-        // ⭐ IMPORTANT: Annuler tout timer précédent
-        this.cancelPauseTimer();
-        
-        // Démarrer le countdown
-        this.pauseTimerId = setInterval(() => {
-            remaining--;
-            
-            // Mettre à jour l'affichage
-            this.showTimerMessage(status, remaining);
-            
-            // Mettre à jour le cercle
-            if (countdown) {
-                countdown.style.setProperty('--t', remaining);
-            }
-            
-            // Fin du timer
-            if (remaining <= 0) {
-                this.cancelPauseTimer();
-                document.body.classList.remove('showTimer');
-                this.hideTimerMessage();
-                this.loadRandomProblem();
-            }
-        }, 1000);
-        if (window.AppState) AppState._timerIds.push(this.votingTimerId);
-        console.log(`⏱️ Pause de ${pauseDuration}s avant prochain problème`);
-    }
+startPauseTimer(status) {
+    const pauseDuration = this.config.pauseAfterEnd || 5;
+    this.showTimerMessage(status, pauseDuration);
 
-    cancelPauseTimer() {
-        if (this.pauseTimerId) {
-            clearInterval(this.pauseTimerId);
-            this.pauseTimerId = null;
-            console.log('⏱️ Timer de pause annulé');
-        }
+    window.timer.start(pauseDuration);
+    window.timer.onTick = (remaining) => {
+        window.timer.onComplete = () => {
+            this.hideTimerMessage();
+            this.loadRandomProblem();
+        };
     }
+}
+cancelVotingTimer() {
+    if (window.timer) window.timer.stop();
+    this.votingTimerId = null;
+}
 
-    skipPause() {
-        this.cancelPauseTimer();
-        document.body.classList.remove('showTimer');
-        this.hideTimerMessage();
-        this.loadRandomProblem();
-    }
+skipPause() {
+    if (window.timer) window.timer.stop();
+    this.hideTimerMessage();
+    this.loadRandomProblem();
+}
 
     showTimerMessage(status, seconds) {
         const timerValue = document.getElementById('timer-value');
@@ -867,6 +816,11 @@ document.body.classList.remove('showTimer');
     isLoaded() {
         return this.problems.length > 0;
     }
+
+cancelPauseTimer() {
+    if (window.timer) window.timer.stop();
+    this.pauseTimerId = null;
+}
 
     reset() {
         // ⭐ Annuler le timer de pause

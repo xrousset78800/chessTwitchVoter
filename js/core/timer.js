@@ -69,7 +69,7 @@ class Timer {
         // Démarrer l'interval
         this.intervalId = setInterval(() => this.tick(), 1000);
         if (window.AppState) AppState._timerIds.push(this.intervalId);
-        
+
         console.log('▶️ Timer démarré:', this.duration, 'secondes');
     }
 
@@ -229,6 +229,7 @@ class Timer {
 
 // Instance singleton
 const timer = new Timer();
+window.timer = timer;
 
 (function() {
     'use strict';
