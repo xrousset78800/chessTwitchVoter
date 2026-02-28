@@ -1137,9 +1137,8 @@ async function initApp() {
     // Écouter les votes Twitch
     if (twitch) {
         twitch.onVote = (voteContext) => {
-            // En mode problèmes, envoyer le vote au problemsManager
             if (AppState.gameMode === 'problems' && problemsManager.isActive) {
-                const accepted = problemsManager.receiveVote(voteContext.move);
+                const accepted = problemsManager.receiveVote(voteContext);
                 console.log(`🗳️ Vote problème: ${voteContext.move} →`, accepted ? 'accepté' : 'ignoré');
                 return;
             }

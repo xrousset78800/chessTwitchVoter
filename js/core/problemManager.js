@@ -336,7 +336,10 @@ cancelVotingTimer() {
     this.votingTimerId = null; // gardé pour compatibilité mais inutilisé
 }
 
-receiveVote(move) {
+receiveVote(voteData) {
+    const move = typeof voteData === 'string' ? voteData : voteData.move;
+    const username = typeof voteData === 'string' ? 'anonyme' : (voteData.displayName || voteData.username || 'anonyme');
+    
     if (!this.votingOpen) {
         console.log('🗳️ Vote rejeté : votes fermés');
         return false;
@@ -346,13 +349,14 @@ receiveVote(move) {
         return false;
     }
     
-    this.votesForCurrentTurn.push(move);
-    console.log(`🗳️ Vote enregistré: ${move} (total: ${this.votesForCurrentTurn.length})`);
+    this.votesForCurrentTurn.push({ move, username });
+    console.log(`🗳️ Vote enregistré: ${move} par ${username} (total: ${this.votesForCurrentTurn.length})`);
     
-    // ✅ Mettre à jour la roue en temps réel
+    // Log dans la sidebar
+    if (window.VoteLog) window.VoteLog.add(username, move);
+    
     this.syncWheelDisplay();
     
-    // Sans timer : jouer directement le premier vote
     if (!this.config.timerEnabled) {
         this.votingOpen = false;
         this.validateAndPlayMove(move);
@@ -360,12 +364,16 @@ receiveVote(move) {
     
     return true;
 }
+
 syncWheelDisplay() {
     const wheel = window.gameEngine?.votingWheel;
     if (!wheel || wheel.isSpinning) return;
 
     const counts = {};
-    this.votesForCurrentTurn.forEach(v => counts[v] = (counts[v] || 0) + 1);
+    this.votesForCurrentTurn.forEach(v => {
+        const mv = typeof v === 'string' ? v : v.move;
+        counts[mv] = (counts[mv] || 0) + 1;
+    });
 
     if (Object.keys(counts).length === 0) return;
 
@@ -377,7 +385,6 @@ syncWheelDisplay() {
     wheel.draw();
     wheel.updateVoteList();
 
-    // Afficher la roue si pas encore visible
     const wheelArea = document.getElementById('wheel-area');
     if (wheelArea && !wheelArea.classList.contains('is-visible')) {
         window.gameEngine.showWheel();
@@ -385,38 +392,15 @@ syncWheelDisplay() {
 }
 resolveVotes() {
     const counts = {};
-    this.votesForCurrentTurn.forEach(v => counts[v] = (counts[v] || 0) + 1);
+    this.votesForCurrentTurn.forEach(v => {
+        const mv = typeof v === 'string' ? v : v.move;
+        counts[mv] = (counts[mv] || 0) + 1;
+    });
+
+    // Mode problèmes : TOUJOURS majorité, jamais de roue
+    if (Object.keys(counts).length === 0) return null;
     
-
-    if (Object.keys(counts).length === 0) {
-        console.log('⏱️ Timer expiré sans vote → problème perdu');
-        this.handleProblemFailed();
-        return;
-    }
-
-    if (this.config.majorityMode) {
-        const winner = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
-        console.log(`🏆 Résolution majorité: ${winner}`);
-        this.validateAndPlayMove(winner);
-    } else {
-        const results = Object.entries(counts).map(([move, count]) => ({ move, count }));
-        if (this.onResolveWithWheel) {
-            console.log('🎡 Délégation roue au gameEngine');
-            this.onResolveWithWheel(results, (winner) => {
-                this.validateAndPlayMove(winner);
-            });
-        } else {
-            // Fallback sans roue
-            const total = results.reduce((s, r) => s + r.count, 0);
-            let rand = Math.random() * total;
-            let winner = results[0].move;
-            for (const r of results) {
-                rand -= r.count;
-                if (rand <= 0) { winner = r.move; break; }
-            }
-            this.validateAndPlayMove(winner);
-        }
-    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
     validateAndPlayMove(move) {
         if (!this.isActive || !this.currentProblem) {

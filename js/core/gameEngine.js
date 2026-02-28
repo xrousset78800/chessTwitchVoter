@@ -381,13 +381,12 @@ onTimerComplete() {
 onVoteAdded(vote, results) {
     console.log('🗳️ Vote ajouté:', vote.player, '→', vote.move);
     
-    // Récupérer les résultats triés depuis VotingSystem (source de vérité)
-    const sortedResults = voting.getSortedResults();
+    // Log dans la sidebar
+    if (window.VoteLog) window.VoteLog.add(vote.player || 'chat', vote.move);
     
-    // Mettre à jour l'UI des votes
+    const sortedResults = voting.getSortedResults();
     this.updateVotesUI(sortedResults);
     
-    // Reconstruire la roue depuis les données de voting (pas de addVote individuel)
     if (this.votingWheel) {
         this.syncWheelFromVoting();
     }
@@ -868,13 +867,31 @@ onMoveClick(move) {
         this.moveHistory = [];
         this.currentTurn = 'w';
         this.isRunning = true;
-        
+        document.getElementById('vote-log-panel')?.style && (document.getElementById('vote-log-panel').style.display = '');
+
         this.updateAvailableMoves();
         this.startTurn();
         
         console.log('✅ Partie démarrée');
     }
 }
+
+window.VoteLog = {
+    add(username, move) {
+        const list = document.getElementById('vote-log-list');
+        if (!list) return;
+        const item = document.createElement('div');
+        item.style.cssText = 'padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.05);';
+        item.innerHTML = `<span style="color:#9146ff; font-weight:600;">${username}</span> <span style="color:#aaa;">vote</span> <span style="font-family:monospace; color:#fff; font-weight:bold;">${move}</span>`;
+        list.prepend(item);
+        // Limiter à 50 entrées
+        while (list.children.length > 50) list.removeChild(list.lastChild);
+    },
+    clear() {
+        const list = document.getElementById('vote-log-list');
+        if (list) list.innerHTML = '';
+    }
+};
 
 // Instance singleton
 const gameEngine = new GameEngine();
