@@ -88,10 +88,8 @@ async function fetchMoves(uuid) {
 // ── Appliquer les coups TCN ──
 function applyMoves(movesArray) {
     if (movesArray.length === state.lastMoveCount) return false;
-
     state.chess.reset();
     state.moveHistory = [];
-
     for (const [tcn] of movesArray) {
         const uci = decodeTCNMove(tcn);
         if (!uci) continue;
@@ -102,9 +100,35 @@ function applyMoves(movesArray) {
         });
         if (move) state.moveHistory.push(move.san);
     }
-
     state.lastMoveCount = movesArray.length;
+
+    // Highlight dernier coup + indicateur de tour
+    const history = state.chess.history({ verbose: true });
+    if (history.length > 0) {
+        const last = history[history.length - 1];
+        highlightLastMove(last.from, last.to);
+    }
+    updateTurnIndicator();
+
     return true;
+}
+
+function highlightLastMove(from, to) {
+    document.querySelectorAll('.highlight-last-move-live')
+        .forEach(el => el.classList.remove('highlight-last-move-live'));
+    
+    const fromSq = document.querySelector(`#liveBoard [data-square="${from}"]`);
+    const toSq   = document.querySelector(`#liveBoard [data-square="${to}"]`);
+    if (fromSq) fromSq.classList.add('highlight-last-move-live');
+    if (toSq)   toSq.classList.add('highlight-last-move-live');
+}
+
+function updateTurnIndicator() {
+    const turn = state.chess?.turn(); // 'w' ou 'b'
+    document.getElementById('playerWhite')?.closest('.player-row')
+        .classList.toggle('is-turn', turn === 'w');
+    document.getElementById('playerBlack')?.closest('.player-row')
+        .classList.toggle('is-turn', turn === 'b');
 }
 
 // ── Mettre à jour l'UI ──
@@ -224,7 +248,7 @@ document.getElementById('btnPhantom').addEventListener('click', async () => {
                 document.getElementById('speedVal').textContent = currentSpeed;
             }
         } catch(e) { /* optionnel */ }
-        
+
     } else {
         log('Connexion Phantom échouée', 'error');
     }
