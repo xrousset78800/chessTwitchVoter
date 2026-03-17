@@ -343,3 +343,67 @@ input[type=range] {
     background: #1a1a2e;
     border: 1px solid #555;
 }
+
+
+.round-btn {
+    padding: 3px 8px;
+    border-radius: var(--radius-xs, 4px);
+    border: 1px solid var(--border-subtle, #2a2a3a);
+    background: transparent;
+    color: var(--text-secondary, #8888a0);
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+.round-btn.is-active {
+    background: var(--accent-purple, #8b5cf6);
+    border-color: var(--accent-purple, #8b5cf6);
+    color: white;
+}
+
+.tournament-game-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 6px;
+    border-radius: var(--radius-xs, 4px);
+    margin-bottom: 3px;
+    font-size: 0.75rem;
+    border: 1px solid transparent;
+    transition: background 0.15s;
+}
+.tournament-game-row.is-live {
+    border-color: rgba(139, 92, 246, 0.2);
+    background: rgba(139, 92, 246, 0.05);
+}
+.tournament-game-row.is-live:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: var(--accent-purple, #8b5cf6);
+}
+.tournament-game-row.is-finished {
+    opacity: 0.5;
+}
+
+.tg-players { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; }
+.tg-white, .tg-black { 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+    max-width: 110px;
+    color: var(--text-primary, #e8e8f0);
+}
+.tg-sep { color: var(--text-muted, #55556a); flex-shrink: 0; }
+.tg-elo { color: var(--text-muted, #55556a); font-size: 0.68rem; }
+.tg-meta { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.tg-live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #10b981;
+    animation: pulse 1.5s infinite;
+}
+.tg-elapsed { color: #10b981; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; }
+.tg-result { color: var(--text-muted, #55556a); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }
+.player-title {
+    color: #f59e0b;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}

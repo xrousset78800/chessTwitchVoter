@@ -425,6 +425,31 @@
 
                             </div>
 
+                            <!-- Recherche par tournoi -->
+                            <div class="input-group">
+                                <label data-i18n="live.input.tournament">Tournoi Chess.com</label>
+                                <div>
+                                    <input type="text" class="live-input" id="tournamentInput" 
+                                           placeholder="ex: 2026-titled-tuesday-blitz-march-17" style="flex:1;">
+                                    <button class="btn-primary" id="btnLoadTournament" style="padding:6px 10px; white-space:nowrap;">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <small style="color:var(--text-muted,#55556a); font-size:0.72rem;" data-i18n="live.input.tournamentHint">
+                                    Slug depuis chess.com/events/{slug}/games
+                                </small>
+                            </div>
+
+                            <!-- Liste des parties du tournoi -->
+                            <div id="tournamentPanel" style="display:none; margin-top:8px;">
+                                <div id="tournamentHeader" style="font-size:0.72rem; color:var(--text-muted,#55556a); margin-bottom:6px;"></div>
+                                <div id="tournamentRounds" style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px;"></div>
+                                <div id="tournamentGames"></div>
+                            </div>
+
+                            <hr style="border-color:var(--border-subtle,#2a2a3a); margin:10px 0;">
+
+
                             <div class="input-group">
                                 <label data-i18n="live.polling.label">Intervalle de polling</label>
                                 <input type="number" class="live-input" id="pollInterval"
