@@ -414,29 +414,27 @@
 
                         <!-- Connexion partie -->
                         <div class="live-card">
-                            <div class="live-card__title"><i class="fas fa-chess"></i> Partie Chess.com</div>
+                            <div class="live-card__title" data-i18n="live.card.game">...</div>
 
                             <div class="input-group">
-                                <label>ID ou URL de la partie</label>
+                                <label data-i18n="live.input.label">ID ou URL de la partie</label>
                                 <input type="text" class="live-input" id="gameInput"
+                                       data-i18n-placeholder="live.input.placeholder"
                                        placeholder="ex: 123456789">
-                                <small style="color:var(--text-muted,#55556a); font-size:0.72rem;">
-                                    URL chess.com/game/live/123456789 ou ID seul
-                                </small>
+                                <small data-i18n="live.input.hint" ...>URL chess.com/game/live/123456789 ou ID seul</small>
+
                             </div>
 
                             <div class="input-group">
-                                <label>Intervalle de polling (s)</label>
+                                <label data-i18n="live.polling.label">Intervalle de polling</label>
                                 <input type="number" class="live-input" id="pollInterval"
                                        value="3" min="1" max="15" style="width:80px;">
+                                <small data-i18n="live.polling.unit">secondes</small>
                             </div>
 
-                            <button class="btn-primary btn-connect" id="btnConnect">
-                                <i class="fas fa-plug"></i> Connecter
-                            </button>
-                            <button class="btn-primary btn-stop" id="btnStop" disabled>
-                                <i class="fas fa-stop"></i> Arrêter
-                            </button>
+                            <button class="btn-primary btn-connect" id="btnConnect"><i class="fas fa-play"></i> <span data-i18n="live.btn.connect">Connecter</span></button>
+                            <button class="btn-primary btn-stop" id="btnStop"><i class="fas fa-stop"></i> <span data-i18n="live.btn.stop">Arrêter</span></button>
+
                         </div>
 
                         <!-- Infos partie -->
@@ -472,9 +470,9 @@
 
                         <!-- Moves -->
                         <div class="live-card" style="flex:1;">
-                            <div class="live-card__title"><i class="fas fa-list"></i> Coups joués</div>
+                            <div class="live-card__title" data-i18n="live.card.moves">Coups joués</div>
                             <div class="moves-list" id="movesList">
-                                <span style="color:var(--text-muted,#55556a); font-size:0.8rem;">Aucun coup pour l'instant</span>
+                                <span data-i18n="live.moves.empty" style="color:var(--text-muted,#55556a); font-size:0.8rem;">Aucun coup pour l'instant</span>
                             </div>
                         </div>
 
@@ -486,12 +484,10 @@
                                 <i class="fas fa-times-circle"></i> Déconnecté
                             </div>
 
-                            <button class="btn-primary btn-connect" id="btnPhantom" style="margin-bottom:8px;">
-                                <i class="fas fa-robot"></i> Connecter Phantom
-                            </button>
+                            <button class="btn-primary btn-connect" id="btnPhantom"><i class="fas fa-robot"></i> <span data-i18n="live.phantom.connect">Connecter Phantom</span></button>
 
                             <div class="phantom-toggle">
-                                <span>Sync automatique</span>
+                                <span data-i18n="live.phantom.autosync">Sync automatique</span>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="phantomAutoSync" checked>
                                     <span class="toggle-slider"></span>
@@ -500,16 +496,16 @@
 
                             <div class="speed-control">
                                 <label>
-                                    <span>Vitesse Phantom</span>
+                                    <span data-i18n="live.phantom.speed">Vitesse Phantom</span>
                                     <span id="speedVal">50%</span>
                                 </label>
-                                <input type="range" id="phantomSpeed" min="1" max="100" value="50">
+                                <input type="range" id="phantomSpeed" min="1" max="5" value="3" step="1">
                             </div>
                         </div>
 
                         <!-- Log -->
                         <div class="live-card">
-                            <div class="live-card__title"><i class="fas fa-terminal"></i> Log</div>
+                            <div class="live-card__title" data-i18n="live.card.log">Log</div>
                             <div class="live-log" id="liveLog"></div>
                         </div>
 

@@ -114,5 +114,42 @@
     "votesInProgress": "Current votes",
     "totalVotes": "Voters",
     "votes": "votes"
-  }
+  },
+  "live": {
+    "card": {
+      "game": "Chess.com Game",
+      "board": "Chessboard",
+      "moves": "Played moves",
+      "log": "Log"
+    },
+    "input": {
+      "label": "Game ID or URL",
+      "placeholder": "e.g. 123456789",
+      "hint": "chess.com/game/live/123456789 or ID only"
+    },
+    "polling": {
+      "label": "Polling interval",
+      "unit": "seconds"
+    },
+    "btn": {
+      "connect": "Connect",
+      "stop": "Stop"
+    },
+    "moves": {
+      "empty": "No moves yet"
+    },
+    "phantom": {
+      "connect": "Connect Phantom",
+      "autosync": "Auto-sync",
+      "speed": "Phantom speed"
+    },
+    "status": {
+      "idle": "Waiting",
+      "polling": "Polling...",
+      "live": "Live",
+      "ended": "Game over",
+      "error": "Error",
+      "stopped": "Stopped"
+    }
+  }  
 }

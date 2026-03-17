@@ -114,5 +114,42 @@
     "votesInProgress": "Votes en cours",
     "totalVotes":"Votants",
     "votes": "votes"
+  },
+  "live": {
+    "card": {
+      "game": "Partie Chess.com",
+      "board": "Échiquier",
+      "moves": "Coups joués",
+      "log": "Log"
+    },
+    "input": {
+      "label": "ID ou URL de la partie",
+      "placeholder": "ex: 123456789",
+      "hint": "URL chess.com/game/live/123456789 ou ID seul"
+    },
+    "polling": {
+      "label": "Intervalle de polling",
+      "unit": "secondes"
+    },
+    "btn": {
+      "connect": "Connecter",
+      "stop": "Arrêter"
+    },
+    "moves": {
+      "empty": "Aucun coup pour l'instant"
+    },
+    "phantom": {
+      "connect": "Connecter Phantom",
+      "autosync": "Sync automatique",
+      "speed": "Vitesse Phantom"
+    },
+    "status": {
+      "idle": "En attente",
+      "polling": "Polling...",
+      "live": "En direct",
+      "ended": "Terminée",
+      "error": "Erreur",
+      "stopped": "Arrêté"
+    }
   }
 }

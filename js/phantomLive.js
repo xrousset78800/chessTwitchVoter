@@ -5,7 +5,7 @@ const PROXY_BASE = window.location.hostname === 'localhost' || window.location.h
     ? ''
     : 'https://chesstwitchvoter.onrender.com';
 
-    
+
 function decodeTCNMove(two) {
     const c1 = TCN_CHARS.indexOf(two[0]);
     const c2 = TCN_CHARS.indexOf(two[1]);
@@ -43,10 +43,13 @@ function log(msg, type = 'info') {
     el.scrollTop = el.scrollHeight;
 }
 
-function setStatus(s, text) {
+function setStatus(type, text) {
     const badge = document.getElementById('statusBadge');
-    badge.className = `live-badge ${s}`;
-    document.getElementById('statusText').textContent = text;
+    const label = document.getElementById('statusText');
+    badge.className = `live-badge ${type}`;
+    // Utiliser i18n si disponible
+    const key = `live.status.${type}`;
+    label.textContent = window.i18n?.t(key) ?? text;
 }
 
 function parseGameId(input) {
@@ -213,6 +216,15 @@ document.getElementById('btnPhantom').addEventListener('click', async () => {
             window.phantomChessboard.syncPosition(state.chess.fen());
             log('Phantom synchronisé sur la position actuelle', 'ok');
         }
+        try {
+            const speedValue = await window.phantomChessboard.characteristics.speed?.readValue();
+            if (speedValue) {
+                const currentSpeed = parseInt(new TextDecoder().decode(speedValue));
+                document.getElementById('phantomSpeed').value = currentSpeed;
+                document.getElementById('speedVal').textContent = currentSpeed;
+            }
+        } catch(e) { /* optionnel */ }
+        
     } else {
         log('Connexion Phantom échouée', 'error');
     }
@@ -271,9 +283,15 @@ document.getElementById('btnStop').addEventListener('click', () => {
 });
 
 document.getElementById('phantomSpeed').addEventListener('input', function() {
-    document.getElementById('speedVal').textContent = this.value + '%';
+    document.getElementById('speedVal').textContent = this.value;
+});
+
+document.getElementById('phantomSpeed').addEventListener('change', async function() {
     if (window.phantomChessboard?.isConnected) {
-        window.phantomChessboard.setSpeed(parseInt(this.value));
+        await window.phantomChessboard.setSpeed(parseInt(this.value));
+        log(`Vitesse réglée à ${this.value}/5`, 'ok');
+    } else {
+        log('Phantom non connecté', 'warn');
     }
 });
 
