@@ -1,6 +1,17 @@
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
+
+
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    next();
+});
+
+
 const io = require('socket.io')(http, {
     cors: {
         origin: "*", // En production, mettez votre domaine
