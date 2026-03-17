@@ -148,7 +148,8 @@ const Router = {
     routes: {
         '/': 'landing',
         '/sandbox': 'sandbox',
-        '/browse': 'browse'
+        '/browse': 'browse',
+        '/live': 'live',
     },
 
     init() {
@@ -198,9 +199,23 @@ const Router = {
             SandboxPage.init();
         } else if (pageName === 'browse') {
             BrowsePage.init();
+        } else if (pageName === 'live') {
+            LivePage.init();
         }
     }
 };
+
+
+const LivePage = {
+    initialized: false,
+    init() {
+        if (!this.initialized) {
+            initBoard();  // fonction du script de phantomLive
+            this.initialized = true;
+        }
+    }
+};
+
 
 // ============================================
 // SANDBOX PAGE

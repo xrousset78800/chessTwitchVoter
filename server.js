@@ -10,6 +10,9 @@ const io = require('socket.io')(http, {
 const path = require('path');
 const chatHistory = {};
 
+const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+
+
 // Servir les fichiers statiques (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname)));
 app.use('/js', express.static(path.join(__dirname, 'js')));
@@ -24,6 +27,33 @@ app.get('/', (req, res) => {
 // Route pour le setup multiplayer
 app.get('/multiplayer', (req, res) => {
     res.sendFile(path.join(__dirname, 'multiplayer-setup.html'));
+});
+
+app.get('/proxy/chess/:gameId', async (req, res) => {
+    try {
+        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+        const url = `https://www.chess.com/service/play/games/${req.params.gameId}`;
+        const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        res.json(await r.json());
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Étape 2 : coups en cours (TCN)
+app.get('/proxy/chess-moves/', async (req, res) => {
+    try {
+        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+        const url = `https://www.chess.com${req.query.url}`;
+        console.log('🔍 Proxy URL:', url); // ← ajouter
+        const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        console.log('🔍 Status chess.com:', r.status); // ← ajouter
+        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        res.json(await r.json());
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 const games = {}; // Stockage des parties actives
