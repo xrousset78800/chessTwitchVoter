@@ -1,7 +1,11 @@
 // ── Décodeur TCN (Two Character Notation chess.com) ──
 const TCN_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?';
 const FILES = 'abcdefgh';
+const PROXY_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? ''
+    : 'https://chesstwitchvoter.onrender.com';
 
+    
 function decodeTCNMove(two) {
     const c1 = TCN_CHARS.indexOf(two[0]);
     const c2 = TCN_CHARS.indexOf(two[1]);
@@ -66,14 +70,14 @@ function initBoard() {
 
 // ── Étape 1 : récupérer UUID + infos joueurs ──
 async function fetchGameInfo(legacyId) {
-    const r = await fetch(`/proxy/chess/${legacyId}`);
+    const r = await fetch(`${PROXY_BASE}/proxy/chess/${legacyId}`);
     if (!r.ok) throw new Error(`Infos partie : HTTP ${r.status}`);
     return await r.json();
 }
 
 // ── Étape 2 : récupérer les coups ──
 async function fetchMoves(uuid) {
-    const r = await fetch(`/proxy/chess-moves/?url=${encodeURIComponent(state.movesUrl)}`);
+    const r = await fetch(`${PROXY_BASE}/proxy/chess-moves/?url=${encodeURIComponent(state.movesUrl)}`);
     if (!r.ok) throw new Error(`Coups : HTTP ${r.status}`);
     return await r.json();
 }
