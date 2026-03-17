@@ -70,16 +70,28 @@ app.get('/proxy/chess-event/:slug', async (req, res) => {
     try {
         const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
         const url = `https://www.chess.com/events/v1/api/room/${req.params.slug}`;
-        const r = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
-                'Referer': 'https://www.chess.com/',
-                'Origin': 'https://www.chess.com'
-            }
-        });
-        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+            'Referer': 'https://www.chess.com/',
+            'Origin': 'https://www.chess.com'
+        };
+        
+        console.log('🔍 Requête vers:', url);
+        console.log('🔍 Headers:', JSON.stringify(headers, null, 2));
+        
+        const r = await fetch(url, { headers });
+        
+        console.log('🔍 Status chess.com:', r.status);
+        console.log('🔍 Response headers:', JSON.stringify(Object.fromEntries(r.headers), null, 2));
+        
+        if (!r.ok) {
+            const body = await r.text();
+            console.log('🔍 Response body:', body.slice(0, 500));
+            return res.status(r.status).json({ error: `chess.com HTTP ${r.status}`, body });
+        }
         res.json(await r.json());
     } catch (err) {
         res.status(500).json({ error: err.message });
