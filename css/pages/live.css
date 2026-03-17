@@ -384,7 +384,11 @@ input[type=range] {
 .tournament-game-row.is-finished {
     opacity: 0.5;
 }
-
+#tournamentGames {
+    max-height: 400px;
+    overflow: hidden;
+    overflow-y: scroll;
+}
 .tg-players { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; }
 .tg-white, .tg-black { 
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
