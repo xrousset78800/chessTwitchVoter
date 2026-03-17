@@ -279,7 +279,11 @@ class MultiplayerManager {
             return;
         }
         
-        this.socket = io();
+        const SOCKET_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000'
+            : 'https://chesstwitchvoter.onrender.com';
+            
+        this.socket = io(SOCKET_URL);
         
         this.socket.on('connect', () => {
             console.log('🔗 Connecté au serveur');
