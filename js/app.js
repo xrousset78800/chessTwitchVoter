@@ -150,6 +150,7 @@ const Router = {
         '/sandbox': 'sandbox',
         '/browse': 'browse',
         '/live': 'live',
+        '/tournament': 'tournament',
     },
 
     init() {
@@ -201,10 +202,21 @@ const Router = {
             BrowsePage.init();
         } else if (pageName === 'live') {
             LivePage.init();
+        } else if (pageName === 'tournament') {
+            TournamentPage.init();
         }
     }
 };
 
+const TournamentPage = {
+    initialized: false,
+    init() {
+        if (!this.initialized) {
+            initTournamentBoard();
+            this.initialized = true;
+        }
+    }
+};
 
 const LivePage = {
     initialized: false,
@@ -533,6 +545,14 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 Toast.success('Échiquier réinitialisé');
             }
         });
+
+        document.getElementById('btn-calibrate')?.addEventListener('click', async () => {
+            if (window.phantomChessboard?.isConnected) {
+                await window.phantomChessboard.calibrate();
+                Toast.success('Calibration lancée');
+            }
+        });
+
         document.getElementById('problem-pause')?.addEventListener('change', (e) => {
             AppState.config.pauseAfterEnd = parseInt(e.target.value) || 5;
             if (window.problemsManager) {
@@ -876,6 +896,7 @@ fullReset() {
         document.querySelectorAll('.phantom-only').forEach(el => {
             el.classList.toggle('is-visible', phantomConnected);
         });
+        document.getElementById('btn-calibrate')?.removeAttribute('disabled');
 
         document.getElementById('btn-sync')?.toggleAttribute('disabled', !phantomConnected);
         document.getElementById('btn-game-end')?.toggleAttribute('disabled', !phantomConnected);
