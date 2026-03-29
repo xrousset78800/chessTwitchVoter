@@ -155,12 +155,18 @@ async function pollGame() {
         if (r.ok) {
             const data = await r.json();
             const updatedGame = data.games.find(game => game.slug === g.slug);
-            if (updatedGame?.currentFEN) {
+            if (updatedGame?.currentFEN && updatedGame.currentFEN !== stateT.lastFEN) {
+                stateT.lastFEN = updatedGame.currentFEN; // ← évite les syncs inutiles
                 stateT.chess.load(updatedGame.currentFEN);
                 stateT.board.position(updatedGame.currentFEN);
                 document.getElementById('fenDisplayT').textContent = `FEN : ${updatedGame.currentFEN}`;
+
+                // Sync Phantom
+                if (window.phantomChessboard?.isConnected) {
+                    await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
+                    logT('Phantom synchronisé', 'ok');
+                }
             }
-            // Mettre à jour aussi la liste des parties
             renderGames(data.games, activeRoundId);
         }
     } catch (err) {
