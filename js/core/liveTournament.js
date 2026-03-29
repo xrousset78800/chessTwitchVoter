@@ -149,8 +149,10 @@ function stopGamePolling() {
 async function pollGame() {
     if (!stateT.polling || !stateT.currentGame) return;
     const g = stateT.currentGame;
-    try {
-        const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event-game/${g.slug}`);
+    const round = tournamentData.rounds.find(r => r.id === g.roundId);
+    const roundSlug = String(round?.slug ?? '01').padStart(2, '0');
+    const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event-game/${stateT.tournamentSlug}/${roundSlug}/${g.slug}`);
+
         if (r.ok) {
             const data = await r.json();
             if (data.fen) {
