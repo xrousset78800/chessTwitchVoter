@@ -30,6 +30,7 @@ async function loadTournament(input) {
     let slug = input.trim();
     const match = slug.match(/chess\.com\/events\/([^\/]+)/);
     if (match) slug = match[1];
+    stateT.tournamentSlug = slug; // ← ajout
     const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event/${slug}`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return await r.json();
@@ -149,17 +150,18 @@ function stopGamePolling() {
 async function pollGame() {
     if (!stateT.polling || !stateT.currentGame) return;
     const g = stateT.currentGame;
-    const round = tournamentData.rounds.find(r => r.id === g.roundId);
-    const roundSlug = String(round?.slug ?? '01').padStart(2, '0');
-    const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event-game/${stateT.tournamentSlug}/${roundSlug}/${g.slug}`);
-
+    try {
+        const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event/${stateT.tournamentSlug}`);
         if (r.ok) {
             const data = await r.json();
-            if (data.fen) {
-                stateT.chess.load(data.fen);
-                stateT.board.position(data.fen);
-                document.getElementById('fenDisplayT').textContent = `FEN : ${data.fen}`;
+            const updatedGame = data.games.find(game => game.slug === g.slug);
+            if (updatedGame?.currentFEN) {
+                stateT.chess.load(updatedGame.currentFEN);
+                stateT.board.position(updatedGame.currentFEN);
+                document.getElementById('fenDisplayT').textContent = `FEN : ${updatedGame.currentFEN}`;
             }
+            // Mettre à jour aussi la liste des parties
+            renderGames(data.games, activeRoundId);
         }
     } catch (err) {
         logT(`Poll erreur : ${err.message}`, 'error');

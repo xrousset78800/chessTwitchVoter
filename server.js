@@ -97,27 +97,7 @@ app.get('/proxy/chess-event/:slug', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-app.get('/proxy/chess-event-game/:tournamentSlug/:roundSlug/:gameSlug', async (req, res) => {
-    try {
-        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
-        const url = `https://www.chess.com/events/${req.params.tournamentSlug}/${req.params.roundSlug}/${req.params.gameSlug}`;
-        console.log('🔍 Fetching game page:', url);
-        const r = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/json,*/*',
-                'Referer': 'https://www.chess.com/',
-            }
-        });
-        console.log('🔍 Status:', r.status);
-        console.log('🔍 Content-Type:', r.headers.get('content-type'));
-        const body = await r.text();
-        console.log('🔍 Body preview:', body.slice(0, 1000));
-        res.status(r.status).send(body);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+
 const games = {}; // Stockage des parties actives
 
 io.on('connection', (socket) => {
