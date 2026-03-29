@@ -4,7 +4,11 @@ const PROXY_BASE_T = window.location.hostname === 'localhost' || window.location
 let tournamentData = null;
 let activeRoundId = null;
 
-const stateT = { chess: null, board: null, polling: false, pollTimer: null, currentGame: null };
+const stateT = { 
+    chess: null, board: null, polling: false, pollTimer: null, 
+    currentGame: null, tournamentSlug: null, lastFEN: null,
+    clockInterval: null, clockWhite: 0, clockBlack: 0  // ← nouveau
+};
 
 function logT(msg, type = 'info') {
     const el = document.getElementById('liveLogT');
@@ -132,11 +136,13 @@ function renderGames(games, roundId) {
         el.appendChild(row);
     });
 }
+
 async function startGamePolling(game) {
     stopGamePolling();
+    stopClockT();  // ← reset
     stateT.currentGame = game;
+    stateT.lastFEN = null;
     stateT.polling = true;
-    stateT.chess.reset();
     logT(`Suivi de ${game.white?.preferredShortName} vs ${game.black?.preferredShortName}`, 'info');
     await pollGame();
 }
@@ -144,6 +150,7 @@ async function startGamePolling(game) {
 function stopGamePolling() {
     stateT.polling = false;
     clearTimeout(stateT.pollTimer);
+    stopClockT();  // ← reset
     stateT.currentGame = null;
 }
 
@@ -154,14 +161,44 @@ async function pollGame() {
         const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event/${stateT.tournamentSlug}`);
         if (r.ok) {
             const data = await r.json();
+
+
+            
             const updatedGame = data.games.find(game => game.slug === g.slug);
+            console.log('🎯 updatedGame keys:', updatedGame ? Object.keys(updatedGame) : 'null');
+            console.log('🎯 updatedGame full:', JSON.stringify(updatedGame)?.slice(0, 1500));
+            console.log('🎯 chess.history() length:', stateT.chess.history().length);
+
+
+
+
+
             if (updatedGame?.currentFEN && updatedGame.currentFEN !== stateT.lastFEN) {
-                stateT.lastFEN = updatedGame.currentFEN; // ← évite les syncs inutiles
+                const prevFEN = stateT.lastFEN;
+                stateT.lastFEN = updatedGame.currentFEN;
+
+                // Trouver le dernier coup en comparant l'ancien et le nouveau FEN
+                if (prevFEN) {
+                    const tempChess = new Chess(prevFEN);
+                    const moves = tempChess.moves({ verbose: true });
+                    const matchingMove = moves.find(m => {
+                        const t = new Chess(prevFEN);
+                        t.move(m);
+                        return t.fen().split(' ')[0] === updatedGame.currentFEN.split(' ')[0];
+                    });
+                    if (matchingMove) highlightLastMoveT(matchingMove.from, matchingMove.to);
+                }
+
                 stateT.chess.load(updatedGame.currentFEN);
                 stateT.board.position(updatedGame.currentFEN);
-                document.getElementById('fenDisplayT').textContent = `FEN : ${updatedGame.currentFEN}`;
+                updateTurnIndicatorT();
 
-                // Sync Phantom
+                // Chrono — resync depuis les données Chess.com si dispo, sinon simulation
+                if (updatedGame.whiteClock != null) {
+                    startClockT(updatedGame.whiteClock, updatedGame.blackClock);
+                }
+
+                // Phantom
                 if (window.phantomChessboard?.isConnected) {
                     await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
                     logT('Phantom synchronisé', 'ok');
@@ -174,6 +211,53 @@ async function pollGame() {
     }
     stateT.pollTimer = setTimeout(pollGame, 5000);
 }
+
+function highlightLastMoveT(from, to) {
+    document.querySelectorAll('.highlight-last-move-live')
+        .forEach(el => el.classList.remove('highlight-last-move-live'));
+    const fromSq = document.querySelector(`#liveBoardT [data-square="${from}"]`);
+    const toSq   = document.querySelector(`#liveBoardT [data-square="${to}"]`);
+    if (fromSq) fromSq.classList.add('highlight-last-move-live');
+    if (toSq)   toSq.classList.add('highlight-last-move-live');
+}
+
+function updateTurnIndicatorT() {
+    const turn = stateT.chess?.turn();
+    document.getElementById('playerWhiteT')?.closest('.player-row')
+        ?.classList.toggle('is-turn', turn === 'w');
+    document.getElementById('playerBlackT')?.closest('.player-row')
+        ?.classList.toggle('is-turn', turn === 'b');
+}
+
+function startClockT(whiteMs, blackMs) {
+    stopClockT();
+    stateT.clockWhite = whiteMs;
+    stateT.clockBlack = blackMs;
+    stateT.clockInterval = setInterval(() => {
+        const turn = stateT.chess?.turn();
+        if (turn === 'w') stateT.clockWhite = Math.max(0, stateT.clockWhite - 1000);
+        else              stateT.clockBlack = Math.max(0, stateT.clockBlack - 1000);
+        renderClocksT();
+    }, 1000);
+    renderClocksT();
+}
+
+function stopClockT() {
+    clearInterval(stateT.clockInterval);
+    stateT.clockInterval = null;
+}
+
+function renderClocksT() {
+    const fmt = ms => {
+        const total = Math.floor(ms / 1000);
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return `${m}:${String(s).padStart(2, '0')}`;
+    };
+    document.getElementById('clockWhiteT').textContent = fmt(stateT.clockWhite);
+    document.getElementById('clockBlackT').textContent = fmt(stateT.clockBlack);
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btnLoadTournament');
