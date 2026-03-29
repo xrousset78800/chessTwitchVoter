@@ -215,7 +215,17 @@ const TournamentPage = {
             initTournamentBoard();
             this.initialized = true;
         }
-        setTimeout(() => stateT.board?.resize(), 50);
+        setTimeout(() => {
+            stateT.board?.resize();
+            // Auto-load depuis le hash
+            const hash = window.location.hash;
+            const hashParams = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
+            const eventSlug = hashParams.get('event');
+            if (eventSlug && !stateT.tournamentSlug) {
+                document.getElementById('tournamentInput').value = eventSlug;
+                document.getElementById('btnLoadTournament').click();
+            }
+        }, 50);
     }
 };
 

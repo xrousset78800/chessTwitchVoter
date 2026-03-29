@@ -173,7 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btnLoadTournament');
     if (!btn) return;
 
-    //initTournamentBoard();
+    // Auto-load depuis ?event=slug ou #/tournament?event=slug
+    const hash = window.location.hash; // "#/tournament?event=2026-fide-candidates-open"
+    const hashParams = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
+    const eventSlug = hashParams.get('event');
+    if (eventSlug) {
+        document.getElementById('tournamentInput').value = eventSlug;
+        btn.click();
+    }
 
     btn.addEventListener('click', async () => {
         const slug = document.getElementById('tournamentInput').value.trim();
