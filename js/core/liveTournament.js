@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btnLoadTournament');
     if (!btn) return;
 
-    initTournamentBoard();
+    //initTournamentBoard();
 
     btn.addEventListener('click', async () => {
         const slug = document.getElementById('tournamentInput').value.trim();

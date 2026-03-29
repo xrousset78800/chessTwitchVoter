@@ -215,6 +215,7 @@ const TournamentPage = {
             initTournamentBoard();
             this.initialized = true;
         }
+        setTimeout(() => stateT.board?.resize(), 50);
     }
 };
 
