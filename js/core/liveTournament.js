@@ -179,15 +179,18 @@ async function pollGame() {
 
                 // Highlight : trouver le coup joué entre prevFEN et le nouveau FEN
                 if (prevFEN) {
-                    const tempChess = new Chess(prevFEN);
-                    const legalMoves = tempChess.moves({ verbose: true });
-                    const playedMove = legalMoves.find(m => {
-                        tempChess.move(m);
-                        const match = tempChess.fen().split(' ')[0] === updatedGame.currentFEN.split(' ')[0];
-                        tempChess.undo();
-                        return match;
-                    });
-                    if (playedMove) highlightLastMoveT(playedMove.from, playedMove.to);
+                    const prevObj = Chessboard.fenToObj(prevFEN);
+                    const newObj  = Chessboard.fenToObj(updatedGame.currentFEN);
+                    
+                    // Cases qui ont disparu = "from", cases qui sont apparues = "to"
+                    const disappeared = Object.keys(prevObj).filter(sq => !newObj[sq] || newObj[sq] !== prevObj[sq]);
+                    const appeared    = Object.keys(newObj).filter(sq => !prevObj[sq] || newObj[sq] !== prevObj[sq]);
+                    
+                    // Le "to" est la case qui a reçu une pièce (appeared), le "from" celle qui s'est vidée
+                    const toSq   = appeared.find(sq => !prevObj[sq]);
+                    const fromSq = disappeared.find(sq => !newObj[sq]);
+                    
+                    if (fromSq && toSq) highlightLastMoveT(fromSq, toSq);
                 }
 
                 stateT.chess.load(updatedGame.currentFEN);
