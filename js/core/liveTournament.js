@@ -177,16 +177,17 @@ async function pollGame() {
                 const prevFEN = stateT.lastFEN;
                 stateT.lastFEN = updatedGame.currentFEN;
 
-                // Trouver le dernier coup en comparant l'ancien et le nouveau FEN
+                // Highlight : trouver le coup joué entre prevFEN et le nouveau FEN
                 if (prevFEN) {
                     const tempChess = new Chess(prevFEN);
-                    const moves = tempChess.moves({ verbose: true });
-                    const matchingMove = moves.find(m => {
-                        const t = new Chess(prevFEN);
-                        t.move(m);
-                        return t.fen().split(' ')[0] === updatedGame.currentFEN.split(' ')[0];
+                    const legalMoves = tempChess.moves({ verbose: true });
+                    const playedMove = legalMoves.find(m => {
+                        tempChess.move(m);
+                        const match = tempChess.fen().split(' ')[0] === updatedGame.currentFEN.split(' ')[0];
+                        tempChess.undo();
+                        return match;
                     });
-                    if (matchingMove) highlightLastMoveT(matchingMove.from, matchingMove.to);
+                    if (playedMove) highlightLastMoveT(playedMove.from, playedMove.to);
                 }
 
                 stateT.chess.load(updatedGame.currentFEN);
