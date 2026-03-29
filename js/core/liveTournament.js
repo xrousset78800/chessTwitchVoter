@@ -4,7 +4,7 @@ const PROXY_BASE_T = window.location.hostname === 'localhost' || window.location
 let tournamentData = null;
 let activeRoundId = null;
 
-const stateT = { chess: null, board: null };
+const stateT = { chess: null, board: null, polling: false, pollTimer: null, currentGame: null };
 
 function logT(msg, type = 'info') {
     const el = document.getElementById('liveLogT');
@@ -116,19 +116,53 @@ function renderGames(games, roundId) {
         if (isLive && g.currentFEN) {
             row.style.cursor = 'pointer';
             row.addEventListener('click', () => {
-                stateT.board.position(g.currentFEN);
-                document.getElementById('fenDisplayT').textContent = `FEN : ${g.currentFEN}`;
-                // Infos joueurs
+                stateT.chess.reset();
+                stateT.board.position(g.currentFEN ?? 'start');
+                document.getElementById('fenDisplayT').textContent = `FEN : ${g.currentFEN ?? '—'}`;
                 document.getElementById('playerWhiteT').textContent = wName;
                 document.getElementById('ratingWhiteT').textContent = g.whiteElo ? `(${g.whiteElo})` : '';
                 document.getElementById('playerBlackT').textContent = bName;
                 document.getElementById('ratingBlackT').textContent = g.blackElo ? `(${g.blackElo})` : '';
-                logT(`${wName} vs ${bName} — position chargée`, 'ok');
+                logT(`${wName} vs ${bName} — suivi démarré`, 'ok');
+                startGamePolling(g);  // ← remplace l'ancien log statique
             });
         }
 
         el.appendChild(row);
     });
+}
+async function startGamePolling(game) {
+    stopGamePolling();
+    stateT.currentGame = game;
+    stateT.polling = true;
+    stateT.chess.reset();
+    logT(`Suivi de ${game.white?.preferredShortName} vs ${game.black?.preferredShortName}`, 'info');
+    await pollGame();
+}
+
+function stopGamePolling() {
+    stateT.polling = false;
+    clearTimeout(stateT.pollTimer);
+    stateT.currentGame = null;
+}
+
+async function pollGame() {
+    if (!stateT.polling || !stateT.currentGame) return;
+    const g = stateT.currentGame;
+    try {
+        const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event-game/${g.slug}`);
+        if (r.ok) {
+            const data = await r.json();
+            if (data.fen) {
+                stateT.chess.load(data.fen);
+                stateT.board.position(data.fen);
+                document.getElementById('fenDisplayT').textContent = `FEN : ${data.fen}`;
+            }
+        }
+    } catch (err) {
+        logT(`Poll erreur : ${err.message}`, 'error');
+    }
+    stateT.pollTimer = setTimeout(pollGame, 5000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
