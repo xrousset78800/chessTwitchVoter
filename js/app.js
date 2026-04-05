@@ -596,6 +596,17 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 Toast.info('Synchronisation envoyée');
             }
         });
+
+        // Reset + Sync Phantom
+        document.getElementById('btn-reset-sync')?.addEventListener('click', () => {
+            gameEngine.reset();
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.syncPosition(gameEngine.getFen());
+                Toast.success('Échiquier réinitialisé et synchronisé');
+            } else {
+                Toast.success('Échiquier réinitialisé');
+            }
+        });
         
         // Game End Phantom
         document.getElementById('btn-game-end')?.addEventListener('click', async () => {
@@ -910,6 +921,7 @@ fullReset() {
         document.getElementById('btn-calibrate')?.removeAttribute('disabled');
 
         document.getElementById('btn-sync')?.toggleAttribute('disabled', !phantomConnected);
+        document.getElementById('btn-reset-sync')?.toggleAttribute('disabled', !phantomConnected);
         document.getElementById('btn-game-end')?.toggleAttribute('disabled', !phantomConnected);
     },
 
