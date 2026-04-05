@@ -312,6 +312,31 @@ document.addEventListener('DOMContentLoaded', () => {
         logT('Synchronisation envoyée', 'ok');
     });
 
+    document.getElementById('btnResetT')?.addEventListener('click', async () => {
+        stopGamePolling();
+        stateT.chess.reset();
+        stateT.board.position('start');
+        stateT.lastFEN = null;
+        document.querySelectorAll('.highlight-last-move-live')
+            .forEach(el => el.classList.remove('highlight-last-move-live'));
+        document.getElementById('fenDisplayT').textContent = 'FEN : —';
+        document.getElementById('playerWhiteT').textContent = '—';
+        document.getElementById('playerBlackT').textContent = '—';
+        document.getElementById('clockWhiteT').textContent = '—';
+        document.getElementById('clockBlackT').textContent = '—';
+        const badgeT = document.getElementById('statusBadgeT');
+        if (badgeT) badgeT.className = 'live-badge idle';
+        const statusTextT = document.getElementById('statusTextT');
+        if (statusTextT) statusTextT.textContent = 'En attente';
+        if (window.phantomChessboard?.isConnected) {
+            window.phantomChessboard.sendGameStart();
+            await window.phantomChessboard.syncPosition(stateT.chess.fen());
+            logT('Échiquier réinitialisé et synchronisé', 'ok');
+        } else {
+            logT('Échiquier réinitialisé', 'ok');
+        }
+    });
+
     document.getElementById('btnCalibrateT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
         await window.phantomChessboard.calibrate();

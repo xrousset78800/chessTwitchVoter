@@ -231,6 +231,25 @@ document.getElementById('btnSyncLive')?.addEventListener('click', async () => {
     log('Synchronisation envoyée', 'ok');
 });
 
+document.getElementById('btnResetLive')?.addEventListener('click', async () => {
+    stopPolling();
+    state.chess.reset();
+    state.board.position('start');
+    state.lastMoveCount = 0;
+    state.moveHistory = [];
+    state.uuid = null;
+    document.getElementById('fenDisplay').textContent = 'FEN : —';
+    document.getElementById('movesList').innerHTML = '<span style="color:var(--text-muted,#55556a); font-size:0.8rem;">Aucun coup pour l\'instant</span>';
+    setStatus('idle', 'En attente');
+    if (window.phantomChessboard?.isConnected) {
+        window.phantomChessboard.sendGameStart();
+        await window.phantomChessboard.syncPosition(state.chess.fen());
+        log('Échiquier réinitialisé et synchronisé', 'ok');
+    } else {
+        log('Échiquier réinitialisé', 'ok');
+    }
+});
+
 document.getElementById('btnCalibrateLive')?.addEventListener('click', async () => {
     if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
     await window.phantomChessboard.calibrate();
