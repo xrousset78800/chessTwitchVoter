@@ -66,6 +66,55 @@ app.get('/proxy/chess-moves/', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+// Liste des tournois en cours depuis chess.com (search API + filtre qualité)
+app.get('/proxy/chess-events-list', async (req, res) => {
+    try {
+        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+        const now = new Date();
+        const r = await fetch('https://www.chess.com/events/v1/api/search', {
+            method: 'POST',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Content-Type': 'application/json',
+                'Origin': 'https://www.chess.com',
+                'Referer': 'https://www.chess.com/events',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ size: 100 })
+        });
+        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        const raw = await r.json();
+        const events = Array.isArray(raw) ? raw.map(i => i.event).filter(Boolean) : [];
+
+        const filtered = events
+            // Exclure les événements terminés ou débutant dans plus de 30 jours
+            .filter(e => {
+                const end   = e.endAt   ? new Date(e.endAt)   : null;
+                const start = e.startAt ? new Date(e.startAt) : null;
+                if (end   && end   < now) return false;
+                if (start && start > new Date(now.getTime() + 30 * 86400e3)) return false;
+                return true;
+            })
+            // Exclure les tournois sans aucun contenu (spam)
+            .filter(e =>
+                e.playerCount > 0 || e.roundCount > 0 ||
+                e.imageUrl    || (e.streams?.length > 0) ||
+                (e.schedules?.length > 0)
+            )
+            // Trier : image > streams > joueurs > date de début desc
+            .sort((a, b) => {
+                const score = e => (e.imageUrl ? 100 : 0) + (e.streams?.length > 0 ? 50 : 0) + Math.min(e.playerCount || 0, 40);
+                const diff = score(b) - score(a);
+                if (diff !== 0) return diff;
+                return new Date(b.startAt) - new Date(a.startAt);
+            });
+
+        res.json(filtered);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Partie daily Chess.com (callback spécifique daily)
 app.get('/proxy/chess-daily/:gameId', async (req, res) => {
     try {
