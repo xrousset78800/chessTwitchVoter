@@ -84,6 +84,78 @@ async function fetchMoves(uuid) {
     return await r.json();
 }
 
+// ── Daily : récupérer une partie (API publique Chess.com — PGN) ──
+function isDaily() {
+    return document.getElementById('isDailyGame')?.checked ?? false;
+}
+
+async function fetchDailyGame(gameId) {
+    const r = await fetch(`${PROXY_BASE}/proxy/chess-daily/${gameId}`);
+    if (!r.ok) throw new Error(`Partie daily : HTTP ${r.status}`);
+    return await r.json();
+}
+
+// Normalise la réponse daily vers le format attendu par updateUI()
+function normalizeDailyInfo(data) {
+    return {
+        ...data,
+        playersDetails: [
+            { username: data.white?.username, rating: data.white?.rating },
+            { username: data.black?.username, rating: data.black?.rating }
+        ],
+        timeclass: 'daily',
+        rated: data.rated
+    };
+}
+
+// ── Daily : appliquer les coups depuis le PGN ──
+function applyPGN(pgn) {
+    const temp = new Chess();
+    try { temp.loadPgn(pgn); } catch(e) { return false; }
+
+    const history = temp.history({ verbose: true });
+    if (history.length === state.lastMoveCount) return false;
+
+    state.chess.reset();
+    state.moveHistory = [];
+    for (const move of history) {
+        const m = state.chess.move(move.san);
+        if (m) state.moveHistory.push(m.san);
+    }
+    state.lastMoveCount = history.length;
+
+    if (history.length > 0) {
+        const last = history[history.length - 1];
+        highlightLastMove(last.from, last.to);
+    }
+    updateTurnIndicator();
+    return true;
+}
+
+// ── Boucle de polling daily ──
+async function pollDaily(gameId, gameInfo) {
+    if (!state.polling) return;
+    try {
+        const data = await fetchDailyGame(gameId);
+        const changed = data.pgn ? applyPGN(data.pgn) : false;
+        if (changed) {
+            updateUI(gameInfo);
+            log(`${state.lastMoveCount} coup(s) — position mise à jour`, 'ok');
+        }
+        if (state.chess.isGameOver()) {
+            setStatus('ended', 'Terminée');
+            log('Partie terminée', 'warn');
+            stopPolling();
+            return;
+        }
+        setStatus('live', 'En direct');
+    } catch (err) {
+        log(`Erreur : ${err.message}`, 'error');
+    }
+    const interval = parseInt(document.getElementById('pollInterval').value) * 1000;
+    state.pollTimer = setTimeout(() => pollDaily(gameId, gameInfo), interval);
+}
+
 // ── Appliquer les coups TCN ──
 function applyMoves(movesArray) {
     if (movesArray.length === state.lastMoveCount) return false;
@@ -287,40 +359,63 @@ document.getElementById('btnPhantom').addEventListener('click', async () => {
 // ── Connexion ──
 document.getElementById('btnConnect').addEventListener('click', async () => {
     const raw = document.getElementById('gameInput').value;
-    const legacyId = parseGameId(raw);
-    if (!legacyId) { log('ID invalide', 'error'); return; }
+    const gameId = parseGameId(raw);
+    if (!gameId) { log('ID invalide', 'error'); return; }
 
     setStatus('polling', 'Connexion…');
-    log(`Récupération des infos pour la partie ${legacyId}…`, 'info');
+    log(`Récupération des infos pour la partie ${gameId}…`, 'info');
 
     document.getElementById('btnConnect').disabled = true;
     document.getElementById('btnStop').disabled = false;
     document.getElementById('gameMeta').innerHTML = '';
 
+    state.lastMoveCount = 0;
+    state.moveHistory = [];
+    state.chess.reset();
+    state.board.position('start');
+
     try {
-        const gameInfo = await fetchGameInfo(legacyId);
-        state.uuid = gameInfo.id;
-        state.movesUrl = gameInfo.transports.http.url;
-        state.legacyId = legacyId;
-        state.lastMoveCount = 0;
-        state.moveHistory = [];
-        state.chess.reset();
-        state.board.position('start');
+        if (isDaily()) {
+            // ── Mode daily (PGN) ──
+            const data = await fetchDailyGame(gameId);
+            const gameInfo = normalizeDailyInfo(data);
+            state.legacyId = gameId;
 
-        log(`UUID : ${state.uuid}`, 'ok');
-        log(`${gameInfo.playersDetails?.[0]?.username} vs ${gameInfo.playersDetails?.[1]?.username}`, 'ok');
+            log(`${data.white?.username} vs ${data.black?.username}`, 'ok');
 
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.sendGameStart();
+                log('Phantom : partie démarrée', 'ok');
+            }
 
-        // Ajouter ici
-        if (window.phantomChessboard?.isConnected) {
-            window.phantomChessboard.sendGameStart();
-            log('Phantom : partie démarrée', 'ok');
+            if (data.pgn) {
+                applyPGN(data.pgn);
+                updateUI(gameInfo);
+            }
+
+            state.polling = true;
+            const interval = parseInt(document.getElementById('pollInterval').value) * 1000;
+            state.pollTimer = setTimeout(() => pollDaily(gameId, gameInfo), interval);
+            setStatus('live', 'En direct');
+
+        } else {
+            // ── Mode live (TCN) ──
+            const gameInfo = await fetchGameInfo(gameId);
+            state.uuid = gameInfo.id;
+            state.movesUrl = gameInfo.transports.http.url;
+            state.legacyId = gameId;
+
+            log(`UUID : ${state.uuid}`, 'ok');
+            log(`${gameInfo.playersDetails?.[0]?.username} vs ${gameInfo.playersDetails?.[1]?.username}`, 'ok');
+
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.sendGameStart();
+                log('Phantom : partie démarrée', 'ok');
+            }
+
+            state.polling = true;
+            await poll(gameInfo);
         }
-
-
-        state.polling = true;
-        log(`UUID utilisé : ${state.uuid}`, 'info');
-        await poll(gameInfo);
 
     } catch (err) {
         log(`Erreur connexion : ${err.message}`, 'error');

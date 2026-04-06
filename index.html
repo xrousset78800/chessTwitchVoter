@@ -432,10 +432,15 @@
                                 <small data-i18n="live.input.hint" ...>URL chess.com/game/live/123456789 ou ID seul</small>
 
                             </div>
+                            <div class="input-group" style="flex-direction:row; align-items:center; gap:8px; margin-top:4px;">
+                                <input type="checkbox" id="isDailyGame" style="width:16px; height:16px; cursor:pointer; accent-color:var(--accent-purple,#8b5cf6);">
+                                <label for="isDailyGame" style="cursor:pointer; font-size:0.85rem;" data-i18n="live.daily.label">Partie daily</label>
+                            </div>
+
                             <div class="input-group">
                                 <label data-i18n="live.polling.label">Intervalle de polling</label>
                                 <input type="number" class="live-input" id="pollInterval"
-                                       value="3" min="1" max="15" style="width:80px;">
+                                       value="3" min="1" max="60" style="width:80px;">
                                 <small data-i18n="live.polling.unit">secondes</small>
                             </div>
 
