@@ -84,7 +84,7 @@ async function fetchMoves(uuid) {
     return await r.json();
 }
 
-// ── Daily : récupérer une partie (API publique Chess.com — PGN) ──
+// ── Daily : helpers ──
 function isDaily() {
     return document.getElementById('isDailyGame')?.checked ?? false;
 }
@@ -95,35 +95,44 @@ async function fetchDailyGame(gameId) {
     return await r.json();
 }
 
-// Normalise la réponse daily vers le format attendu par updateUI()
+// Réponse : { game: { moveList, plyCount, isFinished, turnColor, pgnHeaders },
+//             players: { top: { color, username, rating }, bottom: { ... } } }
 function normalizeDailyInfo(data) {
+    const top    = data.players?.top;
+    const bottom = data.players?.bottom;
+    const white  = top?.color === 'white' ? top : bottom;
+    const black  = top?.color === 'black' ? top : bottom;
     return {
-        ...data,
         playersDetails: [
-            { username: data.white?.username, rating: data.white?.rating },
-            { username: data.black?.username, rating: data.black?.rating }
+            { username: white?.username, rating: white?.rating },
+            { username: black?.username, rating: black?.rating }
         ],
         timeclass: 'daily',
-        rated: data.rated
+        rated: data.game?.isRated
     };
 }
 
-// ── Daily : appliquer les coups depuis le PGN ──
-function applyPGN(pgn) {
-    const temp = new Chess();
-    try { temp.loadPgn(pgn); } catch(e) { return false; }
-
-    const history = temp.history({ verbose: true });
-    if (history.length === state.lastMoveCount) return false;
+// ── Daily : appliquer les coups depuis moveList (TCN concaténé) ──
+function applyDailyMoves(moveList) {
+    if (!moveList && moveList !== '') return false;
+    const totalMoves = moveList.length / 2;
+    if (totalMoves === state.lastMoveCount) return false;
 
     state.chess.reset();
     state.moveHistory = [];
-    for (const move of history) {
-        const m = state.chess.move(move.san);
-        if (m) state.moveHistory.push(m.san);
+    for (let i = 0; i < moveList.length; i += 2) {
+        const uci = decodeTCNMove(moveList.slice(i, i + 2));
+        if (!uci) continue;
+        const move = state.chess.move({
+            from: uci.slice(0, 2),
+            to:   uci.slice(2, 4),
+            promotion: uci[4] || undefined
+        });
+        if (move) state.moveHistory.push(move.san);
     }
-    state.lastMoveCount = history.length;
+    state.lastMoveCount = totalMoves;
 
+    const history = state.chess.history({ verbose: true });
     if (history.length > 0) {
         const last = history[history.length - 1];
         highlightLastMove(last.from, last.to);
@@ -137,12 +146,12 @@ async function pollDaily(gameId, gameInfo) {
     if (!state.polling) return;
     try {
         const data = await fetchDailyGame(gameId);
-        const changed = data.pgn ? applyPGN(data.pgn) : false;
+        const changed = applyDailyMoves(data.game?.moveList ?? '');
         if (changed) {
             updateUI(gameInfo);
             log(`${state.lastMoveCount} coup(s) — position mise à jour`, 'ok');
         }
-        if (state.chess.isGameOver()) {
+        if (data.game?.isFinished || state.chess.isGameOver()) {
             setStatus('ended', 'Terminée');
             log('Partie terminée', 'warn');
             stopPolling();
@@ -376,50 +385,26 @@ document.getElementById('btnConnect').addEventListener('click', async () => {
 
     try {
         if (isDaily()) {
-            // ── Mode daily ──
+            // ── Mode daily (TCN concaténé dans game.moveList) ──
             const data = await fetchDailyGame(gameId);
-            console.log('📦 Réponse daily brute:', data);
-            log(`Réponse reçue — clés : ${Object.keys(data).join(', ')}`, 'info');
-
+            const gameInfo = normalizeDailyInfo(data);
             state.legacyId = gameId;
 
-            // Détection du format de réponse
-            if (data.pgn) {
-                // Réponse avec PGN direct
-                const gameInfo = normalizeDailyInfo(data);
-                log(`${data.white?.username ?? '?'} vs ${data.black?.username ?? '?'}`, 'ok');
+            const w = gameInfo.playersDetails[0]?.username ?? '?';
+            const b = gameInfo.playersDetails[1]?.username ?? '?';
+            log(`${w} (blancs) vs ${b} (noirs)`, 'ok');
 
-                if (window.phantomChessboard?.isConnected) {
-                    window.phantomChessboard.sendGameStart();
-                    log('Phantom : partie démarrée', 'ok');
-                }
-                applyPGN(data.pgn);
-                updateUI(gameInfo);
-                state.polling = true;
-                const interval = parseInt(document.getElementById('pollInterval').value) * 1000;
-                state.pollTimer = setTimeout(() => pollDaily(gameId, gameInfo), interval);
-
-            } else if (data.transports?.http?.url) {
-                // Même format que live — réutilise le flow TCN
-                log('Format identique au live — bascule en mode TCN', 'info');
-                state.uuid = data.id;
-                state.movesUrl = data.transports.http.url;
-                log(`${data.playersDetails?.[0]?.username} vs ${data.playersDetails?.[1]?.username}`, 'ok');
-
-                if (window.phantomChessboard?.isConnected) {
-                    window.phantomChessboard.sendGameStart();
-                    log('Phantom : partie démarrée', 'ok');
-                }
-                state.polling = true;
-                await poll(data);
-
-            } else {
-                log(`Format de réponse inconnu. Inspecte la console (clés : ${Object.keys(data).join(', ')})`, 'warn');
-                setStatus('idle', 'Format inconnu');
-                document.getElementById('btnConnect').disabled = false;
-                document.getElementById('btnStop').disabled = true;
-                return;
+            if (window.phantomChessboard?.isConnected) {
+                window.phantomChessboard.sendGameStart();
+                log('Phantom : partie démarrée', 'ok');
             }
+
+            applyDailyMoves(data.game?.moveList ?? '');
+            updateUI(gameInfo);
+
+            state.polling = true;
+            const interval = parseInt(document.getElementById('pollInterval').value) * 1000;
+            state.pollTimer = setTimeout(() => pollDaily(gameId, gameInfo), interval);
             setStatus('live', 'En direct');
 
         } else {
