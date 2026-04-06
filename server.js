@@ -66,18 +66,13 @@ app.get('/proxy/chess-moves/', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-// Partie daily (API publique Chess.com — retourne PGN)
+// Partie daily Chess.com (même endpoint que live, type différent)
 app.get('/proxy/chess-daily/:gameId', async (req, res) => {
     try {
         const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
-        const url = `https://api.chess.com/pub/game/${req.params.gameId}`;
+        const url = `https://www.chess.com/service/play/games/${req.params.gameId}`;
         console.log('🔍 Daily game URL:', url);
-        const r = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0',
-                'Accept': 'application/json'
-            }
-        });
+        const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
         res.json(await r.json());
     } catch (err) {

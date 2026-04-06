@@ -376,26 +376,50 @@ document.getElementById('btnConnect').addEventListener('click', async () => {
 
     try {
         if (isDaily()) {
-            // ── Mode daily (PGN) ──
+            // ── Mode daily ──
             const data = await fetchDailyGame(gameId);
-            const gameInfo = normalizeDailyInfo(data);
+            console.log('📦 Réponse daily brute:', data);
+            log(`Réponse reçue — clés : ${Object.keys(data).join(', ')}`, 'info');
+
             state.legacyId = gameId;
 
-            log(`${data.white?.username} vs ${data.black?.username}`, 'ok');
-
-            if (window.phantomChessboard?.isConnected) {
-                window.phantomChessboard.sendGameStart();
-                log('Phantom : partie démarrée', 'ok');
-            }
-
+            // Détection du format de réponse
             if (data.pgn) {
+                // Réponse avec PGN direct
+                const gameInfo = normalizeDailyInfo(data);
+                log(`${data.white?.username ?? '?'} vs ${data.black?.username ?? '?'}`, 'ok');
+
+                if (window.phantomChessboard?.isConnected) {
+                    window.phantomChessboard.sendGameStart();
+                    log('Phantom : partie démarrée', 'ok');
+                }
                 applyPGN(data.pgn);
                 updateUI(gameInfo);
-            }
+                state.polling = true;
+                const interval = parseInt(document.getElementById('pollInterval').value) * 1000;
+                state.pollTimer = setTimeout(() => pollDaily(gameId, gameInfo), interval);
 
-            state.polling = true;
-            const interval = parseInt(document.getElementById('pollInterval').value) * 1000;
-            state.pollTimer = setTimeout(() => pollDaily(gameId, gameInfo), interval);
+            } else if (data.transports?.http?.url) {
+                // Même format que live — réutilise le flow TCN
+                log('Format identique au live — bascule en mode TCN', 'info');
+                state.uuid = data.id;
+                state.movesUrl = data.transports.http.url;
+                log(`${data.playersDetails?.[0]?.username} vs ${data.playersDetails?.[1]?.username}`, 'ok');
+
+                if (window.phantomChessboard?.isConnected) {
+                    window.phantomChessboard.sendGameStart();
+                    log('Phantom : partie démarrée', 'ok');
+                }
+                state.polling = true;
+                await poll(data);
+
+            } else {
+                log(`Format de réponse inconnu. Inspecte la console (clés : ${Object.keys(data).join(', ')})`, 'warn');
+                setStatus('idle', 'Format inconnu');
+                document.getElementById('btnConnect').disabled = false;
+                document.getElementById('btnStop').disabled = true;
+                return;
+            }
             setStatus('live', 'En direct');
 
         } else {
