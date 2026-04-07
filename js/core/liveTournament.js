@@ -279,10 +279,36 @@ async function fetchEventsList() {
     }
 }
 
+// Suffixes courants pour les index events (parent → sub-rooms)
+const SLUG_SUFFIXES = ['-open', '-women', '-blitz', '-rapid', '-classic', '-standard', '-bullet'];
+
 async function loadAndRenderTournament(slug) {
     try {
         logT(`Chargement de "${slug}"…`, 'info');
-        const data = await loadTournament(slug);
+        let data;
+        try {
+            data = await loadTournament(slug);
+        } catch (err404) {
+            if (!err404.message.includes('404') && !err404.message.includes('HTTP 4')) throw err404;
+            // Slug d'index (événement parent) → essai avec suffixes courants
+            logT(`Slug introuvable, recherche de sub-rooms…`, 'warn');
+            let found = false;
+            for (const suffix of SLUG_SUFFIXES) {
+                try {
+                    data = await loadTournament(slug + suffix);
+                    slug = slug + suffix;
+                    const input = document.getElementById('tournamentInput');
+                    if (input) input.value = slug;
+                    logT(`Sub-room trouvée : "${slug}"`, 'ok');
+                    found = true;
+                    break;
+                } catch { /* continuer */ }
+            }
+            if (!found) {
+                logT(`Aucune sub-room trouvée. Essayez un slug plus précis (ex: ${slug}-open).`, 'error');
+                return;
+            }
+        }
         renderTournament(data);
         logT(`${data.games.length} parties chargées`, 'ok');
     } catch (err) {
