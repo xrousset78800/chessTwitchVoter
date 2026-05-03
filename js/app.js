@@ -1003,26 +1003,166 @@ fullReset() {
 // BROWSE PAGE
 // ============================================
 const BrowsePage = {
+    initialized: false,
+    socket: null,
+
     init() {
-        this.renderGames();
+        if (!this.initialized) {
+            this.setupSocket();
+            this.setupFormHandlers();
+            this.setupCopyButtons();
+            this.initialized = true;
+        } else {
+            this.socket?.emit('getGames');
+        }
+        this.handleJoinParam();
     },
 
-    renderGames() {
+    setupSocket() {
+        if (typeof io === 'undefined') return;
+
+        const SOCKET_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? `http://localhost:${window.location.port || 3000}`
+            : 'https://chesstwitchvoter.onrender.com';
+
+        this.socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+
+        this.socket.on('connect', () => {
+            this.socket.emit('subscribeBrowse');
+        });
+
+        this.socket.on('gamesList', (games) => this.renderGames(games));
+        this.socket.on('gamesListUpdated', (games) => this.renderGames(games));
+    },
+
+    setupFormHandlers() {
+        document.getElementById('browse-create-btn')?.addEventListener('click', () => {
+            const channel = document.getElementById('browse-host-channel')?.value?.trim();
+            if (!channel) { Toast.error('Entre ton channel Twitch'); return; }
+
+            const timerDuration = parseInt(document.getElementById('browse-timer')?.value) || 30;
+            const mode          = document.getElementById('browse-mode')?.value || 'wheel';
+
+            const gameId = window.multiplayerManager?.createGameFromBrowse(channel, {
+                timerDuration,
+                majorityMode: mode === 'majority'
+            });
+
+            if (gameId) {
+                const guestUrl = `${window.location.origin}${window.location.pathname}?join=${gameId}`;
+                document.getElementById('browse-game-code').textContent   = gameId;
+                document.getElementById('browse-guest-url').textContent   = guestUrl;
+                document.getElementById('browse-created-info').style.display = 'block';
+                document.getElementById('browse-create-btn').style.display   = 'none';
+            }
+        });
+
+        document.getElementById('browse-join-btn')?.addEventListener('click', () => {
+            const channel = document.getElementById('browse-guest-channel')?.value?.trim();
+            const code    = document.getElementById('browse-join-code')?.value?.trim().toUpperCase();
+            if (!channel || !code) { Toast.error('Remplis tous les champs'); return; }
+            window.multiplayerManager?.joinGameFromBrowse(channel, code);
+        });
+
+        document.getElementById('browse-refresh-btn')?.addEventListener('click', () => {
+            this.socket?.emit('getGames');
+        });
+    },
+
+    setupCopyButtons() {
+        document.querySelectorAll('#page-browse .btn-copy').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const text = document.getElementById(btn.dataset.target)?.textContent?.trim();
+                if (!text) return;
+                navigator.clipboard.writeText(text).then(() => {
+                    const icon = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check" style="color:#34d399"></i>';
+                    setTimeout(() => { btn.innerHTML = icon; }, 2000);
+                });
+            });
+        });
+    },
+
+    handleJoinParam() {
+        const joinCode = new URLSearchParams(window.location.search).get('join');
+        if (!joinCode) return;
+        const codeInput = document.getElementById('browse-join-code');
+        if (codeInput) {
+            codeInput.value = joinCode.toUpperCase();
+            document.getElementById('browse-join-btn')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    },
+
+    renderGames(games) {
         const container = document.getElementById('games-list');
         if (!container) return;
 
-        // Mock data - à remplacer par Socket.IO
-        const games = [];
+        const active = (games || []).filter(g => g.status !== 'ended');
 
-        if (games.length === 0) {
+        if (active.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state__icon">📺</div>
+                    <div class="empty-state__icon">⚔</div>
                     <p class="empty-state__title">Aucune partie en cours</p>
                     <p class="empty-state__desc">Sois le premier à lancer une Bataille Twitch !</p>
                 </div>
             `;
+            return;
         }
+
+        container.innerHTML = active.map(game => {
+            const elapsed    = game.startedAt ? Math.floor((Date.now() - game.startedAt) / 60000) + ' min' : '';
+            const statusClass = game.status === 'playing' ? 'game-card__status--playing' : 'game-card__status--waiting';
+            const statusLabel = game.status === 'playing' ? '● En cours' : '⏳ En attente';
+
+            return `
+                <div class="game-card" data-game-id="${game.gameId}">
+                    <div class="game-card__header">
+                        <span class="game-card__mode">Chat vs Chat</span>
+                        <span class="game-card__status ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <div class="game-card__players">
+                        <div class="game-card__player">
+                            <div class="game-card__avatar">♙</div>
+                            <div>
+                                <div class="game-card__player-name">${game.host}</div>
+                                <div class="game-card__player-rating">Blancs</div>
+                            </div>
+                        </div>
+                        <div class="game-card__vs">⚔</div>
+                        <div class="game-card__player game-card__player--right">
+                            <div class="game-card__avatar">♟</div>
+                            <div>
+                                <div class="game-card__player-name">${game.guest || '???'}</div>
+                                <div class="game-card__player-rating">Noirs</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="game-card__footer">
+                        <span>${game.moveCount || 0} coup${game.moveCount !== 1 ? 's' : ''}</span>
+                        ${elapsed ? `<span>${elapsed}</span>` : ''}
+                        ${game.status === 'waiting' ? `
+                            <button class="btn btn--primary btn--sm game-card__join-btn"
+                                    data-game-id="${game.gameId}">
+                                <i class="fas fa-sign-in-alt"></i> Rejoindre
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.querySelectorAll('.game-card__join-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const codeInput = document.getElementById('browse-join-code');
+                if (codeInput) {
+                    codeInput.value = btn.dataset.gameId;
+                    codeInput.scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('browse-guest-channel')?.focus();
+                }
+            });
+        });
     }
 };
 
@@ -1193,12 +1333,25 @@ async function initApp() {
     // Init router
     Router.init();
 
-    // Si on arrive via URL multiplayer (?game=...&role=... ou ?join=...), aller direct en sandbox
+    // ?game=&role=&streamer= → connexion directe côté sandbox (URLs partagées)
+    // ?join= → browse page pour rejoindre via le formulaire
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('game') || urlParams.get('join')) {
+    if (urlParams.get('game')) {
         Router.showPage('sandbox');
         Toast.info('🎮 Mode Bataille Twitch — connexion en cours...');
+    } else if (urlParams.get('join')) {
+        Router.showPage('browse');
     }
+
+    // Naviguer vers sandbox quand multi.js crée/rejoint une partie depuis browse
+    window.addEventListener('multiNavigateSandbox', (e) => {
+        const { role, gameId } = e.detail;
+        Router.showPage('sandbox');
+        const msg = role === 'host'
+            ? `Partie ${gameId} créée — en attente de l'adversaire`
+            : `Connexion à la partie ${gameId}...`;
+        Toast.info(`🎮 ${msg}`);
+    });
 
     // Restore connections
     await twitch?.restore();
@@ -1241,18 +1394,21 @@ async function initApp() {
 
     // ---- Événement Bataille Twitch prête ----
     window.addEventListener('multiGameReady', (e) => {
-        const { players } = e.detail;
+        const { players, settings } = e.detail;
+
+        // Appliquer les paramètres de la partie (browse form ou defaults)
+        const timerDuration = window._browseTimerDuration || settings?.timerDuration || AppState.config.timerDuration;
+        const majorityMode  = window._browseMajorityMode  !== undefined ? window._browseMajorityMode : AppState.config.majorityMode;
+        delete window._browseTimerDuration;
+        delete window._browseMajorityMode;
 
         // Configurer l'état pour le mode ChatVsChat
-        AppState.gameMode        = 'chatVsChat';
-        AppState.players.chat1   = players.white;
-        AppState.players.chat2   = players.black;
-
-        // Activer le timer de vote si pas déjà fait
-        if (!AppState.config.timerEnabled) {
-            AppState.config.timerEnabled = true;
-            gameEngine.config.timerEnabled = true;
-        }
+        AppState.gameMode              = 'chatVsChat';
+        AppState.players.chat1         = players.white;
+        AppState.players.chat2         = players.black;
+        AppState.config.timerEnabled   = true;
+        AppState.config.timerDuration  = timerDuration;
+        AppState.config.majorityMode   = majorityMode;
 
         // Orienter l'échiquier selon le rôle
         const myColor = window.playerColor;
@@ -1263,13 +1419,17 @@ async function initApp() {
         // Démarrer la partie
         if (!SandboxPage.initialized) {
             gameEngine.init({
-                timerEnabled:  AppState.config.timerEnabled,
-                timerDuration: AppState.config.timerDuration,
+                timerEnabled:  true,
+                timerDuration: timerDuration,
                 wheelDuration: AppState.config.wheelDuration,
-                majorityMode:  AppState.config.majorityMode,
+                majorityMode:  majorityMode,
                 singleVote:    AppState.config.singleVote
             });
             SandboxPage.initialized = true;
+        } else {
+            gameEngine.config.timerEnabled  = true;
+            gameEngine.config.timerDuration = timerDuration;
+            gameEngine.config.majorityMode  = majorityMode;
         }
 
         gameEngine.startGame();
