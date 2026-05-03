@@ -355,6 +355,11 @@ startTurn() {
         if (this.votingWheel) this.votingWheel.clear();
     }
 
+    // Mettre à jour l'indicateur de tour multi
+    if (window.multiplayerManager?.gameId) {
+        window.multiplayerManager.updateTurnIndicator();
+    }
+
     this.updateAvailableMoves();
     if (this.onTurnChange) this.onTurnChange(this.currentTurn);
 }
@@ -442,8 +447,20 @@ highlightMostVoted() {
     });
 }
     processVoteResult() {
+        // ========== MODE MULTI : jouer seulement si c'est notre tour ==========
+        if (window.multiplayerManager?.gameId && window.playerColor) {
+            const turn = this.chess.turn(); // 'w' ou 'b'
+            const isMyTurn = (window.playerColor === 'white' && turn === 'w') ||
+                             (window.playerColor === 'black' && turn === 'b');
+            if (!isMyTurn) {
+                voting.reset();
+                console.log('⏳ Multi : timer expiré mais pas notre tour — on attend le coup adverse');
+                return;
+            }
+        }
+
         const results = voting.getSortedResults();
-        
+
         // ========== CAS 1: AUCUN VOTE → COUP ALÉATOIRE ==========
         if (!results || results.length === 0) {
             console.warn('⚠️ Aucun vote reçu');
@@ -621,17 +638,39 @@ showWheelAnimation(results) {
         if (toSquare) toSquare.classList.add('highlight-last-move');
     }
 
-    executeMove(moveStr) {
+    executeMove(moveStr, fromNetwork = false) {
         const move = this.chess.move(moveStr);
-        
+
         if (move) {
-            this.board.position(this.chess.fen());
+            const fen = this.chess.fen();
+
+            if (fromNetwork) {
+                // Pas d'animation pour les coups réseau → highlight immédiat et fiable
+                this.board.position(fen, false);
+                this.highlightLastMove(move.from, move.to);
+            } else {
+                // Animation locale → re-appliquer le highlight après la fin de l'animation
+                this.board.position(fen);
+                // Double requestAnimationFrame : passe après le repaint de l'animation chessboard
+                const from = move.from, to = move.to;
+                requestAnimationFrame(() => requestAnimationFrame(() => this.highlightLastMove(from, to)));
+            }
+
             this.moveHistory.push(move);
-            this.highlightLastMove(move.from, move.to);            
             this.playMoveSound(move);
             this.updateHistoryUI(move);
             this.syncPhantom();
-            
+
+            // Envoyer au serveur si mode multi et coup local
+            if (!fromNetwork && window.multiplayerManager?.gameId) {
+                window.multiplayerManager.sendMove(moveStr);
+            }
+
+            // Mettre à jour l'indicateur de tour multi
+            if (window.multiplayerManager?.gameId) {
+                window.multiplayerManager.updateTurnIndicator();
+            }
+
             if (!this.checkGameEnd()) {
                 this.currentTurn = this.chess.turn();
                 this.startTurn();
@@ -743,6 +782,14 @@ updateAvailableMoves() {
         }
     });
     
+    // En mode multi, griser le panel si ce n'est pas notre tour
+    const movesPanel = document.getElementById('moves-panel');
+    const isLocked = !this.isMyTurnInMulti();
+    if (movesPanel) {
+        movesPanel.classList.toggle('is-locked', isLocked);
+        movesPanel.title = isLocked ? 'Tour de l\'adversaire — attendez...' : '';
+    }
+
     // Mettre à jour chaque liste avec l'icône de la bonne couleur
     ['P', 'N', 'B', 'R', 'Q', 'K', 'O'].forEach(piece => {
         const list = document.getElementById(`availableList${piece}`);
@@ -776,7 +823,24 @@ updateAvailableMoves() {
     });
 }
 
+/**
+ * Retourne true si, en mode multi, c'est le tour de cette instance.
+ * Toujours true hors mode multi.
+ */
+isMyTurnInMulti() {
+    if (!window.multiplayerManager?.gameId || !window.playerColor) return true;
+    const turn = this.chess.turn(); // 'w' ou 'b'
+    return (window.playerColor === 'white' && turn === 'w') ||
+           (window.playerColor === 'black' && turn === 'b');
+}
+
 onMoveClick(move) {
+    // Mode multi : bloquer complètement si ce n'est pas notre tour
+    if (!this.isMyTurnInMulti()) {
+        console.log('🚫 Multi : clic ignoré — pas votre tour');
+        return;
+    }
+
     // Mode problèmes (chessVoterApp) avec timer : passer par addMoveToPoll
     if (typeof gameMode !== 'undefined' && gameMode === 'probMode') {
         if (typeof timerMode !== 'undefined' && timerMode && typeof voteOpen !== 'undefined' && voteOpen) {

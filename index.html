@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="css/components/wheel.css">
     <link rel="stylesheet" href="css/components/problems.css">
     <link rel="stylesheet" href="css/components/twitch-connect.css">
+    <link rel="stylesheet" href="css/components/multiplayer.css">
     <link rel="stylesheet" href="css/pages/landing.css">
     <link rel="stylesheet" href="css/pages/sandbox.css">
     <link rel="stylesheet" href="css/pages/browse.css">
@@ -188,6 +189,120 @@
                                 <div class="vote-total" id="vote-total"></div>
                             </div>
                         </div>                      
+                        <!-- ========== BATAILLE TWITCH MULTIJOUEUR ========== -->
+                        <div class="panel panel--multi" id="panel-multiplayer">
+                            <div class="panel__header">
+                                <i class="fas fa-chess-knight"></i> Bataille Twitch
+                                <span class="badge badge--live" id="multi-status-badge" style="display:none">● LIVE</span>
+                            </div>
+                            <div class="panel__content">
+
+                                <!-- Bannière partie active (visible quand les 2 joueurs sont connectés) -->
+                                <div id="multi-active-banner" class="multi-banner" style="display:none">
+                                    <div class="multi-banner__teams">
+                                        <span class="multi-banner__team multi-banner__team--white" id="multi-team-white">—</span>
+                                        <span class="multi-banner__vs">⚔</span>
+                                        <span class="multi-banner__team multi-banner__team--black" id="multi-team-black">—</span>
+                                    </div>
+                                    <div class="multi-banner__status">
+                                        <span class="status-dot is-connected"></span>
+                                        <span id="multi-partner-text">Partie en cours !</span>
+                                    </div>
+                                </div>
+
+                                <!-- Indicateur de tour -->
+                                <div class="multi-turn-indicator" id="multi-turn-indicator">À votre tour de voter !</div>
+
+                                <!-- Onglets Créer / Rejoindre -->
+                                <div id="multi-tabs-container">
+                                    <div class="multi-tab-nav">
+                                        <button class="multi-tab active" data-tab="create">
+                                            <i class="fas fa-plus"></i> Créer
+                                        </button>
+                                        <button class="multi-tab" data-tab="join">
+                                            <i class="fas fa-sign-in-alt"></i> Rejoindre
+                                        </button>
+                                    </div>
+
+                                    <!-- ===== Panel CRÉER ===== -->
+                                    <div class="multi-tab-panel active" id="create-panel">
+                                        <div class="form-group">
+                                            <label class="form-label">Ton channel Twitch (Blancs ⬜)</label>
+                                            <input type="text" class="input input--sm" id="hostStreamerName"
+                                                   placeholder="ton_channel" autocomplete="off" spellcheck="false">
+                                        </div>
+                                        <button class="btn btn--primary btn--full" id="createGameBtn">
+                                            <i class="fas fa-play"></i> Créer la partie
+                                        </button>
+
+                                        <!-- Résultat création -->
+                                        <div id="gameCreatedInfo" style="display:none">
+                                            <div class="multi-game-code-wrapper">
+                                                <span style="font-size:0.75rem; color:var(--text-muted)">Code :</span>
+                                                <span class="multi-game-code" id="gameCode">—</span>
+                                            </div>
+
+                                            <div class="multi-url-box">
+                                                <div class="form-label">🎮 Ton URL (Host — Blancs)</div>
+                                                <div class="multi-url-row">
+                                                    <span class="multi-url-text" id="hostUrl"></span>
+                                                    <button class="btn btn--icon btn--sm btn-copy" data-target="hostUrl" title="Copier"><i class="fas fa-copy"></i></button>
+                                                    <button class="btn btn--icon btn--sm btn-blank" data-target="hostUrl" title="Ouvrir"><i class="fas fa-external-link-alt"></i></button>
+                                                </div>
+                                            </div>
+
+                                            <div class="multi-url-box">
+                                                <div class="form-label">⚔ URL adversaire (Noirs ⬛)</div>
+                                                <div class="multi-url-row">
+                                                    <span class="multi-url-text" id="guestUrl"></span>
+                                                    <button class="btn btn--icon btn--sm btn-copy" data-target="guestUrl" title="Copier"><i class="fas fa-copy"></i></button>
+                                                </div>
+                                            </div>
+
+                                            <div class="multi-waiting" id="multi-waiting-host">
+                                                <span class="multi-waiting__dot"></span>
+                                                En attente de l'adversaire...
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== Panel REJOINDRE ===== -->
+                                    <div class="multi-tab-panel" id="join-panel">
+                                        <div class="form-group">
+                                            <label class="form-label">Ton channel Twitch (Noirs ⬛)</label>
+                                            <input type="text" class="input input--sm" id="guestStreamerName"
+                                                   placeholder="ton_channel" autocomplete="off" spellcheck="false">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Code de partie</label>
+                                            <input type="text" class="input input--sm" id="gameCodeInput"
+                                                   placeholder="AB12" maxlength="6"
+                                                   style="text-transform:uppercase; letter-spacing:6px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.1rem; text-align:center;">
+                                        </div>
+                                        <button class="btn btn--primary btn--full" id="joinGameBtn">
+                                            <i class="fas fa-sign-in-alt"></i> Rejoindre
+                                        </button>
+
+                                        <!-- Résultat join -->
+                                        <div id="gameJoinedInfo" style="display:none">
+                                            <div class="multi-url-box">
+                                                <div class="form-label">🎮 Ton URL</div>
+                                                <div class="multi-url-row">
+                                                    <span class="multi-url-text" id="playerUrl"></span>
+                                                    <button class="btn btn--icon btn--sm btn-copy" data-target="playerUrl" title="Copier"><i class="fas fa-copy"></i></button>
+                                                    <button class="btn btn--icon btn--sm btn-blank" data-target="playerUrl" title="Ouvrir"><i class="fas fa-external-link-alt"></i></button>
+                                                </div>
+                                            </div>
+                                            <div class="multi-waiting" id="multi-waiting-guest">
+                                                <span class="multi-waiting__dot"></span>
+                                                Connexion en cours...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Mode selector -->
                         <div class="panel">
                             <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
@@ -718,6 +833,12 @@
     <script src="js/config.js"></script>
     <script src="js/phantom-form.js"></script>
     
+    <!-- Socket.IO (mode multiplayer) -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Multiplayer manager -->
+    <script src="js/multi.js"></script>
+
     <script src="js/app.js" type="module"></script>
 </body>
 </html>

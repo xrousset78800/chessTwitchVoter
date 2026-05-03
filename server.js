@@ -229,8 +229,25 @@ io.on('connection', (socket) => {
     });
     
     socket.on('moveSelected', (data) => {
-        // Synchroniser le coup joué
-        io.to(data.gameId).emit('movePlayed', data);
+        // Stocker le dernier FEN connu pour la partie
+        if (games[data.gameId] && data.fen) {
+            games[data.gameId].lastFen = data.fen;
+        }
+        // Diffuser le coup + FEN à tous les participants
+        io.to(data.gameId).emit('movePlayed', {
+            player: data.player,
+            move:   data.move,
+            fen:    data.fen || null
+        });
+        console.log(`♟ [${data.gameId}] ${data.player}: ${data.move}`);
+    });
+
+    socket.on('requestSync', (data) => {
+        // Un client demande une resynchronisation du FEN
+        const game = games[data.gameId];
+        if (game?.lastFen) {
+            socket.emit('syncFen', { fen: game.lastFen });
+        }
     });
     
     socket.on('disconnect', () => {

@@ -1182,6 +1182,9 @@ async function initApp() {
     // Charger la config sauvegardée
     Storage.loadConfig();
 
+    // Exposer Toast globalement (utilisé par multi.js et d'autres scripts)
+    window.AppToast = Toast;
+
     // Setup
     Toast.init();
     setupModals();
@@ -1190,24 +1193,93 @@ async function initApp() {
     // Init router
     Router.init();
 
+    // Si on arrive via URL multiplayer (?game=...&role=... ou ?join=...), aller direct en sandbox
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('game') || urlParams.get('join')) {
+        Router.showPage('sandbox');
+        Toast.info('🎮 Mode Bataille Twitch — connexion en cours...');
+    }
+
     // Restore connections
     await twitch?.restore();
 
     // Écouter les votes Twitch
     if (twitch) {
         twitch.onVote = (voteContext) => {
+            // ---- Mode problèmes ----
             if (AppState.gameMode === 'problems' && problemsManager.isActive) {
                 const accepted = problemsManager.receiveVote(voteContext);
                 console.log(`🗳️ Vote problème: ${voteContext.move} →`, accepted ? 'accepté' : 'ignoré');
                 return;
             }
-            
-            // Sinon comportement normal
+
+            // ---- Mode Bataille Twitch multijoueur ----
+            if (window.multiplayerManager?.gameId && window.playerColor) {
+                const channel  = (voteContext.channel || '').toLowerCase();
+                const myColor  = window.playerColor; // 'white' ou 'black'
+                const myChannel = myColor === 'white'
+                    ? (window.streamer1Channel || '').toLowerCase()
+                    : (window.streamer2Channel || '').toLowerCase();
+
+                // Chaque page n'accepte que les votes de son propre channel
+                if (channel !== myChannel) {
+                    return;
+                }
+
+                // Et seulement si c'est effectivement son tour
+                if (!gameEngine.isMyTurnInMulti?.()) {
+                    return;
+                }
+            }
+
+            // ---- Comportement normal ----
             if (voting.isOpen) {
                 voting.addVote(voteContext.username, voteContext.move);
             }
         };
     }
+
+    // ---- Événement Bataille Twitch prête ----
+    window.addEventListener('multiGameReady', (e) => {
+        const { players } = e.detail;
+
+        // Configurer l'état pour le mode ChatVsChat
+        AppState.gameMode        = 'chatVsChat';
+        AppState.players.chat1   = players.white;
+        AppState.players.chat2   = players.black;
+
+        // Activer le timer de vote si pas déjà fait
+        if (!AppState.config.timerEnabled) {
+            AppState.config.timerEnabled = true;
+            gameEngine.config.timerEnabled = true;
+        }
+
+        // Orienter l'échiquier selon le rôle
+        const myColor = window.playerColor;
+        if (myColor === 'black' && gameEngine.board) {
+            gameEngine.board.orientation('black');
+        }
+
+        // Démarrer la partie
+        if (!SandboxPage.initialized) {
+            gameEngine.init({
+                timerEnabled:  AppState.config.timerEnabled,
+                timerDuration: AppState.config.timerDuration,
+                wheelDuration: AppState.config.wheelDuration,
+                majorityMode:  AppState.config.majorityMode,
+                singleVote:    AppState.config.singleVote
+            });
+            SandboxPage.initialized = true;
+        }
+
+        gameEngine.startGame();
+
+        // Rendre le Toast accessible au multiplayerManager
+        window.AppToast = Toast;
+
+        Toast.success(`⚔ Bataille lancée ! ${players.white} (⬜) vs ${players.black} (⬛)`);
+        console.log(`🎮 Partie multi démarrée : ${players.white} vs ${players.black}`);
+    });
     if (sessionStorage.getItem('autoStart') === '1') {
         sessionStorage.removeItem('autoStart');
         // Attendre que SandboxPage soit init via le Router
@@ -1236,5 +1308,11 @@ async function initApp() {
 // Démarrer quand le DOM est prêt
 document.addEventListener('DOMContentLoaded', initApp);
 
-// Exports
+// Exposer les objets critiques pour les scripts non-modules (multi.js, phantom.js, etc.)
+window.gameEngine       = gameEngine;
+window.votingSystem     = voting;
+window.appTimer         = timer;
+window.AppState         = AppState;
+
+// Exports ES module
 export { AppState, Router, SandboxPage, BrowsePage, Toast, Storage, gameEngine, timer, voting, problemsManager };

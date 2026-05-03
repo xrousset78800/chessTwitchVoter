@@ -1,523 +1,468 @@
 /**
- * MULTI.JS - Gestion du mode multiplayer StreamerChat vs StreamerChat
- * Intégré directement dans index.html sans page intermédiaire
+ * MULTI.JS - Mode Bataille Twitch (Chat vs Chat en réseau)
+ * Deux streamers, deux chats, une partie synchronisée via Socket.IO
  */
 
 class MultiplayerManager {
     constructor() {
         this.socket = null;
         this.gameId = null;
-        this.role = null;
+        this.role = null;         // 'host' (blancs) ou 'guest' (noirs)
         this.streamerName = null;
         this.partnerConnected = false;
-        
-        // Initialiser dès le chargement de la page
+
         this.initializeFromURL();
         this.bindEvents();
     }
-    
-    /**
-     * Initialise le mode multiplayer depuis les paramètres URL
-     */
+
+    // ==================== INIT ====================
+
     initializeFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const gameId = urlParams.get('game');
-        const role = urlParams.get('role');
-        const streamer = urlParams.get('streamer');
-        
+        const params = new URLSearchParams(window.location.search);
+        const gameId   = params.get('game');
+        const role     = params.get('role');
+        const streamer = params.get('streamer');
+
         if (gameId && role && streamer) {
-            this.gameId = gameId;
-            this.role = role;
+            this.gameId       = gameId;
+            this.role         = role;
             this.streamerName = streamer;
-            
-            // Activer le mode multiplayer global
-            window.multiplayerMode = true;
-            window.currentGameId = gameId;
-            window.playerColor = (role === 'host') ? 'white' : 'black';
-            
-            console.log(`🎮 Mode multiplayer activé: ${role} dans la partie ${gameId}`);
-            
-            // Initialiser la connexion Socket.IO
+
+            window.multiplayerMode  = true;
+            window.currentGameId    = gameId;
+            window.playerColor      = (role === 'host') ? 'white' : 'black';
+
+            console.log(`🎮 Multi depuis URL : ${role} dans la partie ${gameId}`);
             this.initializeSocket();
-            
-            // Configurer les variables pour le mode StreamerChat
-            this.configureStreamerChatMode();
         }
     }
-    
-    /**
-     * Configure les variables globales pour le mode StreamerChat
-     */
-    configureStreamerChatMode() {
-        // Forcer le mode StreamerChat vs StreamerChat
-        window.modStreamerChatvStreamerChat = true;
-        
-        // Configurer les streamers selon le rôle
-        if (this.role === 'host') {
-            window.streamer1Channel = this.streamerName;
-            window.streamerChatvStreamerChat0 = this.streamerName;
-            // Le streamer2 sera défini quand le guest se connecte
-        } else if (this.role === 'guest') {
-            window.streamer2Channel = this.streamerName;
-            window.streamerChatvStreamerChat1 = this.streamerName;
-        }
-        
-        console.log(`📺 Streamer configuré: ${this.streamerName} (${this.role})`);
-    }
-    
-    /**
-     * Lie les événements pour l'interface multiplayer dans index.html
-     */
+
     bindEvents() {
-        // Gestion des onglets multiplayer
         document.addEventListener('DOMContentLoaded', () => {
-            this.setupMultiplayerTabs();
-            this.setupMultiplayerButtons();
+            this.setupTabs();
+            this.setupButtons();
             this.setupCopyButtons();
+            this.handleJoinParam();
         });
     }
-    
-    setupMultiplayerTabs() {
-        document.querySelectorAll('.multiplayer-tab').forEach(tab => {
+
+    handleJoinParam() {
+        const joinCode = new URLSearchParams(window.location.search).get('join');
+        if (!joinCode) return;
+
+        // Pré-remplir le code et switcher sur l'onglet Rejoindre
+        const codeInput = document.getElementById('gameCodeInput');
+        if (codeInput) codeInput.value = joinCode.toUpperCase();
+
+        // Activer l'onglet Rejoindre
+        document.querySelectorAll('.multi-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.multi-tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelector('.multi-tab[data-tab="join"]')?.classList.add('active');
+        document.getElementById('join-panel')?.classList.add('active');
+
+        // Scroller jusqu'au panneau multi
+        document.getElementById('panel-multiplayer')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ==================== UI ====================
+
+    setupTabs() {
+        document.querySelectorAll('.multi-tab').forEach(tab => {
             tab.addEventListener('click', () => {
-                const tabName = tab.dataset.tab;
-                
-                // Activer l'onglet
-                document.querySelectorAll('.multiplayer-tab').forEach(t => t.classList.remove('active'));
+                const name = tab.dataset.tab;
+                document.querySelectorAll('.multi-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                
-                // Afficher le panneau correspondant
-                document.querySelectorAll('.multiplayer-panel').forEach(panel => panel.classList.remove('active'));
-                document.getElementById(tabName + '-panel').classList.add('active');
+                document.querySelectorAll('.multi-tab-panel').forEach(p => p.classList.remove('active'));
+                document.getElementById(name + '-panel')?.classList.add('active');
             });
         });
     }
-    
-    setupMultiplayerButtons() {
-        // Bouton créer partie
-        const createBtn = document.getElementById('createGameBtn');
-        if (createBtn) {
-            createBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.createGame();
-            });
-        }
-        
-        // Bouton rejoindre partie
-        const joinBtn = document.getElementById('joinGameBtn');
-        if (joinBtn) {
-            joinBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.joinGame();
-            });
-        }
+
+    setupButtons() {
+        document.getElementById('createGameBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.createGame();
+        });
+
+        document.getElementById('joinGameBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.joinGame();
+        });
     }
-    
+
     setupCopyButtons() {
-        // Boutons de copie
         document.querySelectorAll('.btn-copy').forEach(btn => {
             btn.addEventListener('click', () => {
-                const targetId = btn.dataset.target;
-                const text = document.getElementById(targetId).textContent;
-                
+                const text = document.getElementById(btn.dataset.target)?.textContent?.trim();
+                if (!text) return;
                 navigator.clipboard.writeText(text).then(() => {
-                    const originalIcon = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => {
-                        btn.innerHTML = originalIcon;
-                    }, 2000);
-                    
-                    this.showToast('URL copiée !', 'success');
+                    const icon = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check" style="color:#34d399"></i>';
+                    setTimeout(() => { btn.innerHTML = icon; }, 2000);
                 });
             });
         });
-        
-        // Boutons d'ouverture dans un nouvel onglet
+
         document.querySelectorAll('.btn-blank').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
-                const targetId = btn.dataset.target;
-                const url = document.getElementById(targetId).textContent;
-                window.open(url, '_blank');
+                const url = document.getElementById(btn.dataset.target)?.textContent?.trim();
+                if (url) window.open(url, '_blank');
             });
         });
     }
-    
-    /**
-     * Créer une nouvelle partie multiplayer
-     */
+
+    // ==================== CRÉER UNE PARTIE ====================
+
     createGame() {
-        const streamerInput = document.getElementById('hostStreamerName');
-        const streamerName = streamerInput ? streamerInput.value.trim() : '';
-        
+        const streamerName = document.getElementById('hostStreamerName')?.value?.trim();
         if (!streamerName) {
-            this.showToast('Veuillez entrer votre nom de streameur', 'error');
+            this.showToast('Entre ton nom de channel Twitch', 'error');
             return;
         }
-        
-        // Générer un code de partie
-        this.gameId = this.generateGameId();
-        this.role = 'host';
+
+        this.gameId       = this.generateGameId();
+        this.role         = 'host';
         this.streamerName = streamerName;
-        
-        // Générer les URLs avec tous les paramètres nécessaires
-        const baseUrl = window.location.origin + window.location.pathname;
-        const commonParams = this.getCommonUrlParams();
-        
-        const hostUrl = `${baseUrl}?game=${this.gameId}&role=host&streamer=${encodeURIComponent(streamerName)}&${commonParams}`;
-        const guestUrl = `${baseUrl}?game=${this.gameId}&role=guest&streamer=${encodeURIComponent(streamerName)}&${commonParams}`;
-        
-        // Mettre à jour l'interface
-        this.updateGameCreatedUI(this.gameId, hostUrl, guestUrl);
-        
-        // Activer le mode multiplayer
-        window.multiplayerMode = true;
-        window.currentGameId = this.gameId;
-        window.playerColor = 'white';
-        
-        // Initialiser Socket.IO pour la partie créée
+
+        const baseUrl      = window.location.origin + window.location.pathname;
+        const commonParams = `gameMode=modStreamerChatvStreamerChat`;
+        const hostUrl  = `${baseUrl}?game=${this.gameId}&role=host&streamer=${encodeURIComponent(streamerName)}&${commonParams}`;
+        // URL guest = ouvre la page et pré-remplit le code + switche sur l'onglet Rejoindre
+        const guestUrl = `${baseUrl}?join=${this.gameId}`;
+
+        // Mettre à jour l'UI
+        document.getElementById('gameCode').textContent  = this.gameId;
+        document.getElementById('hostUrl').textContent   = hostUrl;
+        document.getElementById('guestUrl').textContent  = guestUrl;
+        document.getElementById('gameCreatedInfo').style.display = 'block';
+        document.getElementById('createGameBtn').style.display   = 'none';
+
+        window.multiplayerMode  = true;
+        window.currentGameId    = this.gameId;
+        window.playerColor      = 'white';
+
         this.initializeSocket();
-        
-        this.showToast('Partie créée avec succès !', 'success');
-        console.log(`🎮 Partie créée: ${this.gameId} par ${streamerName}`);
+        this.showToast(`Partie créée ! Code : ${this.gameId}`, 'success');
+        console.log(`🎮 Partie créée : ${this.gameId} par ${streamerName}`);
     }
-    
-    /**
-     * Rejoindre une partie existante
-     */
+
+    // ==================== REJOINDRE UNE PARTIE ====================
+
     joinGame() {
-        const streamerInput = document.getElementById('guestStreamerName');
-        const codeInput = document.getElementById('gameCodeInput');
-        
-        const streamerName = streamerInput ? streamerInput.value.trim() : '';
-        const gameCode = codeInput ? codeInput.value.trim().toUpperCase() : '';
-        
+        const streamerName = document.getElementById('guestStreamerName')?.value?.trim();
+        const gameCode     = document.getElementById('gameCodeInput')?.value?.trim().toUpperCase();
+
         if (!streamerName || !gameCode) {
-            this.showToast('Veuillez remplir tous les champs', 'error');
+            this.showToast('Remplis tous les champs', 'error');
             return;
         }
-        
-        this.gameId = gameCode;
-        this.role = 'guest';
+
+        this.gameId       = gameCode;
+        this.role         = 'guest';
         this.streamerName = streamerName;
-        
-        // Générer l'URL du joueur
-        const baseUrl = window.location.origin + window.location.pathname;
-        const commonParams = this.getCommonUrlParams();
-        const playerUrl = `${baseUrl}?game=${this.gameId}&role=guest&streamer=${encodeURIComponent(streamerName)}&${commonParams}`;
-        
-        // Mettre à jour l'interface
-        this.updateGameJoinedUI(playerUrl);
-        
-        // Activer le mode multiplayer
-        window.multiplayerMode = true;
-        window.currentGameId = this.gameId;
-        window.playerColor = 'black';
-        
-        // Initialiser Socket.IO pour rejoindre la partie
+
+        const baseUrl  = window.location.origin + window.location.pathname;
+        const playerUrl = `${baseUrl}?game=${this.gameId}&role=guest&streamer=${encodeURIComponent(streamerName)}&gameMode=modStreamerChatvStreamerChat`;
+
+        document.getElementById('playerUrl').textContent         = playerUrl;
+        document.getElementById('gameJoinedInfo').style.display  = 'block';
+        document.getElementById('joinGameBtn').style.display     = 'none';
+
+        window.multiplayerMode  = true;
+        window.currentGameId    = this.gameId;
+        window.playerColor      = 'black';
+
         this.initializeSocket();
-        
-        this.showToast('Connexion à la partie !', 'success');
-        console.log(`🎮 Connexion à la partie: ${this.gameId} par ${streamerName}`);
+        this.showToast(`Connexion à la partie ${this.gameId}...`, 'info');
+        console.log(`🎮 Rejoindre : ${this.gameId} en tant que ${streamerName}`);
     }
-    
-    /**
-     * Génère les paramètres communs pour les URLs
-     */
-    getCommonUrlParams() {
-        const params = new URLSearchParams();
-        
-        // Mode de jeu
-        params.append('gameMode', 'modStreamerChatvStreamerChat');
-        /*
-        // Paramètres par défaut
-        params.append('defaultChannel', 'Xou____');
-        params.append('timerMode', 'on');
-        params.append('InitialvoterTimer', '50');
-        params.append('timerWheelAnimation', '10');
-        params.append('pauseAfterWinLose', '15');*/
-        
-        return params.toString();
-    }
-    
-    /**
-     * Met à jour l'UI après création de partie
-     */
-    updateGameCreatedUI(gameCode, hostUrl, guestUrl) {
-        const gameCodeEl = document.getElementById('gameCode');
-        const hostUrlEl = document.getElementById('hostUrl');
-        const guestUrlEl = document.getElementById('guestUrl');
-        const gameInfoEl = document.getElementById('gameCreatedInfo');
-        const createBtn = document.getElementById('createGameBtn');
-        
-        if (gameCodeEl) gameCodeEl.textContent = gameCode;
-        if (hostUrlEl) hostUrlEl.textContent = hostUrl;
-        if (guestUrlEl) guestUrlEl.textContent = guestUrl;
-        if (gameInfoEl) gameInfoEl.style.display = 'block';
-        if (createBtn) createBtn.style.display = 'none';
-    }
-    
-    /**
-     * Met à jour l'UI après avoir rejoint une partie
-     */
-    updateGameJoinedUI(playerUrl) {
-        const playerUrlEl = document.getElementById('playerUrl');
-        const gameInfoEl = document.getElementById('gameJoinedInfo');
-        const joinBtn = document.getElementById('joinGameBtn');
-        
-        if (playerUrlEl) playerUrlEl.textContent = playerUrl;
-        if (gameInfoEl) gameInfoEl.style.display = 'block';
-        if (joinBtn) joinBtn.style.display = 'none';
-    }
-    
-    /**
-     * Initialise la connexion Socket.IO
-     */
+
+    // ==================== SOCKET.IO ====================
+
     initializeSocket() {
         if (typeof io === 'undefined') {
-            console.warn('⚠️ Socket.IO non disponible');
+            console.warn('⚠️ Socket.IO non disponible — mode hors-ligne');
             return;
         }
-        
-        const SOCKET_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3000'
+
+        const SOCKET_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? `http://localhost:${window.location.port || 3000}`
             : 'https://chesstwitchvoter.onrender.com';
-            
-        this.socket = io(SOCKET_URL);
-        
+
+        this.socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+
         this.socket.on('connect', () => {
-            console.log('🔗 Connecté au serveur');
-            
-            // AJOUTER CETTE LIGNE
-            this.setupChatListeners();
-            console.log('🔗 Connecté au serveur');
-            
+            console.log('🔗 Connecté au serveur Socket.IO');
+            this.setupSocketListeners();
+
             if (this.role === 'host') {
                 this.socket.emit('createGame', {
-                    gameId: this.gameId,
-                    hostName: this.streamerName,
-                    settings: {
-                        timer: true,
-                        restrictions: {}
-                    }
+                    gameId:    this.gameId,
+                    hostName:  this.streamerName,
+                    settings:  { timer: true }
                 });
             } else if (this.role === 'guest') {
                 this.socket.emit('joinGame', {
-                    gameId: this.gameId,
+                    gameId:    this.gameId,
                     guestName: this.streamerName
                 });
             }
         });
-        
-        this.socket.on('gameReady', (data) => {
-            console.log('🎮 Partie prête !', data);
-            
-            // Configurer les streamers des deux côtés
-            window.streamer1Channel = data.players.white;
-            window.streamer2Channel = data.players.black;
-            window.streamerChatvStreamerChat0 = data.players.white;
-            window.streamerChatvStreamerChat1 = data.players.black;
-            
-            this.partnerConnected = true;
-            this.updateConnectionStatus('Adversaire connecté !');
-            this.showToast('La partie peut commencer !', 'success');
-        });
-        
-        this.socket.on('partnerVotes', (votes) => {
-            // Afficher les votes du partenaire
-            this.displayPartnerVotes(votes);
-        });
-        
-this.socket.on('movePlayed', (data) => {
-    if (data.player !== window.playerColor && typeof window.chess !== 'undefined') {
-        // Appeler moveAction avec flag réseau pour éviter boucle
-        if (typeof window.moveAction === 'function') {
-            window.moveAction(data.move, true);
-        }
-        console.log(`🎯 Coup reçu: ${data.move}`);
-    }
-});
-        
+
         this.socket.on('disconnect', () => {
             console.log('🔌 Déconnecté du serveur');
-            this.updateConnectionStatus('Connexion perdue...');
+            this.updatePartnerStatus(false);
         });
     }
-    
-    /**
-     * Affiche les votes du partenaire
-     */
-    displayPartnerVotes(votes) {
-        // Cette fonction peut être étendue pour afficher les votes en temps réel
-        console.log('👥 Votes du partenaire:', votes);
-    }
-    
-    /**
-     * Met à jour le statut de connexion
-     */
-    updateConnectionStatus(message) {
-        const statusEl = document.getElementById('gameStatus') || document.querySelector('.status-waiting');
-        if (statusEl) {
-            statusEl.textContent = message;
-        }
-    }
-    
-    /**
-     * Envoie les votes via Socket.IO
-     */
-    sendVotes(votes) {
-        if (this.socket && this.gameId) {
-            this.socket.emit('votesUpdate', {
-                gameId: this.gameId,
-                votes: votes
-            });
-        }
-    }
-    
-    /**
-     * Envoie un coup joué via Socket.IO
-     */
-    sendMove(move) {
-        if (this.socket && this.gameId) {
-            this.socket.emit('moveSelected', {
-                gameId: this.gameId,
-                player: window.playerColor,
-                move: move,
-                fen: window.chess ? window.chess.fen() : null
-            });
-        }
-    }
-    
-    /**
-     * Génère un ID de partie aléatoire
-     */
-    generateGameId() {
-        return Math.random().toString(36).substring(2, 6).toUpperCase();
-    }
-    
-    /**
-     * Affiche un toast de notification
-     */
-    showToast(message, type = 'info') {
-        // Utiliser l'alerte native en fallback
-        console.log(`${type.toUpperCase()}: ${message}`);
-        
-        // Créer un toast personnalisé
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
-            z-index: 10000;
-            animation: slideIn 0.3s ease-out;
-        `;
-        
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
-    
-    /**
-     * Retourne les informations de la partie actuelle
-     */
-    getGameInfo() {
-        return {
-            gameId: this.gameId,
-            role: this.role,
-            streamerName: this.streamerName,
-            partnerConnected: this.partnerConnected,
-            isMultiplayer: !!this.gameId
-        };
-    }
 
-    /**
-     * Envoie un message de chat via Socket.IO
-     * @param {Object} messageData - Données du message
-     */
-    sendChatMessage(messageData) {
-        if (!this.socket || !this.gameId) {
-            console.warn('⚠️ Pas de connexion Socket.IO active');
-            return;
-        }
-        
-        this.socket.emit('chat:message', {
-            gameId: this.gameId,
-            role: this.role,
-            ...messageData
-        });
-        
-        console.log('💬 Message envoyé:', messageData);
-    }
-
-    /**
-     * Configure l'écoute des messages de chat entrants
-     */
-    setupChatListeners() {
+    setupSocketListeners() {
         if (!this.socket) return;
-        
+
+        // ---- Partie prête (les 2 joueurs connectés) ----
+        this.socket.on('gameReady', (data) => {
+            console.log('🎮 gameReady !', data);
+
+            const white = data.players.white;
+            const black = data.players.black;
+
+            // Stocker les channels globalement
+            window.streamer1Channel             = white;
+            window.streamer2Channel             = black;
+            window.streamerChatvStreamerChat0   = white;
+            window.streamerChatvStreamerChat1   = black;
+
+            this.partnerConnected = true;
+
+            // Mettre à jour la bannière
+            this.showActiveBanner(white, black);
+            this.updatePartnerStatus(true);
+
+            // Connecter Twitch aux 2 channels
+            this.connectTwitchChannels(white, black);
+
+            // Lancer le jeu (app.js écoute cet event)
+            window.dispatchEvent(new CustomEvent('multiGameReady', { detail: data }));
+
+            this.showToast(`⚔ Bataille lancée ! ${white} vs ${black}`, 'success');
+        });
+
+        // ---- Coup joué par le partenaire ----
+        this.socket.on('movePlayed', (data) => {
+            if (data.player === window.playerColor) return; // Notre propre coup rebounced, ignorer
+
+            console.log(`🎯 Coup adverse reçu : ${data.move}`);
+
+            const ge = window.gameEngine;
+            if (!ge) return;
+
+            // Vérifier la synchro via FEN avant d'appliquer
+            if (data.fen && ge.chess) {
+                const localFen = ge.chess.fen().split(' ')[0]; // position seulement
+                const remoteFen = data.fen.split(' ')[0];
+                if (localFen !== remoteFen) {
+                    console.warn('⚠️ Désync FEN détectée, resync...');
+                    ge.loadFen(data.fen);
+                    return; // loadFen remet le board, pas besoin d'executeMove
+                }
+            }
+
+            ge.executeMove(data.move, true); // true = fromNetwork, n'émet pas en retour
+        });
+
+        // ---- Votes du partenaire (affichage temps réel) ----
+        this.socket.on('partnerVotes', (votes) => {
+            this.displayPartnerVotes(votes);
+        });
+
+        // ---- Resynchronisation FEN forcée ----
+        this.socket.on('syncFen', (data) => {
+            const ge = window.gameEngine;
+            if (data.fen && ge) {
+                console.log('🔄 Resync FEN depuis serveur');
+                ge.loadFen(data.fen);
+            }
+        });
+
+        // ---- Historique chat ----
+        this.socket.on('chat:history', (messages) => {
+            messages.forEach(msg => this.displayChatMessage(msg));
+        });
+
         this.socket.on('chat:message', (data) => {
             this.displayChatMessage(data);
         });
-        
-        this.socket.on('chat:history', (messages) => {
-            // Afficher l'historique des messages
-            messages.forEach(msg => this.displayChatMessage(msg));
+    }
+
+    // ==================== TWITCH ====================
+
+    async connectTwitchChannels(white, black) {
+        const twitch = window.twitch;
+        if (!twitch) {
+            console.warn('⚠️ TwitchManager non disponible');
+            return;
+        }
+
+        try {
+            console.log(`📺 Connexion Twitch au channel principal : ${white}`);
+            await twitch.connect(white);
+
+            if (black && black !== white) {
+                console.log(`📺 Rejoindre le channel secondaire : ${black}`);
+                await twitch.joinChannel(black);
+            }
+
+            console.log('✅ Twitch connecté aux 2 channels');
+            this.showToast(`📺 Twitch : #${white} & #${black}`, 'success');
+        } catch (err) {
+            console.error('❌ Erreur connexion Twitch multi:', err.message);
+            this.showToast('Erreur connexion Twitch : ' + err.message, 'error');
+        }
+    }
+
+    // ==================== ENVOI ====================
+
+    sendMove(move) {
+        if (!this.socket || !this.gameId) return;
+        const ge = window.gameEngine;
+        this.socket.emit('moveSelected', {
+            gameId: this.gameId,
+            player: window.playerColor,
+            move:   move,
+            fen:    ge?.chess?.fen() || null
+        });
+        console.log(`📤 Coup envoyé : ${move}`);
+    }
+
+    sendVotes(votes) {
+        if (!this.socket || !this.gameId) return;
+        this.socket.emit('votesUpdate', { gameId: this.gameId, votes });
+    }
+
+    sendChatMessage(messageData) {
+        if (!this.socket || !this.gameId) return;
+        this.socket.emit('chat:message', {
+            gameId: this.gameId,
+            role:   this.role,
+            ...messageData
         });
     }
 
-    /**
-     * Affiche un message de chat dans l'interface
-     */
+    // ==================== UI HELPERS ====================
+
+    showActiveBanner(white, black) {
+        document.getElementById('multi-team-white').textContent = white;
+        document.getElementById('multi-team-black').textContent = black;
+        document.getElementById('multi-active-banner').style.display = 'block';
+        document.getElementById('multi-status-badge').style.display  = '';
+        document.getElementById('multi-tabs-container').style.display = 'none';
+        document.body.classList.add('multi-active');
+    }
+
+    updatePartnerStatus(connected) {
+        const waitEls = document.querySelectorAll('.multi-waiting');
+
+        if (connected) {
+            waitEls.forEach(el => {
+                el.classList.add('multi-waiting--connected');
+                const dot = el.querySelector('.multi-waiting__dot');
+                if (dot) dot.style.background = '#10b981';
+                const textNode = el.lastChild;
+                if (textNode) textNode.textContent = ' Adversaire connecté !';
+            });
+        } else {
+            waitEls.forEach(el => el.classList.remove('multi-waiting--connected'));
+        }
+    }
+
+    updateTurnIndicator() {
+        if (!window.multiplayerMode || !window.playerColor) return;
+        const ge = window.gameEngine;
+        if (!ge?.chess) return;
+
+        const turn = ge.chess.turn(); // 'w' ou 'b'
+        const isMyTurn = (window.playerColor === 'white' && turn === 'w') ||
+                         (window.playerColor === 'black' && turn === 'b');
+
+        document.body.classList.toggle('multi-your-turn',  isMyTurn);
+        document.body.classList.toggle('multi-their-turn', !isMyTurn);
+
+        const ind = document.getElementById('multi-turn-indicator');
+        if (ind) {
+            ind.textContent = isMyTurn
+                ? '🗳 À votre tour — votez !'
+                : '⏳ Tour de l\'adversaire...';
+        }
+    }
+
+    displayPartnerVotes(votes) {
+        // Affichage optionnel dans le vote-log
+        if (!votes || !window.VoteLog) return;
+        Object.entries(votes).forEach(([move, count]) => {
+            window.VoteLog.add(`[adv] ×${count}`, move);
+        });
+    }
+
     displayChatMessage(data) {
-        const chatMessages = document.querySelector('.chat-messages');
-        if (!chatMessages) {
-            console.warn('⚠️ Zone de chat non trouvée dans le DOM');
+        const chatEl = document.querySelector('.chat-messages');
+        if (!chatEl) return;
+
+        const el = document.createElement('div');
+        el.className = 'chat-message';
+        const teamClass = data.team || (data.role === 'host' ? 'white' : 'black');
+        el.innerHTML = `
+            <span class="message-author ${teamClass}-team">${data.author}</span>
+            <span class="message-content"> ${this.escapeHtml(data.content)}</span>
+        `;
+        chatEl.appendChild(el);
+        chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    escapeHtml(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    // ==================== UTILS ====================
+
+    generateGameId() {
+        return Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+
+    getGameInfo() {
+        return {
+            gameId:           this.gameId,
+            role:             this.role,
+            streamerName:     this.streamerName,
+            partnerConnected: this.partnerConnected,
+            isMultiplayer:    !!this.gameId
+        };
+    }
+
+    showToast(message, type = 'info') {
+        // Utilise le système de Toast de app.js si disponible
+        if (window.AppToast) {
+            window.AppToast[type]?.(message) || window.AppToast.show(message, type);
             return;
         }
-        
-        const messageElement = document.createElement('div');
-        messageElement.className = 'chat-message';
-        
-        // Déterminer l'équipe du message
-        const teamClass = data.team || (data.role === 'host' ? 'white' : 'black');
-        
-        messageElement.innerHTML = `
-            <div class="message-author ${teamClass}-team">
-                ${data.author} 
-                ${data.badges?.broadcaster ? '📺' : ''}
-                ${data.badges?.moderator ? '⚔️' : ''}
-                ${data.badges?.subscriber ? '⭐' : ''}
-            </div>
-            <div class="message-content">${this.escapeHtml(data.content)}</div>
-            <div class="message-time">${new Date(data.timestamp).toLocaleTimeString()}</div>
+        // Fallback maison
+        const toast = document.createElement('div');
+        const colors = { success: '#10b981', error: '#ef4444', info: '#3b82f6', warning: '#f59e0b' };
+        toast.style.cssText = `
+            position:fixed; top:20px; right:20px; z-index:99999;
+            background:${colors[type] || colors.info};
+            color:#fff; padding:10px 18px; border-radius:8px;
+            font-size:0.85rem; font-weight:600;
+            box-shadow:0 4px 20px rgba(0,0,0,0.4);
+            animation:multi-glow-in 0.3s ease-out;
         `;
-        
-        chatMessages.appendChild(messageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3500);
     }
-
-    /**
-     * Échappe le HTML pour éviter les injections XSS
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    
 }
 
-// Initialiser le gestionnaire multiplayer
+// Instance globale
 const multiplayerManager = new MultiplayerManager();
-
-// Rendre le gestionnaire disponible globalement
 window.multiplayerManager = multiplayerManager;
