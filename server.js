@@ -163,20 +163,55 @@ app.get('/proxy/chess-event/:slug', async (req, res) => {
 
 const games = {}; // Stockage des parties actives
 
+/** Retourne la liste publique des parties (sans données internes) */
+function getPublicGamesList() {
+    return Object.values(games)
+        .filter(g => g.status !== 'ended')
+        .map(g => ({
+            gameId:     g.gameId,
+            host:       g.host,
+            guest:      g.guest,
+            status:     g.status,
+            moveCount:  g.moveCount,
+            startedAt:  g.startedAt,
+            settings:   g.settings
+        }));
+}
+
+/** Diffuse la liste mise à jour à tous les clients sur le canal 'browse' */
+function broadcastGamesList() {
+    io.to('browse').emit('gamesListUpdated', getPublicGamesList());
+}
+
 io.on('connection', (socket) => {
     console.log('Nouvelle connexion:', socket.id);
-    
+
+    // Un client browse s'abonne aux mises à jour de la liste
+    socket.on('subscribeBrowse', () => {
+        socket.join('browse');
+        socket.emit('gamesList', getPublicGamesList());
+    });
+
+    socket.on('getGames', () => {
+        socket.emit('gamesList', getPublicGamesList());
+    });
+
     socket.on('createGame', (data) => {
         games[data.gameId] = {
-            host: data.hostName,
-            hostSocket: socket.id,
-            settings: data.settings,
-            guest: null,
+            gameId:      data.gameId,
+            host:        data.hostName,
+            hostSocket:  socket.id,
+            settings:    data.settings || {},
+            guest:       null,
             guestSocket: null,
-            moves: []
+            status:      'waiting',
+            moveCount:   0,
+            startedAt:   null,
+            lastFen:     null
         };
         socket.join(data.gameId);
         console.log(`Partie créée: ${data.gameId} par ${data.hostName}`);
+        broadcastGamesList();
     });
 
     socket.on('chat:message', (data) => {
@@ -198,23 +233,24 @@ io.on('connection', (socket) => {
     });
 
     socket.on('joinGame', (data) => {
-        if (games[data.gameId]) {
-            games[data.gameId].guest = data.guestName;
-            games[data.gameId].guestSocket = socket.id;
+        const game = games[data.gameId];
+        if (game) {
+            game.guest       = data.guestName;
+            game.guestSocket = socket.id;
+            game.status      = 'playing';
+            game.startedAt   = Date.now();
             socket.join(data.gameId);
 
             if (chatHistory[data.gameId]) {
                 socket.emit('chat:history', chatHistory[data.gameId]);
             }
-            
-            // Notifier les deux joueurs
+
             io.to(data.gameId).emit('gameReady', {
-                players: {
-                    white: games[data.gameId].host,
-                    black: games[data.gameId].guest
-                }
+                players: { white: game.host, black: game.guest },
+                settings: game.settings
             });
             console.log(`${data.guestName} a rejoint la partie ${data.gameId}`);
+            broadcastGamesList();
         }
     });
     
@@ -229,11 +265,11 @@ io.on('connection', (socket) => {
     });
     
     socket.on('moveSelected', (data) => {
-        // Stocker le dernier FEN connu pour la partie
-        if (games[data.gameId] && data.fen) {
-            games[data.gameId].lastFen = data.fen;
+        const game = games[data.gameId];
+        if (game) {
+            if (data.fen) game.lastFen = data.fen;
+            game.moveCount = (game.moveCount || 0) + 1;
         }
-        // Diffuser le coup + FEN à tous les participants
         io.to(data.gameId).emit('movePlayed', {
             player: data.player,
             move:   data.move,
@@ -252,6 +288,15 @@ io.on('connection', (socket) => {
     
     socket.on('disconnect', () => {
         console.log('Déconnexion:', socket.id);
+        // Marquer la partie comme terminée si un joueur actif se déconnecte
+        for (const game of Object.values(games)) {
+            if (game.hostSocket === socket.id || game.guestSocket === socket.id) {
+                game.status = 'ended';
+                io.to(game.gameId).emit('partnerLeft');
+                broadcastGamesList();
+                break;
+            }
+        }
     });
 });
 

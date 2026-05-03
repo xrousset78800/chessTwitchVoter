@@ -50,18 +50,12 @@ class MultiplayerManager {
         const joinCode = new URLSearchParams(window.location.search).get('join');
         if (!joinCode) return;
 
-        // Pré-remplir le code et switcher sur l'onglet Rejoindre
-        const codeInput = document.getElementById('gameCodeInput');
-        if (codeInput) codeInput.value = joinCode.toUpperCase();
-
-        // Activer l'onglet Rejoindre
-        document.querySelectorAll('.multi-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.multi-tab-panel').forEach(p => p.classList.remove('active'));
-        document.querySelector('.multi-tab[data-tab="join"]')?.classList.add('active');
-        document.getElementById('join-panel')?.classList.add('active');
-
-        // Scroller jusqu'au panneau multi
-        document.getElementById('panel-multiplayer')?.scrollIntoView({ behavior: 'smooth' });
+        // Pré-remplir le code dans le formulaire browse
+        const codeInput = document.getElementById('browse-join-code');
+        if (codeInput) {
+            codeInput.value = joinCode.toUpperCase();
+            document.getElementById('browse-join-btn')?.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     // ==================== UI ====================
@@ -112,7 +106,52 @@ class MultiplayerManager {
         });
     }
 
-    // ==================== CRÉER UNE PARTIE ====================
+    // ==================== DEPUIS LA PAGE BROWSE ====================
+
+    /** Appelé par BrowsePage quand l'utilisateur clique "Créer" */
+    createGameFromBrowse(streamerName, options = {}) {
+        this.gameId       = this.generateGameId();
+        this.role         = 'host';
+        this.streamerName = streamerName;
+
+        if (options.timerDuration) window._browseTimerDuration = options.timerDuration;
+        if (options.majorityMode !== undefined) window._browseMajorityMode = options.majorityMode;
+
+        window.multiplayerMode = true;
+        window.currentGameId   = this.gameId;
+        window.playerColor     = 'white';
+
+        this.initializeSocket();
+
+        // Naviguer vers sandbox et montrer le code
+        window.dispatchEvent(new CustomEvent('multiNavigateSandbox', {
+            detail: { role: 'host', gameId: this.gameId, streamer: streamerName }
+        }));
+
+        console.log(`🎮 Partie créée depuis browse : ${this.gameId}`);
+        return this.gameId;
+    }
+
+    /** Appelé par BrowsePage quand l'utilisateur clique "Rejoindre" */
+    joinGameFromBrowse(streamerName, gameCode) {
+        this.gameId       = gameCode.toUpperCase();
+        this.role         = 'guest';
+        this.streamerName = streamerName;
+
+        window.multiplayerMode = true;
+        window.currentGameId   = this.gameId;
+        window.playerColor     = 'black';
+
+        this.initializeSocket();
+
+        window.dispatchEvent(new CustomEvent('multiNavigateSandbox', {
+            detail: { role: 'guest', gameId: this.gameId, streamer: streamerName }
+        }));
+
+        console.log(`🎮 Rejoindre depuis browse : ${this.gameId}`);
+    }
+
+    // ==================== CRÉER UNE PARTIE (depuis URL/sandbox legacy) ====================
 
     createGame() {
         const streamerName = document.getElementById('hostStreamerName')?.value?.trim();
@@ -275,6 +314,15 @@ class MultiplayerManager {
             this.displayPartnerVotes(votes);
         });
 
+        // ---- Adversaire déconnecté ----
+        this.socket.on('partnerLeft', () => {
+            console.warn('⚠️ Adversaire déconnecté');
+            this.partnerConnected = false;
+            this.updatePartnerStatus(false);
+            if (window.AppToast) window.AppToast.warning('⚠️ Adversaire déconnecté');
+            window.dispatchEvent(new Event('multiPartnerLeft'));
+        });
+
         // ---- Resynchronisation FEN forcée ----
         this.socket.on('syncFen', (data) => {
             const ge = window.gameEngine;
@@ -351,11 +399,12 @@ class MultiplayerManager {
     // ==================== UI HELPERS ====================
 
     showActiveBanner(white, black) {
-        document.getElementById('multi-team-white').textContent = white;
-        document.getElementById('multi-team-black').textContent = black;
-        document.getElementById('multi-active-banner').style.display = 'block';
-        document.getElementById('multi-status-badge').style.display  = '';
-        document.getElementById('multi-tabs-container').style.display = 'none';
+        const el = (id) => document.getElementById(id);
+        if (el('multi-team-white')) el('multi-team-white').textContent = white;
+        if (el('multi-team-black')) el('multi-team-black').textContent = black;
+        if (el('multi-active-banner')) el('multi-active-banner').style.display = 'block';
+        if (el('multi-status-badge')) el('multi-status-badge').style.display   = '';
+        if (el('multi-tabs-container')) el('multi-tabs-container').style.display = 'none';
         document.body.classList.add('multi-active');
     }
 

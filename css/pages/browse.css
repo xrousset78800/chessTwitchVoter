@@ -26,6 +26,112 @@
     font-size: 1.1rem;
 }
 
+/* ===== Battle Setup (create / join cards) ===== */
+
+.battle-setup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+@media (max-width: 768px) {
+    .battle-setup { grid-template-columns: 1fr; }
+}
+
+.battle-setup__card {
+    padding: 28px 24px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.battle-setup__card--create {
+    border-color: rgba(139, 92, 246, 0.35);
+    background: rgba(139, 92, 246, 0.04);
+}
+
+.battle-setup__card--join {
+    border-color: rgba(59, 130, 246, 0.35);
+    background: rgba(59, 130, 246, 0.04);
+}
+
+.battle-setup__icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.battle-setup__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.battle-setup__desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ===== Section header (Parties en cours) ===== */
+
+.browse__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.browse__section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.browse__live-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 1.5s infinite;
+    flex-shrink: 0;
+}
+
+/* ===== Game card status badge ===== */
+
+.game-card__status {
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.game-card__status--playing {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.game-card__status--waiting {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.game-card__join-btn {
+    margin-left: auto;
+}
+
 /* Games Grid */
 .games-grid {
     display: grid;
