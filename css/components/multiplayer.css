@@ -242,3 +242,14 @@ body.multi-their-turn .multi-turn-indicator { color: #f87171; }
 #gameCreatedInfo, #gameJoinedInfo {
     animation: multi-glow-in 0.3s ease-out;
 }
+
+/* ==================== ROUTE /battle : transformation de la sandbox ==================== */
+
+/* Éléments cachés en mode Bataille */
+body.battle-mode .sandbox-only { display: none !important; }
+
+/* Bannières multi intégrées dans la sandbox (visibles uniquement en mode Bataille) */
+#multi-pre-ready-banner,
+#multi-active-banner {
+    margin: 0 0 14px;
+}

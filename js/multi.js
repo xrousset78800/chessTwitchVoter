@@ -115,7 +115,9 @@ class MultiplayerManager {
         this.streamerName = streamerName;
 
         if (options.timerDuration) window._browseTimerDuration = options.timerDuration;
-        if (options.majorityMode !== undefined) window._browseMajorityMode = options.majorityMode;
+        if (options.majorityMode  !== undefined) window._browseMajorityMode  = options.majorityMode;
+        if (options.followersOnly !== undefined) window._browseFollowersOnly = options.followersOnly;
+        if (options.subsOnly      !== undefined) window._browseSubsOnly      = options.subsOnly;
 
         window.multiplayerMode = true;
         window.currentGameId   = this.gameId;

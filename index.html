@@ -122,13 +122,38 @@
                         <button data-i18n="actions.sync" class="btn btn--sm" id="btn-sync" disabled><i class="fas fa-sync"></i> Sync</button>
                         <button class="btn btn--sm btn--primary" id="btn-reset-sync" disabled><i class="fas fa-undo"></i> Reset + Sync</button>
                         <button data-i18n="actions.gameEnd" class="btn btn--sm btn--danger" id="btn-game-end" disabled><i class="fas fa-stop"></i> Game End</button>
-                        <button data-i18n="actions.save" class="btn btn--sm btn--primary" id="btn-save-config"><i class="fas fa-save"></i> Sauvegarder</button>
+                        <button data-i18n="actions.save" class="btn btn--sm btn--primary sandbox-only" id="btn-save-config"><i class="fas fa-save"></i> Sauvegarder</button>
                         <button class="btn btn--sm btn--warning" id="btn-calibrate" disabled>
                             <i class="fas fa-tools"></i> Calibrer
                         </button>                        
-                        <button data-i18n="actions.apply" class="btn btn--primary btn--lg" id="btn-apply-config">
+                        <button data-i18n="actions.apply" class="btn btn--primary btn--lg sandbox-only" id="btn-apply-config">
                             <i class="fas fa-play"></i> Appliquer
                         </button>                        
+                    </div>
+                </div>
+
+                <!-- Bannière Bataille Twitch : en attente de l'adversaire -->
+                <div id="multi-pre-ready-banner" style="display:none;" class="multi-banner">
+                    <div class="multi-banner__teams">
+                        <span style="font-size:0.78rem; color:var(--text-muted,#888);">⚔ Bataille Twitch</span>
+                        <span class="multi-game-code" id="sandbox-game-code" style="font-size:1.6rem; letter-spacing:8px; margin:0 10px;"></span>
+                        <button class="btn btn--icon btn--sm" id="sandbox-game-code-copy" title="Copier le code"><i class="fas fa-copy"></i></button>
+                    </div>
+                    <div class="multi-waiting" id="sandbox-pre-waiting">
+                        <span class="multi-waiting__dot"></span>
+                        En attente de l'adversaire...
+                    </div>
+                </div>
+
+                <!-- Bannière Bataille Twitch : partie lancée -->
+                <div id="multi-active-banner" style="display:none;" class="multi-banner">
+                    <div class="multi-banner__teams">
+                        <span class="multi-banner__team--white" id="multi-team-white">—</span>
+                        <span class="multi-banner__vs">⚔</span>
+                        <span class="multi-banner__team--black" id="multi-team-black">—</span>
+                    </div>
+                    <div class="multi-banner__status">
+                        <span id="multi-status-badge" class="badge badge--live">● LIVE</span>
                     </div>
                 </div>
 
@@ -192,7 +217,7 @@
                             </div>
                         </div>                      
                         <!-- Mode selector -->
-                        <div class="panel">
+                        <div class="panel sandbox-only">
                             <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
                             <div class="panel__content">
                                 <div class="mode-selector">
@@ -350,7 +375,7 @@
                         </div>
 
                         <!-- Saved configs -->
-                        <div class="panel">
+                        <div class="panel sandbox-only">
                             <div class="panel__header" data-i18n="game.configuration.title"><i class="fas fa-folder"></i> Configurations</div>
                             <div class="panel__content">
                                 <div id="configs-list">
@@ -398,6 +423,17 @@
                                     <option value="wheel">🎡 Roue</option>
                                     <option value="majority">📊 Majorité</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:16px; margin-top:4px;">
+                            <div class="form-row" style="flex:1">
+                                <span style="font-size:0.82rem;"><i class="fab fa-twitch" style="color:#9146ff"></i> Followers only</span>
+                                <div class="toggle" id="browse-follow-toggle"></div>
+                            </div>
+                            <div class="form-row" style="flex:1">
+                                <span style="font-size:0.82rem;"><i class="fas fa-star" style="color:#f59e0b"></i> Subs only</span>
+                                <div class="toggle" id="browse-sub-toggle"></div>
                             </div>
                         </div>
 
