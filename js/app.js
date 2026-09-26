@@ -1026,11 +1026,8 @@ const BrowsePage = {
     setupSocket() {
         if (typeof io === 'undefined') return;
 
-        const SOCKET_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-            ? `http://localhost:${window.location.port || 3000}`
-            : 'https://chesstwitchvoter.onrender.com';
-
-        this.socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+        // Le serveur Socket.IO est servi par la même origine que la page
+        this.socket = io({ transports: ['websocket', 'polling'] });
 
         this.socket.on('connect', () => {
             this.socket.emit('subscribeBrowse');

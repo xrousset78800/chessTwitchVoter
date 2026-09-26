@@ -1,34 +1,31 @@
-name: Deploy to OVH via FTP
+name: Deploy to Oracle VM
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
-  ftp-deploy:
-    name: FTP Deploy
+  deploy:
+    name: SSH deploy
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Deploy to OVH
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Pull & rebuild on the VM
+        uses: appleboy/ssh-action@v1
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-
-          local-dir: ./
-          server-dir: /www/chessTwitchVoter/
-
-          exclude: |
-            **/.git*
-            **/.git/**
-            **/.github/**
-            **/vendor/**
-            **/node_modules/**
-            **/.env
-            **/twitchToken.js
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/apps/chesstwitchvoter
+            git fetch --depth 1 origin main
+            git reset --hard origin/main
+            docker compose up -d --build
+            docker image prune -f

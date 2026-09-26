@@ -1,0 +1,4 @@
+# À déposer une seule fois dans /www/chessTwitchVoter/ sur l'hébergement OVH :
+# redirige l'ancienne URL vers l'appli hébergée sur la VM.
+RewriteEngine On
+RewriteRule ^(.*)$ https://chesstwitchvoter.xouindaplace.fr/$1 [R=301,L]

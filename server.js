@@ -21,7 +21,6 @@ const io = require('socket.io')(http, {
 const path = require('path');
 const chatHistory = {};
 
-const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
 
 
 // Servir les fichiers statiques (HTML, CSS, JS)
@@ -42,8 +41,7 @@ app.get('/multiplayer', (req, res) => {
 
 app.get('/proxy/chess/:gameId', async (req, res) => {
     try {
-        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
-        const url = `https://www.chess.com/service/play/games/${req.params.gameId}`;
+                const url = `https://www.chess.com/service/play/games/${req.params.gameId}`;
         const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
         res.json(await r.json());
@@ -55,8 +53,7 @@ app.get('/proxy/chess/:gameId', async (req, res) => {
 // Étape 2 : coups en cours (TCN)
 app.get('/proxy/chess-moves/', async (req, res) => {
     try {
-        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
-        const url = `https://www.chess.com${req.query.url}`;
+                const url = `https://www.chess.com${req.query.url}`;
         console.log('🔍 Proxy URL:', url); // ← ajouter
         const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         console.log('🔍 Status chess.com:', r.status); // ← ajouter
@@ -69,8 +66,7 @@ app.get('/proxy/chess-moves/', async (req, res) => {
 // Liste des tournois en cours depuis chess.com (search API + filtre qualité)
 app.get('/proxy/chess-events-list', async (req, res) => {
     try {
-        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
-        const now = new Date();
+                const now = new Date();
         const r = await fetch('https://www.chess.com/events/v1/api/search', {
             method: 'POST',
             headers: {
@@ -118,8 +114,7 @@ app.get('/proxy/chess-events-list', async (req, res) => {
 // Partie daily Chess.com (callback spécifique daily)
 app.get('/proxy/chess-daily/:gameId', async (req, res) => {
     try {
-        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
-        const url = `https://www.chess.com/callback/daily/game/${req.params.gameId}`;
+                const url = `https://www.chess.com/callback/daily/game/${req.params.gameId}`;
         console.log('🔍 Daily game URL:', url);
         const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
@@ -131,8 +126,7 @@ app.get('/proxy/chess-daily/:gameId', async (req, res) => {
 
 app.get('/proxy/chess-event/:slug', async (req, res) => {
     try {
-        const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
-        const url = `https://www.chess.com/events/v1/api/room/${req.params.slug}`;
+                const url = `https://www.chess.com/events/v1/api/room/${req.params.slug}`;
         
         const r = await fetch(url, {
             method: 'POST',

@@ -1,9 +1,8 @@
 // ── Décodeur TCN (Two Character Notation chess.com) ──
 const TCN_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?';
 const FILES = 'abcdefgh';
-const PROXY_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? ''
-    : 'https://chesstwitchvoter.onrender.com';
+// Les proxys sont servis par la même origine que la page
+const PROXY_BASE = '';
 
 function decodeTCNMove(two) {
     const c1 = TCN_CHARS.indexOf(two[0]);

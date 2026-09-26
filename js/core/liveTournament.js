@@ -1,5 +1,5 @@
-const PROXY_BASE_T = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? '' : 'https://chesstwitchvoter.onrender.com';
+// Les proxys sont servis par la même origine que la page
+const PROXY_BASE_T = '';
 
 let tournamentData = null;
 let activeRoundId = null;
