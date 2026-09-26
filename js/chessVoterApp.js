@@ -2658,7 +2658,7 @@ function parseCSVLine(line) {
 
 // ========== Configuration globale ==========
 window.CHESS_VOTER_CONFIG = {
-    basePath: '/chessTwitchVoter/',
+    basePath: '/',
     serverUrl: null, // Mettez l'URL de votre serveur si vous en avez un
     isProduction: window.location.hostname !== 'localhost'
 };
