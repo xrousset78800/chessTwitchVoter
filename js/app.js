@@ -10,7 +10,10 @@ import gameEngine from './core/gameEngine.js';
 import timer from './core/timer.js';
 import voting from './core/voting.js';
 import problemsManager from './core/problemManager.js';
+import rushManager from './core/rushManager.js';
 import twitch from './managers/twitch.js';
+import twitchAuth from './core/twitchAuth.js';
+import { matchLegalMove } from './utils/moveMatch.js';
 
 // ============================================
 // ÉTAT GLOBAL
@@ -149,6 +152,7 @@ const Router = {
         '/': 'landing',
         '/sandbox': 'sandbox',
         '/battle': 'battle',
+        '/game': 'game',
         '/browse': 'browse',
         '/live': 'live',
         '/tournament': 'tournament',
@@ -176,14 +180,18 @@ const Router = {
     },
 
     showPage(pageName) {
-        // /battle réutilise page-sandbox mais avec body.battle-mode
-        const actualPage = pageName === 'battle' ? 'sandbox' : pageName;
+        // /battle et /game réutilisent page-sandbox (échiquier) :
+        //  - battle : body.battle-mode (cache les éléments .sandbox-only)
+        //  - game   : body.game-mode   (cache toute la configuration, juste le live)
+        const actualPage = (pageName === 'battle' || pageName === 'game') ? 'sandbox' : pageName;
 
         // Cacher toutes les pages
         document.querySelectorAll('.page').forEach(p => p.classList.remove('is-active'));
 
-        // Activer/désactiver le mode Bataille sur le body
+        // Activer/désactiver les variantes de la page échiquier sur le body
         document.body.classList.toggle('battle-mode', pageName === 'battle');
+        document.body.classList.toggle('game-mode', pageName === 'game');
+        SandboxPage.applyPageVariant(pageName);
 
         // Afficher la page cible
         const target = document.getElementById(`page-${actualPage}`);
@@ -201,7 +209,7 @@ const Router = {
         });
 
         // Init spécifique à la page
-        if (pageName === 'sandbox' || pageName === 'battle') {
+        if (pageName === 'sandbox' || pageName === 'battle' || pageName === 'game') {
             SandboxPage.init();
         } else if (pageName === 'browse') {
             BrowsePage.init();
@@ -248,9 +256,39 @@ const LivePage = {
 // ============================================
 // SANDBOX PAGE
 // ============================================
+/** Modes qui s'appuient sur problemsManager (échiquier piloté par les puzzles) */
+function isPuzzleMode(mode = AppState.gameMode) {
+    return mode === 'problems' || mode === 'rush';
+}
+
+/**
+ * body.wheel-mode : la roue n'est visible pendant le vote que dans ce cas.
+ * Majorité active ou mode puzzle (toujours majorité) → pas de roue.
+ */
+function syncWheelModeClass() {
+    const wheelMode = !AppState.config.majorityMode && !isPuzzleMode();
+    document.body.classList.toggle('wheel-mode', wheelMode);
+    if (!wheelMode) window.gameEngine?.hideWheel?.();
+}
+
 const SandboxPage = {
     initialized: false,
     problemsInitialized: false,
+    rushUIReady: false,
+
+    /** Titre et bouton retour selon la route (/sandbox, /battle, /game) */
+    applyPageVariant(pageName) {
+        const titleEl = document.querySelector('#page-sandbox .sandbox__title');
+        const backBtn = document.getElementById('sandbox-back');
+        if (pageName === 'game') {
+            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes' };
+            if (titleEl) titleEl.textContent = titles[AppState.gameMode] || '♟ Partie';
+            if (backBtn) backBtn.dataset.navigate = '/browse';
+        } else if (pageName === 'sandbox') {
+            if (titleEl) titleEl.textContent = '🧪 Sandbox';
+            if (backBtn) backBtn.dataset.navigate = '/';
+        }
+    },
 
     init() {
         if (!this.initialized) {
@@ -283,8 +321,24 @@ const SandboxPage = {
 
 async applyConfigAfterReload() {
     document.body.classList.toggle('no-bg', AppState.config.noBg);
+    syncWheelModeClass();
 
     if (gameEngine.updateVotingIndicator) gameEngine.updateVotingIndicator();
+
+    if (AppState.gameMode === 'rush') {
+        if (!this.problemsInitialized) {
+            const success = await this.initProblemsMode();
+            if (!success) { Toast.error('Erreur initialisation Puzzle Rush'); return; }
+        }
+        problemsManager.clearThemes();
+        problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+        AppState.problems.isActive = true;
+        this.setupRushUI();
+        await rushManager.fetchChannelRecord();
+        rushManager.start({ startRating: AppState.config.rushStartRating || 600 });
+        Toast.success('🔥 Puzzle Rush lancé ! 3 erreurs et c\'est fini.');
+        return;
+    }
 
     if (AppState.gameMode === 'problems') {
         if (!this.problemsInitialized) {
@@ -429,22 +483,14 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             console.log('🎉 Résolu!');
             this.showProblemFeedback('solved');
             Toast.success('🎉 Problème résolu !');
-            
-            // Charger le suivant après délai
-            setTimeout(() => {
-                problemsManager.loadRandomProblem();
-            }, (AppState.config.pauseAfterEnd || 5) * 1000);
+            // Le suivant est enchaîné par problemsManager.startPauseTimer()
         };
         
         // Problème échoué
         problemsManager.onProblemFailed = (problem) => {
             console.log('💔 Échoué');
             this.showProblemFeedback('failed');
-            
-            // Charger le suivant après délai
-            setTimeout(() => {
-                problemsManager.loadRandomProblem();
-            }, (AppState.config.pauseAfterEnd || 5) * 1000);
+            // Le suivant est enchaîné par problemsManager.startPauseTimer()
         };
         
         // Changement d'état
@@ -453,6 +499,95 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         };
     },
     
+    // ========== PUZZLE RUSH : HUD + ÉCRAN DE FIN ==========
+
+    setupRushUI() {
+        if (this.rushUIReady) return;
+        this.rushUIReady = true;
+
+        rushManager.onUpdate = (state) => this.updateRushHUD(state);
+        rushManager.onEnd    = (result) => this.showRushEnd(result);
+
+        document.getElementById('rush-restart-btn')?.addEventListener('click', () => this.restartRush());
+        document.getElementById('rush-end-close')?.addEventListener('click', () => {
+            document.getElementById('rush-end')?.classList.remove('is-active');
+        });
+        document.getElementById('rush-login-btn')?.addEventListener('click', () => {
+            window.twitchAuth?.login();
+        });
+    },
+
+    restartRush() {
+        document.getElementById('rush-end')?.classList.remove('is-active');
+        rushManager.stop();
+        gameEngine.hideWheel?.();
+        rushManager.start({ startRating: AppState.config.rushStartRating || 600 });
+        Toast.info('🔥 Nouveau run !');
+    },
+
+    updateRushHUD(state) {
+        const banner = document.getElementById('rush-banner');
+        if (!banner) return;
+
+        banner.style.display = (state.active || state.ended) ? '' : 'none';
+
+        const hearts = Array.from({ length: state.maxStrikes }, (_, i) =>
+            `<span class="rush-heart ${i < state.livesLeft ? '' : 'rush-heart--lost'}">${i < state.livesLeft ? '❤️' : '🖤'}</span>`
+        ).join('');
+
+        const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerHTML = value; };
+        set('rush-score',  state.score);
+        set('rush-hearts', hearts);
+        set('rush-rating', state.active ? `~${state.targetRating}` : (state.maxRating ? `max ${state.maxRating}` : '—'));
+
+        const best = state.record?.best?.score;
+        set('rush-record', best != null ? `🏆 ${best}` : '🏆 —');
+
+        banner.classList.toggle('rush-banner--ended', state.ended);
+    },
+
+    showRushEnd(result) {
+        const overlay = document.getElementById('rush-end');
+        if (!overlay) return;
+
+        const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerHTML = value; };
+        const mins = Math.floor(result.durationMs / 60000);
+        const secs = Math.floor((result.durationMs % 60000) / 1000);
+
+        set('rush-end-score',    result.score);
+        set('rush-end-rating',   result.maxRating || '—');
+        set('rush-end-duration', `${mins}:${String(secs).padStart(2, '0')}`);
+
+        let status, cls = '';
+        const loggedIn = !!window.twitchAuth?.isLoggedIn;
+        if (!loggedIn) {
+            status = 'Connecte-toi avec Twitch pour enregistrer le record de ta chaîne.';
+            cls = 'rush-end__status--muted';
+        } else if (result.error) {
+            status = `Score non enregistré : ${result.error}`;
+            cls = 'rush-end__status--error';
+        } else if (result.score === 0) {
+            status = 'Aucun puzzle résolu, rien à enregistrer.';
+            cls = 'rush-end__status--muted';
+        } else if (result.isNewRecord) {
+            status = '🏆 Nouveau record de la chaîne !';
+            cls = 'rush-end__status--record';
+        } else {
+            const best = result.record?.best?.score;
+            status = best != null ? `Record de la chaîne : ${best}` : 'Score enregistré.';
+        }
+        const statusEl = document.getElementById('rush-end-status');
+        if (statusEl) {
+            statusEl.textContent = status;
+            statusEl.className = `rush-end__status ${cls}`.trim();
+        }
+
+        const loginBtn = document.getElementById('rush-login-btn');
+        if (loginBtn) loginBtn.style.display = loggedIn ? 'none' : '';
+
+        overlay.classList.add('is-active');
+    },
+
     // ========== UI HELPERS POUR PROBLÈMES ==========
     
     updateProblemUI(problem) {
@@ -553,7 +688,9 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         
         // Reset
         document.getElementById('btn-reset')?.addEventListener('click', () => {
-            if (AppState.gameMode === 'problems' && problemsManager.isActive) {
+            if (AppState.gameMode === 'rush' && (rushManager.active || rushManager.ended)) {
+                this.restartRush();
+            } else if (AppState.gameMode === 'problems' && problemsManager.isActive) {
                 problemsManager.loadRandomProblem();
                 Toast.info('Nouveau problème chargé');
             } else {
@@ -575,9 +712,22 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 window.problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
             }
         });
+
+        document.getElementById('rush-pause')?.addEventListener('change', (e) => {
+            AppState.config.pauseAfterEnd = parseInt(e.target.value) || 5;
+            if (window.problemsManager) {
+                window.problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+            }
+        });
+
+        document.getElementById('rush-start-rating')?.addEventListener('change', (e) => {
+            const v = parseInt(e.target.value) || 600;
+            AppState.config.rushStartRating = Math.min(3000, Math.max(400, v));
+            e.target.value = AppState.config.rushStartRating;
+        });
         // Undo
         document.getElementById('btn-undo')?.addEventListener('click', () => {
-            if (AppState.gameMode === 'problems') {
+            if (isPuzzleMode()) {
                 Toast.warning('Undo désactivé en mode problèmes');
                 return;
             }
@@ -639,7 +789,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 }                
 
                 // Précharger les problèmes si mode problèmes sélectionné
-                if (option.dataset.mode === 'problems' && !problemsManager.isLoaded()) {
+                if (isPuzzleMode(option.dataset.mode) && !problemsManager.isLoaded()) {
                     problemsManager.loadProblems('js/problemsV2.csv').then(() => {
                         this.populateThemesSelect();
                     });
@@ -659,6 +809,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         
         this.setupToggle('toggle-majority', (active) => {
             AppState.config.majorityMode = active;
+            syncWheelModeClass();
         });
         
         this.setupToggle('toggle-followers', (active) => {
@@ -739,7 +890,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         
         gameEngine.onDrop = (source, target, piece, newPos, oldPos, orientation) => {
             // Si mode problèmes actif, déléguer au problemsManager
-            if (AppState.gameMode === 'problems' && problemsManager.isActive) {
+            if (isPuzzleMode() && problemsManager.isActive) {
                 const move = source + target;
                 const result = problemsManager.validateAndPlayMove(move);
                 
@@ -851,6 +1002,7 @@ fullReset() {
             o.classList.toggle('is-active', o.dataset.mode === AppState.gameMode);
         });
         this.updateModeOptions();
+        syncWheelModeClass();
 
         // Toggles
         this.setToggleState('toggle-voting', AppState.config.timerEnabled);
@@ -866,6 +1018,14 @@ fullReset() {
         
         const wheelDuration = document.getElementById('wheel-duration');
         if (wheelDuration) wheelDuration.value = AppState.config.wheelDuration;
+
+        const rushRating = document.getElementById('rush-start-rating');
+        if (rushRating) rushRating.value = AppState.config.rushStartRating || 600;
+
+        ['problem-pause', 'rush-pause'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = AppState.config.pauseAfterEnd || 5;
+        });
 
         // Inputs joueurs
         const playerSolo = document.getElementById('player-solo');
@@ -991,7 +1151,7 @@ fullReset() {
             Object.assign(AppState.problems, config.problems);
         }
 
-        if (config.fen && config.gameMode !== 'problems') {
+        if (config.fen && !isPuzzleMode(config.gameMode)) {
             gameEngine.loadFen(config.fen);
         }
 
@@ -1020,7 +1180,85 @@ const BrowsePage = {
         } else {
             this.socket?.emit('getGames');
         }
+        this.syncAuthFields();
         this.handleJoinParam();
+        this.loadRushRecords();
+    },
+
+    // ========== PUZZLE RUSH : RECORDS ==========
+
+    async loadRushRecords() {
+        const ratingInput = document.getElementById('browse-rush-rating');
+        if (ratingInput && !ratingInput.dataset.filled) {
+            ratingInput.value = AppState.config.rushStartRating || 600;
+            ratingInput.dataset.filled = '1';
+        }
+        const pauseInput = document.getElementById('browse-rush-pause');
+        if (pauseInput && !pauseInput.dataset.filled) {
+            pauseInput.value = AppState.config.pauseAfterEnd || 5;
+            pauseInput.dataset.filled = '1';
+        }
+
+        const container = document.getElementById('rush-records');
+        if (!container) return;
+        try {
+            const { RushManager } = await import('./core/rushManager.js');
+            const records = await RushManager.fetchLeaderboard(50);
+            this.renderRushRecords(records);
+        } catch (e) {
+            console.warn('🔥 Records indisponibles:', e.message);
+            container.textContent = '';
+            const msg = document.createElement('div');
+            msg.className = 'rush-records__empty';
+            msg.textContent = `Records indisponibles (${e.message})`;
+            container.appendChild(msg);
+        }
+    },
+
+    renderRushRecords(records) {
+        const container = document.getElementById('rush-records');
+        if (!container) return;
+
+        const me   = (window.twitchAuth?.user?.login || '').toLowerCase();
+        const mine = me ? records.find(r => r.login === me) : null;
+
+        // Encart "Ton record" (visible seulement si connecté à Twitch)
+        const myBox = document.getElementById('rush-my-record');
+        if (myBox) {
+            myBox.style.display = me ? '' : 'none';
+            const v = document.getElementById('rush-my-record-value');
+            if (v) v.textContent = mine ? `${mine.best.score} puzzle${mine.best.score > 1 ? 's' : ''}` : 'Aucun run';
+        }
+
+        if (!records.length) {
+            container.innerHTML = `
+                <div class="rush-records__empty">
+                    Aucun record pour l'instant.<br>
+                    Lance un run pour inscrire ta chaîne !
+                </div>`;
+            return;
+        }
+
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const fmtDate = (ts) => ts ? new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '';
+        const medals = ['🥇', '🥈', '🥉'];
+
+        container.innerHTML = records.slice(0, 20).map((r, i) => {
+            const name   = r.displayName || r.login;
+            const avatar = r.avatar
+                ? `<img class="rush-list__avatar" src="${esc(r.avatar)}" alt="">`
+                : `<span class="rush-list__avatar">${esc(name[0].toUpperCase())}</span>`;
+            return `
+                <div class="rush-list__row ${r.login === me ? 'rush-list__row--me' : ''}">
+                    <span class="rush-list__rank">${medals[i] || i + 1}</span>
+                    ${avatar}
+                    <span class="rush-list__name">
+                        <a href="https://twitch.tv/${esc(r.login)}" target="_blank" rel="noopener">${esc(name)}</a>
+                        <span class="rush-list__meta">rating max ${r.best.maxRating || '—'} · ${fmtDate(r.best.at)}</span>
+                    </span>
+                    <span class="rush-list__score" title="${r.runs || 1} run(s)">${r.best.score}</span>
+                </div>`;
+        }).join('');
     },
 
     setupSocket() {
@@ -1039,8 +1277,8 @@ const BrowsePage = {
 
     setupFormHandlers() {
         document.getElementById('browse-create-btn')?.addEventListener('click', () => {
-            const channel = document.getElementById('browse-host-channel')?.value?.trim();
-            if (!channel) { Toast.error('Entre ton channel Twitch'); return; }
+            const channel = this.requireChannel();
+            if (!channel) return;
 
             const timerDuration  = parseInt(document.getElementById('browse-timer')?.value) || 30;
             const mode           = document.getElementById('browse-mode')?.value || 'wheel';
@@ -1064,14 +1302,34 @@ const BrowsePage = {
         });
 
         document.getElementById('browse-join-btn')?.addEventListener('click', () => {
-            const channel = document.getElementById('browse-guest-channel')?.value?.trim();
             const code    = document.getElementById('browse-join-code')?.value?.trim().toUpperCase();
-            if (!channel || !code) { Toast.error('Remplis tous les champs'); return; }
+            if (!code) { Toast.error('Entre le code de la partie'); return; }
+            const channel = this.requireChannel();
+            if (!channel) return;
             window.multiplayerManager?.joinGameFromBrowse(channel, code);
         });
 
         document.getElementById('browse-refresh-btn')?.addEventListener('click', () => {
             this.socket?.emit('getGames');
+        });
+
+        document.getElementById('rush-records-refresh')?.addEventListener('click', () => {
+            this.loadRushRecords();
+        });
+
+        // Lancer un run : démarre le Puzzle Rush directement sur #/game
+        document.getElementById('browse-rush-start')?.addEventListener('click', () => {
+            const rating = parseInt(document.getElementById('browse-rush-rating')?.value);
+            const pause  = parseInt(document.getElementById('browse-rush-pause')?.value);
+            AppState.gameMode = 'rush';
+            AppState.config.rushStartRating = Math.min(3000, Math.max(400, rating || 600));
+            AppState.config.pauseAfterEnd   = Math.min(60, Math.max(1, pause || 5));
+            Storage.saveConfig();
+            // Même mécanique que "Appliquer" : rechargement pour un état propre,
+            // puis applyConfigAfterReload() démarre le run sur la page Game.
+            sessionStorage.setItem('autoStart', '1');
+            window.location.hash = '#/game';
+            window.location.reload();
         });
     },
 
@@ -1239,23 +1497,39 @@ function setupModals() {
 function setupConnectionHandlers() {
     document.querySelectorAll('[data-action="connect-twitch"]').forEach(btn => {
         btn.addEventListener('click', async () => {
+            // Pas de session Twitch → redirection OAuth (la page change)
+            if (!twitchAuth.isLoggedIn) {
+                twitchAuth.login();
+                return;
+            }
+
+            // Session active → déconnexion complète (chat + révocation du token)
             try {
-                // Toggle: si connecté → déconnecter
-                if (twitch?.isConnected) {
-                    await twitch.disconnect();
-                    updateConnectionUI();
-                    Toast.info('Twitch déconnecté');
-                } else {
-                    await twitch.connect();
-                    updateConnectionUI();
-                    Toast.success('Twitch connecté !');
-                }
+                await twitch.logout();
+                updateConnectionUI();
+                Toast.info('Déconnecté de Twitch');
             } catch (e) {
-                if (e.message !== 'Connexion annulée') {
-                    Toast.error('Connexion Twitch échouée');
-                }
+                Toast.error('Déconnexion Twitch échouée');
             }
         });
+    });
+
+    // Changements de session OAuth (login, expiration, erreur)
+    window.addEventListener('twitchAuthChange', async (e) => {
+        const { reason, user, error } = e.detail || {};
+        twitch.updateUI();
+        updateConnectionUI();
+        BrowsePage.syncAuthFields();
+
+        if (reason === 'login' && user) {
+            // Le chat est rejoint par twitch.restore() dans initApp
+            Toast.success(`Connecté en tant que ${user.displayName}`);
+        } else if (reason === 'expired') {
+            await twitch.disconnect();
+            Toast.warning('Session Twitch expirée, reconnecte-toi');
+        } else if (reason === 'error') {
+            Toast.error(`Connexion Twitch refusée : ${error || 'erreur inconnue'}`);
+        }
     });
 
     document.querySelectorAll('[data-action="connect-phantom"]').forEach(btn => {
@@ -1336,6 +1610,10 @@ async function initApp() {
     setupModals();
     setupConnectionHandlers();
 
+    // Session Twitch (traite un éventuel retour OAuth AVANT le router : le token
+    // arrive dans le fragment d'URL, que le router utilise pour la navigation)
+    await twitchAuth.init();
+
     // Init router
     Router.init();
 
@@ -1384,7 +1662,7 @@ async function initApp() {
     if (twitch) {
         twitch.onVote = (voteContext) => {
             // ---- Mode problèmes ----
-            if (AppState.gameMode === 'problems' && problemsManager.isActive) {
+            if (isPuzzleMode() && problemsManager.isActive) {
                 const accepted = problemsManager.receiveVote(voteContext);
                 console.log(`🗳️ Vote problème: ${voteContext.move} →`, accepted ? 'accepté' : 'ignoré');
                 return;
@@ -1411,7 +1689,13 @@ async function initApp() {
 
             // ---- Comportement normal ----
             if (voting.isOpen) {
-                voting.addVote(voteContext.username, voteContext.move);
+                // "kh1" → "Kh1" ; un coup illégal n'est pas compté
+                const resolved = matchLegalMove(gameEngine.chess, voteContext.move);
+                if (!resolved) {
+                    console.log('🗳️ Vote ignoré (coup illégal) :', voteContext.move);
+                    return;
+                }
+                voting.addVote(voteContext.username, resolved.san);
             }
         };
     }
@@ -1443,6 +1727,7 @@ async function initApp() {
         AppState.config.majorityMode   = majorityMode;
         AppState.config.followersOnly  = followersOnly;
         AppState.config.subsOnly       = subsOnly;
+        syncWheelModeClass();
 
         // Orienter l'échiquier selon le rôle
         const myColor = window.playerColor;
@@ -1509,4 +1794,4 @@ window.appTimer         = timer;
 window.AppState         = AppState;
 
 // Exports ES module
-export { AppState, Router, SandboxPage, BrowsePage, Toast, Storage, gameEngine, timer, voting, problemsManager };
+export { AppState, Router, SandboxPage, BrowsePage, Toast, Storage, gameEngine, timer, voting, problemsManager, rushManager };

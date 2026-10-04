@@ -30,13 +30,24 @@
 
 .battle-setup {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
     margin-bottom: 40px;
 }
 
+@media (max-width: 1024px) {
+    .battle-setup { grid-template-columns: 1fr 1fr; }
+    .battle-setup__card--rush { grid-column: 1 / -1; }
+}
+
 @media (max-width: 768px) {
     .battle-setup { grid-template-columns: 1fr; }
+    .battle-setup__card--rush { grid-column: auto; }
+}
+
+.battle-setup__card--rush {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.04);
 }
 
 .battle-setup__card {

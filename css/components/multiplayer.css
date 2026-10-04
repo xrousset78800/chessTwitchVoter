@@ -248,6 +248,10 @@ body.multi-their-turn .multi-turn-indicator { color: #f87171; }
 /* Éléments cachés en mode Bataille */
 body.battle-mode .sandbox-only { display: none !important; }
 
+/* Route /game : uniquement le live, aucune configuration */
+body.game-mode .sandbox-only,
+body.game-mode .config-only { display: none !important; }
+
 /* Bannières multi intégrées dans la sandbox (visibles uniquement en mode Bataille) */
 #multi-pre-ready-banner,
 #multi-active-banner {

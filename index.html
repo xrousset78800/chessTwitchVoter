@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="css/components/modal.css">
     <link rel="stylesheet" href="css/components/wheel.css">
     <link rel="stylesheet" href="css/components/problems.css">
+    <link rel="stylesheet" href="css/components/rush.css">
     <link rel="stylesheet" href="css/components/twitch-connect.css">
     <link rel="stylesheet" href="css/components/multiplayer.css">
     <link rel="stylesheet" href="css/pages/landing.css">
@@ -112,18 +113,18 @@
             <div class="sandbox">
                 <div class="sandbox__header">
                     <div class="sandbox__title-area">
-                        <button class="btn btn--icon" data-navigate="/"><i class="fas fa-arrow-left"></i></button>
+                        <button class="btn btn--icon" id="sandbox-back" data-navigate="/"><i class="fas fa-arrow-left"></i></button>
                         <h1 class="sandbox__title">🧪 Sandbox</h1>
                     </div>
                     <div class="sandbox__actions">
                         <button data-i18n="actions.reverse" class="btn btn--sm" id="btn-flip"><i class="fas fa-sync-alt"></i> Retourner</button>
                         <button data-i18n="actions.reset" class="btn btn--sm" id="btn-reset"><i class="fas fa-undo"></i> Reset</button>
-                        <button data-i18n="actions.undo" class="btn btn--sm" id="btn-undo"><i class="fas fa-step-backward"></i> Undo</button>
-                        <button data-i18n="actions.sync" class="btn btn--sm" id="btn-sync" disabled><i class="fas fa-sync"></i> Sync</button>
-                        <button class="btn btn--sm btn--primary" id="btn-reset-sync" disabled><i class="fas fa-undo"></i> Reset + Sync</button>
-                        <button data-i18n="actions.gameEnd" class="btn btn--sm btn--danger" id="btn-game-end" disabled><i class="fas fa-stop"></i> Game End</button>
+                        <button data-i18n="actions.undo" class="btn btn--sm config-only" id="btn-undo"><i class="fas fa-step-backward"></i> Undo</button>
+                        <button data-i18n="actions.sync" class="btn btn--sm config-only" id="btn-sync" disabled><i class="fas fa-sync"></i> Sync</button>
+                        <button class="btn btn--sm btn--primary config-only" id="btn-reset-sync" disabled><i class="fas fa-undo"></i> Reset + Sync</button>
+                        <button data-i18n="actions.gameEnd" class="btn btn--sm btn--danger config-only" id="btn-game-end" disabled><i class="fas fa-stop"></i> Game End</button>
                         <button data-i18n="actions.save" class="btn btn--sm btn--primary sandbox-only" id="btn-save-config"><i class="fas fa-save"></i> Sauvegarder</button>
-                        <button class="btn btn--sm btn--warning" id="btn-calibrate" disabled>
+                        <button class="btn btn--sm btn--warning config-only" id="btn-calibrate" disabled>
                             <i class="fas fa-tools"></i> Calibrer
                         </button>                        
                         <button data-i18n="actions.apply" class="btn btn--primary btn--lg sandbox-only" id="btn-apply-config">
@@ -154,6 +155,36 @@
                     </div>
                     <div class="multi-banner__status">
                         <span id="multi-status-badge" class="badge badge--live">● LIVE</span>
+                    </div>
+                </div>
+
+                <!-- Bannière Puzzle Rush : score / vies / rating -->
+                <div id="rush-banner" class="rush-banner" style="display:none;">
+                    <span class="rush-banner__title">🔥 Puzzle Rush</span>
+                    <span class="rush-banner__stat"><span class="rush-banner__label">Score</span><span class="rush-banner__value" id="rush-score">0</span></span>
+                    <span class="rush-banner__stat rush-banner__hearts" id="rush-hearts">❤️❤️❤️</span>
+                    <span class="rush-banner__stat"><span class="rush-banner__label">Rating</span><span class="rush-banner__value" id="rush-rating">—</span></span>
+                    <span class="rush-banner__stat"><span class="rush-banner__label">Record</span><span class="rush-banner__value" id="rush-record">🏆 —</span></span>
+                </div>
+
+                <!-- Écran de fin Puzzle Rush -->
+                <div id="rush-end" class="rush-end">
+                    <div class="rush-end__card">
+                        <button class="rush-end__close" id="rush-end-close" title="Fermer"><i class="fas fa-times"></i></button>
+                        <div class="rush-end__icon">🔥</div>
+                        <h2 class="rush-end__title">Run terminé</h2>
+                        <div class="rush-end__score" id="rush-end-score">0</div>
+                        <div class="rush-end__subtitle">puzzles résolus</div>
+                        <div class="rush-end__stats">
+                            <div><span class="rush-end__stat-label">Rating max</span><span class="rush-end__stat-value" id="rush-end-rating">—</span></div>
+                            <div><span class="rush-end__stat-label">Durée</span><span class="rush-end__stat-value" id="rush-end-duration">0:00</span></div>
+                        </div>
+                        <p class="rush-end__status" id="rush-end-status"></p>
+                        <div class="rush-end__actions">
+                            <button class="btn btn--primary" id="rush-restart-btn"><i class="fas fa-redo"></i> Rejouer</button>
+                            <button class="btn btn--ghost" id="rush-login-btn" style="display:none;"><i class="fab fa-twitch"></i> Se connecter</button>
+                            <a class="btn btn--ghost" href="#/browse"><i class="fas fa-trophy"></i> Voir les records</a>
+                        </div>
                     </div>
                 </div>
 
@@ -229,6 +260,10 @@
                                         <span class="mode-option__icon">🧩</span>
                                         <span class="mode-option__label">Problèmes</span>
                                     </div>
+                                    <div class="mode-option" data-mode="rush">
+                                        <span class="mode-option__icon">🔥</span>
+                                        <span class="mode-option__label">Puzzle Rush</span>
+                                    </div>
                                     <div class="mode-option" data-mode="oneVsAll">
                                         <span class="mode-option__icon">👤</span>
                                         <span class="mode-option__label">1 vs All</span>
@@ -274,6 +309,35 @@
                                     </div>
                                 </div>
 
+                                <!-- Mode: Puzzle Rush options -->
+                                <div class="mode-options" id="options-rush">
+                                    <p class="form-hint rush-rules">
+                                        Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité).
+                                        <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote
+                                        avant la fin du timer compte comme une erreur.
+                                    </p>
+                                    <div class="form-row">
+                                        <label class="form-label" for="rush-start-rating">
+                                            <i class="fas fa-signal"></i>
+                                            Rating de départ
+                                        </label>
+                                        <input type="number" id="rush-start-rating" class="input input--sm"
+                                               style="width: 90px;" min="400" max="3000" step="50" value="600">
+                                    </div>
+                                    <div class="form-row">
+                                        <label class="form-label" for="rush-pause">
+                                            <i class="fas fa-clock"></i>
+                                            Pause entre puzzles
+                                        </label>
+                                        <input type="number" id="rush-pause" class="input input--sm"
+                                               style="width: 80px;" min="1" max="60" value="5">
+                                    </div>
+                                    <p class="form-hint">
+                                        Le record de la chaîne est enregistré si tu es connecté avec Twitch
+                                        et s'affiche dans <a href="#/browse">Parcourir</a>.
+                                    </p>
+                                </div>
+
                                 <!-- Mode: Problems options -->
                                 <div class="mode-options" id="options-problems">
                                     <div class="form-group">
@@ -295,7 +359,7 @@
                         </div>
 
                         <!-- Voting options -->
-                        <div class="panel">
+                        <div class="panel config-only">
                             <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
                             <div class="panel__content">
                                 <div class="form-row">
@@ -329,7 +393,7 @@
                         </div>
 
                         <!-- Twitch restrictions (only when connected) -->
-                        <div class="panel conditional-section twitch-only">
+                        <div class="panel conditional-section twitch-only config-only">
                             <div class="panel__header" data-i18n="gameMode.twitchOptions.restrictions"><i class="fab fa-twitch"></i> Restrictions</div>
                             <div class="panel__content">
                                 <div class="form-row">
@@ -345,7 +409,7 @@
                         </div>
 
                         <!-- Phantom settings (only when connected) -->
-                        <div class="panel conditional-section phantom-only">
+                        <div class="panel conditional-section phantom-only config-only">
                             <div class="panel__header" data-i18n="gameMode.phantom.title">><i class="fas fa-chess-board"></i> Paramètres Phantom</div>
                             <div class="panel__content">
                                 <div class="form-row">
@@ -483,6 +547,43 @@
                         <button class="btn btn--primary btn--full" id="browse-join-btn">
                             <i class="fas fa-sign-in-alt"></i> Rejoindre
                         </button>
+                    </div>
+
+                    <!-- Puzzle Rush : records des chaînes -->
+                    <div class="battle-setup__card battle-setup__card--rush">
+                        <div class="battle-setup__icon">🔥</div>
+                        <h2 class="battle-setup__title">Puzzle Rush</h2>
+                        <p class="battle-setup__desc">Ton chat enchaîne des puzzles de plus en plus durs, <strong>3 erreurs</strong> et le run s'arrête. Meilleur score de chaque chaîne :</p>
+
+                        <div class="rush-my-record" id="rush-my-record" style="display:none;">
+                            <span class="rush-my-record__label">Ton record</span>
+                            <span class="rush-my-record__value" id="rush-my-record-value">—</span>
+                        </div>
+
+                        <div id="rush-records" class="rush-records">
+                            <div class="rush-records__empty">Chargement des records…</div>
+                        </div>
+
+                        <div class="rush-card__options">
+                            <label class="rush-card__option">
+                                <span>Rating de départ</span>
+                                <input type="number" id="browse-rush-rating" class="input input--sm" min="400" max="3000" step="50" value="600">
+                            </label>
+                            <label class="rush-card__option">
+                                <span>Pause (s)</span>
+                                <input type="number" id="browse-rush-pause" class="input input--sm" min="1" max="60" value="5">
+                            </label>
+                        </div>
+
+                        <div class="rush-card__actions">
+                            <button class="btn btn--primary btn--full" id="browse-rush-start">
+                                <i class="fas fa-play"></i> Lancer un run
+                            </button>
+                            <button class="btn btn--ghost" id="rush-records-refresh" title="Actualiser">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <p class="form-hint rush-card__hint">Connecte-toi avec Twitch pour que le chat vote et que ton record soit enregistré.</p>
                     </div>
                 </div>
 
