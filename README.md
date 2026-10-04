@@ -1,11 +1,48 @@
-- git clone https://github.com/xrousset78800/chessTwitchVoter
-- change TWITCH_TOKEN in twitchToken.js
+# Phantom Twitchess
 
-- npm install
-- http-server C:\path-to\chessTwitchVoter
+Échecs interactifs pilotés par le chat Twitch : le chat vote les coups, l'échiquier
+Phantom (optionnel) les rejoue physiquement.
 
+## Lancer en local
 
+```
+npm install
+node --watch server.js
+```
 
-Lorsque le timer est activé, j'aimerai qu'en mode 1vsAll le coup joué par le joueur tout seul soit automatiquement joué et non pas tiré au sort. 
-De la même manière, pour le 1 contre 1, ne pas utiliser de vote. On peut supprimer le tous contre tous (pair impair) 
-J'aimerai aussi retravailler la présentation du pannel d'options. J'aimerai que tout sois plus serré et plus intuitif. 
+Puis ouvrir http://localhost:3000.
+
+- `--watch` redémarre le serveur quand `server.js` change. Les fichiers `js/` et `css/`
+  sont servis statiquement : un rechargement du navigateur suffit (Ctrl+F5 si cache).
+- Le serveur Express est obligatoire (Socket.IO pour la Bataille Twitch et la page
+  Parcourir). Ne pas utiliser `http-server`.
+
+## Connexion Twitch
+
+La connexion passe par OAuth (implicit grant, 100 % navigateur, aucun scope demandé).
+Le login Twitch de l'utilisateur devient sa chaîne : le chat est rejoint automatiquement
+et sert d'identité pour les records.
+
+Le Client ID de l'application Twitch est défini dans `js/core/twitchAuth.js`.
+L'URL de redirection enregistrée dans la console développeur Twitch doit correspondre
+exactement à l'URL de la page, par exemple `http://localhost:3000/` en développement.
+
+## Puzzle Rush
+
+Mode solo configurable dans **Nouveau** (carte « Puzzle Rush ») : le chat enchaîne des
+puzzles Lichess de difficulté croissante, toujours par vote à la majorité. Un mauvais coup,
+ou aucun vote avant la fin du timer, compte comme une erreur ; à la troisième le run s'arrête.
+
+- Options : rating de départ (défaut 600, +60 par puzzle résolu) et pause entre puzzles.
+- Le score est envoyé au serveur (`POST /api/rush/records`) si l'utilisateur est connecté
+  avec Twitch. Le serveur vérifie le token auprès de Twitch et n'accepte que ceux émis pour
+  notre Client ID : la chaîne enregistrée est toujours celle du token.
+- Les records sont stockés dans `data/rush-records.json` (dossier ignoré par git, un
+  enregistrement par chaîne) et affichés dans **Parcourir**, carte « Puzzle Rush » à côté de Créer / Rejoindre. Le bouton « Lancer un run » (rating de départ, pause) démarre directement sur la route `#/game` : même échiquier que Nouveau, sans aucun réglage.
+- Variables d'environnement : `TWITCH_CLIENT_ID` (sinon la valeur du code) et `DATA_DIR`
+  (sinon `./data`).
+
+## Tester sans Twitch
+
+Dans **Nouveau**, activer le vote puis cliquer sur des coups dans le panneau
+« Coups disponibles » : chaque clic compte comme un vote d'un joueur de test.

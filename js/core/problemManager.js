@@ -8,6 +8,8 @@
  * - Mise à jour des coups disponibles
  */
 
+import { matchLegalMove } from '../utils/moveMatch.js';
+
 class ProblemsManager {
     constructor() {
         // État
@@ -50,6 +52,10 @@ class ProblemsManager {
         this.onProblemFailed = null;
         this.onBotMove = null;
         this.onStateChange = null;
+        this.onNoVote = null;            // timer écoulé sans aucun vote
+
+        // Puzzle Rush : fournit le prochain puzzle (null = plus rien, false = ignorer l'appel)
+        this.nextProblemProvider = null;
         
         // Sons
         this.sounds = {};
@@ -177,6 +183,16 @@ class ProblemsManager {
     loadRandomProblem() {
         // ⭐ IMPORTANT: Annuler tout timer de pause en cours
         this.cancelPauseTimer();
+
+        if (this.nextProblemProvider) {
+            const next = this.nextProblemProvider();
+            if (next === false) return null;          // appel doublon, ignoré
+            if (!next) {
+                console.log('🧩 Plus de problème à charger (session terminée)');
+                return null;
+            }
+            return this.loadProblem(next);
+        }
         
         const filtered = this.getFilteredProblems();
         
@@ -321,11 +337,23 @@ startPlayerTurn() {
 
     if (this.config.timerEnabled && this.config.timerDuration > 0) {
         this.votingOpen = true;
-        window.timer.start(this.config.timerDuration);
+        window.timer.onTick = null;
         window.timer.onComplete = () => {
             this.votingOpen = false;
-            this.resolveVotes();
+            const winner = this.resolveVotes();
+            if (winner) {
+                const result = this.validateAndPlayMove(winner);
+                if (result && result.valid === false) {
+                    this.failCurrentProblem(`Coup non jouable : ${winner}`);
+                }
+            } else if (this.onNoVote) {
+                this.onNoVote();
+            } else {
+                // Personne n'a voté : on rouvre le tour
+                this.startPlayerTurn();
+            }
         };
+        window.timer.start(this.config.timerDuration);
     } else {
         this.votingOpen = true;
     }
@@ -337,7 +365,7 @@ cancelVotingTimer() {
 }
 
 receiveVote(voteData) {
-    const move = typeof voteData === 'string' ? voteData : voteData.move;
+    const rawMove = typeof voteData === 'string' ? voteData : voteData.move;
     const username = typeof voteData === 'string' ? 'anonyme' : (voteData.displayName || voteData.username || 'anonyme');
     
     if (!this.votingOpen) {
@@ -349,6 +377,15 @@ receiveVote(voteData) {
         return false;
     }
     
+    // "kh1" → "Kh1" : on résout contre les coups légaux (casse ignorée).
+    // Un coup illégal n'est pas un vote.
+    const resolved = matchLegalMove(this.chess, rawMove);
+    if (!resolved) {
+        console.log('🗳️ Vote rejeté : coup illégal', rawMove);
+        return false;
+    }
+    const move = resolved.san;
+
     this.votesForCurrentTurn.push({ move, username });
     console.log(`🗳️ Vote enregistré: ${move} par ${username} (total: ${this.votesForCurrentTurn.length})`);
     
@@ -359,7 +396,8 @@ receiveVote(voteData) {
     
     if (!this.config.timerEnabled) {
         this.votingOpen = false;
-        this.validateAndPlayMove(move);
+        const result = this.validateAndPlayMove(move);
+        if (result && result.valid === false) this.votingOpen = true; // coup non jouable : on reste ouvert
     }
     
     return true;
@@ -384,11 +422,7 @@ syncWheelDisplay() {
 
     wheel.draw();
     wheel.updateVoteList();
-
-    const wheelArea = document.getElementById('wheel-area');
-    if (wheelArea && !wheelArea.classList.contains('is-visible')) {
-        window.gameEngine.showWheel();
-    }
+    // Mode problèmes/rush : toujours majorité, la roue reste masquée
 }
 resolveVotes() {
     const counts = {};
@@ -593,6 +627,10 @@ resolveVotes() {
             return turn === 'w' ? 'e1g1' : 'e8g8';
         }
 
+        // SAN quelle que soit la casse ("kh1", "Kh1", "KH1") : coups légaux
+        const matched = matchLegalMove(this.chess, str);
+        if (matched) return matched.uci;
+
         try {
             // SAN : conserver la casse originale (Bc3 ≠ bc3 pour chess.js)
             const result = this.chess?.move(str);
@@ -671,6 +709,25 @@ handleProblemSolved() {
     this.startPauseTimer('solved');
 }
 
+/** Déclare le problème courant échoué sans coup joué (ex: aucun vote) */
+failCurrentProblem(reason = '') {
+    if (!this.isActive || !this.currentProblem) return false;
+    console.log('💔 Échec forcé :', reason);
+
+    const expectedUCI = this.currentProblem.moves[this.attemptIndex];
+    if (expectedUCI) {
+        const expectedSAN = this.uciToSAN(expectedUCI);
+        if (this.onWrongMove) this.onWrongMove(expectedSAN, expectedUCI);
+        const correctMove = this.uciToMoveObject(expectedUCI);
+        if (correctMove) this.highlightSquares(correctMove.from, correctMove.to, 'correct');
+    }
+
+    this.votingOpen = false;
+    this.cancelVotingTimer();
+    this.handleProblemFailed();
+    return true;
+}
+
 handleProblemFailed() {
     console.log('💔 PROBLÈME ÉCHOUÉ');
     this.isActive = false;
@@ -687,13 +744,12 @@ startPauseTimer(status) {
     const pauseDuration = this.config.pauseAfterEnd || 5;
     this.showTimerMessage(status, pauseDuration);
 
+    window.timer.onTick = null;
+    window.timer.onComplete = () => {
+        this.hideTimerMessage();
+        this.loadRandomProblem();
+    };
     window.timer.start(pauseDuration);
-    window.timer.onTick = (remaining) => {
-        window.timer.onComplete = () => {
-            this.hideTimerMessage();
-            this.loadRandomProblem();
-        };
-    }
 }
 cancelVotingTimer() {
     if (window.timer) window.timer.stop();

@@ -31,208 +31,39 @@
 }
 
 /* ============================================
-   TWITCH MODAL
+   SESSION TWITCH (bouton de connexion OAuth)
    ============================================ */
 
-.twitch-modal {
-    max-width: 450px;
-    overflow: visible;
+.twitch-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+    margin-right: 6px;
 }
 
-.twitch-modal__header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-subtle);
-}
-
-.twitch-modal__logo {
-    width: 50px;
-    height: 50px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, #9146FF, #772CE8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-    flex-shrink: 0;
-}
-
-.modal__subtitle {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-}
-
-/* ============================================
-   INPUT GROUP
-   ============================================ */
-
-.twitch-input-group {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: var(--bg-input);
-    border: 2px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    transition: all 0.2s ease;
-    margin-bottom: 20px;
-}
-
-.twitch-input-group:focus-within {
-    border-color: #9146FF;
-    box-shadow: 0 0 0 3px rgba(145, 70, 255, 0.2);
-}
-
-.twitch-input-prefix {
-    padding: 0 0 0 16px;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    user-select: none;
-}
-
-.twitch-input {
-    flex: 1;
-    padding: 14px 12px;
-    background: transparent;
-    border: none;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-    outline: none;
-}
-
-.twitch-input::placeholder {
-    color: var(--text-muted);
-}
-
-.twitch-input-status {
-    padding: 0 16px;
-    font-size: 1.1rem;
-    min-width: 40px;
-    display: flex;
-    justify-content: center;
-}
-
-/* ============================================
-   RECENT CHANNELS
-   ============================================ */
-
-.twitch-recent {
-    margin-bottom: 20px;
-}
-
-.twitch-recent__label {
-    display: block;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    margin-bottom: 10px;
-}
-
-.twitch-recent__list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.twitch-recent__item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
+.twitch-logout {
+    margin-left: 10px;
+    padding: 2px 8px;
     border-radius: var(--radius-full);
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.twitch-recent__item:hover {
-    background: var(--bg-card-hover);
-    border-color: #9146FF;
-    color: var(--text-primary);
-}
-
-.twitch-recent__item i {
-    color: #9146FF;
-    font-size: 0.8rem;
-}
-
-/* ============================================
-   CHANNEL PREVIEW
-   ============================================ */
-
-.twitch-preview {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px;
-    background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    margin-bottom: 16px;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
 }
 
-.twitch-preview__avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--gradient-hero);
-    background-size: cover;
-    background-position: center;
-    flex-shrink: 0;
-}
-
-.twitch-preview__info {
-    flex: 1;
-}
-
-.twitch-preview__name {
-    display: block;
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text-primary);
-}
-
-.twitch-preview__status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.twitch-preview__status.is-live {
+[data-action="connect-twitch"]:hover .twitch-logout {
+    opacity: 1;
+    border-color: var(--accent-red);
     color: var(--accent-red);
 }
 
-.twitch-preview__status.is-live::before {
-    content: '';
-    width: 8px;
-    height: 8px;
-    background: var(--accent-red);
-    border-radius: 50%;
-    animation: pulse 1.5s infinite;
-}
-
-/* ============================================
-   ERROR MESSAGE
-   ============================================ */
-
-.twitch-error {
-    padding: 12px 16px;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid var(--accent-red);
-    border-radius: var(--radius-sm);
-    color: var(--accent-red);
-    font-size: 0.9rem;
-    margin-bottom: 16px;
+/* Champ channel verrouillé par la session Twitch */
+.input.is-locked {
+    opacity: 0.75;
+    cursor: not-allowed;
+    border-color: #9146FF;
 }
 
 /* ============================================
@@ -378,28 +209,4 @@
 .twitch-status-bar__channel {
     font-weight: 600;
     color: var(--text-primary);
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (max-width: 480px) {
-    .twitch-modal {
-        margin: 16px;
-        max-width: calc(100% - 32px);
-    }
-    
-    .twitch-modal__header {
-        flex-wrap: wrap;
-    }
-    
-    .twitch-recent__list {
-        gap: 6px;
-    }
-    
-    .twitch-recent__item {
-        padding: 6px 12px;
-        font-size: 0.85rem;
-    }
 }

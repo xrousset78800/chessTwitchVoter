@@ -276,8 +276,10 @@
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Afficher la roue quand le vote est actif ou pendant l'animation */
-body.showTimer #wheel-area,
+/* Afficher la roue pendant le vote UNIQUEMENT en mode roue (body.wheel-mode,
+   posé par app.js quand le mode majorité est désactivé hors puzzles),
+   ou pendant l'animation de tirage. En mode majorité : jamais. */
+body.showTimer.wheel-mode #wheel-area,
 body.randomWheel #wheel-area,
 #wheel-area.is-visible {
     opacity: 1;

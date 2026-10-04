@@ -5,11 +5,12 @@ const http = require('http').createServer(app);
 
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
 });
+app.use(express.json({ limit: '16kb' }));
 
 
 const io = require('socket.io')(http, {
@@ -154,6 +155,148 @@ app.get('/proxy/chess-event/:slug', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+// ============================================
+// PUZZLE RUSH — RECORDS PAR CHAÎNE
+// ============================================
+// Identité : token Twitch (implicit grant côté client) validé auprès de Twitch.
+// Stockage : fichier JSON (data/rush-records.json), un enregistrement par chaîne.
+
+const fs = require('fs');
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '5lgt1omtgbo8gp4bla49ktvvr7gbj3';
+const DATA_DIR     = process.env.DATA_DIR || path.join(__dirname, 'data');
+const RECORDS_FILE = path.join(DATA_DIR, 'rush-records.json');
+
+let rushRecords = {}; // { [login]: { login, userId, displayName, avatar, best: {score, maxRating, durationMs, at}, runs, lastScore, lastAt } }
+
+function loadRushRecords() {
+    try {
+        rushRecords = JSON.parse(fs.readFileSync(RECORDS_FILE, 'utf8')) || {};
+        console.log(`🔥 ${Object.keys(rushRecords).length} record(s) Puzzle Rush chargé(s)`);
+    } catch (e) {
+        if (e.code !== 'ENOENT') console.warn('🔥 Records illisibles, repart de zéro:', e.message);
+        rushRecords = {};
+    }
+}
+
+function saveRushRecords() {
+    try {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+        const tmp = RECORDS_FILE + '.tmp';
+        fs.writeFileSync(tmp, JSON.stringify(rushRecords, null, 2));
+        fs.renameSync(tmp, RECORDS_FILE);
+    } catch (e) {
+        console.error('🔥 Impossible de sauvegarder les records:', e.message);
+    }
+}
+
+function publicRecord(r) {
+    return {
+        login:       r.login,
+        displayName: r.displayName || r.login,
+        avatar:      r.avatar || null,
+        best:        r.best,
+        runs:        r.runs || 1,
+        lastScore:   r.lastScore,
+        lastAt:      r.lastAt
+    };
+}
+
+function leaderboard(limit) {
+    return Object.values(rushRecords)
+        .sort((a, b) => (b.best.score - a.best.score)
+            || (b.best.maxRating - a.best.maxRating)
+            || (a.best.at - b.best.at))
+        .slice(0, limit)
+        .map(publicRecord);
+}
+
+// Validation des tokens Twitch, avec cache court pour ne pas spammer Twitch
+const tokenCache = new Map(); // token -> { login, userId, until }
+const TOKEN_CACHE_MS = 5 * 60 * 1000;
+
+async function verifyTwitchToken(token) {
+    const cached = tokenCache.get(token);
+    if (cached && cached.until > Date.now()) return cached;
+
+    const r = await fetch('https://id.twitch.tv/oauth2/validate', {
+        headers: { Authorization: `OAuth ${token}` }
+    });
+    if (r.status === 401) throw Object.assign(new Error('Token Twitch invalide ou expiré'), { status: 401 });
+    if (!r.ok) throw Object.assign(new Error(`Twitch HTTP ${r.status}`), { status: 502 });
+
+    const data = await r.json();
+    if (data.client_id !== TWITCH_CLIENT_ID) {
+        throw Object.assign(new Error('Token émis pour une autre application'), { status: 401 });
+    }
+
+    const identity = { login: data.login.toLowerCase(), userId: data.user_id, until: Date.now() + TOKEN_CACHE_MS };
+    tokenCache.set(token, identity);
+    if (tokenCache.size > 500) tokenCache.delete(tokenCache.keys().next().value);
+    return identity;
+}
+
+async function requireTwitch(req, res, next) {
+    const m = /^Bearer\s+(\S+)$/i.exec(req.headers.authorization || '');
+    if (!m) return res.status(401).json({ error: 'Connexion Twitch requise' });
+    try {
+        req.twitch = await verifyTwitchToken(m[1]);
+        next();
+    } catch (e) {
+        res.status(e.status || 502).json({ error: e.message });
+    }
+}
+
+// Classement
+app.get('/api/rush/records', (req, res) => {
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
+    res.json({ records: leaderboard(limit), total: Object.keys(rushRecords).length });
+});
+
+// Record d'une chaîne
+app.get('/api/rush/records/:login', (req, res) => {
+    const r = rushRecords[String(req.params.login).toLowerCase()];
+    if (!r) return res.status(404).json({ error: 'Aucun record pour cette chaîne' });
+    res.json(publicRecord(r));
+});
+
+// Fin de run : enregistre le score pour la chaîne du token
+app.post('/api/rush/records', requireTwitch, (req, res) => {
+    const body = req.body || {};
+    const score      = Number.isInteger(body.score) ? body.score : -1;
+    const maxRating  = Math.max(0, Math.min(4000, parseInt(body.maxRating) || 0));
+    const durationMs = Math.max(0, Math.min(24 * 3600e3, parseInt(body.durationMs) || 0));
+
+    if (score < 0 || score > 1000) {
+        return res.status(400).json({ error: 'Score invalide' });
+    }
+
+    const { login, userId } = req.twitch;
+    const now  = Date.now();
+    const prev = rushRecords[login];
+    const run  = { score, maxRating, durationMs, at: now };
+
+    const displayName = typeof body.displayName === 'string' ? body.displayName.slice(0, 50) : (prev?.displayName || login);
+    const avatar      = typeof body.avatar === 'string' && /^https:\/\/[^\s"'<>]+$/.test(body.avatar) ? body.avatar.slice(0, 300) : (prev?.avatar || null);
+
+    const isNewRecord = !prev || score > prev.best.score;
+    rushRecords[login] = {
+        login,
+        userId,
+        displayName,
+        avatar,
+        best:      isNewRecord ? run : prev.best,
+        runs:      (prev?.runs || 0) + 1,
+        lastScore: score,
+        lastAt:    now
+    };
+    saveRushRecords();
+
+    console.log(`🔥 [${login}] run terminé : ${score} puzzle(s)${isNewRecord ? ' — NOUVEAU RECORD' : ''}`);
+    res.json({ record: publicRecord(rushRecords[login]), isNewRecord });
+});
+
+loadRushRecords();
 
 const games = {}; // Stockage des parties actives
 
