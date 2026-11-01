@@ -15,6 +15,7 @@ class I18n {
         this.setupLanguageSelector();
         this.updateDOM();
         this.loaded = true;
+        window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: this.currentLang } }));
     }
 
     async loadLanguage(lang) {

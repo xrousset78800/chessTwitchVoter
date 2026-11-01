@@ -14,6 +14,7 @@ import rushManager from './core/rushManager.js';
 import twitch from './managers/twitch.js';
 import twitchAuth from './core/twitchAuth.js';
 import { matchLegalMove } from './utils/moveMatch.js';
+import lobby, { normalizeLogin } from './core/lobby.js';
 
 // ============================================
 // ÉTAT GLOBAL
@@ -98,6 +99,8 @@ const Storage = {
     },
     
     saveConfig() {
+        // Une route préconfigurée ne remplace pas les réglages du sandbox
+        if (GameSession.current) return;
         Storage.set(Storage.KEYS.CONFIG, {
             gameMode: AppState.gameMode,
             config: AppState.config,
@@ -145,6 +148,52 @@ const Storage = {
 };
 
 // ============================================
+// SESSION DE JEU (routes préconfigurées)
+// ============================================
+const SESSION_KEY = 'phantom_session';
+const MONO_LOBBY_SECONDS = 120;
+
+const tr = (key, params) => window.i18n.t(key, params);
+
+const GameSession = {
+    current: null,
+
+    /** Même mécanique que "Appliquer" : rechargement pour repartir d'un état propre */
+    launch(session) {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        sessionStorage.setItem('autoStart', '1');
+        window.location.hash = '#/game';
+        window.location.reload();
+    },
+
+    restore() {
+        const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+        if (!saved) return;
+        if (sessionStorage.getItem('autoStart') === '1') {
+            this.activate(saved);
+            return;
+        }
+        // F5 pendant une partie : retour à la page de réglage de la route
+        sessionStorage.removeItem(SESSION_KEY);
+        if (window.location.hash.startsWith('#/game')) {
+            history.replaceState(null, '', `#/${saved.route}`);
+        }
+    },
+
+    activate(session) {
+        this.current = session;
+        AppState.gameMode = session.gameMode;
+        Object.assign(AppState.config, session.config);
+        document.body.classList.add(`preset-${session.route}`);
+    },
+
+    clear() {
+        sessionStorage.removeItem(SESSION_KEY);
+        this.current = null;
+    }
+};
+
+// ============================================
 // ROUTER (SPA Navigation)
 // ============================================
 const Router = {
@@ -156,7 +205,11 @@ const Router = {
         '/browse': 'browse',
         '/live': 'live',
         '/tournament': 'tournament',
+        '/rush': 'rush',
+        '/mono': 'mono',
+        '/multi': 'multi',
     },
+    started: false,
 
     init() {
         window.addEventListener('hashchange', () => this.handleRoute());
@@ -169,11 +222,27 @@ const Router = {
         });
 
         this.handleRoute();
+        this.started = true;
     },
 
     handleRoute() {
         const hash = window.location.hash.slice(1) || '/';
-        const [path] = hash.split('?');
+        const [path, query] = hash.split('?');
+        const room = MultiRoom.parse(path, query);
+
+        // Entrer dans un salon ou quitter une partie préconfigurée : état propre
+        if (this.started && (room || (GameSession.current && path !== '/game'))) {
+            GameSession.clear();
+            window.location.reload();
+            return;
+        }
+
+        if (room) {
+            MultiRoom.prepare(room);
+            this.showPage('game');
+            return;
+        }
+
         const pageName = this.routes[path] || 'landing';
 
         this.showPage(pageName);
@@ -203,8 +272,10 @@ const Router = {
         // Mettre à jour la nav
         document.querySelectorAll('.nav__link').forEach(link => {
             const linkPath = link.dataset.navigate;
+            // Pendant une partie préconfigurée, seule sa route est active (pas /sandbox)
+            const activePage = GameSession.current?.route || actualPage;
             link.classList.toggle('is-active',
-                linkPath === '/' + actualPage || (linkPath === '/' && pageName === 'landing')
+                linkPath === '/' + activePage || (linkPath === '/' && pageName === 'landing')
             );
         });
 
@@ -217,6 +288,12 @@ const Router = {
             LivePage.init();
         } else if (pageName === 'tournament') {
             TournamentPage.init();
+        } else if (pageName === 'rush') {
+            RushPage.init();
+        } else if (pageName === 'mono') {
+            MonoPage.init();
+        } else if (pageName === 'multi') {
+            MultiPage.init();
         }
     }
 };
@@ -281,9 +358,10 @@ const SandboxPage = {
         const titleEl = document.querySelector('#page-sandbox .sandbox__title');
         const backBtn = document.getElementById('sandbox-back');
         if (pageName === 'game') {
-            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes' };
+            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi' };
+            const route = GameSession.current?.route;
             if (titleEl) titleEl.textContent = titles[AppState.gameMode] || '♟ Partie';
-            if (backBtn) backBtn.dataset.navigate = '/browse';
+            if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/browse';
         } else if (pageName === 'sandbox') {
             if (titleEl) titleEl.textContent = '🧪 Sandbox';
             if (backBtn) backBtn.dataset.navigate = '/';
@@ -322,8 +400,14 @@ const SandboxPage = {
 async applyConfigAfterReload() {
     document.body.classList.toggle('no-bg', AppState.config.noBg);
     syncWheelModeClass();
+    twitch.settings.subsOnly = !!AppState.config.subsOnly;
 
     if (gameEngine.updateVotingIndicator) gameEngine.updateVotingIndicator();
+
+    if (AppState.gameMode === 'mono') {
+        PresetGame.startMono();
+        return;
+    }
 
     if (AppState.gameMode === 'rush') {
         if (!this.problemsInitialized) {
@@ -688,7 +772,9 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         
         // Reset
         document.getElementById('btn-reset')?.addEventListener('click', () => {
-            if (AppState.gameMode === 'rush' && (rushManager.active || rushManager.ended)) {
+            if (AppState.gameMode === 'mono') {
+                PresetGame.rematch();
+            } else if (AppState.gameMode === 'rush' && (rushManager.active || rushManager.ended)) {
                 this.restartRush();
             } else if (AppState.gameMode === 'problems' && problemsManager.isActive) {
                 problemsManager.loadRandomProblem();
@@ -1187,7 +1273,7 @@ const BrowsePage = {
 
     // ========== PUZZLE RUSH : RECORDS ==========
 
-    async loadRushRecords() {
+    async loadRushRecords(containerId = 'rush-records') {
         const ratingInput = document.getElementById('browse-rush-rating');
         if (ratingInput && !ratingInput.dataset.filled) {
             ratingInput.value = AppState.config.rushStartRating || 600;
@@ -1199,12 +1285,12 @@ const BrowsePage = {
             pauseInput.dataset.filled = '1';
         }
 
-        const container = document.getElementById('rush-records');
+        const container = document.getElementById(containerId);
         if (!container) return;
         try {
             const { RushManager } = await import('./core/rushManager.js');
             const records = await RushManager.fetchLeaderboard(50);
-            this.renderRushRecords(records);
+            this.renderRushRecords(records, container);
         } catch (e) {
             console.warn('🔥 Records indisponibles:', e.message);
             container.textContent = '';
@@ -1215,9 +1301,7 @@ const BrowsePage = {
         }
     },
 
-    renderRushRecords(records) {
-        const container = document.getElementById('rush-records');
-        if (!container) return;
+    renderRushRecords(records, container) {
 
         const me   = (window.twitchAuth?.user?.login || '').toLowerCase();
         const mine = me ? records.find(r => r.login === me) : null;
@@ -1321,15 +1405,7 @@ const BrowsePage = {
         document.getElementById('browse-rush-start')?.addEventListener('click', () => {
             const rating = parseInt(document.getElementById('browse-rush-rating')?.value);
             const pause  = parseInt(document.getElementById('browse-rush-pause')?.value);
-            AppState.gameMode = 'rush';
-            AppState.config.rushStartRating = Math.min(3000, Math.max(400, rating || 600));
-            AppState.config.pauseAfterEnd   = Math.min(60, Math.max(1, pause || 5));
-            Storage.saveConfig();
-            // Même mécanique que "Appliquer" : rechargement pour un état propre,
-            // puis applyConfigAfterReload() démarre le run sur la page Game.
-            sessionStorage.setItem('autoStart', '1');
-            window.location.hash = '#/game';
-            window.location.reload();
+            RushPage.launch('browse', rating, pause);
         });
     },
 
@@ -1594,6 +1670,471 @@ window.addEventListener('phantomConnected', async () => {
 });
 
 // ============================================
+// ROUTES PRÉCONFIGURÉES : PAGES DE RÉGLAGE
+// ============================================
+const PresetForm = {
+    bindToggles(prefix) {
+        ['follow', 'sub'].forEach(name => {
+            const toggle = document.getElementById(`${prefix}-${name}-toggle`);
+            toggle?.addEventListener('click', () => toggle.classList.toggle('is-active'));
+        });
+    },
+
+    read(prefix) {
+        const value = (name) => document.getElementById(`${prefix}-${name}`)?.value;
+        const isOn  = (name) => !!document.getElementById(`${prefix}-${name}-toggle`)?.classList.contains('is-active');
+        return {
+            timerEnabled:  true,
+            singleVote:    true,
+            timerDuration: Math.min(300, Math.max(5, parseInt(value('timer')) || 30)),
+            majorityMode:  value('mode') === 'majority',
+            followersOnly: isOn('follow'),
+            subsOnly:      isOn('sub')
+        };
+    },
+
+    /** Pas connecté, ou token antérieur à l'autorisation de lire les followers */
+    needsLogin(config) {
+        return !twitchAuth.isLoggedIn || (config.followersOnly && !twitchAuth.canCheckFollowers);
+    }
+};
+
+const RushPage = {
+    initialized: false,
+
+    init() {
+        const rating = document.getElementById('rush-page-rating');
+        const pause  = document.getElementById('rush-page-pause');
+        if (!this.initialized) {
+            rating.value = AppState.config.rushStartRating || 600;
+            pause.value  = AppState.config.pauseAfterEnd || 5;
+            document.getElementById('rush-page-start').addEventListener('click', () => {
+                if (!twitchAuth.isLoggedIn) { twitchAuth.login(); return; }
+                this.launch('rush', parseInt(rating.value), parseInt(pause.value));
+            });
+            this.initialized = true;
+        }
+        BrowsePage.loadRushRecords('rush-page-records');
+    },
+
+    launch(route, rating, pause) {
+        AppState.config.rushStartRating = Math.min(3000, Math.max(400, rating || 600));
+        AppState.config.pauseAfterEnd   = Math.min(60, Math.max(1, pause || 5));
+        Storage.saveConfig();
+        GameSession.launch({ route, gameMode: 'rush', config: {} });
+    }
+};
+
+const MonoPage = {
+    initialized: false,
+    format: 'vsStreamer',
+
+    init() {
+        if (this.initialized) return;
+        this.initialized = true;
+        PresetForm.bindToggles('mono');
+        document.querySelectorAll('#page-mono .preset-choice').forEach(choice => {
+            choice.addEventListener('click', () => {
+                this.format = choice.dataset.format;
+                document.querySelectorAll('#page-mono .preset-choice').forEach(c => {
+                    c.classList.toggle('is-active', c === choice);
+                });
+                document.getElementById('mono-color-group').style.display =
+                    this.format === 'vsStreamer' ? '' : 'none';
+            });
+        });
+        document.getElementById('mono-start').addEventListener('click', () => {
+            const config = PresetForm.read('mono');
+            if (PresetForm.needsLogin(config)) { twitchAuth.login(); return; }
+            GameSession.launch({
+                route: 'mono',
+                gameMode: 'mono',
+                format: this.format,
+                streamerColor: document.getElementById('mono-color').value,
+                config
+            });
+        });
+    }
+};
+
+const MultiPage = {
+    initialized: false,
+
+    init() {
+        const channel = document.getElementById('multi-channel');
+        channel.value = twitchAuth.user?.login || '';
+        if (this.initialized) return;
+        this.initialized = true;
+        PresetForm.bindToggles('multi');
+        document.getElementById('multi-start').addEventListener('click', () => {
+            const options = PresetForm.read('multi');
+            if (PresetForm.needsLogin(options)) { twitchAuth.login(); return; }
+            const me       = normalizeLogin(twitchAuth.user.login);
+            const opponent = normalizeLogin(document.getElementById('multi-opponent').value);
+            if (opponent.length < 2 || opponent === me) {
+                Toast.error(tr('multi.invalidOpponent'));
+                return;
+            }
+            const query = new URLSearchParams({ timer: options.timerDuration, mode: options.majorityMode ? 'majority' : 'wheel' });
+            if (options.subsOnly) query.set('subs', '1');
+            if (options.followersOnly) query.set('followers', '1');
+            window.location.hash = `#/multi/${me}/${opponent}?${query}`;
+        });
+    }
+};
+
+// ============================================
+// ROUTES PRÉCONFIGURÉES : SALON ET PARTIE
+// ============================================
+const PresetGame = {
+    countdownId: null,
+    endsAt: null,
+    banner: null,
+
+    /** Bandeau au-dessus de l'échiquier : { title | titleKey, params, hintKey, actions } */
+    setBanner(banner) {
+        this.banner = banner;
+        const el = document.getElementById('lobby-banner');
+        el.style.display = banner ? '' : 'none';
+        if (!banner) return;
+        document.getElementById('lobby-title').textContent = banner.title || tr(banner.titleKey, banner.params);
+        document.getElementById('lobby-hint').textContent  = banner.hintKey ? tr(banner.hintKey) : '';
+        el.querySelectorAll('[data-lobby-action]').forEach(btn => {
+            btn.style.display = banner.actions?.includes(btn.dataset.lobbyAction) ? '' : 'none';
+        });
+        this.renderCount();
+    },
+
+    renderCount() {
+        const remaining = this.endsAt ? Math.max(0, Math.ceil((this.endsAt - Date.now()) / 1000)) : null;
+        document.getElementById('lobby-countdown').textContent = remaining === null ? ''
+            : `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+        document.getElementById('lobby-count').textContent = lobby.open
+            ? tr('lobby.count', { count: lobby.players.size }) : '';
+    },
+
+    startCountdown(seconds, onEnd = null) {
+        this.stopCountdown();
+        this.endsAt = Date.now() + seconds * 1000;
+        this.renderCount();
+        this.countdownId = setInterval(() => {
+            this.renderCount();
+            if (onEnd && Date.now() >= this.endsAt) onEnd();
+        }, 250);
+    },
+
+    stopCountdown() {
+        clearInterval(this.countdownId);
+        this.countdownId = null;
+        this.endsAt = null;
+    },
+
+    /** Mêmes exemptions que le mode followers du chat Twitch */
+    async verifyFollower(tags) {
+        const badges = tags.badges || {};
+        if (tags.mod || tags.subscriber || badges.broadcaster || badges.moderator || badges.vip || badges.subscriber) {
+            return true;
+        }
+        try {
+            return await twitchAuth.isFollower(tags['user-id']);
+        } catch (e) {
+            // Twitch indisponible : on n'empêche pas la partie, mais le streamer doit le savoir
+            console.warn('Vérification follower impossible :', e.message);
+            if (!this.followCheckWarned) Toast.warning(tr('lobby.followCheckFailed'));
+            this.followCheckWarned = true;
+            return true;
+        }
+    },
+
+    followerCheck(enabled) {
+        return enabled ? (tags) => this.verifyFollower(tags) : null;
+    },
+
+    lobbyHint() {
+        if (twitch.settings.subsOnly) return 'lobby.hintSubs';
+        return lobby.verifyJoin ? 'lobby.hintFollowers' : 'lobby.hint';
+    },
+
+    startLobby(options) {
+        document.getElementById('roster-panel').style.display = '';
+        gameEngine.onGameEnd = (result) => this.onGameEnd(result);
+        lobby.start({
+            ...options,
+            isEligible: (tags) => twitch.checkVoteEligibility(tags),
+            verifyJoin: this.followerCheck(AppState.config.followersOnly),
+            onChange: () => {
+                this.renderCount();
+                this.renderRoster();
+            }
+        });
+    },
+
+    // ========== MONO ==========
+
+    startMono() {
+        const login = twitchAuth.user?.login;
+        if (!login) {
+            GameSession.clear();
+            window.location.hash = '#/mono';
+            window.location.reload();
+            return;
+        }
+        const { format, streamerColor } = GameSession.current;
+        if (format === 'vsStreamer') {
+            const color = streamerColor === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : streamerColor;
+            gameEngine.session = { humanColor: color };
+            gameEngine.board.orientation(color === 'w' ? 'white' : 'black');
+            this.startLobby({ format, channel: login, streamer: login, color: color === 'w' ? 'b' : 'w' });
+        } else {
+            gameEngine.session = { humanColor: null };
+            this.startLobby({ format, channel: login, streamer: login });
+        }
+        this.showMonoLobby();
+        this.startCountdown(MONO_LOBBY_SECONDS, () => this.closeMonoLobby());
+    },
+
+    showMonoLobby() {
+        this.setBanner({
+            titleKey: 'lobby.title',
+            hintKey: PresetGame.lobbyHint(),
+            actions: ['start-now']
+        });
+    },
+
+    closeMonoLobby() {
+        // Une partie sans joueur ne jouerait que des coups au hasard
+        if (lobby.players.size === 0) {
+            Toast.warning(tr('lobby.nobody'));
+            this.startCountdown(MONO_LOBBY_SECONDS, () => this.closeMonoLobby());
+            return;
+        }
+        this.stopCountdown();
+        lobby.close();
+        this.setBanner(null);
+        gameEngine.startGame();
+    },
+
+    rematch() {
+        if (lobby.open) return;
+        this.setBanner(null);
+        gameEngine.reset();
+        gameEngine.startGame();
+    },
+
+    // ========== FIN DE PARTIE ==========
+
+    onGameEnd(result) {
+        timer.stop();
+        voting.close();
+        const isMulti = GameSession.current?.route === 'multi';
+        this.setBanner({
+            title: result,
+            actions: isMulti ? ['revenge', 'back'] : ['rematch', 'new-lobby']
+        });
+    },
+
+    // ========== ROSTER ==========
+
+    renderRoster() {
+        const groups = lobby.format === 'teams' && !lobby.open
+            ? [[tr('roster.white'), lobby.getPlayers('w')], [tr('roster.black'), lobby.getPlayers('b')]]
+            : [[tr('roster.players'), lobby.getPlayers()]];
+
+        const list = document.getElementById('roster-list');
+        list.textContent = '';
+        groups.forEach(([title, players]) => {
+            const heading = document.createElement('div');
+            heading.className = 'roster__team';
+            heading.textContent = `${title} (${players.length})`;
+            list.appendChild(heading);
+
+            players.forEach(player => {
+                const row = document.createElement('div');
+                row.className = 'roster__row';
+                const name = document.createElement('span');
+                name.className = 'roster__name';
+                name.textContent = player.name;
+                const kick = document.createElement('button');
+                kick.className = 'btn btn--icon btn--sm';
+                kick.title = tr('roster.kick');
+                kick.innerHTML = '<i class="fas fa-times"></i>';
+                kick.addEventListener('click', () => this.kick(player.login));
+                row.append(name, kick);
+                list.appendChild(row);
+            });
+        });
+
+        document.getElementById('roster-team').style.display =
+            lobby.format === 'teams' && !lobby.open ? '' : 'none';
+    },
+
+    kick(login) {
+        lobby.kick(login);
+        voting.removePlayer(login);
+        if (voting.isOpen) {
+            gameEngine.updateVotesUI(voting.getSortedResults());
+            gameEngine.syncWheelFromVoting();
+        }
+    },
+
+    addFromForm() {
+        const input = document.getElementById('roster-add');
+        const team  = document.getElementById('roster-team');
+        const added = lobby.add(input.value, team.style.display === 'none' ? null : team.value);
+        if (!added) { Toast.error(tr('roster.invalid')); return; }
+        input.value = '';
+    },
+
+    setupControls() {
+        const actions = {
+            'start-now': () => {
+                if (lobby.players.size === 0) { Toast.warning(tr('lobby.nobodyYet')); return; }
+                this.closeMonoLobby();
+            },
+            'copy-link': () => {
+                navigator.clipboard.writeText(window.location.href).then(() => Toast.success(tr('lobby.linkCopied')));
+            },
+            'login':     () => twitchAuth.login(),
+            'rematch':   () => this.rematch(),
+            'new-lobby': () => GameSession.launch(GameSession.current),
+            'revenge':   () => window.location.reload(),
+            'back':      () => { window.location.hash = '#/multi'; }
+        };
+        document.querySelectorAll('[data-lobby-action]').forEach(btn => {
+            btn.addEventListener('click', () => actions[btn.dataset.lobbyAction]());
+        });
+        document.getElementById('roster-add-btn').addEventListener('click', () => this.addFromForm());
+        document.getElementById('roster-add').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.addFromForm();
+        });
+        window.addEventListener('languageChanged', () => {
+            this.setBanner(this.banner);
+            if (lobby.active) this.renderRoster();
+        });
+    }
+};
+
+const MultiRoom = {
+    room: null,
+
+    parse(path, query) {
+        const match = /^\/multi\/([^/]+)\/([^/]+)$/.exec(path);
+        if (!match) return null;
+        const params = new URLSearchParams(query || '');
+        return {
+            a: normalizeLogin(match[1]),
+            b: normalizeLogin(match[2]),
+            settings: {
+                timerDuration: Math.min(300, Math.max(5, parseInt(params.get('timer')) || 30)),
+                majorityMode:  params.get('mode') === 'majority',
+                followersOnly: params.get('followers') === '1',
+                subsOnly:      params.get('subs') === '1'
+            }
+        };
+    },
+
+    /** Avant SandboxPage.init : le moteur démarre avec les réglages du lien */
+    prepare(room) {
+        this.room = room;
+        GameSession.activate({
+            route: 'multi',
+            gameMode: 'multi',
+            config: { ...room.settings, timerEnabled: true, singleVote: true }
+        });
+    },
+
+    /** Après la restauration de Twitch : entrée réelle dans le salon */
+    enter() {
+        const { a, b, settings } = this.room;
+        const login = normalizeLogin(twitchAuth.user?.login);
+
+        window.addEventListener('multiRoomState', (e) => this.onState(e.detail));
+        window.addEventListener('multiRoomDenied', (e) => this.deny(e.detail.reason));
+        window.addEventListener('multiPartnerLeft', () => this.onPartnerLeft());
+
+        if (!login) {
+            PresetGame.setBanner({
+                title: `${a} ⚔ ${b}`,
+                hintKey: 'multi.loginRequired',
+                actions: ['login', 'back']
+            });
+            return;
+        }
+        if (login !== a && login !== b) {
+            this.deny('notParticipant');
+            return;
+        }
+        if (settings.followersOnly && !twitchAuth.canCheckFollowers) {
+            PresetGame.setBanner({
+                title: `${a} ⚔ ${b}`,
+                hintKey: 'multi.followersScope',
+                actions: ['login', 'back']
+            });
+            return;
+        }
+
+        twitch.settings.subsOnly = settings.subsOnly;
+        gameEngine.session = { humanColor: null };
+        PresetGame.startLobby({
+            format: 'multi',
+            channel: login,
+            streamer: login,
+            color: login === a ? 'w' : 'b'
+        });
+        this.opponent = login === a ? b : a;
+        window.multiplayerManager.enterRoom({ a, b, login, token: twitchAuth.token, settings });
+    },
+
+    onState({ present, remainingMs, settings }) {
+        // Le premier arrivé fixe les réglages de la partie
+        twitch.settings.subsOnly = settings.subsOnly;
+        lobby.verifyJoin = PresetGame.followerCheck(settings.followersOnly);
+
+        if (present.length < 2) {
+            PresetGame.stopCountdown();
+            PresetGame.setBanner({
+                titleKey: 'multi.waiting',
+                params: { name: this.opponent },
+                hintKey: 'multi.waitingHint',
+                actions: ['copy-link', 'back']
+            });
+            return;
+        }
+        PresetGame.startCountdown(remainingMs / 1000);
+        PresetGame.setBanner({
+            titleKey: 'lobby.title',
+            hintKey: PresetGame.lobbyHint(),
+            actions: ['copy-link']
+        });
+    },
+
+    deny(reason) {
+        PresetGame.stopCountdown();
+        lobby.open = false;
+        const { a, b } = this.room;
+        PresetGame.setBanner({
+            titleKey: `multi.denied.${reason}`,
+            params: { a, b },
+            actions: reason === 'auth' ? ['login', 'back'] : ['back']
+        });
+    },
+
+    onGameReady() {
+        PresetGame.stopCountdown();
+        lobby.close();
+        PresetGame.setBanner(null);
+    },
+
+    onPartnerLeft() {
+        if (!gameEngine.isRunning) return;
+        timer.stop();
+        voting.close();
+        gameEngine.isRunning = false;
+        PresetGame.setBanner({ titleKey: 'multi.partnerLeft', actions: ['revenge', 'back'] });
+    }
+};
+
+// ============================================
 // INITIALISATION
 // ============================================
 async function initApp() {
@@ -1601,6 +2142,7 @@ async function initApp() {
 
     // Charger la config sauvegardée
     Storage.loadConfig();
+    GameSession.restore();
 
     // Exposer Toast globalement (utilisé par multi.js et d'autres scripts)
     window.AppToast = Toast;
@@ -1609,6 +2151,7 @@ async function initApp() {
     Toast.init();
     setupModals();
     setupConnectionHandlers();
+    PresetGame.setupControls();
 
     // Session Twitch (traite un éventuel retour OAuth AVANT le router : le token
     // arrive dans le fragment d'URL, que le router utilise pour la navigation)
@@ -1660,6 +2203,8 @@ async function initApp() {
 
     // Écouter les votes Twitch
     if (twitch) {
+        twitch.onMessage = (message) => lobby.handleMessage(message);
+
         twitch.onVote = (voteContext) => {
             // ---- Mode problèmes ----
             if (isPuzzleMode() && problemsManager.isActive) {
@@ -1687,6 +2232,11 @@ async function initApp() {
                 }
             }
 
+            // ---- Routes à inscription : seuls les inscrits du camp au trait votent ----
+            if (lobby.active && !lobby.canVote(voteContext.username, gameEngine.chess.turn())) {
+                return;
+            }
+
             // ---- Comportement normal ----
             if (voting.isOpen) {
                 // "kh1" → "Kh1" ; un coup illégal n'est pas compté
@@ -1710,9 +2260,9 @@ async function initApp() {
 
         // Appliquer les paramètres de la partie (browse form ou defaults)
         const timerDuration  = window._browseTimerDuration || settings?.timerDuration || AppState.config.timerDuration;
-        const majorityMode   = window._browseMajorityMode  !== undefined ? window._browseMajorityMode  : AppState.config.majorityMode;
-        const followersOnly  = window._browseFollowersOnly !== undefined ? window._browseFollowersOnly : AppState.config.followersOnly;
-        const subsOnly       = window._browseSubsOnly      !== undefined ? window._browseSubsOnly      : AppState.config.subsOnly;
+        const majorityMode   = window._browseMajorityMode  ?? settings?.majorityMode  ?? AppState.config.majorityMode;
+        const followersOnly  = window._browseFollowersOnly ?? settings?.followersOnly ?? AppState.config.followersOnly;
+        const subsOnly       = window._browseSubsOnly      ?? settings?.subsOnly      ?? AppState.config.subsOnly;
         delete window._browseTimerDuration;
         delete window._browseMajorityMode;
         delete window._browseFollowersOnly;
@@ -1727,6 +2277,7 @@ async function initApp() {
         AppState.config.majorityMode   = majorityMode;
         AppState.config.followersOnly  = followersOnly;
         AppState.config.subsOnly       = subsOnly;
+        twitch.settings.subsOnly       = !!subsOnly;
         syncWheelModeClass();
 
         // Orienter l'échiquier selon le rôle
@@ -1751,6 +2302,7 @@ async function initApp() {
             gameEngine.config.majorityMode  = majorityMode;
         }
 
+        if (MultiRoom.room) MultiRoom.onGameReady();
         gameEngine.startGame();
 
         // Rendre le Toast accessible au multiplayerManager
@@ -1759,6 +2311,8 @@ async function initApp() {
         Toast.success(`⚔ Bataille lancée ! ${players.white} (⬜) vs ${players.black} (⬛)`);
         console.log(`🎮 Partie multi démarrée : ${players.white} vs ${players.black}`);
     });
+    if (MultiRoom.room) MultiRoom.enter();
+
     if (sessionStorage.getItem('autoStart') === '1') {
         sessionStorage.removeItem('autoStart');
         // Attendre que SandboxPage soit init via le Router

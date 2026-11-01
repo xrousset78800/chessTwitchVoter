@@ -300,6 +300,70 @@ loadRushRecords();
 
 const games = {}; // Stockage des parties actives
 
+// ============================================
+// ROUTE MULTI : SALON AVANT LA PARTIE
+// ============================================
+// #/multi/a/b : chaque streamer entre avec son token Twitch. Le compte à rebours
+// des inscriptions démarre quand les deux sont là, puis la partie se lance.
+const MULTI_LOBBY_MS = parseInt(process.env.MULTI_LOBBY_MS) || 2 * 60 * 1000;
+const multiRooms = {}; // gameId -> { gameId, a, b, settings, sockets: { login: socketId }, endsAt, timeout }
+
+function sanitizeMultiSettings(s = {}) {
+    return {
+        timerDuration: Math.min(300, Math.max(5, parseInt(s.timerDuration) || 30)),
+        majorityMode:  !!s.majorityMode,
+        followersOnly: !!s.followersOnly,
+        subsOnly:      !!s.subsOnly
+    };
+}
+
+function emitMultiRoom(room) {
+    // Pas de diffusion au canal de la partie : la page de l'autre streamer peut
+    // encore y être, sur le résultat de la partie précédente
+    const state = {
+        present:     Object.keys(room.sockets),
+        remainingMs: room.endsAt ? room.endsAt - Date.now() : null,
+        settings:    room.settings
+    };
+    Object.values(room.sockets).forEach(id => io.to(id).emit('multi:lobby', state));
+}
+
+function launchMultiRoom(room) {
+    games[room.gameId] = {
+        gameId:      room.gameId,
+        host:        room.a,
+        hostSocket:  room.sockets[room.a],
+        settings:    room.settings,
+        guest:       room.b,
+        guestSocket: room.sockets[room.b],
+        status:      'playing',
+        moveCount:   0,
+        startedAt:   Date.now(),
+        lastFen:     null
+    };
+    delete multiRooms[room.gameId];
+    io.to(room.gameId).emit('gameReady', {
+        players:  { white: room.a, black: room.b },
+        settings: room.settings
+    });
+    console.log(`Partie multi lancée : ${room.a} vs ${room.b}`);
+    broadcastGamesList();
+}
+
+function leaveMultiRoom(socket) {
+    const room = multiRooms[socket.data.multiRoom];
+    if (!room) return;
+    const login = Object.keys(room.sockets).find(l => room.sockets[l] === socket.id);
+    if (!login) return;
+    delete room.sockets[login];
+    // Il faut les deux streamers : le compte à rebours repartira à leur retour
+    clearTimeout(room.timeout);
+    room.timeout = null;
+    room.endsAt  = null;
+    if (Object.keys(room.sockets).length === 0) delete multiRooms[room.gameId];
+    else emitMultiRoom(room);
+}
+
 /** Retourne la liste publique des parties (sans données internes) */
 function getPublicGamesList() {
     return Object.values(games)
@@ -331,6 +395,48 @@ io.on('connection', (socket) => {
 
     socket.on('getGames', () => {
         socket.emit('gamesList', getPublicGamesList());
+    });
+
+    socket.on('multi:enter', async (data = {}) => {
+        const a = String(data.a || '').toLowerCase();
+        const b = String(data.b || '').toLowerCase();
+        const valid = /^[a-z0-9_]{2,25}$/;
+        if (!valid.test(a) || !valid.test(b) || a === b) {
+            return socket.emit('multi:denied', { reason: 'invalid' });
+        }
+
+        let login;
+        try {
+            ({ login } = await verifyTwitchToken(String(data.token || '')));
+        } catch (e) {
+            return socket.emit('multi:denied', { reason: 'auth' });
+        }
+        // Personne ne peut lancer une partie au nom de deux autres chaînes
+        if (login !== a && login !== b) {
+            return socket.emit('multi:denied', { reason: 'notParticipant' });
+        }
+
+        const gameId = `${a}-${b}`;
+        if (games[gameId]?.status === 'playing') {
+            return socket.emit('multi:denied', { reason: 'playing' });
+        }
+
+        const room = multiRooms[gameId] ||= {
+            gameId, a, b,
+            settings: sanitizeMultiSettings(data.settings),
+            sockets:  {},
+            endsAt:   null,
+            timeout:  null
+        };
+        room.sockets[login]   = socket.id;
+        socket.data.multiRoom = gameId;
+        socket.join(gameId);
+
+        if (room.sockets[a] && room.sockets[b] && !room.timeout) {
+            room.endsAt  = Date.now() + MULTI_LOBBY_MS;
+            room.timeout = setTimeout(() => launchMultiRoom(room), MULTI_LOBBY_MS);
+        }
+        emitMultiRoom(room);
     });
 
     socket.on('createGame', (data) => {
@@ -403,6 +509,8 @@ io.on('connection', (socket) => {
     
     socket.on('moveSelected', (data) => {
         const game = games[data.gameId];
+        // L'identifiant d'une partie multi est public : seuls ses deux streamers jouent
+        if (game && socket.id !== game.hostSocket && socket.id !== game.guestSocket) return;
         if (game) {
             if (data.fen) game.lastFen = data.fen;
             game.moveCount = (game.moveCount || 0) + 1;
@@ -425,9 +533,12 @@ io.on('connection', (socket) => {
     
     socket.on('disconnect', () => {
         console.log('Déconnexion:', socket.id);
+        leaveMultiRoom(socket);
         // Marquer la partie comme terminée si un joueur actif se déconnecte
         for (const game of Object.values(games)) {
             if (game.hostSocket === socket.id || game.guestSocket === socket.id) {
+                // Le second départ ne concerne plus personne : l'autre est peut-être déjà au salon suivant
+                if (game.status === 'ended') break;
                 game.status = 'ended';
                 io.to(game.gameId).emit('partnerLeft');
                 broadcastGamesList();

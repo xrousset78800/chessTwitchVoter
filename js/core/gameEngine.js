@@ -31,6 +31,7 @@ class GameEngine {
         // Mode de jeu
         this.mode = 'sandbox';       // sandbox, problems, oneVsAll, oneVsOne, chatVsChat
         this.modeHandler = null;     // Handler spécifique au mode
+        this.session = null;         // Partie à joueurs inscrits : { humanColor: 'w' | 'b' | null }
         
         // Historique
         this.moveHistory = [];
@@ -154,7 +155,16 @@ class GameEngine {
             return false;
         }
         
-        return true;
+        return this.canHumanPlay();
+    }
+
+    /**
+     * Partie à joueurs inscrits : seul le streamer touche l'échiquier, à son tour.
+     * Toujours true hors de ces parties.
+     */
+    canHumanPlay() {
+        if (!this.session) return true;
+        return this.isRunning && this.session.humanColor === this.chess.turn();
     }
 
     /**
@@ -348,6 +358,28 @@ startTurn() {
         return;
     }
 
+    // Tour du streamer : ni vote ni timer, il joue sur l'échiquier
+    if (this.session && this.canHumanPlay()) {
+        timer.stop();
+        voting.reset();
+        if (this.votingWheel) this.votingWheel.clear();
+        this.updateAvailableMoves();
+        if (this.onTurnChange) this.onTurnChange(this.currentTurn);
+        return;
+    }
+
+    // Multi : la page qui n'a pas le trait attend le coup de l'autre chaîne.
+    // Son timer jouerait sinon un coup au hasard pour le camp adverse.
+    if (!this.isMyTurnInMulti()) {
+        timer.stop();
+        voting.reset();
+        if (this.votingWheel) this.votingWheel.clear();
+        window.multiplayerManager.updateTurnIndicator();
+        this.updateAvailableMoves();
+        if (this.onTurnChange) this.onTurnChange(this.currentTurn);
+        return;
+    }
+
     if (this.config.timerEnabled) {
         voting.reset();
         voting.open();
@@ -496,6 +528,9 @@ playRandomMove() {
     
     console.log('🎲 Aucun vote - Tirage au sort parmi', moves.length, 'coups');
     
+    // Tirer au sort le gagnant
+    const randomMove = moves[Math.floor(Math.random() * moves.length)];
+
     // Mode majorité : coup aléatoire direct (pas d'animation)
     if (this.config.majorityMode) {
         console.log('🎲 Coup aléatoire (direct):', randomMove);
@@ -520,8 +555,6 @@ playRandomMove() {
         percentage: Math.round(100 / moves.length)
     }));
     
-    // Tirer au sort le gagnant
-    const randomMove = moves[Math.floor(Math.random() * moves.length)];
     
     // Remplir la roue avec tous les coups
     if (this.votingWheel) {
@@ -861,6 +894,12 @@ onMoveClick(move) {
         } else {
             window.problemsManager.validateAndPlayMove(move);
         }
+        return;
+    }
+
+    // Partie à joueurs inscrits : le clic ne vote pas, seul le streamer joue à son tour
+    if (this.session) {
+        if (this.canHumanPlay()) this.executeMove(move);
         return;
     }
 

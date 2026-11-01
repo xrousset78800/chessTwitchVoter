@@ -318,7 +318,8 @@ class TwitchManager {
             return true;
         }
 
-        // Followers only : tmi.js ne fournit pas le statut follower,
+        // Followers only : tmi.js ne fournit pas le statut follower. Les routes à
+        // inscription le vérifient à l'inscription (PresetGame.verifyFollower), ailleurs
         // on s'appuie sur le mode followers de Twitch côté chat.
 
         if (this.settings.subsOnly && !tags.subscriber) {

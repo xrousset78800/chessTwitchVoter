@@ -1,5 +1,10 @@
 {
   "nav": {
+    "rush": "Puzzle Rush",
+    "mono": "Mono",
+    "multi": "Multi",
+    "live": "🔴 Live Chess",
+    "tournament": "Tournament",
     "new": "New",
     "browse": "Browse"
   },
@@ -114,6 +119,86 @@
     "votesInProgress": "Current votes",
     "totalVotes": "Voters",
     "votes": "votes"
+  },
+  "moves": {
+    "available": "Available moves"
+  },
+  "presets": {
+    "rushCard": "Your chat solves puzzle after puzzle",
+    "monoCard": "One channel, registered viewers play",
+    "multiCard": "Two channels face off",
+    "voteTime": "Voting time (s)",
+    "choice": "Move selection",
+    "wheel": "🎡 Wheel",
+    "majority": "📊 Majority",
+    "followersHint": "Followers only: only followers, subs, mods and VIPs can register. Twitch will ask once for permission to read your followers."
+  },
+  "rushPage": {
+    "desc": "Your chat solves harder and harder puzzles. Three mistakes and the run is over.",
+    "rating": "Starting rating",
+    "pause": "Pause (s)",
+    "start": "Start a run",
+    "records": "Channel records",
+    "loading": "Loading records…"
+  },
+  "mono": {
+    "desc": "Your chat has 2 minutes to register by typing join, then the game starts.",
+    "vsStreamer": "Me against the players",
+    "vsStreamerDesc": "You play on the board, registered viewers vote for the other side.",
+    "teams": "Players against each other",
+    "teamsDesc": "Registered viewers are randomly split into two teams, White and Black.",
+    "color": "Your color",
+    "colorWhite": "White",
+    "colorBlack": "Black",
+    "colorRandom": "Random",
+    "start": "Open registration"
+  },
+  "multi": {
+    "desc": "Two channels face off. Once both streamers are on the link, their chats have 2 minutes to register.",
+    "channel": "Your channel (White)",
+    "channelEmpty": "Log in with Twitch",
+    "opponent": "Opposing channel (Black)",
+    "start": "Create link and enter",
+    "invalidOpponent": "Enter the other channel's Twitch name",
+    "loginRequired": "Log in with Twitch to enter this game.",
+    "followersScope": "This game is for followers only: log in again to allow reading them.",
+    "waiting": "Waiting for {name}",
+    "waitingHint": "Send them this link: the 2 minutes of registration start once you are both here.",
+    "partnerLeft": "Connection with the other channel was lost, the game is interrupted.",
+    "denied": {
+      "invalid": "This game link is not valid.",
+      "auth": "Your Twitch session has expired, please log in again.",
+      "notParticipant": "This link is reserved for {a} and {b}.",
+      "playing": "This game is already in progress."
+    }
+  },
+  "lobby": {
+    "title": "Registration open",
+    "hint": "Type join in chat to play",
+    "hintFollowers": "Type join in chat to play (followers only)",
+    "hintSubs": "Type join in chat to play (subs only)",
+    "followCheckFailed": "Twitch is not responding: registrations go through without a follow check.",
+    "count": "{count} registered",
+    "nobody": "Nobody registered: 2 more minutes.",
+    "nobodyYet": "At least one player must register to start the game.",
+    "linkCopied": "Link copied!",
+    "startNow": "Start now",
+    "copyLink": "Copy link",
+    "login": "Log in",
+    "rematch": "Replay with the same players",
+    "newLobby": "New registration",
+    "revenge": "New game",
+    "back": "Back"
+  },
+  "roster": {
+    "title": "Registered players",
+    "players": "Registered",
+    "white": "White",
+    "black": "Black",
+    "kick": "Remove this player",
+    "add": "Add",
+    "addPlaceholder": "twitch_name",
+    "invalid": "Invalid Twitch name"
   },
   "live": {
     "card": {

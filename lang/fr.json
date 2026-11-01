@@ -1,5 +1,10 @@
 {
   "nav": {
+    "rush": "Puzzle Rush",
+    "mono": "Mono",
+    "multi": "Multi",
+    "live": "🔴 Live Chess",
+    "tournament": "Tournoi",
     "new": "Nouveau",
     "browse": "Parcourir"
   },
@@ -114,6 +119,86 @@
     "votesInProgress": "Votes en cours",
     "totalVotes":"Votants",
     "votes": "votes"
+  },
+  "moves": {
+    "available": "Coups disponibles"
+  },
+  "presets": {
+    "rushCard": "Ton chat enchaîne les puzzles",
+    "monoCard": "Une chaîne, les inscrits jouent",
+    "multiCard": "Deux chaînes s'affrontent",
+    "voteTime": "Temps de vote (s)",
+    "choice": "Choix du coup",
+    "wheel": "🎡 Roue",
+    "majority": "📊 Majorité",
+    "followersHint": "Followers only : seuls les followers, subs, modos et VIP peuvent s'inscrire. Twitch te demandera une fois l'autorisation de lire tes followers."
+  },
+  "rushPage": {
+    "desc": "Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.",
+    "rating": "Rating de départ",
+    "pause": "Pause (s)",
+    "start": "Lancer un run",
+    "records": "Records des chaînes",
+    "loading": "Chargement des records…"
+  },
+  "mono": {
+    "desc": "Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.",
+    "vsStreamer": "Moi contre les inscrits",
+    "vsStreamerDesc": "Tu joues sur l'échiquier, les inscrits votent pour l'autre camp.",
+    "teams": "Les inscrits entre eux",
+    "teamsDesc": "Les inscrits sont répartis au hasard en deux équipes, Blancs et Noirs.",
+    "color": "Ta couleur",
+    "colorWhite": "Blancs",
+    "colorBlack": "Noirs",
+    "colorRandom": "Au hasard",
+    "start": "Ouvrir les inscriptions"
+  },
+  "multi": {
+    "desc": "Deux chaînes s'affrontent. Quand les deux streamers sont sur le lien, leurs chats ont 2 minutes pour s'inscrire.",
+    "channel": "Ta chaîne (Blancs)",
+    "channelEmpty": "Connecte-toi avec Twitch",
+    "opponent": "Chaîne adverse (Noirs)",
+    "start": "Créer le lien et entrer",
+    "invalidOpponent": "Indique le pseudo Twitch de l'autre chaîne",
+    "loginRequired": "Connecte-toi avec Twitch pour entrer dans cette partie.",
+    "followersScope": "Cette partie est réservée aux followers : reconnecte-toi pour autoriser leur lecture.",
+    "waiting": "En attente de {name}",
+    "waitingHint": "Envoie-lui ce lien : les 2 minutes d'inscription démarrent quand vous êtes tous les deux ici.",
+    "partnerLeft": "Connexion perdue avec l'autre chaîne, la partie est interrompue.",
+    "denied": {
+      "invalid": "Ce lien de partie n'est pas valide.",
+      "auth": "Ta session Twitch a expiré, reconnecte-toi.",
+      "notParticipant": "Ce lien est réservé à {a} et {b}.",
+      "playing": "Cette partie est déjà en cours."
+    }
+  },
+  "lobby": {
+    "title": "Inscriptions ouvertes",
+    "hint": "Tape join dans le chat pour jouer",
+    "hintFollowers": "Tape join dans le chat pour jouer (réservé aux followers)",
+    "hintSubs": "Tape join dans le chat pour jouer (réservé aux subs)",
+    "followCheckFailed": "Twitch ne répond pas : les inscriptions passent sans vérifier le follow.",
+    "count": "{count} inscrit(s)",
+    "nobody": "Personne ne s'est inscrit : 2 minutes de plus.",
+    "nobodyYet": "Il faut au moins un inscrit pour lancer la partie.",
+    "linkCopied": "Lien copié !",
+    "startNow": "Lancer maintenant",
+    "copyLink": "Copier le lien",
+    "login": "Se connecter",
+    "rematch": "Rejouer avec les mêmes joueurs",
+    "newLobby": "Nouvelles inscriptions",
+    "revenge": "Nouvelle partie",
+    "back": "Retour"
+  },
+  "roster": {
+    "title": "Joueurs inscrits",
+    "players": "Inscrits",
+    "white": "Blancs",
+    "black": "Noirs",
+    "kick": "Retirer ce joueur",
+    "add": "Ajouter",
+    "addPlaceholder": "pseudo_twitch",
+    "invalid": "Pseudo Twitch invalide"
   },
   "live": {
     "card": {

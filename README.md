@@ -42,6 +42,22 @@ ou aucun vote avant la fin du timer, compte comme une erreur ; à la troisième 
 - Variables d'environnement : `TWITCH_CLIENT_ID` (sinon la valeur du code) et `DATA_DIR`
   (sinon `./data`).
 
+## Routes préconfigurées
+
+Trois routes du menu lancent une partie sans passer par les réglages. Elles demandent une connexion Twitch : la chaîne du compte connecté est celle qui joue.
+
+- **`#/rush`** : Puzzle Rush, rating de départ et pause, records des chaînes.
+- **`#/mono`** : une chaîne. Le chat s'inscrit pendant 2 minutes en tapant `join` ou `!join`, puis la partie démarre. Deux formats :
+  - le streamer joue sur l'échiquier (Blancs, Noirs ou au hasard) contre les inscrits, qui votent pour l'autre camp ;
+  - les inscrits sont répartis au hasard en deux équipes.
+- **`#/multi`** : deux chaînes. Le formulaire crée un lien `#/multi/<blancs>/<noirs>?timer=30&mode=wheel` à envoyer à l'autre streamer. Les 2 minutes d'inscription démarrent quand les deux sont sur le lien. Seuls ces deux comptes peuvent y entrer : le serveur vérifie le token Twitch.
+
+Options communes : temps de vote, roue ou majorité, subs only, followers only. Seuls les inscrits du camp au trait votent, une fois par coup. Le panneau « Joueurs inscrits » permet de retirer ou d'ajouter un joueur pendant la partie.
+
+« Followers only » est vérifié à l'inscription auprès de Twitch (`GET /helix/channels/followers`), avec le token du streamer et le scope `moderator:read:followers`. Un compte connecté avant l'ajout de ce scope doit se reconnecter. Les subs, modos et VIP sont exemptés, comme dans le mode followers du chat. Si Twitch ne répond pas, l'inscription passe et le streamer est averti. Hors de ces routes, l'option reste sans vérification : il faut activer le mode followers dans le chat Twitch.
+
+`MULTI_LOBBY_MS` change la durée du salon multi côté serveur (120000 par défaut).
+
 ## Tester sans Twitch
 
 Dans **Nouveau**, activer le vote puis cliquer sur des coups dans le panneau

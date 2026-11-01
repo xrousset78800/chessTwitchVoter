@@ -101,6 +101,13 @@ class VotingSystem {
     }
 
     /**
+     * Retire les votes d'un joueur exclu pendant le tour
+     */
+    removePlayer(player) {
+        this.votes = this.votes.filter(v => v.player !== player);
+    }
+
+    /**
      * Retourne les résultats agrégés
      * @returns {Object} - {move: count, ...}
      */

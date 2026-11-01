@@ -1,0 +1,201 @@
+/* ============================================
+   ROUTES PRÉCONFIGURÉES (Rush, Mono, Multi)
+   ============================================ */
+
+.preset {
+    padding: calc(var(--nav-height) + 30px) 16px 60px;
+    max-width: 680px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.preset__card {
+    margin-top: 24px;
+}
+
+.preset__row {
+    display: flex;
+    gap: 16px;
+}
+
+.preset__row > * {
+    flex: 1;
+    min-width: 0;
+}
+
+.preset__subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    margin-top: 8px;
+}
+
+.preset__choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.preset-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px;
+    text-align: left;
+    color: var(--text-primary);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font: inherit;
+}
+
+.preset-choice.is-active {
+    border-color: var(--twitch-purple);
+    background: rgba(145, 70, 255, 0.1);
+}
+
+.preset-choice__title {
+    font-weight: 700;
+}
+
+.preset-choice__desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+    .preset__row,
+    .preset__choices {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+/* ===== Bandeau du salon ===== */
+
+.lobby-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: rgba(145, 70, 255, 0.1);
+    border: 1px solid var(--twitch-purple);
+    border-radius: var(--radius-lg);
+}
+
+.lobby-banner__text {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.lobby-banner__title {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.lobby-banner__hint {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+}
+
+.lobby-banner__countdown {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.lobby-banner__count {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.lobby-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ===== Joueurs inscrits ===== */
+
+.roster {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.roster__team {
+    margin: 8px 0 4px;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.roster__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 0;
+}
+
+.roster__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.roster__add {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.roster__add .input {
+    flex: 1 1 90px;
+    min-width: 0;
+}
+
+/* ===== Menu : sept liens sur une seule ligne ===== */
+
+.nav__link,
+.nav__logo-text {
+    white-space: nowrap;
+}
+
+.nav__link {
+    padding-left: 11px;
+    padding-right: 11px;
+}
+
+@media (max-width: 1500px) {
+    .nav__logo-text {
+        display: none;
+    }
+}
+
+@media (max-width: 1050px) {
+    .nav {
+        padding: 0 12px;
+    }
+
+    .nav__links {
+        gap: 2px;
+    }
+
+    .nav__link {
+        padding-left: 6px;
+        padding-right: 6px;
+        font-size: 0.82rem;
+    }
+}
+
+/* Multi : la partie appartient aux deux chaînes, pas de reset d'un seul côté */
+body.preset-multi #btn-reset {
+    display: none;
+}

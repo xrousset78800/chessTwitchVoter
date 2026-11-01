@@ -3,7 +3,7 @@
  * Connexion Twitch via OAuth "implicit grant" (100 % navigateur, sans secret).
  *
  * Flux :
- *  1. login()          → redirection vers id.twitch.tv (aucun scope demandé)
+ *  1. login()          → redirection vers id.twitch.tv (scope : lecture des followers)
  *  2. Twitch redirige vers l'app avec #access_token=... dans le fragment
  *  3. init()           → récupère le token, le valide, restaure la route d'avant
  *  4. validate()       → appelé à l'init puis toutes les heures (exigence Twitch)
@@ -15,6 +15,7 @@
 const TWITCH_CLIENT_ID = '5lgt1omtgbo8gp4bla49ktvvr7gbj3';
 const AUTH_BASE        = 'https://id.twitch.tv/oauth2';
 const HELIX_BASE       = 'https://api.twitch.tv/helix';
+const FOLLOWERS_SCOPE  = 'moderator:read:followers'; // option "Followers only"
 const STORAGE_KEY      = 'twitchess_auth';
 const RETURN_KEY       = 'twitchess_auth_return';
 const STATE_KEY        = 'twitchess_auth_state';
@@ -24,7 +25,7 @@ const VALIDATE_EVERY   = 60 * 60 * 1000; // 1 h
 class TwitchAuth {
     constructor() {
         this.clientId = TWITCH_CLIENT_ID;
-        this.session  = null;   // { token, login, userId, displayName, avatar, expiresAt }
+        this.session  = null;   // { token, login, userId, displayName, avatar, expiresAt, scopes }
         this._validateTimer = null;
     }
 
@@ -46,6 +47,11 @@ class TwitchAuth {
 
     get isLoggedIn() {
         return !!this.session;
+    }
+
+    /** false pour un token obtenu avant l'ajout du scope : il faut se reconnecter */
+    get canCheckFollowers() {
+        return !!this.session?.scopes?.includes(FOLLOWERS_SCOPE);
     }
 
     /** URL de retour enregistrée dans la console Twitch (ex: http://localhost:3000/) */
@@ -100,7 +106,7 @@ class TwitchAuth {
             response_type: 'token',
             client_id:     this.clientId,
             redirect_uri:  this.redirectUri,
-            scope:         '',
+            scope:         FOLLOWERS_SCOPE,
             state
         });
         // Sans ce paramètre, Twitch réutilise silencieusement le compte de sa propre
@@ -153,6 +159,7 @@ class TwitchAuth {
             this.session.login     = data.login;
             this.session.userId    = data.user_id;
             this.session.expiresAt = Date.now() + (data.expires_in * 1000);
+            this.session.scopes    = data.scopes || [];
             this._save();
             return true;
         } catch (e) {
@@ -250,6 +257,22 @@ class TwitchAuth {
         } catch (e) {
             console.warn('🟣 [Auth] Profil indisponible:', e.message);
         }
+    }
+
+    // ========== FOLLOWERS ==========
+
+    /** Ce compte Twitch suit-il la chaîne connectée ? Lève une erreur si Twitch ne répond pas. */
+    async isFollower(userId) {
+        const params = new URLSearchParams({ broadcaster_id: this.session.userId, user_id: userId });
+        const r = await fetch(`${HELIX_BASE}/channels/followers?${params}`, {
+            headers: {
+                Authorization: `Bearer ${this.token}`,
+                'Client-Id':   this.clientId
+            }
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const { data } = await r.json();
+        return data.length > 0;
     }
 
     /** En-têtes prêts à l'emploi pour appeler notre serveur avec l'identité Twitch */

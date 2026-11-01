@@ -153,6 +153,22 @@ class MultiplayerManager {
         console.log(`🎮 Rejoindre depuis browse : ${this.gameId}`);
     }
 
+    // ==================== ROUTE #/multi/a/b ====================
+
+    /** Entre dans le salon : le serveur vérifie le token et lance le compte à rebours */
+    enterRoom({ a, b, login, token, settings }) {
+        this.gameId       = `${a}-${b}`;
+        this.role         = login === a ? 'host' : 'guest';
+        this.streamerName = login;
+        this.roomEntry    = { a, b, token, settings };
+
+        window.multiplayerMode = true;
+        window.currentGameId   = this.gameId;
+        window.playerColor     = login === a ? 'white' : 'black';
+
+        this.initializeSocket();
+    }
+
     // ==================== CRÉER UNE PARTIE (depuis URL/sandbox legacy) ====================
 
     createGame() {
@@ -234,7 +250,10 @@ class MultiplayerManager {
             console.log('🔗 Connecté au serveur Socket.IO');
             this.setupSocketListeners();
 
-            if (this.role === 'host') {
+            if (this.roomEntry) {
+                // Après le lancement, une reconnexion ne doit pas rouvrir un salon
+                if (!this.partnerConnected) this.socket.emit('multi:enter', this.roomEntry);
+            } else if (this.role === 'host') {
                 this.socket.emit('createGame', {
                     gameId:    this.gameId,
                     hostName:  this.streamerName,
@@ -251,11 +270,25 @@ class MultiplayerManager {
         this.socket.on('disconnect', () => {
             console.log('🔌 Déconnecté du serveur');
             this.updatePartnerStatus(false);
+            // Le serveur a clos la partie : la route multi propose d'en relancer une
+            if (this.roomEntry && this.partnerConnected) {
+                window.dispatchEvent(new Event('multiPartnerLeft'));
+            }
         });
     }
 
     setupSocketListeners() {
-        if (!this.socket) return;
+        if (!this.socket || this.listening) return;
+        this.listening = true;
+
+        // ---- Salon de la route multi ----
+        this.socket.on('multi:lobby', (data) => {
+            window.dispatchEvent(new CustomEvent('multiRoomState', { detail: data }));
+        });
+
+        this.socket.on('multi:denied', (data) => {
+            window.dispatchEvent(new CustomEvent('multiRoomDenied', { detail: data }));
+        });
 
         // ---- Partie prête (les 2 joueurs connectés) ----
         this.socket.on('gameReady', (data) => {
@@ -276,8 +309,8 @@ class MultiplayerManager {
             this.showActiveBanner(white, black);
             this.updatePartnerStatus(true);
 
-            // Connecter Twitch aux 2 channels
-            this.connectTwitchChannels(white, black);
+            // Connecter Twitch aux 2 channels (salon : chaque page garde le chat de sa chaîne)
+            if (!this.roomEntry) this.connectTwitchChannels(white, black);
 
             // Lancer le jeu (app.js écoute cet event)
             window.dispatchEvent(new CustomEvent('multiGameReady', { detail: data }));
@@ -294,13 +327,16 @@ class MultiplayerManager {
             const ge = window.gameEngine;
             if (!ge) return;
 
-            // Vérifier la synchro via FEN avant d'appliquer
+            // Vérifier la synchro : le FEN reçu est la position APRÈS le coup
             if (data.fen && ge.chess) {
-                const localFen = ge.chess.fen().split(' ')[0]; // position seulement
-                const remoteFen = data.fen.split(' ')[0];
-                if (localFen !== remoteFen) {
+                const remoteFen = data.fen.split(' ')[0]; // position seulement
+                const probe = ge.chess.move(data.move);
+                const localFen = ge.chess.fen().split(' ')[0];
+                if (probe) ge.chess.undo();
+                if (!probe || localFen !== remoteFen) {
                     console.warn('⚠️ Désync FEN détectée, resync...');
                     ge.loadFen(data.fen);
+                    if (!ge.checkGameEnd()) ge.startTurn();
                     return; // loadFen remet le board, pas besoin d'executeMove
                 }
             }
