@@ -151,14 +151,25 @@ class VotingSystem {
         const results = this.getSortedResults();
         
         if (this.majorityMode) {
-            // Mode majorité : retourner le coup avec le plus de votes
-            const winner = results[0];
-            console.log('🏆 Gagnant (majorité):', winner.move, 'avec', winner.count, 'votes');
-            return winner.move;
+            return this.selectByMajority();
         } else {
             // Mode roue : sélection aléatoire pondérée
             return this.selectByWheel();
         }
+    }
+
+    /**
+     * Coup le plus voté, tiré au sort entre les ex æquo
+     * @returns {string|null} - Le coup sélectionné
+     */
+    selectByMajority() {
+        const results = this.getSortedResults();
+        if (results.length === 0) return null;
+
+        const tied = results.filter(r => r.count === results[0].count);
+        const winner = tied[Math.floor(Math.random() * tied.length)];
+        console.log('🏆 Gagnant (majorité):', winner.move, 'avec', winner.count, 'vote(s),', tied.length, 'ex æquo');
+        return winner.move;
     }
 
     /**

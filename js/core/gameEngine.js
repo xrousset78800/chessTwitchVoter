@@ -500,19 +500,15 @@ highlightMostVoted() {
             return;
         }
         
-        // Récupérer le coup gagnant (le plus voté)
-        const winningMove = results[0].move;
-        console.log('🏆 Coup gagnant:', winningMove, 'avec', results[0].count, 'vote(s)');
-        
         // ========== CAS 2: MODE MAJORITÉ → EXÉCUTION DIRECTE ==========
         if (this.config.majorityMode) {
-            this.executeMove(winningMove);
+            this.executeMove(voting.selectByMajority());
             return;
         }
         
         // ========== CAS 3: MODE ROUE → ANIMATION ==========
         console.log('🎡 Mode roue - Animation...');
-        this.showWheelAnimation(results, winningMove);
+        this.showWheelAnimation(results);
     }
 
     /**
@@ -591,9 +587,8 @@ hideWheel() {
 }
 
         /**
-     * Affiche l'animation de la roue et exécute le coup gagnant
+     * Affiche l'animation de la roue et exécute le coup qu'elle tire au sort
      * @param {Array} results - [{move, count, color, percentage}, ...]
-     * @param {string} winningMove - Le coup qui sera joué
      */
 showWheelAnimation(results) {
     const wheelDuration = (this.config.wheelDuration || 5) * 1000;
@@ -624,16 +619,15 @@ showWheelAnimation(results) {
             this.hideWheel();
         };
         
-        // ✅ Passer le gagnant pré-déterminé à spin()
-        const forcedWinner = results[0].move;
-        this.votingWheel.spin(wheelDuration, forcedWinner);
+        // La roue tire elle-même le gagnant, chaque coup pèse son nombre de votes
+        this.votingWheel.spin(wheelDuration);
         return;
     }
     
     // Fallback
     setTimeout(() => {
         document.body.classList.remove('randomWheel');
-        this.executeMove(results[0].move);
+        this.executeMove(this.selectRandomWeighted(results));
     }, wheelDuration);
 }
 
