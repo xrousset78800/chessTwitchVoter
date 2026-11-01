@@ -172,6 +172,11 @@
       "playing": "Cette partie est déjà en cours."
     }
   },
+  "wheelStyle": {
+    "band": "Tirage : bande",
+    "classic": "Tirage : roue",
+    "waiting": "En attente des votes…"
+  },
   "lobby": {
     "title": "Inscriptions ouvertes",
     "hint": "Tape join dans le chat pour jouer",

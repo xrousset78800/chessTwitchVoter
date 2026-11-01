@@ -172,6 +172,11 @@
       "playing": "This game is already in progress."
     }
   },
+  "wheelStyle": {
+    "band": "Draw: strip",
+    "classic": "Draw: wheel",
+    "waiting": "Waiting for votes…"
+  },
   "lobby": {
     "title": "Registration open",
     "hint": "Type join in chat to play",

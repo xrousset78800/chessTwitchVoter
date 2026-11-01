@@ -9,6 +9,7 @@
 import timer from './timer.js';
 import voting from './voting.js';
 import VotingWheel from '../components/wheel.js';
+import WheelBand from '../components/wheelBand.js';
 
 class GameEngine {
     constructor() {
@@ -91,10 +92,7 @@ class GameEngine {
             onVoteAdded: (vote, results) => this.onVoteAdded(vote, results)
         });
 
-        if (document.getElementById('wheel-area')) {
-            this.votingWheel = new VotingWheel('wheel-area');
-            console.log('🎡 VotingWheel initialisée');
-        }
+        this.setWheelStyle(this.wheelStyle);
 
         window.addEventListener('phantomMoveStart', () => {
             if (this.config.timerEnabled && timer.isRunning) {
@@ -567,6 +565,37 @@ playRandomMove() {
     
     // Lancer l'animation
     this.showWheelAnimation(randomResults);
+}
+
+/** Affichage du tirage choisi par ce navigateur : 'band' (par défaut) ou 'classic' */
+get wheelStyle() {
+    try {
+        return localStorage.getItem('wheelStyle') === 'classic' ? 'classic' : 'band';
+    } catch {
+        return 'band';
+    }
+}
+
+/**
+ * Change l'affichage du tirage en gardant les votes en cours
+ * @returns {boolean} - false si un tirage est en train de se dérouler
+ */
+setWheelStyle(style) {
+    const area = document.getElementById('wheel-area');
+    if (!area || this.votingWheel?.isSpinning) return false;
+
+    try {
+        localStorage.setItem('wheelStyle', style);
+    } catch {}
+
+    const votes = this.votingWheel?.votes;
+    area.classList.toggle('wheel-area--band', style === 'band');
+    this.votingWheel = style === 'band' ? new WheelBand('wheel-area') : new VotingWheel('wheel-area');
+    if (votes) {
+        this.votingWheel.votes = votes;
+        this.votingWheel.draw();
+    }
+    return true;
 }
 
 showWheel() {

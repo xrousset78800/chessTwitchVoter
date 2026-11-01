@@ -1,0 +1,107 @@
+/* ============================================
+   BANDE DE TIRAGE (variante de la roue, sous l'échiquier)
+   ============================================ */
+
+/* En mode roue, la place reste réservée pour que la page ne saute pas à chaque tour.
+   La bande n'apparaît que pendant le vote ou un tirage. */
+body #wheel-area.wheel-area--band {
+    position: static;
+    display: none;
+    width: 100%;
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none;
+}
+
+body.wheel-mode #wheel-area.wheel-area--band {
+    display: block;
+    visibility: hidden;
+}
+
+body.showTimer.wheel-mode #wheel-area.wheel-area--band,
+body.randomWheel #wheel-area.wheel-area--band,
+body #wheel-area.wheel-area--band.is-visible {
+    display: block;
+    visibility: visible;
+}
+
+.wheel-band {
+    position: relative;
+    height: 64px;
+    border-radius: var(--radius-sm);
+    outline: 1px solid var(--border-subtle);
+}
+
+#wheel-area.is-spinning .wheel-band {
+    outline: 2px solid var(--accent-purple);
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
+}
+
+.wheel-band__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-sm);
+}
+
+/* Curseur au milieu de la bande */
+.wheel-band__pointer {
+    position: absolute;
+    top: -6px;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+    z-index: 2;
+}
+
+.wheel-band__pointer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -7px;
+    border-top: 12px solid #fff;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+}
+
+/* Coup gagnant, affiché quelques instants sur la bande */
+.wheel-band__result {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    align-items: center;
+    gap: 10px;
+    padding: 6px 18px;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    z-index: 3;
+}
+
+.wheel-band__result.is-revealed {
+    display: flex;
+    animation: winnerPulse 0.5s ease-out;
+}
+
+.wheel-band__result .winner-piece {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.wheel-band__result .winner-move {
+    font-size: 1.1rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 0;
+}
+
+/* Le choix d'affichage ne concerne que le mode roue */
+body:not(.wheel-mode) #btn-wheel-style {
+    display: none;
+}

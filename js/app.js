@@ -826,6 +826,16 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         });
         
         // Flip
+        const renderWheelStyle = () => {
+            document.getElementById('wheel-style-label').textContent = tr(`wheelStyle.${gameEngine.wheelStyle}`);
+        };
+        renderWheelStyle();
+        window.addEventListener('languageChanged', renderWheelStyle);
+        document.getElementById('btn-wheel-style')?.addEventListener('click', () => {
+            gameEngine.setWheelStyle(gameEngine.wheelStyle === 'band' ? 'classic' : 'band');
+            renderWheelStyle();
+        });
+
         document.getElementById('btn-flip')?.addEventListener('click', () => {
             gameEngine.flip();
         });
