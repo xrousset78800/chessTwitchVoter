@@ -125,20 +125,22 @@ app.get('/proxy/chess-daily/:gameId', async (req, res) => {
     }
 });
 
+const CHESS_COM_EVENT_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+    'Referer': 'https://www.chess.com/',
+    'Origin': 'https://www.chess.com',
+    'Content-Type': 'application/json'
+};
+
 app.get('/proxy/chess-event/:slug', async (req, res) => {
     try {
                 const url = `https://www.chess.com/events/v1/api/room/${req.params.slug}`;
         
         const r = await fetch(url, {
             method: 'POST',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
-                'Referer': 'https://www.chess.com/',
-                'Origin': 'https://www.chess.com',
-                'Content-Type': 'application/json'
-            },
+            headers: CHESS_COM_EVENT_HEADERS,
             body: JSON.stringify({})
         });
         
@@ -151,6 +153,30 @@ app.get('/proxy/chess-event/:slug', async (req, res) => {
             return res.status(r.status).json({ error: `chess.com HTTP ${r.status}`, body });
         }
         res.json(await r.json());
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Événement chess.com qui regroupe plusieurs salles (groupes, brackets…) :
+// chaque salle a son propre slug, c'est lui qui donne accès aux parties
+app.get('/proxy/chess-event-index/:slug', async (req, res) => {
+    try {
+        const url = `https://www.chess.com/events/v1/api/index/${encodeURIComponent(req.params.slug)}`;
+        const r = await fetch(url, { method: 'POST', headers: CHESS_COM_EVENT_HEADERS, body: JSON.stringify({}) });
+        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        const data = await r.json();
+        res.json({
+            name: data.index?.name,
+            rooms: (data.rooms || []).map(room => ({
+                slug:         room.slug,
+                name:         room.name,
+                timeControl:  room.timeControl,
+                startAt:      room.startAt,
+                endAt:        room.endAt,
+                currentRound: room.currentRound || null
+            }))
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

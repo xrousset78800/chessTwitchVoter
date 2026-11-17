@@ -46,6 +46,9 @@ function formatElapsed(seconds) {
     return m > 0 ? `${m}m${s.toString().padStart(2,'0')}` : `${s}s`;
 }
 
+// Une partie pas encore jouée a aussi le résultat '*', mais pas d'heure de début
+const isLiveGame = g => g.result === '*' && !!(g.startAt || g.currentFEN);
+
 function renderTournament(data) {
     tournamentData = data;
     const panel = document.getElementById('tournamentPanel');
@@ -55,12 +58,16 @@ function renderTournament(data) {
     panel.style.display = 'block';
 
     const tc = parseInt(data.room.timeControl);
-    const liveCount = data.games.filter(g => g.result === '*').length;
+    const liveCount = data.games.filter(isLiveGame).length;
     header.textContent = `${data.room.name} · ${tc >= 60 ? tc/60+'min' : tc+'s'} · ${liveCount} en cours`;
 
     roundsEl.innerHTML = '';
-    const activeRound = data.rounds.find(r => r.startAt && !r.endAt)
-                     ?? data.rounds.filter(r => r.startAt).at(-1);
+    // Ronde d'une partie en cours, sinon la dernière ronde où l'on a joué (chess.com ne donne pas de fin de ronde)
+    const liveRoundId = data.games.find(isLiveGame)?.roundId;
+    const playedRoundIds = new Set(data.games.filter(g => g.result !== '*' || isLiveGame(g)).map(g => g.roundId));
+    const activeRound = data.rounds.find(r => r.id === liveRoundId)
+                     ?? data.rounds.filter(r => playedRoundIds.has(r.id)).at(-1)
+                     ?? data.rounds.find(r => r.startAt);
     activeRoundId = activeRound?.id ?? null;
 
     data.rounds.forEach(r => {
@@ -85,7 +92,7 @@ function renderGames(games, roundId) {
     const el = document.getElementById('tournamentGames');
     const filtered = games
         .filter(g => g.roundId === roundId)
-        .sort((a, b) => (a.result === '*' ? 0 : 1) - (b.result === '*' ? 0 : 1) || a.board - b.board);
+        .sort((a, b) => (isLiveGame(a) ? 0 : 1) - (isLiveGame(b) ? 0 : 1) || a.board - b.board);
 
     if (filtered.length === 0) {
         el.innerHTML = '<div style="font-size:0.75rem;color:var(--text-muted,#55556a);">Aucune partie</div>';
@@ -96,7 +103,7 @@ function renderGames(games, roundId) {
     const now = Date.now();
 
     filtered.forEach(g => {
-        const isLive = g.result === '*';
+        const isLive = isLiveGame(g);
         const elapsed = g.startAt ? Math.floor((now - new Date(g.startAt)) / 1000) : null;
         const wTitle = g.whiteTitle ? `<span class="player-title">${g.whiteTitle}</span> ` : '';
         const bTitle = g.blackTitle ? `<span class="player-title">${g.blackTitle}</span> ` : '';
@@ -114,7 +121,7 @@ function renderGames(games, roundId) {
             <div class="tg-meta">
                 ${isLive
                     ? `<span class="tg-live-dot"></span><span class="tg-elapsed">${elapsed !== null ? formatElapsed(elapsed) : '—'}</span>`
-                    : `<span class="tg-result">${g.result}</span>`
+                    : `<span class="tg-result">${g.result === '*' ? 'à venir' : g.result}</span>`
                 }
             </div>`;
 
@@ -279,38 +286,65 @@ async function fetchEventsList() {
     }
 }
 
-// Suffixes courants pour les index events (parent → sub-rooms)
-const SLUG_SUFFIXES = ['-open', '-women', '-blitz', '-rapid', '-classic', '-standard', '-bullet'];
+// Un événement chess.com (index) regroupe souvent plusieurs salles : groupes, brackets, départages…
+// Seul le slug d'une salle donne accès aux parties, on le lit donc dans l'index de l'événement.
+async function loadEventRooms(slug) {
+    const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event-index/${slug}`);
+    if (r.status === 404) throw new Error(`événement "${slug}" introuvable sur chess.com`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return (await r.json()).rooms || [];
+}
 
-async function loadAndRenderTournament(slug) {
+// D'abord les salles dont la ronde courante est la plus proche de maintenant
+function sortRooms(rooms) {
+    const now = Date.now();
+    const gap = room => room.currentRound?.startAt ? Math.abs(new Date(room.currentRound.startAt) - now) : Infinity;
+    return [...rooms].sort((a, b) => gap(a) - gap(b) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+}
+
+function renderRoomPicker(rooms) {
+    const picker = document.getElementById('tournamentRoomPicker');
+    const select = document.getElementById('tournamentRoomSelect');
+    const fmtDate = d => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    select.innerHTML = '';
+    rooms.forEach(room => {
+        const round = room.currentRound?.startAt
+            ? ` · ronde ${room.currentRound.name || room.currentRound.slug} le ${fmtDate(room.currentRound.startAt)}`
+            : '';
+        select.add(new Option(`${room.name}${round}`, room.slug));
+    });
+    picker.style.display = rooms.length > 1 ? 'block' : 'none';
+}
+
+async function loadRoom(slug) {
+    const data = await loadTournament(slug);
+    const input = document.getElementById('tournamentInput');
+    if (input) input.value = slug;
+    renderTournament(data);
+    logT(`${data.games.length} parties chargées`, 'ok');
+}
+
+async function loadAndRenderTournament(slug, isIndex = false) {
     try {
         logT(`Chargement de "${slug}"…`, 'info');
-        let data;
-        try {
-            data = await loadTournament(slug);
-        } catch (err404) {
-            if (!err404.message.includes('404') && !err404.message.includes('HTTP 4')) throw err404;
-            // Slug d'index (événement parent) → essai avec suffixes courants
-            logT(`Slug introuvable, recherche de sub-rooms…`, 'warn');
-            let found = false;
-            for (const suffix of SLUG_SUFFIXES) {
-                try {
-                    data = await loadTournament(slug + suffix);
-                    slug = slug + suffix;
-                    const input = document.getElementById('tournamentInput');
-                    if (input) input.value = slug;
-                    logT(`Sub-room trouvée : "${slug}"`, 'ok');
-                    found = true;
-                    break;
-                } catch { /* continuer */ }
-            }
-            if (!found) {
-                logT(`Aucune sub-room trouvée. Essayez un slug plus précis (ex: ${slug}-open).`, 'error');
+        document.getElementById('tournamentRoomPicker').style.display = 'none';
+        if (!isIndex) {
+            try {
+                await loadRoom(slug);
                 return;
+            } catch (err) {
+                if (!err.message.includes('HTTP 404')) throw err;
+                // Ce n'est pas une salle : sans doute un événement qui en regroupe plusieurs
             }
         }
-        renderTournament(data);
-        logT(`${data.games.length} parties chargées`, 'ok');
+        const rooms = sortRooms(await loadEventRooms(slug));
+        if (rooms.length === 0) {
+            logT(`Aucune salle publiée pour cet événement pour l'instant`, 'warn');
+            return;
+        }
+        renderRoomPicker(rooms);
+        if (rooms.length > 1) logT(`${rooms.length} salles dans cet événement, choisissez-en une`, 'info');
+        await loadRoom(rooms[0].slug);
     } catch (err) {
         logT(`Erreur : ${err.message}`, 'error');
     }
@@ -360,7 +394,7 @@ function renderEventsList(events, filter = '') {
         row.addEventListener('click', () => {
             const input = document.getElementById('tournamentInput');
             if (input) input.value = event.slug;
-            loadAndRenderTournament(event.slug);
+            loadAndRenderTournament(event.slug, event.type === 'index');
         });
 
         el.appendChild(row);
@@ -375,6 +409,15 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchEventsList().then(events => {
         allEvents = events;
         renderEventsList(events);
+    });
+
+    document.getElementById('tournamentRoomSelect')?.addEventListener('change', async function () {
+        logT(`Chargement de "${this.value}"…`, 'info');
+        try {
+            await loadRoom(this.value);
+        } catch (err) {
+            logT(`Erreur : ${err.message}`, 'error');
+        }
     });
 
     // Filtre texte en temps réel
