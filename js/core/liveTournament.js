@@ -211,7 +211,7 @@ async function pollGame() {
                 }
 
                 // Phantom
-                if (window.phantomChessboard?.isConnected) {
+                if (window.phantomChessboard?.isConnected && document.getElementById('phantomAutoSyncT')?.checked !== false) {
                     await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
                     logT('Phantom synchronisé', 'ok');
                 }
@@ -498,6 +498,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             logT('Échiquier réinitialisé', 'ok');
         }
+    });
+
+    document.getElementById('btnGameEndT')?.addEventListener('click', async () => {
+        if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
+        await window.phantomChessboard.sendGameEnd();
+        logT('Fin de partie envoyée', 'ok');
     });
 
     document.getElementById('btnCalibrateT')?.addEventListener('click', async () => {

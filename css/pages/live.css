@@ -252,6 +252,38 @@
     margin-bottom: 10px;
 }
 
+/* Actions Phantom : grille 2 x 2 sous le bouton de connexion */
+.phantom-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: 8px 0 12px;
+}
+.phantom-action {
+    --action-color: #06b6d4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 8px 6px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid color-mix(in srgb, var(--action-color) 60%, transparent);
+    background: color-mix(in srgb, var(--action-color) 10%, transparent);
+    color: var(--action-color);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.phantom-action:hover { background: color-mix(in srgb, var(--action-color) 22%, transparent); }
+.phantom-action--reset     { --action-color: #8b5cf6; }
+.phantom-action--calibrate { --action-color: #f59e0b; }
+.phantom-action--end       { --action-color: #ef4444; }
+
 /* Toggle switch */
 .toggle-switch {
     position: relative;

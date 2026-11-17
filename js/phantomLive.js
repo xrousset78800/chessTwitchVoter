@@ -330,6 +330,12 @@ document.getElementById('btnResetLive')?.addEventListener('click', async () => {
     }
 });
 
+document.getElementById('btnGameEndLive')?.addEventListener('click', async () => {
+    if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
+    await window.phantomChessboard.sendGameEnd();
+    log('Fin de partie envoyée', 'ok');
+});
+
 document.getElementById('btnCalibrateLive')?.addEventListener('click', async () => {
     if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
     await window.phantomChessboard.calibrate();
