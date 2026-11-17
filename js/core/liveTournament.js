@@ -128,8 +128,10 @@ function renderGames(games, roundId) {
         if (isLive && g.currentFEN) {
             row.style.cursor = 'pointer';
             row.addEventListener('click', () => {
-                stateT.chess.reset();
-                stateT.board.position(g.currentFEN ?? 'start');
+                // L'état interne doit suivre l'échiquier affiché : c'est lui que Synchroniser envoie au Phantom
+                stateT.chess.load(g.currentFEN);
+                stateT.board.position(g.currentFEN);
+                updateTurnIndicatorT();
                 document.getElementById('fenDisplayT').textContent = `FEN : ${g.currentFEN ?? '—'}`;
                 document.getElementById('playerWhiteT').textContent = wName;
                 document.getElementById('ratingWhiteT').textContent = g.whiteElo ? `(${g.whiteElo})` : '';
@@ -166,15 +168,14 @@ async function pollGame() {
     const g = stateT.currentGame;
     try {
         const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event/${stateT.tournamentSlug}`);
-        if (r.ok) {
+        if (!r.ok) {
+            logT(`Suivi : chess.com a répondu HTTP ${r.status}, nouvel essai dans 5 s`, 'warn');
+        } else {
             const data = await r.json();
 
 
             
             const updatedGame = data.games.find(game => game.slug === g.slug);
-            console.log('🎯 updatedGame keys:', updatedGame ? Object.keys(updatedGame) : 'null');
-            console.log('🎯 updatedGame full:', JSON.stringify(updatedGame)?.slice(0, 1500));
-            console.log('🎯 chess.history() length:', stateT.chess.history().length);
 
 
 
@@ -469,8 +470,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btnSyncT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
-        if (stateT.chess) await window.phantomChessboard.syncPosition(stateT.chess.fen());
-        logT('Synchronisation envoyée', 'ok');
+        if (!stateT.chess) return;
+        const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
+        logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Synchronisation envoyée', sent === false ? 'warn' : 'ok');
     });
 
     document.getElementById('btnResetT')?.addEventListener('click', async () => {

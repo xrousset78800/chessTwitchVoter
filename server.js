@@ -134,25 +134,33 @@ const CHESS_COM_EVENT_HEADERS = {
     'Content-Type': 'application/json'
 };
 
+// Chaque spectateur interroge la salle toutes les 5 s : une seule requête à chess.com
+// par salle et par intervalle, sinon chess.com finit par répondre 429
+const chessEventCache = new Map(); // slug -> { at, promise }
+const CHESS_EVENT_TTL = 4000;
+
+function fetchChessEventRoom(slug) {
+    const cached = chessEventCache.get(slug);
+    if (cached && Date.now() - cached.at < CHESS_EVENT_TTL) return cached.promise;
+    const promise = fetch(`https://www.chess.com/events/v1/api/room/${encodeURIComponent(slug)}`, {
+        method: 'POST',
+        headers: CHESS_COM_EVENT_HEADERS,
+        body: JSON.stringify({})
+    }).then(async r => ({ status: r.status, ok: r.ok, body: r.ok ? await r.json() : await r.text() }));
+    chessEventCache.set(slug, { at: Date.now(), promise });
+    promise.catch(() => chessEventCache.delete(slug));
+    if (chessEventCache.size > 200) chessEventCache.delete(chessEventCache.keys().next().value);
+    return promise;
+}
+
 app.get('/proxy/chess-event/:slug', async (req, res) => {
     try {
-                const url = `https://www.chess.com/events/v1/api/room/${req.params.slug}`;
-        
-        const r = await fetch(url, {
-            method: 'POST',
-            headers: CHESS_COM_EVENT_HEADERS,
-            body: JSON.stringify({})
-        });
-        
-        console.log('🔍 Status chess.com:', r.status);
-        console.log('🔍 Response headers:', JSON.stringify(Object.fromEntries(r.headers), null, 2));
-        
+        const r = await fetchChessEventRoom(req.params.slug);
         if (!r.ok) {
-            const body = await r.text();
-            console.log('🔍 Response body:', body.slice(0, 500));
-            return res.status(r.status).json({ error: `chess.com HTTP ${r.status}`, body });
+            console.log(`chess.com room ${req.params.slug} : HTTP ${r.status}`);
+            return res.status(r.status).json({ error: `chess.com HTTP ${r.status}`, body: String(r.body).slice(0, 500) });
         }
-        res.json(await r.json());
+        res.json(r.body);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
