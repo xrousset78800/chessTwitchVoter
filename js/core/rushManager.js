@@ -23,6 +23,7 @@ class RushManager {
 
         this.config = {
             startRating: 600,    // rating du 1er puzzle
+            mode: '0',           // temps pour voter (s), '0' = illimité : un classement par mode
             ratingStep:  60,     // +rating par puzzle résolu
             ratingSpread: 120,   // tolérance autour du rating cible
             maxStrikes:  3
@@ -274,6 +275,7 @@ class RushManager {
                 score:       result.score,
                 maxRating:   result.maxRating,
                 durationMs:  result.durationMs,
+                mode:        this.config.mode,
                 displayName: user?.displayName,
                 avatar:      user?.avatar
             })
@@ -290,7 +292,7 @@ class RushManager {
         const login = twitchAuth.user?.login;
         if (!login) { this.channelRecord = null; return null; }
         try {
-            const r = await fetch(`${API_RECORDS}/${encodeURIComponent(login)}`);
+            const r = await fetch(`${API_RECORDS}/${encodeURIComponent(login)}?mode=${this.config.mode}`);
             if (r.status === 404) { this.channelRecord = null; return null; }
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             this.channelRecord = await r.json();
@@ -301,8 +303,8 @@ class RushManager {
         return this.channelRecord;
     }
 
-    static async fetchLeaderboard(limit = 50) {
-        const r = await fetch(`${API_RECORDS}?limit=${limit}`);
+    static async fetchLeaderboard(limit = 50, mode = '0') {
+        const r = await fetch(`${API_RECORDS}?limit=${limit}&mode=${encodeURIComponent(mode)}`);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = await r.json();
         return data.records || [];

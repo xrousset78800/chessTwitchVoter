@@ -356,3 +356,41 @@
         gap: 20px;
     }
 }
+
+/* Temps pour voter : un classement par mode */
+.rush-modes {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+.rush-mode {
+    flex: 1;
+    padding: 7px 6px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.rush-mode:hover { color: var(--text-primary); }
+
+.rush-mode.is-active {
+    color: #fff;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+}
+
+.rush-modes__hint {
+    margin: -4px 0 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}

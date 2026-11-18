@@ -143,7 +143,10 @@
     "pause": "Pause (s)",
     "start": "Start a run",
     "records": "Channel records",
-    "loading": "Loading records…"
+    "loading": "Loading records…",
+    "mode": "Time to vote",
+    "modeUnlimited": "Unlimited",
+    "modeHint": "Unlimited: the first valid move suggested by chat is played. Each time has its own leaderboard."
   },
   "mono": {
     "desc": "Your chat has 2 minutes to register by typing join, then the game starts.",

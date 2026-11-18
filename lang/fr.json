@@ -143,7 +143,10 @@
     "pause": "Pause (s)",
     "start": "Lancer un run",
     "records": "Records des chaînes",
-    "loading": "Chargement des records…"
+    "loading": "Chargement des records…",
+    "mode": "Temps pour voter",
+    "modeUnlimited": "Illimité",
+    "modeHint": "Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement."
   },
   "mono": {
     "desc": "Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.",

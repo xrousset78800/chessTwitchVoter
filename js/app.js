@@ -160,6 +160,14 @@ const tr = (key, params) => window.i18n.t(key, params);
  * des pages de réglage : on peut naviguer ailleurs, elle continue, et le lien
  * "Partie en cours" de la nav y ramène. Seuls "Terminer" ou un nouveau lancement l'arrêtent.
  */
+// Puzzle Rush : temps pour voter, un classement par mode ('0' = illimité, le premier coup valide est joué)
+const RUSH_MODES = ['0', '30', '60', '120'];
+const rushMode = () => {
+    const m = String(AppState.config.rushTimer ?? '0');
+    return RUSH_MODES.includes(m) ? m : '0';
+};
+const rushModeLabel = (m) => ({ '0': tr('rushPage.modeUnlimited'), '30': '30 s', '60': '1 min', '120': '2 min' }[m] || m);
+
 const GameSession = {
     current: null,    // Session d'une route préconfigurée (null pour une partie libre)
     running: false,   // Une partie a été lancée dans cette page
@@ -479,8 +487,9 @@ async applyConfigAfterReload() {
         problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
         AppState.problems.isActive = true;
         this.setupRushUI();
+        rushManager.config.mode = rushMode();
         await rushManager.fetchChannelRecord();
-        rushManager.start({ startRating: AppState.config.rushStartRating || 600 });
+        rushManager.start({ startRating: AppState.config.rushStartRating || 600, mode: rushMode() });
         Toast.success('🔥 Puzzle Rush lancé ! 3 erreurs et c\'est fini.');
         return;
     }
@@ -675,6 +684,8 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         if (!banner) return;
 
         banner.style.display = (state.active || state.ended) ? '' : 'none';
+        const title = banner.querySelector('.rush-banner__title');
+        if (title) title.textContent = `🔥 Puzzle Rush · ${rushModeLabel(rushManager.config.mode)}`;
 
         const hearts = Array.from({ length: state.maxStrikes }, (_, i) =>
             `<span class="rush-heart ${i < state.livesLeft ? '' : 'rush-heart--lost'}">${i < state.livesLeft ? '❤️' : '🖤'}</span>`
@@ -1300,6 +1311,8 @@ fullReset() {
         if (votingPanel) {
             votingPanel.classList.toggle('is-visible', AppState.config.timerEnabled);
         }
+        // Sans temps pour voter, pas de minuteur à côté de l'échiquier
+        document.body.classList.toggle('no-vote-timer', !AppState.config.timerEnabled);
     },
 
     updateConditionalUI() {
@@ -1415,6 +1428,7 @@ const BrowsePage = {
             document.getElementById('rush-records-refresh')?.addEventListener('click', () => {
                 this.loadRushRecords();
             });
+            this.bindRushModes(document.getElementById('page-browse'));
             this.initialized = true;
         } else {
             this.socket?.emit('getGames');
@@ -1424,12 +1438,39 @@ const BrowsePage = {
 
     // ========== PUZZLE RUSH : RECORDS ==========
 
+    rushModes: {},   // mode affiché par tableau de records
+
+    /** Onglets Illimité / 30 s / 1 min / 2 min au-dessus d'un tableau de records */
+    bindRushModes(root, onChange) {
+        root?.querySelectorAll('.rush-modes').forEach(bar => {
+            const target = bar.dataset.records;
+            const select = (mode) => {
+                bar.querySelectorAll('[data-rush-mode]').forEach(b => {
+                    const on = b.dataset.rushMode === mode;
+                    b.classList.toggle('is-active', on);
+                    b.setAttribute('aria-pressed', on);
+                });
+                this.rushModes[target] = mode;
+            };
+            select(this.rushModes[target] || '0');
+            bar.addEventListener('click', (e) => {
+                const b = e.target.closest('[data-rush-mode]');
+                if (!b) return;
+                select(b.dataset.rushMode);
+                this.loadRushRecords(target);
+                onChange?.(b.dataset.rushMode);
+            });
+        });
+    },
+
     async loadRushRecords(containerId = 'rush-records') {
         const container = document.getElementById(containerId);
         if (!container) return;
+        const mode = this.rushModes[containerId] || '0';
         try {
             const { RushManager } = await import('./core/rushManager.js');
-            const records = await RushManager.fetchLeaderboard(50);
+            const records = await RushManager.fetchLeaderboard(50, mode);
+            if ((this.rushModes[containerId] || '0') !== mode) return; // un autre onglet a été choisi entre-temps
             this.renderRushRecords(records, container);
         } catch (e) {
             console.warn('🔥 Records indisponibles:', e.message);
@@ -1832,21 +1873,30 @@ const RushPage = {
         if (!this.initialized) {
             rating.value = AppState.config.rushStartRating || 600;
             pause.value  = AppState.config.pauseAfterEnd || 5;
+            BrowsePage.rushModes['rush-page-records'] = rushMode();
+            BrowsePage.bindRushModes(document.getElementById('page-rush'));
             document.getElementById('rush-page-start').addEventListener('click', () => {
-                this.launch('rush', parseInt(rating.value), parseInt(pause.value));
+                this.launch('rush', parseInt(rating.value), parseInt(pause.value),
+                    BrowsePage.rushModes['rush-page-records']);
             });
             this.initialized = true;
         }
         BrowsePage.loadRushRecords('rush-page-records');
     },
 
-    launch(route, rating, pause) {
+    launch(route, rating, pause, mode = '0') {
         if (!GameSession.confirmReplace()) return;
         GameSession.clear();
         AppState.config.rushStartRating = Math.min(3000, Math.max(400, rating || 600));
         AppState.config.pauseAfterEnd   = Math.min(60, Math.max(1, pause || 5));
+        AppState.config.rushTimer       = RUSH_MODES.includes(mode) ? mode : '0';
         Storage.saveConfig();
-        GameSession.launch({ route, gameMode: 'rush', config: {} });
+        // Le temps pour voter vient du mode choisi, pas des réglages de la partie libre
+        const seconds = parseInt(AppState.config.rushTimer, 10);
+        GameSession.launch({
+            route, gameMode: 'rush',
+            config: { rushTimer: AppState.config.rushTimer, timerEnabled: seconds > 0, timerDuration: seconds || 30 }
+        });
     }
 };
 

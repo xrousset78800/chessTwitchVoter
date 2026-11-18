@@ -201,11 +201,27 @@ const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '5lgt1omtgbo8gp4bla49kt
 const DATA_DIR     = process.env.DATA_DIR || path.join(__dirname, 'data');
 const RECORDS_FILE = path.join(DATA_DIR, 'rush-records.json');
 
-let rushRecords = {}; // { [login]: { login, userId, displayName, avatar, best: {score, maxRating, durationMs, at}, runs, lastScore, lastAt } }
+// Un classement par temps de vote : 0 = illimité (le premier vote valide est joué), sinon secondes
+const RUSH_MODES = ['0', '30', '60', '120'];
+const RUSH_DEFAULT_MODE = '0';
+
+// { [login]: { login, userId, displayName, avatar, modes: { [mode]: { best: {score, maxRating, durationMs, at}, runs, lastScore, lastAt } } } }
+let rushRecords = {};
+
+function rushMode(value) {
+    const mode = String(value ?? RUSH_DEFAULT_MODE);
+    return RUSH_MODES.includes(mode) ? mode : null;
+}
 
 function loadRushRecords() {
     try {
         rushRecords = JSON.parse(fs.readFileSync(RECORDS_FILE, 'utf8')) || {};
+        // Ancien format (un seul classement) : repris dans le classement illimité
+        for (const r of Object.values(rushRecords)) {
+            if (r.modes || !r.best) continue;
+            r.modes = { [RUSH_DEFAULT_MODE]: { best: r.best, runs: r.runs || 1, lastScore: r.lastScore, lastAt: r.lastAt } };
+            delete r.best; delete r.runs; delete r.lastScore; delete r.lastAt;
+        }
         console.log(`🔥 ${Object.keys(rushRecords).length} record(s) Puzzle Rush chargé(s)`);
     } catch (e) {
         if (e.code !== 'ENOENT') console.warn('🔥 Records illisibles, repart de zéro:', e.message);
@@ -224,25 +240,28 @@ function saveRushRecords() {
     }
 }
 
-function publicRecord(r) {
+function publicRecord(r, mode) {
+    const m = r.modes[mode];
     return {
         login:       r.login,
         displayName: r.displayName || r.login,
         avatar:      r.avatar || null,
-        best:        r.best,
-        runs:        r.runs || 1,
-        lastScore:   r.lastScore,
-        lastAt:      r.lastAt
+        mode,
+        best:        m.best,
+        runs:        m.runs || 1,
+        lastScore:   m.lastScore,
+        lastAt:      m.lastAt
     };
 }
 
-function leaderboard(limit) {
+function leaderboard(limit, mode) {
     return Object.values(rushRecords)
+        .filter(r => r.modes?.[mode])
+        .map(r => publicRecord(r, mode))
         .sort((a, b) => (b.best.score - a.best.score)
             || (b.best.maxRating - a.best.maxRating)
             || (a.best.at - b.best.at))
-        .slice(0, limit)
-        .map(publicRecord);
+        .slice(0, limit);
 }
 
 // Validation des tokens Twitch, avec cache court pour ne pas spammer Twitch
@@ -284,14 +303,19 @@ async function requireTwitch(req, res, next) {
 // Classement
 app.get('/api/rush/records', (req, res) => {
     const limit = Math.min(200, Math.max(1, parseInt(req.query.limit) || 50));
-    res.json({ records: leaderboard(limit), total: Object.keys(rushRecords).length });
+    const mode  = rushMode(req.query.mode);
+    if (!mode) return res.status(400).json({ error: 'Mode invalide' });
+    const records = leaderboard(limit, mode);
+    res.json({ mode, records, total: records.length });
 });
 
 // Record d'une chaîne
 app.get('/api/rush/records/:login', (req, res) => {
+    const mode = rushMode(req.query.mode);
+    if (!mode) return res.status(400).json({ error: 'Mode invalide' });
     const r = rushRecords[String(req.params.login).toLowerCase()];
-    if (!r) return res.status(404).json({ error: 'Aucun record pour cette chaîne' });
-    res.json(publicRecord(r));
+    if (!r?.modes?.[mode]) return res.status(404).json({ error: 'Aucun record pour cette chaîne' });
+    res.json(publicRecord(r, mode));
 });
 
 // Fin de run : enregistre le score pour la chaîne du token
@@ -304,6 +328,8 @@ app.post('/api/rush/records', requireTwitch, (req, res) => {
     if (score < 0 || score > 1000) {
         return res.status(400).json({ error: 'Score invalide' });
     }
+    const mode = rushMode(body.mode);
+    if (!mode) return res.status(400).json({ error: 'Mode invalide' });
 
     const { login, userId } = req.twitch;
     const now  = Date.now();
@@ -313,21 +339,27 @@ app.post('/api/rush/records', requireTwitch, (req, res) => {
     const displayName = typeof body.displayName === 'string' ? body.displayName.slice(0, 50) : (prev?.displayName || login);
     const avatar      = typeof body.avatar === 'string' && /^https:\/\/[^\s"'<>]+$/.test(body.avatar) ? body.avatar.slice(0, 300) : (prev?.avatar || null);
 
-    const isNewRecord = !prev || score > prev.best.score;
+    const prevMode    = prev?.modes?.[mode];
+    const isNewRecord = !prevMode || score > prevMode.best.score;
     rushRecords[login] = {
         login,
         userId,
         displayName,
         avatar,
-        best:      isNewRecord ? run : prev.best,
-        runs:      (prev?.runs || 0) + 1,
-        lastScore: score,
-        lastAt:    now
+        modes: {
+            ...prev?.modes,
+            [mode]: {
+                best:      isNewRecord ? run : prevMode.best,
+                runs:      (prevMode?.runs || 0) + 1,
+                lastScore: score,
+                lastAt:    now
+            }
+        }
     };
     saveRushRecords();
 
-    console.log(`🔥 [${login}] run terminé : ${score} puzzle(s)${isNewRecord ? ' — NOUVEAU RECORD' : ''}`);
-    res.json({ record: publicRecord(rushRecords[login]), isNewRecord });
+    console.log(`🔥 [${login}] run terminé (mode ${mode}) : ${score} puzzle(s)${isNewRecord ? ' — NOUVEAU RECORD' : ''}`);
+    res.json({ record: publicRecord(rushRecords[login], mode), isNewRecord });
 });
 
 loadRushRecords();

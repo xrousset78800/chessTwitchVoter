@@ -533,6 +533,14 @@
                 <h1 class="browse__title">🔥 Puzzle Rush</h1>
                 <p class="browse__desc" data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</p>
                 <div class="battle-setup__card battle-setup__card--rush preset__card">
+                    <label class="form-label" data-i18n="rushPage.mode">Temps pour voter</label>
+                    <div class="rush-modes" data-records="rush-page-records" role="group" aria-label="Temps pour voter">
+                        <button type="button" class="rush-mode" data-rush-mode="0" data-i18n="rushPage.modeUnlimited">Illimité</button>
+                        <button type="button" class="rush-mode" data-rush-mode="30">30 s</button>
+                        <button type="button" class="rush-mode" data-rush-mode="60">1 min</button>
+                        <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
+                    </div>
+                    <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.</p>
                     <div class="preset__row">
                         <div class="form-group">
                             <label class="form-label" data-i18n="rushPage.rating">Rating de départ</label>
@@ -691,6 +699,12 @@
                     </button>
                 </div>
                 <div class="browse-records">
+                    <div class="rush-modes" data-records="rush-records" role="group" aria-label="Temps pour voter">
+                        <button type="button" class="rush-mode" data-rush-mode="0" data-i18n="rushPage.modeUnlimited">Illimité</button>
+                        <button type="button" class="rush-mode" data-rush-mode="30">30 s</button>
+                        <button type="button" class="rush-mode" data-rush-mode="60">1 min</button>
+                        <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
+                    </div>
                     <div class="rush-my-record" id="rush-my-record" style="display:none;">
                         <span class="rush-my-record__label">Ton record</span>
                         <span class="rush-my-record__value" id="rush-my-record-value">—</span>
