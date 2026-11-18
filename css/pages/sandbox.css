@@ -431,6 +431,81 @@
     border-top: 1px solid var(--border-subtle);
 }
 
+/* Configurations sauvegardées : sans boîte, sous les modes de jeu */
+.setup-configs {
+    padding: 4px 4px 0;
+}
+
+.setup-configs__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted, #888);
+}
+
+#configs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#configs-list .empty-state {
+    padding: 0;
+    text-align: left;
+    font-size: 0.85rem;
+    color: var(--text-muted, #888);
+}
+
+#configs-list .empty-state p {
+    margin: 0;
+}
+
+.config-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 6px 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.config-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.config-card__header {
+    display: contents;
+}
+
+.config-card__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.config-card .badge {
+    order: 1;
+}
+
+.config-card [data-delete] {
+    order: 2;
+    opacity: 0.5;
+}
+
+.config-card [data-delete]:hover {
+    opacity: 1;
+    color: #ef4444;
+}
+
 /* Lancement : la carte remplace l'échiquier et la barre d'outils */
 body.sandbox-launch .sandbox-setup {
     display: block;
