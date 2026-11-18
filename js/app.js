@@ -261,8 +261,9 @@ const Router = {
         document.body.classList.toggle('battle-mode', pageName === 'battle');
         document.body.classList.toggle('game-mode', pageName === 'game');
         // Nouveau : écran de lancement tant que la partie n'est pas lancée (autoStart = juste après "Lancer")
-        document.body.classList.toggle('sandbox-launch',
-            pageName === 'sandbox' && sessionStorage.getItem('autoStart') !== '1');
+        // Une fois lancée, la partie reste affichée si on change d'onglet puis qu'on revient
+        if (pageName === 'sandbox' && sessionStorage.getItem('autoStart') === '1') SandboxPage.gameStarted = true;
+        document.body.classList.toggle('sandbox-launch', pageName === 'sandbox' && !SandboxPage.gameStarted);
         SandboxPage.closeSettings?.(false);
         SandboxPage.applyPageVariant(pageName);
 
@@ -1361,6 +1362,27 @@ const BrowsePage = {
         this.loadRushRecords();
     },
 
+    /** Champs "Ton channel Twitch" : pré-remplis avec le compte connecté s'ils sont vides */
+    syncAuthFields() {
+        const login = twitchAuth.user?.login;
+        if (!login) return;
+        ['browse-host-channel', 'browse-guest-channel'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input && !input.value.trim()) input.value = login;
+        });
+    },
+
+    requireChannel(inputId) {
+        const input = document.getElementById(inputId);
+        const channel = normalizeLogin(input?.value || twitchAuth.user?.login || '');
+        if (!channel) {
+            Toast.error('Entre ton channel Twitch');
+            input?.focus();
+            return null;
+        }
+        return channel;
+    },
+
     // ========== PUZZLE RUSH : RECORDS ==========
 
     async loadRushRecords(containerId = 'rush-records') {
@@ -1451,7 +1473,7 @@ const BrowsePage = {
 
     setupFormHandlers() {
         document.getElementById('browse-create-btn')?.addEventListener('click', () => {
-            const channel = this.requireChannel();
+            const channel = this.requireChannel('browse-host-channel');
             if (!channel) return;
 
             const timerDuration  = parseInt(document.getElementById('browse-timer')?.value) || 30;
@@ -1478,7 +1500,7 @@ const BrowsePage = {
         document.getElementById('browse-join-btn')?.addEventListener('click', () => {
             const code    = document.getElementById('browse-join-code')?.value?.trim().toUpperCase();
             if (!code) { Toast.error('Entre le code de la partie'); return; }
-            const channel = this.requireChannel();
+            const channel = this.requireChannel('browse-guest-channel');
             if (!channel) return;
             window.multiplayerManager?.joinGameFromBrowse(channel, code);
         });

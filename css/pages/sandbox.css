@@ -221,11 +221,10 @@
 
 /* Sidebar */
 .sandbox__sidebar {
-    /*display: flex;*/
+    display: flex;
     flex-direction: column;
     gap: 16px;
-    max-height: calc(70vh);
-    overflow-y: auto;
+    min-width: 0;
 }
 
 /* Mode selector */
