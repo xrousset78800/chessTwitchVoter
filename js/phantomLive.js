@@ -66,6 +66,7 @@ function initBoard() {
         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
         draggable: false,
     });
+    window.BoardAnnotations?.attach('liveBoard');
     window.addEventListener('resize', () => state.board.resize());
 }
 

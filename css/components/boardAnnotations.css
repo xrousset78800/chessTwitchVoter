@@ -1,0 +1,37 @@
+/**
+ * Flèches / cases surlignées (js/components/boardAnnotations.js)
+ * et prise en main des pièces sur un échiquier jouable à la souris
+ */
+
+.board-annotations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 4; /* sous la pièce saisie (z-index 10, dans le body) */
+    overflow: visible;
+}
+
+/* ── Échiquier jouable : main ouverte sur une pièce, main fermée pendant la saisie ── */
+.board--draggable .square-55d63:has(img.piece-417db) {
+    cursor: grab;
+}
+
+body.is-dragging-piece,
+body.is-dragging-piece * {
+    cursor: grabbing !important;
+}
+
+/* La pièce survolée se soulève légèrement */
+.board--draggable .square-55d63:hover > img.piece-417db {
+    transform: translateY(-3px) scale(1.06);
+    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* La pièce saisie (ajoutée au body par chessboard.js) : plus grande, ombre portée,
+   et elle suit la souris sans retard (sinon "transition: all" la fait traîner) */
+body > img.piece-417db {
+    transition: transform 0.12s ease, filter 0.12s ease !important;
+    transform: scale(1.15);
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.45));
+}

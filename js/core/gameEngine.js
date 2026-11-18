@@ -77,6 +77,7 @@ class GameEngine {
         };
         
         this.board = Chessboard('myBoard', boardConfig);
+        window.BoardAnnotations?.attach('myBoard', { draggable: true });
         
         // Initialiser le timer avec les callbacks
         timer.init({

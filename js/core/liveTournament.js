@@ -27,6 +27,7 @@ function initTournamentBoard() {
         pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
         draggable: false,
     });
+    window.BoardAnnotations?.attach('liveBoardT');
     window.addEventListener('resize', () => stateT.board?.resize());
 }
 
