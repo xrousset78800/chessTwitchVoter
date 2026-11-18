@@ -28,6 +28,7 @@
             this.positionKey = null;
 
             if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
+            container.classList.add('board--annotatable');
             if (this.draggable) container.classList.add('board--draggable');
 
             this.svg = document.createElementNS(SVG_NS, 'svg');
@@ -36,7 +37,9 @@
 
             // Avant chessboard.js (capture) : un clic droit ne doit pas saisir la pièce
             container.addEventListener('mousedown', e => this.onMouseDown(e), true);
-            container.addEventListener('contextmenu', e => e.preventDefault());
+            // Pas de menu du navigateur autour de l'échiquier : on rate vite une case en traçant une flèche
+            (container.closest('.board-wrapper, .board-container') || container)
+                .addEventListener('contextmenu', e => e.preventDefault());
             window.addEventListener('mousemove', e => this.onMouseMove(e));
             window.addEventListener('mouseup', e => this.onMouseUp(e));
 
