@@ -355,3 +355,13 @@
         width: 100%;
     }
 }
+
+/* Records Puzzle Rush sous les parties en cours */
+.games-grid + .browse__section-header {
+    margin-top: 40px;
+}
+
+.browse-records .rush-records {
+    min-height: 0;
+    max-height: none;
+}

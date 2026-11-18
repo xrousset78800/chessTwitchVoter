@@ -473,24 +473,6 @@ io.on('connection', (socket) => {
         emitMultiRoom(room);
     });
 
-    socket.on('createGame', (data) => {
-        games[data.gameId] = {
-            gameId:      data.gameId,
-            host:        data.hostName,
-            hostSocket:  socket.id,
-            settings:    data.settings || {},
-            guest:       null,
-            guestSocket: null,
-            status:      'waiting',
-            moveCount:   0,
-            startedAt:   null,
-            lastFen:     null
-        };
-        socket.join(data.gameId);
-        console.log(`Partie créée: ${data.gameId} par ${data.hostName}`);
-        broadcastGamesList();
-    });
-
     socket.on('chat:message', (data) => {
         // Stocker dans l'historique
         if (!chatHistory[data.gameId]) {
@@ -509,28 +491,6 @@ io.on('connection', (socket) => {
         console.log(`💬 [${data.gameId}] ${data.author}: ${data.content}`);
     });
 
-    socket.on('joinGame', (data) => {
-        const game = games[data.gameId];
-        if (game) {
-            game.guest       = data.guestName;
-            game.guestSocket = socket.id;
-            game.status      = 'playing';
-            game.startedAt   = Date.now();
-            socket.join(data.gameId);
-
-            if (chatHistory[data.gameId]) {
-                socket.emit('chat:history', chatHistory[data.gameId]);
-            }
-
-            io.to(data.gameId).emit('gameReady', {
-                players: { white: game.host, black: game.guest },
-                settings: game.settings
-            });
-            console.log(`${data.guestName} a rejoint la partie ${data.gameId}`);
-            broadcastGamesList();
-        }
-    });
-    
     socket.on('reconnectGame', (data) => {
         socket.join(data.gameId);
         console.log(`Reconnexion à la partie ${data.gameId}`);

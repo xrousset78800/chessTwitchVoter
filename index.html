@@ -48,9 +48,6 @@
             </a>
             
             <div class="nav__links">
-                <a class="nav__link" data-navigate="/rush" data-i18n="nav.rush">Puzzle Rush</a>
-                <a class="nav__link" data-navigate="/mono" data-i18n="nav.mono">Mono</a>
-                <a class="nav__link" data-navigate="/multi" data-i18n="nav.multi">Multi</a>
                 <a class="nav__link" data-navigate="/sandbox" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
                 <a class="nav__link" data-navigate="/live" data-i18n="nav.live">🔴 Live Chess</a>
@@ -121,9 +118,9 @@
                         <span data-i18n="sandbox.description" class="action-card__desc">Mode libre avec toutes les options</span>
                     </a>
                     <a class="action-card" data-navigate="/browse">
-                        <div class="action-card__icon">⚔️</div>
-                        <span data-i18n="twitchbattle.name" class="action-card__title">Bataille Twitch</span>
-                        <span data-i18n="twitchbattle.description" class="action-card__desc">Chat vs Chat en direct</span>
+                        <div class="action-card__icon">👀</div>
+                        <span data-i18n="twitchbattle.name" class="action-card__title">Parcourir</span>
+                        <span data-i18n="twitchbattle.description" class="action-card__desc">Parties en cours et records</span>
                     </a>
                 </div>
             </div>
@@ -160,6 +157,14 @@
                     </div>
                 </div>
 
+                <!-- Onglets de Nouveau (déplacés par le router vers /rush, /mono, /multi) -->
+                <nav class="new-tabs" id="new-tabs">
+                    <a class="new-tab" data-navigate="/sandbox" data-new-tab="sandbox">🧪 <span data-i18n="newTabs.free">Partie libre</span></a>
+                    <a class="new-tab" data-navigate="/mono" data-new-tab="mono">👥 Mono</a>
+                    <a class="new-tab" data-navigate="/multi" data-new-tab="multi">⚔ Multi</a>
+                    <a class="new-tab" data-navigate="/rush" data-new-tab="rush">🔥 Puzzle Rush</a>
+                </nav>
+
                 <!-- Lancement (Nouveau) ; pendant la partie, la même carte sert de modale ⚙ -->
                 <div class="sandbox-setup" id="sandbox-setup">
                     <div class="sandbox-setup__card" role="dialog" aria-labelledby="sandbox-setup-title">
@@ -185,7 +190,7 @@
                                             <span class="mode-option__icon">🧩</span>
                                             <span class="mode-option__label">Problèmes</span>
                                         </div>
-                                        <div class="mode-option" data-mode="rush">
+                                        <div class="mode-option" data-mode="rush" style="display:none;">
                                             <span class="mode-option__icon">🔥</span>
                                             <span class="mode-option__label">Puzzle Rush</span>
                                         </div>
@@ -377,19 +382,6 @@
                             <button class="btn" id="btn-save-config"><i class="fas fa-save"></i> <span data-i18n="actions.save">Sauvegarder</span></button>
                             <button class="btn btn--primary btn--lg" id="btn-apply-config"><i class="fas fa-play"></i> <span data-i18n="setup.launch">Lancer</span></button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Bannière Bataille Twitch : en attente de l'adversaire -->
-                <div id="multi-pre-ready-banner" style="display:none;" class="multi-banner">
-                    <div class="multi-banner__teams">
-                        <span style="font-size:0.78rem; color:var(--text-muted,#888);">⚔ Bataille Twitch</span>
-                        <span class="multi-game-code" id="sandbox-game-code" style="font-size:1.6rem; letter-spacing:8px; margin:0 10px;"></span>
-                        <button class="btn btn--icon btn--sm" id="sandbox-game-code-copy" title="Copier le code"><i class="fas fa-copy"></i></button>
-                    </div>
-                    <div class="multi-waiting" id="sandbox-pre-waiting">
-                        <span class="multi-waiting__dot"></span>
-                        En attente de l'adversaire...
                     </div>
                 </div>
 
@@ -665,135 +657,8 @@
         <div class="page" id="page-browse">
             <div class="browse">
                 <div class="browse__header">
-                    <h1 class="browse__title">⚔ Bataille Twitch</h1>
-                    <p class="browse__desc">Lance ou rejoins une partie Chat vs Chat — deux chats Twitch, un échiquier synchronisé</p>
-                </div>
-
-                <!-- ===== Section Créer / Rejoindre ===== -->
-                <div class="battle-setup">
-
-                    <!-- Créer une partie -->
-                    <div class="battle-setup__card battle-setup__card--create">
-                        <div class="battle-setup__icon">♙</div>
-                        <h2 class="battle-setup__title">Créer une partie</h2>
-                        <p class="battle-setup__desc">Tu joues les <strong>Blancs</strong>. Tu recevras un code à partager avec ton adversaire.</p>
-
-                        <div class="form-group">
-                            <label class="form-label">Ton channel Twitch</label>
-                            <input type="text" class="input" id="browse-host-channel"
-                                   placeholder="ton_channel" autocomplete="off" spellcheck="false">
-                        </div>
-
-                        <div style="display:flex; gap:12px;">
-                            <div class="form-group" style="flex:1">
-                                <label class="form-label"><i class="fas fa-clock"></i> Vote (s)</label>
-                                <input type="number" class="input input--sm" id="browse-timer"
-                                       value="30" min="10" max="120">
-                            </div>
-                            <div class="form-group" style="flex:1">
-                                <label class="form-label"><i class="fas fa-dice"></i> Mode</label>
-                                <select class="input input--sm" id="browse-mode">
-                                    <option value="wheel">🎡 Roue</option>
-                                    <option value="majority">📊 Majorité</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div style="display:flex; gap:16px; margin-top:4px;">
-                            <div class="form-row" style="flex:1">
-                                <span style="font-size:0.82rem;"><i class="fab fa-twitch" style="color:#9146ff"></i> Followers only</span>
-                                <div class="toggle" id="browse-follow-toggle"></div>
-                            </div>
-                            <div class="form-row" style="flex:1">
-                                <span style="font-size:0.82rem;"><i class="fas fa-star" style="color:#f59e0b"></i> Subs only</span>
-                                <div class="toggle" id="browse-sub-toggle"></div>
-                            </div>
-                        </div>
-
-                        <button class="btn btn--primary btn--full" id="browse-create-btn">
-                            <i class="fas fa-plus"></i> Créer la partie
-                        </button>
-
-                        <!-- Résultat après création -->
-                        <div id="browse-created-info" style="display:none; margin-top:16px;">
-                            <div style="text-align:center; margin-bottom:12px;">
-                                <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Code de partie</div>
-                                <div class="multi-game-code" id="browse-game-code">—</div>
-                            </div>
-                            <div class="multi-url-box">
-                                <div class="form-label">🔗 URL à envoyer à l'adversaire (Noirs)</div>
-                                <div class="multi-url-row">
-                                    <span class="multi-url-text" id="browse-guest-url"></span>
-                                    <button class="btn btn--icon btn--sm btn-copy" data-target="browse-guest-url" title="Copier"><i class="fas fa-copy"></i></button>
-                                </div>
-                            </div>
-                            <div class="multi-waiting" id="browse-waiting">
-                                <span class="multi-waiting__dot"></span>
-                                En attente de l'adversaire...
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Rejoindre une partie -->
-                    <div class="battle-setup__card battle-setup__card--join">
-                        <div class="battle-setup__icon">♟</div>
-                        <h2 class="battle-setup__title">Rejoindre une partie</h2>
-                        <p class="battle-setup__desc">Tu joues les <strong>Noirs</strong>. Entre le code reçu de l'hôte, ou clique sur une partie ci-dessous.</p>
-
-                        <div class="form-group">
-                            <label class="form-label">Ton channel Twitch</label>
-                            <input type="text" class="input" id="browse-guest-channel"
-                                   placeholder="ton_channel" autocomplete="off" spellcheck="false">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Code de partie</label>
-                            <input type="text" class="input" id="browse-join-code"
-                                   placeholder="AB12" maxlength="6"
-                                   style="text-transform:uppercase; letter-spacing:6px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.2rem; text-align:center;">
-                        </div>
-
-                        <button class="btn btn--primary btn--full" id="browse-join-btn">
-                            <i class="fas fa-sign-in-alt"></i> Rejoindre
-                        </button>
-                    </div>
-
-                    <!-- Puzzle Rush : records des chaînes -->
-                    <div class="battle-setup__card battle-setup__card--rush">
-                        <div class="battle-setup__icon">🔥</div>
-                        <h2 class="battle-setup__title">Puzzle Rush</h2>
-                        <p class="battle-setup__desc">Ton chat enchaîne des puzzles de plus en plus durs, <strong>3 erreurs</strong> et le run s'arrête. Meilleur score de chaque chaîne :</p>
-
-                        <div class="rush-my-record" id="rush-my-record" style="display:none;">
-                            <span class="rush-my-record__label">Ton record</span>
-                            <span class="rush-my-record__value" id="rush-my-record-value">—</span>
-                        </div>
-
-                        <div id="rush-records" class="rush-records">
-                            <div class="rush-records__empty">Chargement des records…</div>
-                        </div>
-
-                        <div class="rush-card__options">
-                            <label class="rush-card__option">
-                                <span>Rating de départ</span>
-                                <input type="number" id="browse-rush-rating" class="input input--sm" min="400" max="3000" step="50" value="600">
-                            </label>
-                            <label class="rush-card__option">
-                                <span>Pause (s)</span>
-                                <input type="number" id="browse-rush-pause" class="input input--sm" min="1" max="60" value="5">
-                            </label>
-                        </div>
-
-                        <div class="rush-card__actions">
-                            <button class="btn btn--primary btn--full" id="browse-rush-start">
-                                <i class="fas fa-play"></i> Lancer un run
-                            </button>
-                            <button class="btn btn--ghost" id="rush-records-refresh" title="Actualiser">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                        </div>
-                        <p class="form-hint rush-card__hint">Connecte-toi avec Twitch pour que le chat vote et que ton record soit enregistré.</p>
-                    </div>
+                    <h1 class="browse__title">👀 <span data-i18n="nav.browse">Parcourir</span></h1>
+                    <p class="browse__desc" data-i18n="browsePage.desc">Les parties en cours et les records Puzzle Rush. Pour jouer, passe par Nouveau.</p>
                 </div>
 
                 <!-- ===== Parties en cours ===== -->
@@ -811,7 +676,24 @@
                     <div class="empty-state">
                         <div class="empty-state__icon">⚔</div>
                         <p class="empty-state__title">Aucune partie en cours</p>
-                        <p class="empty-state__desc">Sois le premier à lancer une Bataille Twitch !</p>
+                        <p class="empty-state__desc" data-i18n="browsePage.empty">Lance une partie Multi depuis Nouveau !</p>
+                    </div>
+                </div>
+
+                <!-- ===== Records Puzzle Rush ===== -->
+                <div class="browse__section-header">
+                    <h2 class="browse__section-title">🔥 <span data-i18n="rushPage.records">Records des chaînes</span></h2>
+                    <button class="btn btn--sm btn--ghost" id="rush-records-refresh" title="Actualiser">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="browse-records">
+                    <div class="rush-my-record" id="rush-my-record" style="display:none;">
+                        <span class="rush-my-record__label">Ton record</span>
+                        <span class="rush-my-record__value" id="rush-my-record-value">—</span>
+                    </div>
+                    <div id="rush-records" class="rush-records">
+                        <div class="rush-records__empty">Chargement des records…</div>
                     </div>
                 </div>
             </div>

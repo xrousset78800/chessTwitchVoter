@@ -23,8 +23,8 @@
     "description": "Mode libre avec toutes les options"
   },
   "twitchbattle": {
-    "name": "Bataille Twitch",
-    "description": "Chat vs Chat en direct"
+    "name": "Parcourir",
+    "description": "Parties en cours et records"
   },
   "actions": {
     "reverse": "Retourner",
@@ -251,5 +251,12 @@
     "phantomOff": "Phantom non connecté",
     "phantomOn": "Phantom connecté",
     "phantomHint": "Connecte le Phantom pour régler sa vitesse et la synchronisation."
+  },
+  "newTabs": {
+    "free": "Partie libre"
+  },
+  "browsePage": {
+    "desc": "Les parties en cours et les records Puzzle Rush. Pour jouer, passe par Nouveau.",
+    "empty": "Lance une partie Multi depuis Nouveau !"
   }
 }

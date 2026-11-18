@@ -196,11 +196,13 @@ const GameSession = {
 // ============================================
 // ROUTER (SPA Navigation)
 // ============================================
+// Pages de réglage regroupées sous Nouveau
+const NEW_TABS = ['sandbox', 'mono', 'multi', 'rush'];
+
 const Router = {
     routes: {
         '/': 'landing',
         '/sandbox': 'sandbox',
-        '/battle': 'battle',
         '/game': 'game',
         '/browse': 'browse',
         '/live': 'live',
@@ -249,16 +251,13 @@ const Router = {
     },
 
     showPage(pageName) {
-        // /battle et /game réutilisent page-sandbox (échiquier) :
-        //  - battle : body.battle-mode (cache les éléments .sandbox-only)
-        //  - game   : body.game-mode   (cache toute la configuration, juste le live)
-        const actualPage = (pageName === 'battle' || pageName === 'game') ? 'sandbox' : pageName;
+        // /game réutilise page-sandbox (échiquier) : body.game-mode cache toute la configuration
+        const actualPage = pageName === 'game' ? 'sandbox' : pageName;
 
         // Cacher toutes les pages
         document.querySelectorAll('.page').forEach(p => p.classList.remove('is-active'));
 
         // Activer/désactiver les variantes de la page échiquier sur le body
-        document.body.classList.toggle('battle-mode', pageName === 'battle');
         document.body.classList.toggle('game-mode', pageName === 'game');
         // Nouveau : écran de lancement tant que la partie n'est pas lancée (autoStart = juste après "Lancer")
         // Une fois lancée, la partie reste affichée si on change d'onglet puis qu'on revient
@@ -274,18 +273,21 @@ const Router = {
             AppState.currentPage = pageName;
         }
 
+        this.placeNewTabs(pageName, target);
+
         // Mettre à jour la nav
         document.querySelectorAll('.nav__link').forEach(link => {
             const linkPath = link.dataset.navigate;
-            // Pendant une partie préconfigurée, seule sa route est active (pas /sandbox)
-            const activePage = GameSession.current?.route || actualPage;
+            // Mono, Multi et Puzzle Rush sont des onglets de Nouveau (/sandbox), en réglage comme en partie
+            let activePage = GameSession.current?.route || actualPage;
+            if (NEW_TABS.includes(activePage)) activePage = 'sandbox';
             link.classList.toggle('is-active',
                 linkPath === '/' + activePage || (linkPath === '/' && pageName === 'landing')
             );
         });
 
         // Init spécifique à la page
-        if (pageName === 'sandbox' || pageName === 'battle' || pageName === 'game') {
+        if (pageName === 'sandbox' || pageName === 'game') {
             SandboxPage.init();
         } else if (pageName === 'browse') {
             BrowsePage.init();
@@ -300,6 +302,17 @@ const Router = {
         } else if (pageName === 'multi') {
             MultiPage.init();
         }
+    },
+
+    /** Les onglets de Nouveau suivent la page de réglage affichée */
+    placeNewTabs(pageName, target) {
+        const tabs = document.getElementById('new-tabs');
+        if (!tabs || !target || !NEW_TABS.includes(pageName)) return;
+        if (pageName === 'sandbox') target.querySelector('#sandbox-setup')?.before(tabs);
+        else target.querySelector('.preset')?.prepend(tabs);
+        tabs.querySelectorAll('.new-tab').forEach(tab => {
+            tab.classList.toggle('is-active', tab.dataset.newTab === pageName);
+        });
     }
 };
 
@@ -358,7 +371,7 @@ const SandboxPage = {
     problemsInitialized: false,
     rushUIReady: false,
 
-    /** Titre et bouton retour selon la route (/sandbox, /battle, /game) */
+    /** Titre et bouton retour selon la route (/sandbox, /game) */
     applyPageVariant(pageName) {
         const titleEl = document.querySelector('#page-sandbox .sandbox__title');
         const backBtn = document.getElementById('sandbox-back');
@@ -366,7 +379,7 @@ const SandboxPage = {
             const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi' };
             const route = GameSession.current?.route;
             if (titleEl) titleEl.textContent = titles[AppState.gameMode] || '♟ Partie';
-            if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/browse';
+            if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/sandbox';
         } else if (pageName === 'sandbox') {
             if (titleEl) titleEl.textContent = '🧪 Sandbox';
             // En partie, la flèche retour ramène à l'écran de lancement (voir setupSetupScreen)
@@ -1351,52 +1364,22 @@ const BrowsePage = {
     init() {
         if (!this.initialized) {
             this.setupSocket();
-            this.setupFormHandlers();
-            this.setupCopyButtons();
+            document.getElementById('browse-refresh-btn')?.addEventListener('click', () => {
+                this.socket?.emit('getGames');
+            });
+            document.getElementById('rush-records-refresh')?.addEventListener('click', () => {
+                this.loadRushRecords();
+            });
             this.initialized = true;
         } else {
             this.socket?.emit('getGames');
         }
-        this.syncAuthFields();
-        this.handleJoinParam();
         this.loadRushRecords();
-    },
-
-    /** Champs "Ton channel Twitch" : pré-remplis avec le compte connecté s'ils sont vides */
-    syncAuthFields() {
-        const login = twitchAuth.user?.login;
-        if (!login) return;
-        ['browse-host-channel', 'browse-guest-channel'].forEach(id => {
-            const input = document.getElementById(id);
-            if (input && !input.value.trim()) input.value = login;
-        });
-    },
-
-    requireChannel(inputId) {
-        const input = document.getElementById(inputId);
-        const channel = normalizeLogin(input?.value || twitchAuth.user?.login || '');
-        if (!channel) {
-            Toast.error('Entre ton channel Twitch');
-            input?.focus();
-            return null;
-        }
-        return channel;
     },
 
     // ========== PUZZLE RUSH : RECORDS ==========
 
     async loadRushRecords(containerId = 'rush-records') {
-        const ratingInput = document.getElementById('browse-rush-rating');
-        if (ratingInput && !ratingInput.dataset.filled) {
-            ratingInput.value = AppState.config.rushStartRating || 600;
-            ratingInput.dataset.filled = '1';
-        }
-        const pauseInput = document.getElementById('browse-rush-pause');
-        if (pauseInput && !pauseInput.dataset.filled) {
-            pauseInput.value = AppState.config.pauseAfterEnd || 5;
-            pauseInput.dataset.filled = '1';
-        }
-
         const container = document.getElementById(containerId);
         if (!container) return;
         try {
@@ -1471,80 +1454,6 @@ const BrowsePage = {
         this.socket.on('gamesListUpdated', (games) => this.renderGames(games));
     },
 
-    setupFormHandlers() {
-        document.getElementById('browse-create-btn')?.addEventListener('click', () => {
-            const channel = this.requireChannel('browse-host-channel');
-            if (!channel) return;
-
-            const timerDuration  = parseInt(document.getElementById('browse-timer')?.value) || 30;
-            const mode           = document.getElementById('browse-mode')?.value || 'wheel';
-            const followersOnly  = document.getElementById('browse-follow-toggle')?.classList.contains('is-active') || false;
-            const subsOnly       = document.getElementById('browse-sub-toggle')?.classList.contains('is-active') || false;
-
-            const gameId = window.multiplayerManager?.createGameFromBrowse(channel, {
-                timerDuration,
-                majorityMode: mode === 'majority',
-                followersOnly,
-                subsOnly
-            });
-
-            if (gameId) {
-                const guestUrl = `${window.location.origin}${window.location.pathname}?join=${gameId}`;
-                document.getElementById('browse-game-code').textContent   = gameId;
-                document.getElementById('browse-guest-url').textContent   = guestUrl;
-                document.getElementById('browse-created-info').style.display = 'block';
-                document.getElementById('browse-create-btn').style.display   = 'none';
-            }
-        });
-
-        document.getElementById('browse-join-btn')?.addEventListener('click', () => {
-            const code    = document.getElementById('browse-join-code')?.value?.trim().toUpperCase();
-            if (!code) { Toast.error('Entre le code de la partie'); return; }
-            const channel = this.requireChannel('browse-guest-channel');
-            if (!channel) return;
-            window.multiplayerManager?.joinGameFromBrowse(channel, code);
-        });
-
-        document.getElementById('browse-refresh-btn')?.addEventListener('click', () => {
-            this.socket?.emit('getGames');
-        });
-
-        document.getElementById('rush-records-refresh')?.addEventListener('click', () => {
-            this.loadRushRecords();
-        });
-
-        // Lancer un run : démarre le Puzzle Rush directement sur #/game
-        document.getElementById('browse-rush-start')?.addEventListener('click', () => {
-            const rating = parseInt(document.getElementById('browse-rush-rating')?.value);
-            const pause  = parseInt(document.getElementById('browse-rush-pause')?.value);
-            RushPage.launch('browse', rating, pause);
-        });
-    },
-
-    setupCopyButtons() {
-        document.querySelectorAll('#page-browse .btn-copy').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const text = document.getElementById(btn.dataset.target)?.textContent?.trim();
-                if (!text) return;
-                navigator.clipboard.writeText(text).then(() => {
-                    const icon = btn.innerHTML;
-                    btn.innerHTML = '<i class="fas fa-check" style="color:#34d399"></i>';
-                    setTimeout(() => { btn.innerHTML = icon; }, 2000);
-                });
-            });
-        });
-    },
-
-    handleJoinParam() {
-        const joinCode = new URLSearchParams(window.location.search).get('join');
-        if (!joinCode) return;
-        const codeInput = document.getElementById('browse-join-code');
-        if (codeInput) {
-            codeInput.value = joinCode.toUpperCase();
-            document.getElementById('browse-join-btn')?.scrollIntoView({ behavior: 'smooth' });
-        }
-    },
-
     renderGames(games) {
         const container = document.getElementById('games-list');
         if (!container) return;
@@ -1556,7 +1465,7 @@ const BrowsePage = {
                 <div class="empty-state">
                     <div class="empty-state__icon">⚔</div>
                     <p class="empty-state__title">Aucune partie en cours</p>
-                    <p class="empty-state__desc">Sois le premier à lancer une Bataille Twitch !</p>
+                    <p class="empty-state__desc">${tr('browsePage.empty')}</p>
                 </div>
             `;
             return;
@@ -1570,7 +1479,7 @@ const BrowsePage = {
             return `
                 <div class="game-card" data-game-id="${game.gameId}">
                     <div class="game-card__header">
-                        <span class="game-card__mode">Chat vs Chat</span>
+                        <span class="game-card__mode">⚔ Multi</span>
                         <span class="game-card__status ${statusClass}">${statusLabel}</span>
                     </div>
                     <div class="game-card__players">
@@ -1593,28 +1502,10 @@ const BrowsePage = {
                     <div class="game-card__footer">
                         <span>${game.moveCount || 0} coup${game.moveCount !== 1 ? 's' : ''}</span>
                         ${elapsed ? `<span>${elapsed}</span>` : ''}
-                        ${game.status === 'waiting' ? `
-                            <button class="btn btn--primary btn--sm game-card__join-btn"
-                                    data-game-id="${game.gameId}">
-                                <i class="fas fa-sign-in-alt"></i> Rejoindre
-                            </button>
-                        ` : ''}
                     </div>
                 </div>
             `;
         }).join('');
-
-        container.querySelectorAll('.game-card__join-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const codeInput = document.getElementById('browse-join-code');
-                if (codeInput) {
-                    codeInput.value = btn.dataset.gameId;
-                    codeInput.scrollIntoView({ behavior: 'smooth' });
-                    document.getElementById('browse-guest-channel')?.focus();
-                }
-            });
-        });
     }
 };
 
@@ -1707,7 +1598,6 @@ function setupConnectionHandlers() {
         const { reason, user, error } = e.detail || {};
         twitch.updateUI();
         updateConnectionUI();
-        BrowsePage.syncAuthFields();
 
         if (reason === 'login' && user) {
             // Le chat est rejoint par twitch.restore() dans initApp
@@ -1821,7 +1711,6 @@ const RushPage = {
             rating.value = AppState.config.rushStartRating || 600;
             pause.value  = AppState.config.pauseAfterEnd || 5;
             document.getElementById('rush-page-start').addEventListener('click', () => {
-                if (!twitchAuth.isLoggedIn) { twitchAuth.login(); return; }
                 this.launch('rush', parseInt(rating.value), parseInt(pause.value));
             });
             this.initialized = true;
@@ -2272,44 +2161,6 @@ async function initApp() {
     // Init router
     Router.init();
 
-    // ?game=&role=&streamer= → connexion directe côté sandbox (URLs partagées)
-    // ?join= → browse page pour rejoindre via le formulaire
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('game')) {
-        Router.showPage('sandbox');
-        Toast.info('🎮 Mode Bataille Twitch — connexion en cours...');
-    } else if (urlParams.get('join')) {
-        Router.showPage('browse');
-    }
-
-    // Naviguer vers /battle quand multi.js crée/rejoint une partie depuis browse
-    window.addEventListener('multiNavigateSandbox', (e) => {
-        const { role, gameId } = e.detail;
-        Router.showPage('battle');
-
-        // Afficher la bannière pre-ready avec le code de partie
-        const preBanner = document.getElementById('multi-pre-ready-banner');
-        const codeEl    = document.getElementById('sandbox-game-code');
-        if (preBanner && codeEl) {
-            codeEl.textContent      = gameId;
-            preBanner.style.display = 'block';
-        }
-
-        // Changer le titre de la page
-        const titleEl = document.querySelector('#page-sandbox .sandbox__title');
-        if (titleEl) titleEl.textContent = '⚔ Bataille Twitch';
-
-        // Bouton copier le code
-        document.getElementById('sandbox-game-code-copy')?.addEventListener('click', () => {
-            navigator.clipboard.writeText(gameId).then(() => Toast.success('Code copié !'));
-        });
-
-        const msg = role === 'host'
-            ? `Partie ${gameId} créée — en attente de l'adversaire`
-            : `Connexion à la partie ${gameId}...`;
-        Toast.info(`🎮 ${msg}`);
-    });
-
     // Restore connections
     await twitch?.restore();
 
@@ -2370,15 +2221,11 @@ async function initApp() {
 
         const { players, settings } = e.detail;
 
-        // Appliquer les paramètres de la partie (browse form ou defaults)
-        const timerDuration  = window._browseTimerDuration || settings?.timerDuration || AppState.config.timerDuration;
-        const majorityMode   = window._browseMajorityMode  ?? settings?.majorityMode  ?? AppState.config.majorityMode;
-        const followersOnly  = window._browseFollowersOnly ?? settings?.followersOnly ?? AppState.config.followersOnly;
-        const subsOnly       = window._browseSubsOnly      ?? settings?.subsOnly      ?? AppState.config.subsOnly;
-        delete window._browseTimerDuration;
-        delete window._browseMajorityMode;
-        delete window._browseFollowersOnly;
-        delete window._browseSubsOnly;
+        // Paramètres choisis à la création du salon (sinon ceux de l'app)
+        const timerDuration  = settings?.timerDuration || AppState.config.timerDuration;
+        const majorityMode   = settings?.majorityMode  ?? AppState.config.majorityMode;
+        const followersOnly  = settings?.followersOnly ?? AppState.config.followersOnly;
+        const subsOnly       = settings?.subsOnly      ?? AppState.config.subsOnly;
 
         // Configurer l'état pour le mode ChatVsChat
         AppState.gameMode              = 'chatVsChat';

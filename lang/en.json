@@ -23,8 +23,8 @@
     "description": "Free mode with all options"
   },
   "twitchbattle": {
-    "name": "Twitch Battle",
-    "description": "Chat vs Chat live"
+    "name": "Browse",
+    "description": "Live games and records"
   },
   "actions": {
     "reverse": "Flip",
@@ -251,5 +251,12 @@
     "phantomOff": "Phantom not connected",
     "phantomOn": "Phantom connected",
     "phantomHint": "Connect the Phantom to adjust its speed and sync."
+  },
+  "newTabs": {
+    "free": "Free play"
+  },
+  "browsePage": {
+    "desc": "Live games and Puzzle Rush records. To play, go to New.",
+    "empty": "Start a Multi game from New!"
   }
 }
