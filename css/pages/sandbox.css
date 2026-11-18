@@ -369,3 +369,192 @@
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* ============================================
+   ÉCRAN DE LANCEMENT (Nouveau) ET MODALE ⚙
+   La même carte #sandbox-setup sert aux deux :
+   - body.sandbox-launch : page centrée, sans échiquier
+   - en partie : modale ouverte par le bouton ⚙
+   ============================================ */
+.sandbox-setup {
+    display: none;
+}
+
+.sandbox-setup__card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+}
+
+.sandbox-setup__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.sandbox-setup__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.sandbox-setup__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.sandbox-setup__col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* Les panneaux sont déjà dans une carte : fond plus discret */
+.sandbox-setup .panel {
+    background: rgba(255, 255, 255, 0.02);
+    margin: 0;
+}
+
+.sandbox-setup__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* Lancement : la carte remplace l'échiquier et la barre d'outils */
+body.sandbox-launch .sandbox-setup {
+    display: block;
+    max-width: 1040px;
+    margin: 0 auto;
+}
+
+body.sandbox-launch .sandbox__actions,
+body.sandbox-launch .sandbox__content,
+body.sandbox-launch .setup-modal-only {
+    display: none !important;
+}
+
+/* En partie : modale */
+body:not(.sandbox-launch) .launch-only {
+    display: none !important;
+}
+
+body:not(.sandbox-launch) .sandbox-setup.is-open {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    align-items: flex-start;
+    justify-content: center;
+    padding: calc(var(--nav-height) + 24px) 16px 24px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+}
+
+body:not(.sandbox-launch) .sandbox-setup__card {
+    width: min(460px, 100%);
+}
+
+body:not(.sandbox-launch) .sandbox-setup__grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* Modale sans réglage Phantom : on explique comment les obtenir */
+.sandbox-setup:has(.phantom-only.is-visible) .setup-phantom-hint {
+    display: none;
+}
+
+.setup-phantom-hint {
+    margin: 0;
+}
+
+/* ============================================
+   BARRE D'OUTILS COMPACTE ET MENU PHANTOM
+   ============================================ */
+.game-toolbar {
+    align-items: center;
+    gap: 8px;
+}
+
+.game-toolbar .tool-btn {
+    width: 38px;
+    height: 36px;
+    padding: 0;
+}
+
+.phantom-menu {
+    position: relative;
+}
+
+.phantom-menu__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted, #666);
+}
+
+body.phantom-connected .phantom-menu__dot {
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e;
+}
+
+.phantom-menu__panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 60;
+    width: 280px;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.phantom-menu.is-open .phantom-menu__panel {
+    display: block;
+}
+
+.phantom-menu__status {
+    margin: 0 0 10px;
+    font-size: 0.8rem;
+    color: #22c55e;
+}
+
+.phantom-menu__status--off {
+    color: var(--text-muted, #888);
+}
+
+.phantom-menu .phantom-actions {
+    margin: 0;
+}
+
+.phantom-action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+    .sandbox-setup__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .phantom-menu__panel {
+        right: auto;
+        left: 0;
+    }
+}

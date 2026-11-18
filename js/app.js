@@ -260,6 +260,10 @@ const Router = {
         // Activer/désactiver les variantes de la page échiquier sur le body
         document.body.classList.toggle('battle-mode', pageName === 'battle');
         document.body.classList.toggle('game-mode', pageName === 'game');
+        // Nouveau : écran de lancement tant que la partie n'est pas lancée (autoStart = juste après "Lancer")
+        document.body.classList.toggle('sandbox-launch',
+            pageName === 'sandbox' && sessionStorage.getItem('autoStart') !== '1');
+        SandboxPage.closeSettings?.(false);
         SandboxPage.applyPageVariant(pageName);
 
         // Afficher la page cible
@@ -364,6 +368,7 @@ const SandboxPage = {
             if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/browse';
         } else if (pageName === 'sandbox') {
             if (titleEl) titleEl.textContent = '🧪 Sandbox';
+            // En partie, la flèche retour ramène à l'écran de lancement (voir setupSetupScreen)
             if (backBtn) backBtn.dataset.navigate = '/';
         }
     },
@@ -977,8 +982,78 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             }
         });
         
+        this.setupSetupScreen();
+
         // ========== INTERCEPTION DES COUPS EN MODE PROBLÈME ==========
         this.setupProblemsInterception();
+    },
+
+    /** Écran de lancement, modale ⚙ en cours de partie et menu Phantom de la barre d'outils */
+    setupSetupScreen() {
+        const setup = document.getElementById('sandbox-setup');
+        const menu = document.getElementById('phantom-menu');
+        const menuBtn = document.getElementById('btn-phantom-menu');
+
+        document.getElementById('btn-settings')?.addEventListener('click', () => this.openSettings());
+        document.getElementById('btn-settings-close')?.addEventListener('click', () => this.closeSettings());
+        setup?.addEventListener('click', (e) => {
+            if (e.target === setup) this.closeSettings();
+        });
+
+        const setMenu = (open) => {
+            menu?.classList.toggle('is-open', open);
+            menuBtn?.setAttribute('aria-expanded', String(open));
+        };
+        menuBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setMenu(!menu.classList.contains('is-open'));
+        });
+        // Une action lancée ou un clic ailleurs referme le menu
+        menu?.querySelectorAll('.phantom-action').forEach(btn => btn.addEventListener('click', () => setMenu(false)));
+        document.addEventListener('click', (e) => {
+            if (menu && !menu.contains(e.target)) setMenu(false);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            setMenu(false);
+            if (setup?.classList.contains('is-open')) this.closeSettings();
+        });
+
+        // Nouveau, en partie : la flèche retour revient à l'écran de lancement (rechargement = état propre)
+        document.getElementById('sandbox-back')?.addEventListener('click', (e) => {
+            if (AppState.currentPage !== 'sandbox' || document.body.classList.contains('sandbox-launch')) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            window.location.reload();
+        }, true);
+    },
+
+    openSettings() {
+        document.getElementById('sandbox-setup')?.classList.add('is-open');
+    },
+
+    /** Ferme la modale ⚙ et applique les réglages à la partie en cours */
+    closeSettings(apply = true) {
+        const setup = document.getElementById('sandbox-setup');
+        if (!setup?.classList.contains('is-open')) return;
+        setup.classList.remove('is-open');
+        if (apply) this.applyLiveSettings();
+    },
+
+    applyLiveSettings() {
+        if (AppState.currentPage === 'sandbox') {
+            Object.assign(gameEngine.config, {
+                timerEnabled: AppState.config.timerEnabled,
+                timerDuration: AppState.config.timerDuration,
+                wheelDuration: AppState.config.wheelDuration,
+                majorityMode: AppState.config.majorityMode,
+                singleVote: AppState.config.singleVote
+            });
+            twitch.settings.subsOnly = !!AppState.config.subsOnly;
+            syncWheelModeClass();
+            gameEngine.updateVotingIndicator?.();
+            Storage.saveConfig();
+        }
     },
 
     setupProblemsInterception() {
@@ -1179,11 +1254,16 @@ fullReset() {
         document.querySelectorAll('.phantom-only').forEach(el => {
             el.classList.toggle('is-visible', phantomConnected);
         });
-        document.getElementById('btn-calibrate')?.removeAttribute('disabled');
-
-        document.getElementById('btn-sync')?.toggleAttribute('disabled', !phantomConnected);
-        document.getElementById('btn-reset-sync')?.toggleAttribute('disabled', !phantomConnected);
-        document.getElementById('btn-game-end')?.toggleAttribute('disabled', !phantomConnected);
+        ['btn-sync', 'btn-reset-sync', 'btn-calibrate', 'btn-game-end'].forEach(id => {
+            document.getElementById(id)?.toggleAttribute('disabled', !phantomConnected);
+        });
+        document.body.classList.toggle('phantom-connected', !!phantomConnected);
+        const status = document.querySelector('.phantom-menu__status');
+        if (status) {
+            status.dataset.i18n = phantomConnected ? 'setup.phantomOn' : 'setup.phantomOff';
+            status.textContent = tr(status.dataset.i18n);
+            status.classList.toggle('phantom-menu__status--off', !phantomConnected);
+        }
     },
 
     showSaveModal() {

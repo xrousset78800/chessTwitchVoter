@@ -117,7 +117,7 @@
       "undefined": "Non défini (= premier qui vote)"
     },
     "votesInProgress": "Votes en cours",
-    "totalVotes":"Votants",
+    "totalVotes": "Votants",
     "votes": "votes"
   },
   "moves": {
@@ -241,5 +241,15 @@
       "error": "Erreur",
       "stopped": "Arrêté"
     }
+  },
+  "setup": {
+    "newGame": "Nouvelle partie",
+    "launch": "Lancer",
+    "settings": "Réglages",
+    "wheelStyle": "Style de roue",
+    "calibrate": "Calibrer",
+    "phantomOff": "Phantom non connecté",
+    "phantomOn": "Phantom connecté",
+    "phantomHint": "Connecte le Phantom pour régler sa vitesse et la synchronisation."
   }
 }

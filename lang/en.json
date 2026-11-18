@@ -241,5 +241,15 @@
       "error": "Error",
       "stopped": "Stopped"
     }
-  }  
+  },
+  "setup": {
+    "newGame": "New game",
+    "launch": "Start",
+    "settings": "Settings",
+    "wheelStyle": "Wheel style",
+    "calibrate": "Calibrate",
+    "phantomOff": "Phantom not connected",
+    "phantomOn": "Phantom connected",
+    "phantomHint": "Connect the Phantom to adjust its speed and sync."
+  }
 }

@@ -137,21 +137,249 @@
                         <button class="btn btn--icon" id="sandbox-back" data-navigate="/"><i class="fas fa-arrow-left"></i></button>
                         <h1 class="sandbox__title">🧪 Sandbox</h1>
                     </div>
-                    <div class="sandbox__actions">
-                        <button class="btn btn--sm" id="btn-wheel-style"><i class="fas fa-dharmachakra"></i> <span id="wheel-style-label"></span></button>
-                        <button data-i18n="actions.reverse" class="btn btn--sm" id="btn-flip"><i class="fas fa-sync-alt"></i> Retourner</button>
-                        <button data-i18n="actions.reset" class="btn btn--sm" id="btn-reset"><i class="fas fa-undo"></i> Reset</button>
-                        <button data-i18n="actions.undo" class="btn btn--sm config-only" id="btn-undo"><i class="fas fa-step-backward"></i> Undo</button>
-                        <button data-i18n="actions.sync" class="btn btn--sm config-only" id="btn-sync" disabled><i class="fas fa-sync"></i> Sync</button>
-                        <button class="btn btn--sm btn--primary config-only" id="btn-reset-sync" disabled><i class="fas fa-undo"></i> Reset + Sync</button>
-                        <button data-i18n="actions.gameEnd" class="btn btn--sm btn--danger config-only" id="btn-game-end" disabled><i class="fas fa-stop"></i> Game End</button>
-                        <button data-i18n="actions.save" class="btn btn--sm btn--primary sandbox-only" id="btn-save-config"><i class="fas fa-save"></i> Sauvegarder</button>
-                        <button class="btn btn--sm btn--warning config-only" id="btn-calibrate" disabled>
-                            <i class="fas fa-tools"></i> Calibrer
-                        </button>                        
-                        <button data-i18n="actions.apply" class="btn btn--primary btn--lg sandbox-only" id="btn-apply-config">
-                            <i class="fas fa-play"></i> Appliquer
-                        </button>                        
+                    <div class="sandbox__actions game-toolbar">
+                        <button class="btn btn--sm" id="btn-wheel-style" data-i18n-title="setup.wheelStyle" title="Style de roue"><i class="fas fa-dharmachakra"></i> <span id="wheel-style-label"></span></button>
+                        <button class="btn btn--sm tool-btn" id="btn-flip" data-i18n-title="actions.reverse" title="Retourner"><i class="fas fa-sync-alt"></i></button>
+                        <button class="btn btn--sm tool-btn" id="btn-reset" data-i18n-title="actions.reset" title="Réinitialiser"><i class="fas fa-undo"></i></button>
+                        <button class="btn btn--sm tool-btn config-only" id="btn-undo" data-i18n-title="actions.undo" title="Annuler"><i class="fas fa-step-backward"></i></button>
+                        <div class="phantom-menu" id="phantom-menu">
+                            <button class="btn btn--sm" id="btn-phantom-menu" aria-haspopup="true" aria-expanded="false">
+                                <span class="phantom-menu__dot"></span> Phantom <i class="fas fa-caret-down"></i>
+                            </button>
+                            <div class="phantom-menu__panel" role="menu">
+                                <p class="phantom-menu__status phantom-menu__status--off" data-i18n="setup.phantomOff">Phantom non connecté</p>
+                                <div class="phantom-actions">
+                                    <button class="phantom-action phantom-action--sync" id="btn-sync" disabled><i class="fas fa-sync"></i> <span data-i18n="actions.sync">Synchroniser</span></button>
+                                    <button class="phantom-action phantom-action--reset" id="btn-reset-sync" disabled><i class="fas fa-undo"></i> Reset + Sync</button>
+                                    <button class="phantom-action phantom-action--calibrate" id="btn-calibrate" disabled><i class="fas fa-tools"></i> <span data-i18n="setup.calibrate">Calibrer</span></button>
+                                    <button class="phantom-action phantom-action--end" id="btn-game-end" disabled><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn--sm tool-btn" id="btn-settings" data-i18n-title="setup.settings" title="Réglages"><i class="fas fa-cog"></i></button>
+                    </div>
+                </div>
+
+                <!-- Lancement (Nouveau) ; pendant la partie, la même carte sert de modale ⚙ -->
+                <div class="sandbox-setup" id="sandbox-setup">
+                    <div class="sandbox-setup__card" role="dialog" aria-labelledby="sandbox-setup-title">
+                        <div class="sandbox-setup__header">
+                            <h2 class="sandbox-setup__title" id="sandbox-setup-title">
+                                <span class="launch-only" data-i18n="setup.newGame">Nouvelle partie</span>
+                                <span class="setup-modal-only"><i class="fas fa-cog"></i> <span data-i18n="setup.settings">Réglages</span></span>
+                            </h2>
+                            <button class="modal__close setup-modal-only" id="btn-settings-close">&times;</button>
+                        </div>
+                        <div class="sandbox-setup__grid">
+                            <div class="sandbox-setup__col launch-only">
+                            <!-- Mode selector -->
+                            <div class="panel">
+                                <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
+                                <div class="panel__content">
+                                    <div class="mode-selector">
+                                        <div class="mode-option is-active" data-mode="yolo">
+                                            <span class="mode-option__icon">🎲</span>
+                                            <span class="mode-option__label">YOLO</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="problems">
+                                            <span class="mode-option__icon">🧩</span>
+                                            <span class="mode-option__label">Problèmes</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="rush">
+                                            <span class="mode-option__icon">🔥</span>
+                                            <span class="mode-option__label">Puzzle Rush</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="oneVsAll">
+                                            <span class="mode-option__icon">👤</span>
+                                            <span class="mode-option__label">1 vs All</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="oneVsOne">
+                                            <span class="mode-option__icon">⚔️</span>
+                                            <span class="mode-option__label">1 vs 1</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="chatVsChat">
+                                            <span class="mode-option__icon">🎭</span>
+                                            <span class="mode-option__label">Chat vs Chat</span>
+                                        </div>
+                                    </div>
+                                    <!-- Mode: 1vsAll options -->
+                                    <div class="mode-options" id="options-oneVsAll">
+                                        <div class="player-input">
+                                            <span data-i18n="gameMode.1vall.title" class="player-input__label">Joueur seul</span>
+                                            <input type="text" class="input input--sm player-input__field" id="player-solo" placeholder="Pseudo...">
+                                        </div>
+                                    </div>
+
+                                    <!-- Mode: 1vs1 options -->
+                                    <div class="mode-options" id="options-oneVsOne">
+                                        <div class="player-input">
+                                            <span class="player-input__label" data-i18n="gameMode.1v1.player1">Joueur 1 ⬜</span>
+                                            <input type="text" class="input input--sm player-input__field" id="player-1" placeholder="Pseudo...">
+                                        </div>
+                                        <div class="player-input">
+                                            <span class="player-input__label" data-i18n="gameMode.1v1.player2">Joueur 2 ⬛</span>
+                                            <input type="text" class="input input--sm player-input__field" id="player-2" placeholder="Pseudo...">
+                                        </div>
+                                    </div>
+
+                                    <!-- Mode: ChatVsChat options -->
+                                    <div class="mode-options" id="options-chatVsChat">
+                                        <div class="player-input">
+                                            <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer1">Chat 1 ⬜</span>
+                                            <input type="text" class="input input--sm player-input__field" id="chat-1" placeholder="Channel...">
+                                        </div>
+                                        <div class="player-input">
+                                            <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer2">Chat 2 ⬛</span>
+                                            <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Channel...">
+                                        </div>
+                                    </div>
+
+                                    <!-- Mode: Puzzle Rush options -->
+                                    <div class="mode-options" id="options-rush">
+                                        <p class="form-hint rush-rules">
+                                            Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité).
+                                            <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote
+                                            avant la fin du timer compte comme une erreur.
+                                        </p>
+                                        <div class="form-row">
+                                            <label class="form-label" for="rush-start-rating">
+                                                <i class="fas fa-signal"></i>
+                                                Rating de départ
+                                            </label>
+                                            <input type="number" id="rush-start-rating" class="input input--sm"
+                                                   style="width: 90px;" min="400" max="3000" step="50" value="600">
+                                        </div>
+                                        <div class="form-row">
+                                            <label class="form-label" for="rush-pause">
+                                                <i class="fas fa-clock"></i>
+                                                Pause entre puzzles
+                                            </label>
+                                            <input type="number" id="rush-pause" class="input input--sm"
+                                                   style="width: 80px;" min="1" max="60" value="5">
+                                        </div>
+                                        <p class="form-hint">
+                                            Le record de la chaîne est enregistré si tu es connecté avec Twitch
+                                            et s'affiche dans <a href="#/browse">Parcourir</a>.
+                                        </p>
+                                    </div>
+
+                                    <!-- Mode: Problems options -->
+                                    <div class="mode-options" id="options-problems">
+                                        <div class="form-group">
+                                            <label data-i18n="gameMode.problems.themes" class="form-label">Thèmes</label>
+                                            <select class="input select" id="problem-themes" multiple>
+
+                                            </select>
+                                        </div>
+                                        <div class="form-row">
+                                            <label class="form-label" for="problem-pause">
+                                                <i class="fas fa-clock"></i>
+                                                Pause
+                                            </label>
+                                            <input type="number" id="problem-pause" class="input input--sm" 
+                                                   style="width: 80px;" min="1" max="60" value="5">
+                                        </div>                                    
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="sandbox-setup__col">
+                            <!-- Voting options -->
+                            <div class="panel config-only">
+                                <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
+                                <div class="panel__content">
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.voteOptions.activateTimer">Activer le timer</span>
+                                        <div class="toggle" id="toggle-voting"></div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.voteOptions.turnDuration">Durée du tour</span>
+                                        <div class="flex items-center gap-sm">
+                                            <input type="number" class="input input--sm input--inline" id="timer-duration" value="25" min="5" max="120" style="width:60px">
+                                            <span>s</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.voteOptions.wheelAnimation">Animation roue</span>
+                                        <div class="flex items-center gap-sm">
+                                            <input type="number" class="input input--sm input--inline" id="wheel-duration" value="5" min="1" max="15" style="width:60px">
+                                            <span>s</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.voteOptions.voteUnique">Vote unique</span>
+                                        <div class="toggle" id="toggle-single-vote"></div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.voteOptions.voteMajority">Mode majorité</span>
+                                        <div class="toggle" id="toggle-majority"></div>
+                                    </div>
+                                    <p data-i18n="gameMode.voteOptions.majorityHint" class="form-hint">Si désactivé, tirage au sort avec la roue</p>
+                                </div>
+                            </div>
+
+                            <!-- Twitch restrictions (only when connected) -->
+                            <div class="panel conditional-section twitch-only config-only">
+                                <div class="panel__header" data-i18n="gameMode.twitchOptions.restrictions"><i class="fab fa-twitch"></i> Restrictions</div>
+                                <div class="panel__content">
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.twitchOptions.followMode">Followers uniquement</span>
+                                        <div class="toggle" id="toggle-followers"></div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.twitchOptions.subMode">Abonnés uniquement</span>
+                                        <div class="toggle" id="toggle-subs"></div>
+                                    </div>
+                                    <p class="form-hint" data-i18n="gameMode.twitchOptions.hint">Mods, VIPs et broadcaster passent toujours</p>
+                                </div>
+                            </div>
+
+                            <!-- Phantom settings (only when connected) -->
+                            <div class="panel conditional-section phantom-only">
+                                <div class="panel__header" data-i18n="gameMode.phantom.title"><i class="fas fa-chess-board"></i> Paramètres Phantom</div>
+                                <div class="panel__content">
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.phantom.battery">Batterie</span>
+                                        <span id="phantom-battery">---%</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" data-i18n="gameMode.phantom.speed">Vitesse mécanisme</label>
+                                        <div class="flex items-center gap-sm">
+                                            <input type="range" class="range" id="phantom-speed" min="1" max="5" value="3" style="flex:1">
+                                            <span id="phantom-speed-value">3</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.phantom.autosync">Auto-sync</span>
+                                        <div class="toggle is-active" id="toggle-auto-sync"></div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.phantom.autoO-O-O">Auto Roque</span>
+                                        <div class="toggle is-active" id="toggle-castling"></div>
+                                    </div>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.phantom.snapOption">Snap au centre</span>
+                                        <div class="toggle is-active" id="toggle-snap"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Saved configs -->
+                            <div class="panel launch-only">
+                                <div class="panel__header" data-i18n="game.configuration.title"><i class="fas fa-folder"></i> Configurations</div>
+                                <div class="panel__content">
+                                    <div id="configs-list">
+                                        <div class="empty-state"><p data-i18n="game.configuration.no-config">Aucune configuration</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                                <p class="form-hint setup-modal-only setup-phantom-hint" data-i18n="setup.phantomHint">Connecte le Phantom pour régler sa vitesse et la synchronisation.</p>
+                            </div>
+                        </div>
+                        <div class="sandbox-setup__footer launch-only">
+                            <button class="btn" id="btn-save-config"><i class="fas fa-save"></i> <span data-i18n="actions.save">Sauvegarder</span></button>
+                            <button class="btn btn--primary btn--lg" id="btn-apply-config"><i class="fas fa-play"></i> <span data-i18n="setup.launch">Lancer</span></button>
+                        </div>
                     </div>
                 </div>
 
@@ -302,206 +530,6 @@
                                 <div class="vote-total" id="vote-total"></div>
                             </div>
                         </div>                      
-                        <!-- Mode selector -->
-                        <div class="panel sandbox-only">
-                            <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
-                            <div class="panel__content">
-                                <div class="mode-selector">
-                                    <div class="mode-option is-active" data-mode="yolo">
-                                        <span class="mode-option__icon">🎲</span>
-                                        <span class="mode-option__label">YOLO</span>
-                                    </div>
-                                    <div class="mode-option" data-mode="problems">
-                                        <span class="mode-option__icon">🧩</span>
-                                        <span class="mode-option__label">Problèmes</span>
-                                    </div>
-                                    <div class="mode-option" data-mode="rush">
-                                        <span class="mode-option__icon">🔥</span>
-                                        <span class="mode-option__label">Puzzle Rush</span>
-                                    </div>
-                                    <div class="mode-option" data-mode="oneVsAll">
-                                        <span class="mode-option__icon">👤</span>
-                                        <span class="mode-option__label">1 vs All</span>
-                                    </div>
-                                    <div class="mode-option" data-mode="oneVsOne">
-                                        <span class="mode-option__icon">⚔️</span>
-                                        <span class="mode-option__label">1 vs 1</span>
-                                    </div>
-                                    <div class="mode-option" data-mode="chatVsChat">
-                                        <span class="mode-option__icon">🎭</span>
-                                        <span class="mode-option__label">Chat vs Chat</span>
-                                    </div>
-                                </div>
-                                <!-- Mode: 1vsAll options -->
-                                <div class="mode-options" id="options-oneVsAll">
-                                    <div class="player-input">
-                                        <span data-i18n="gameMode.1vall.title" class="player-input__label">Joueur seul</span>
-                                        <input type="text" class="input input--sm player-input__field" id="player-solo" placeholder="Pseudo...">
-                                    </div>
-                                </div>
-
-                                <!-- Mode: 1vs1 options -->
-                                <div class="mode-options" id="options-oneVsOne">
-                                    <div class="player-input">
-                                        <span class="player-input__label" data-i18n="gameMode.1v1.player1">Joueur 1 ⬜</span>
-                                        <input type="text" class="input input--sm player-input__field" id="player-1" placeholder="Pseudo...">
-                                    </div>
-                                    <div class="player-input">
-                                        <span class="player-input__label" data-i18n="gameMode.1v1.player2">Joueur 2 ⬛</span>
-                                        <input type="text" class="input input--sm player-input__field" id="player-2" placeholder="Pseudo...">
-                                    </div>
-                                </div>
-
-                                <!-- Mode: ChatVsChat options -->
-                                <div class="mode-options" id="options-chatVsChat">
-                                    <div class="player-input">
-                                        <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer1">Chat 1 ⬜</span>
-                                        <input type="text" class="input input--sm player-input__field" id="chat-1" placeholder="Channel...">
-                                    </div>
-                                    <div class="player-input">
-                                        <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer2">Chat 2 ⬛</span>
-                                        <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Channel...">
-                                    </div>
-                                </div>
-
-                                <!-- Mode: Puzzle Rush options -->
-                                <div class="mode-options" id="options-rush">
-                                    <p class="form-hint rush-rules">
-                                        Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité).
-                                        <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote
-                                        avant la fin du timer compte comme une erreur.
-                                    </p>
-                                    <div class="form-row">
-                                        <label class="form-label" for="rush-start-rating">
-                                            <i class="fas fa-signal"></i>
-                                            Rating de départ
-                                        </label>
-                                        <input type="number" id="rush-start-rating" class="input input--sm"
-                                               style="width: 90px;" min="400" max="3000" step="50" value="600">
-                                    </div>
-                                    <div class="form-row">
-                                        <label class="form-label" for="rush-pause">
-                                            <i class="fas fa-clock"></i>
-                                            Pause entre puzzles
-                                        </label>
-                                        <input type="number" id="rush-pause" class="input input--sm"
-                                               style="width: 80px;" min="1" max="60" value="5">
-                                    </div>
-                                    <p class="form-hint">
-                                        Le record de la chaîne est enregistré si tu es connecté avec Twitch
-                                        et s'affiche dans <a href="#/browse">Parcourir</a>.
-                                    </p>
-                                </div>
-
-                                <!-- Mode: Problems options -->
-                                <div class="mode-options" id="options-problems">
-                                    <div class="form-group">
-                                        <label data-i18n="gameMode.problems.themes" class="form-label">Thèmes</label>
-                                        <select class="input select" id="problem-themes" multiple>
-
-                                        </select>
-                                    </div>
-                                    <div class="form-row">
-                                        <label class="form-label" for="problem-pause">
-                                            <i class="fas fa-clock"></i>
-                                            Pause
-                                        </label>
-                                        <input type="number" id="problem-pause" class="input input--sm" 
-                                               style="width: 80px;" min="1" max="60" value="5">
-                                    </div>                                    
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Voting options -->
-                        <div class="panel config-only">
-                            <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
-                            <div class="panel__content">
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.voteOptions.activateTimer">Activer le timer</span>
-                                    <div class="toggle" id="toggle-voting"></div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.voteOptions.turnDuration">Durée du tour</span>
-                                    <div class="flex items-center gap-sm">
-                                        <input type="number" class="input input--sm input--inline" id="timer-duration" value="25" min="5" max="120" style="width:60px">
-                                        <span>s</span>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.voteOptions.wheelAnimation">Animation roue</span>
-                                    <div class="flex items-center gap-sm">
-                                        <input type="number" class="input input--sm input--inline" id="wheel-duration" value="5" min="1" max="15" style="width:60px">
-                                        <span>s</span>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.voteOptions.voteUnique">Vote unique</span>
-                                    <div class="toggle" id="toggle-single-vote"></div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.voteOptions.voteMajority">Mode majorité</span>
-                                    <div class="toggle" id="toggle-majority"></div>
-                                </div>
-                                <p data-i18n="gameMode.voteOptions.majorityHint" class="form-hint">Si désactivé, tirage au sort avec la roue</p>
-                            </div>
-                        </div>
-
-                        <!-- Twitch restrictions (only when connected) -->
-                        <div class="panel conditional-section twitch-only config-only">
-                            <div class="panel__header" data-i18n="gameMode.twitchOptions.restrictions"><i class="fab fa-twitch"></i> Restrictions</div>
-                            <div class="panel__content">
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.twitchOptions.followMode">Followers uniquement</span>
-                                    <div class="toggle" id="toggle-followers"></div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.twitchOptions.subMode">>Abonnés uniquement</span>
-                                    <div class="toggle" id="toggle-subs"></div>
-                                </div>
-                                <p class="form-hint" data-i18n="gameMode.twitchOptions.hint">>Mods, VIPs et broadcaster passent toujours</p>
-                            </div>
-                        </div>
-
-                        <!-- Phantom settings (only when connected) -->
-                        <div class="panel conditional-section phantom-only config-only">
-                            <div class="panel__header" data-i18n="gameMode.phantom.title">><i class="fas fa-chess-board"></i> Paramètres Phantom</div>
-                            <div class="panel__content">
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.phantom.battery">Batterie</span>
-                                    <span id="phantom-battery">---%</span>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" data-i18n="gameMode.phantom.speed">Vitesse mécanisme</label>
-                                    <div class="flex items-center gap-sm">
-                                        <input type="range" class="range" id="phantom-speed" min="1" max="5" value="3" style="flex:1">
-                                        <span id="phantom-speed-value">3</span>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.phantom.autosync">Auto-sync</span>
-                                    <div class="toggle is-active" id="toggle-auto-sync"></div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.phantom.autoO-O-O">Auto Roque</span>
-                                    <div class="toggle is-active" id="toggle-castling"></div>
-                                </div>
-                                <div class="form-row">
-                                    <span data-i18n="gameMode.phantom.snapOption">Snap au centre</span>
-                                    <div class="toggle is-active" id="toggle-snap"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Saved configs -->
-                        <div class="panel sandbox-only">
-                            <div class="panel__header" data-i18n="game.configuration.title"><i class="fas fa-folder"></i> Configurations</div>
-                            <div class="panel__content">
-                                <div id="configs-list">
-                                    <div class="empty-state"><p data-i18n="game.configuration.no-config">Aucune configuration</p></div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
