@@ -398,6 +398,9 @@ function leaveMultiRoom(socket) {
     else emitMultiRoom(room);
 }
 
+/** Modes annoncés par les parties d'une seule chaîne */
+const LIVE_MODES = ['sandbox', 'problems', 'rush', 'mono', 'chatVsChat', '1v1', '1vAll'];
+
 /** Retourne la liste publique des parties (sans données internes) */
 function getPublicGamesList() {
     return Object.values(games)
@@ -409,7 +412,9 @@ function getPublicGamesList() {
             status:     g.status,
             moveCount:  g.moveCount,
             startedAt:  g.startedAt,
-            settings:   g.settings
+            settings:   g.settings,
+            mode:       g.mode || 'multi',
+            players:    g.players ?? null
         }));
 }
 
@@ -429,6 +434,27 @@ io.on('connection', (socket) => {
 
     socket.on('getGames', () => {
         socket.emit('gamesList', getPublicGamesList());
+    });
+
+    // Partie d'une seule chaîne (Mono, Rush, partie libre) : le navigateur du streamer
+    // en publie un résumé pour Parcourir. Une entrée par connexion, retirée à la déconnexion.
+    socket.on('game:announce', (data = {}) => {
+        const id   = `live-${socket.id}`;
+        const host = String(data.host || '').toLowerCase();
+        const mode = String(data.mode || '');
+        const prev = games[id];
+        games[id] = {
+            gameId:    id,
+            host:      /^[a-z0-9_]{2,25}$/.test(host) ? host : null,
+            guest:     null,
+            mode:      LIVE_MODES.includes(mode) ? mode : 'sandbox',
+            status:    data.waiting ? 'waiting' : 'playing',
+            moveCount: Math.min(Math.max(parseInt(data.moveCount, 10) || 0, 0), 99999),
+            players:   Number.isInteger(data.players) ? Math.min(Math.max(data.players, 0), 99999) : null,
+            startedAt: prev?.startedAt || Date.now(),
+            settings:  null
+        };
+        broadcastGamesList();
     });
 
     socket.on('multi:enter', async (data = {}) => {
@@ -528,6 +554,10 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('Déconnexion:', socket.id);
         leaveMultiRoom(socket);
+        if (games[`live-${socket.id}`]) {
+            delete games[`live-${socket.id}`];
+            broadcastGamesList();
+        }
         // Marquer la partie comme terminée si un joueur actif se déconnecte
         for (const game of Object.values(games)) {
             if (game.hostSocket === socket.id || game.guestSocket === socket.id) {

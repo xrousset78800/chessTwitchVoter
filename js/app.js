@@ -155,8 +155,16 @@ const MONO_LOBBY_SECONDS = 120;
 
 const tr = (key, params) => window.i18n.t(key, params);
 
+/**
+ * Une partie lancée vit sur #/game (ou sur le lien de son salon Multi), indépendamment
+ * des pages de réglage : on peut naviguer ailleurs, elle continue, et le lien
+ * "Partie en cours" de la nav y ramène. Seuls "Terminer" ou un nouveau lancement l'arrêtent.
+ */
 const GameSession = {
-    current: null,
+    current: null,    // Session d'une route préconfigurée (null pour une partie libre)
+    running: false,   // Une partie a été lancée dans cette page
+    hash: '#/game',   // Où la retrouver
+    liveMode: null,   // Mode de la partie en cours (l'écran Nouveau peut changer AppState.gameMode)
 
     /** Même mécanique que "Appliquer" : rechargement pour repartir d'un état propre */
     launch(session) {
@@ -166,25 +174,39 @@ const GameSession = {
         window.location.reload();
     },
 
+    /** Avant de lancer une partie par-dessus celle en cours */
+    confirmReplace() {
+        return !this.running || window.confirm(tr('game.replaceConfirm'));
+    },
+
+    /** Arrête la partie en cours et revient à une page de réglage */
+    quit(hash) {
+        this.clear();
+        sessionStorage.removeItem('autoStart');
+        history.replaceState(null, '', hash);
+        window.location.reload();
+    },
+
     restore() {
         const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-        if (!saved) return;
-        if (sessionStorage.getItem('autoStart') === '1') {
+        this.running = sessionStorage.getItem('autoStart') === '1';
+        if (saved && this.running) {
             this.activate(saved);
-            return;
+        } else if (saved) {
+            // F5 pendant une partie : retour à la page de réglage de la route
+            sessionStorage.removeItem(SESSION_KEY);
+            if (window.location.hash.startsWith('#/game')) {
+                history.replaceState(null, '', `#/${saved.route}`);
+            }
         }
-        // F5 pendant une partie : retour à la page de réglage de la route
-        sessionStorage.removeItem(SESSION_KEY);
-        if (window.location.hash.startsWith('#/game')) {
-            history.replaceState(null, '', `#/${saved.route}`);
-        }
+        if (this.running) this.liveMode = AppState.gameMode;
     },
 
     activate(session) {
         this.current = session;
         AppState.gameMode = session.gameMode;
         Object.assign(AppState.config, session.config);
-        document.body.classList.add(`preset-${session.route}`);
+        document.body.classList.add(`preset-${session.route}`, 'preset-game');
     },
 
     clear() {
@@ -232,20 +254,32 @@ const Router = {
         const [path, query] = hash.split('?');
         const room = MultiRoom.parse(path, query);
 
-        // Entrer dans un salon ou quitter une partie préconfigurée : état propre
-        if (this.started && (room || (GameSession.current && path !== '/game'))) {
-            GameSession.clear();
-            window.location.reload();
-            return;
-        }
-
         if (room) {
+            // Retour sur le salon en cours : la partie a continué pendant ce temps
+            if (MultiRoom.isSame(room)) {
+                this.showPage('game');
+                return;
+            }
+            // Entrer dans un autre salon : état propre
+            if (this.started) {
+                GameSession.clear();
+                window.location.reload();
+                return;
+            }
             MultiRoom.prepare(room);
+            GameSession.running = true;
+            GameSession.liveMode = AppState.gameMode;
+            GameSession.hash = '#' + hash;
             this.showPage('game');
             return;
         }
 
-        const pageName = this.routes[path] || 'landing';
+        let pageName = this.routes[path] || 'landing';
+        // #/game sans partie (F5, lien partagé) : écran de lancement
+        if (pageName === 'game' && !GameSession.running) {
+            history.replaceState(null, '', '#/sandbox');
+            pageName = 'sandbox';
+        }
 
         this.showPage(pageName);
     },
@@ -259,10 +293,13 @@ const Router = {
 
         // Activer/désactiver les variantes de la page échiquier sur le body
         document.body.classList.toggle('game-mode', pageName === 'game');
-        // Nouveau : écran de lancement tant que la partie n'est pas lancée (autoStart = juste après "Lancer")
-        // Une fois lancée, la partie reste affichée si on change d'onglet puis qu'on revient
-        if (pageName === 'sandbox' && sessionStorage.getItem('autoStart') === '1') SandboxPage.gameStarted = true;
-        document.body.classList.toggle('sandbox-launch', pageName === 'sandbox' && !SandboxPage.gameStarted);
+        // Nouveau affiche toujours l'écran de lancement : la partie, elle, est sur #/game
+        document.body.classList.toggle('sandbox-launch', pageName === 'sandbox');
+        // L'écran Nouveau a pu changer de mode entre-temps : la partie garde le sien
+        if (pageName === 'game' && GameSession.liveMode && AppState.gameMode !== GameSession.liveMode) {
+            AppState.gameMode = GameSession.liveMode;
+            SandboxPage.syncUIFromState?.();
+        }
         SandboxPage.closeSettings?.(false);
         SandboxPage.applyPageVariant(pageName);
 
@@ -276,11 +313,16 @@ const Router = {
         this.placeNewTabs(pageName, target);
 
         // Mettre à jour la nav
-        document.querySelectorAll('.nav__link').forEach(link => {
+        const gameLink = document.getElementById('nav-game');
+        if (gameLink) {
+            gameLink.hidden = !GameSession.running;
+            gameLink.dataset.navigate = GameSession.hash.slice(1);
+            gameLink.classList.toggle('is-active', pageName === 'game');
+        }
+        document.querySelectorAll('.nav__link:not(#nav-game)').forEach(link => {
             const linkPath = link.dataset.navigate;
-            // Mono, Multi et Puzzle Rush sont des onglets de Nouveau (/sandbox), en réglage comme en partie
-            let activePage = GameSession.current?.route || actualPage;
-            if (NEW_TABS.includes(activePage)) activePage = 'sandbox';
+            // Mono, Multi et Puzzle Rush sont des onglets de Nouveau (/sandbox)
+            const activePage = NEW_TABS.includes(pageName) ? 'sandbox' : pageName;
             link.classList.toggle('is-active',
                 linkPath === '/' + activePage || (linkPath === '/' && pageName === 'landing')
             );
@@ -376,13 +418,13 @@ const SandboxPage = {
         const titleEl = document.querySelector('#page-sandbox .sandbox__title');
         const backBtn = document.getElementById('sandbox-back');
         if (pageName === 'game') {
-            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi' };
+            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi', sandbox: '🧪 Partie libre' };
             const route = GameSession.current?.route;
             if (titleEl) titleEl.textContent = titles[AppState.gameMode] || '♟ Partie';
+            // La flèche ramène aux réglages sans arrêter la partie (lien "Partie en cours" pour revenir)
             if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/sandbox';
         } else if (pageName === 'sandbox') {
             if (titleEl) titleEl.textContent = '🧪 Sandbox';
-            // En partie, la flèche retour ramène à l'écran de lancement (voir setupSetupScreen)
             if (backBtn) backBtn.dataset.navigate = '/';
         }
     },
@@ -1033,13 +1075,12 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             if (setup?.classList.contains('is-open')) this.closeSettings();
         });
 
-        // Nouveau, en partie : la flèche retour revient à l'écran de lancement (rechargement = état propre)
-        document.getElementById('sandbox-back')?.addEventListener('click', (e) => {
-            if (AppState.currentPage !== 'sandbox' || document.body.classList.contains('sandbox-launch')) return;
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            window.location.reload();
-        }, true);
+        // Terminer la partie : seul moyen (avec un nouveau lancement) de l'arrêter
+        document.getElementById('btn-quit-game')?.addEventListener('click', () => {
+            if (!window.confirm(tr('game.quitConfirm'))) return;
+            const route = GameSession.current?.route;
+            GameSession.quit(route ? `#/${route}` : '#/sandbox');
+        });
     },
 
     openSettings() {
@@ -1055,7 +1096,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
     },
 
     applyLiveSettings() {
-        if (AppState.currentPage === 'sandbox') {
+        if (['sandbox', 'game'].includes(AppState.currentPage)) {
             Object.assign(gameEngine.config, {
                 timerEnabled: AppState.config.timerEnabled,
                 timerDuration: AppState.config.timerDuration,
@@ -1121,8 +1162,12 @@ problemsManager.onResolveWithWheel = (results, callback) => {
      * APPLIQUE LA CONFIG ET DÉMARRE LE JEU
      */
 async applyConfig() {
+    if (!GameSession.confirmReplace()) return;
+    // Une partie libre remplace aussi une partie préconfigurée en cours
+    GameSession.clear();
     Storage.saveConfig();
     sessionStorage.setItem('autoStart', '1');
+    window.location.hash = '#/game';
     window.location.reload();
 },
 fullReset() {
@@ -1476,6 +1521,8 @@ const BrowsePage = {
             const statusClass = game.status === 'playing' ? 'game-card__status--playing' : 'game-card__status--waiting';
             const statusLabel = game.status === 'playing' ? '● En cours' : '⏳ En attente';
 
+            const mode = game.mode || 'multi';
+            if (mode !== 'multi') return this.renderSoloCard(game, mode, statusClass, statusLabel, elapsed);
             return `
                 <div class="game-card" data-game-id="${game.gameId}">
                     <div class="game-card__header">
@@ -1506,6 +1553,81 @@ const BrowsePage = {
                 </div>
             `;
         }).join('');
+    },
+
+    /** Partie d'une seule chaîne : Mono, Puzzle Rush, partie libre… */
+    renderSoloCard(game, mode, statusClass, statusLabel, elapsed) {
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const labels = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono' };
+        const count  = game.moveCount || 0;
+        const progress = mode === 'rush'
+            ? `${count} puzzle${count > 1 ? 's' : ''}`
+            : `${count} coup${count > 1 ? 's' : ''}`;
+        const players = game.players != null ? `${game.players} ${tr('browsePage.players')}` : tr('browsePage.chat');
+        const host = game.host
+            ? `<a href="https://twitch.tv/${esc(game.host)}" target="_blank" rel="noopener">${esc(game.host)}</a>`
+            : esc(tr('browsePage.anonymous'));
+        return `
+            <div class="game-card" data-game-id="${esc(game.gameId)}">
+                <div class="game-card__header">
+                    <span class="game-card__mode">${labels[mode] || '♟ ' + esc(tr('newTabs.free'))}</span>
+                    <span class="game-card__status ${statusClass}">${statusLabel}</span>
+                </div>
+                <div class="game-card__players">
+                    <div class="game-card__player">
+                        <div class="game-card__avatar">♙</div>
+                        <div>
+                            <div class="game-card__player-name">${host}</div>
+                            <div class="game-card__player-rating">${esc(players)}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="game-card__footer">
+                    <span>${progress}</span>
+                    ${elapsed ? `<span>${elapsed}</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+};
+
+// ============================================
+// ANNONCE DE LA PARTIE (liste de Parcourir)
+// ============================================
+/**
+ * Les parties d'une seule chaîne n'existent que dans le navigateur du streamer :
+ * on en publie un résumé au serveur pour qu'elles apparaissent dans Parcourir.
+ * (Les salons Multi sont déjà suivis par le serveur.)
+ */
+const GameAnnouncer = {
+    socket: null,
+    last: null,
+
+    start() {
+        if (typeof io === 'undefined' || this.socket) return;
+        this.socket = io({ transports: ['websocket', 'polling'] });
+        this.socket.on('connect', () => { this.last = null; this.send(); });
+        setInterval(() => this.send(), 4000);
+    },
+
+    snapshot() {
+        const mode = GameSession.liveMode || AppState.gameMode;
+        return {
+            mode,
+            host: normalizeLogin(twitchAuth.user?.login || twitch.channel || ''),
+            moveCount: mode === 'rush' ? rushManager.score : (gameEngine.moveHistory?.length || 0),
+            players: lobby.active ? lobby.players.size : null,
+            waiting: lobby.active && lobby.open
+        };
+    },
+
+    send() {
+        if (!this.socket?.connected) return;
+        const data = this.snapshot();
+        const key = JSON.stringify(data);
+        if (key === this.last) return;
+        this.last = key;
+        this.socket.emit('game:announce', data);
     }
 };
 
@@ -1635,7 +1757,7 @@ function updateConnectionUI() {
         dot.classList.toggle('is-connected', phantomConnected);
     });
 
-    if (AppState.currentPage === 'sandbox') {
+    if (['sandbox', 'game'].includes(AppState.currentPage)) {
         SandboxPage.updateConditionalUI();
     }
 }
@@ -1719,6 +1841,8 @@ const RushPage = {
     },
 
     launch(route, rating, pause) {
+        if (!GameSession.confirmReplace()) return;
+        GameSession.clear();
         AppState.config.rushStartRating = Math.min(3000, Math.max(400, rating || 600));
         AppState.config.pauseAfterEnd   = Math.min(60, Math.max(1, pause || 5));
         Storage.saveConfig();
@@ -1747,6 +1871,7 @@ const MonoPage = {
         document.getElementById('mono-start').addEventListener('click', () => {
             const config = PresetForm.read('mono');
             if (PresetForm.needsLogin(config)) { twitchAuth.login(); return; }
+            if (!GameSession.confirmReplace()) return;
             GameSession.launch({
                 route: 'mono',
                 gameMode: 'mono',
@@ -1779,6 +1904,7 @@ const MultiPage = {
             const query = new URLSearchParams({ timer: options.timerDuration, mode: options.majorityMode ? 'majority' : 'wheel' });
             if (options.subsOnly) query.set('subs', '1');
             if (options.followersOnly) query.set('followers', '1');
+            if (!GameSession.confirmReplace()) return;
             window.location.hash = `#/multi/${me}/${opponent}?${query}`;
         });
     }
@@ -1866,7 +1992,11 @@ const PresetGame = {
             onChange: () => {
                 this.renderCount();
                 this.renderRoster();
-            }
+            },
+            onLateJoin: (player) => Toast.info(tr('lobby.lateJoin', {
+                name: player.name,
+                team: tr(player.team === 'w' ? 'roster.white' : 'roster.black')
+            }))
         });
     },
 
@@ -1905,7 +2035,7 @@ const PresetGame = {
     closeMonoLobby() {
         // Une partie sans joueur ne jouerait que des coups au hasard
         if (lobby.players.size === 0) {
-            Toast.warning(tr('lobby.nobody'));
+            Toast.show(tr('lobby.nobody'), 'warning', 8000);
             this.startCountdown(MONO_LOBBY_SECONDS, () => this.closeMonoLobby());
             return;
         }
@@ -1989,7 +2119,7 @@ const PresetGame = {
     setupControls() {
         const actions = {
             'start-now': () => {
-                if (lobby.players.size === 0) { Toast.warning(tr('lobby.nobodyYet')); return; }
+                if (lobby.players.size === 0) { Toast.show(tr('lobby.nobodyYet'), 'warning', 8000); return; }
                 this.closeMonoLobby();
             },
             'copy-link': () => {
@@ -1999,7 +2129,7 @@ const PresetGame = {
             'rematch':   () => this.rematch(),
             'new-lobby': () => GameSession.launch(GameSession.current),
             'revenge':   () => window.location.reload(),
-            'back':      () => { window.location.hash = '#/multi'; }
+            'back':      () => GameSession.quit('#/multi')
         };
         document.querySelectorAll('[data-lobby-action]').forEach(btn => {
             btn.addEventListener('click', () => actions[btn.dataset.lobbyAction]());
@@ -2032,6 +2162,10 @@ const MultiRoom = {
                 subsOnly:      params.get('subs') === '1'
             }
         };
+    },
+
+    isSame(room) {
+        return !!this.room && room.a === this.room.a && room.b === this.room.b;
     },
 
     /** Avant SandboxPage.init : le moteur démarre avec les réglages du lien */
@@ -2276,6 +2410,7 @@ async function initApp() {
         sessionStorage.removeItem('autoStart');
         // Attendre que SandboxPage soit init via le Router
         setTimeout(() => SandboxPage.applyConfigAfterReload(), 100);
+        GameAnnouncer.start();
     }
     // Écouter les événements Phantom pour pause/resume du timer
     window.addEventListener('phantomMoveStart', () => {

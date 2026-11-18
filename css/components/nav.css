@@ -167,3 +167,52 @@
     outline: none;
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
 }
+/* Lien "Partie en cours" : visible tant qu'une partie tourne, même ailleurs dans l'app */
+.nav__link--game {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.nav__link--game[hidden] {
+    display: none;
+}
+
+.nav__link--game.is-active {
+    background: rgba(16, 185, 129, 0.18);
+}
+
+.nav__game-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green);
+    animation: nav-game-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes nav-game-pulse {
+    50% { opacity: 0.35; }
+}
+
+/* Mobile : les autres liens sont masqués, celui-ci reste pour revenir à la partie */
+@media (max-width: 768px) {
+    .nav__links:has(.nav__link--game:not([hidden])) {
+        display: flex;
+    }
+
+    .nav__links .nav__link:not(.nav__link--game) {
+        display: none;
+    }
+
+    /* Pastille seule : la place manque à côté des badges */
+    .nav__link--game {
+        padding: 10px;
+    }
+
+    .nav__link--game [data-i18n] {
+        display: none;
+    }
+}

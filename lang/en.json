@@ -6,7 +6,8 @@
     "live": "🔴 Live Chess",
     "tournament": "Tournament",
     "new": "New",
-    "browse": "Browse"
+    "browse": "Browse",
+    "game": "Game in progress"
   },
   "app": {
     "tagline": "Connect your Phantom board and your Twitch account for interactive games with your community"
@@ -83,7 +84,10 @@
     "configuration": {
       "title": "Saved configurations",
       "no-config": "No configuration saved"
-    }
+    },
+    "quit": "End",
+    "quitConfirm": "End the current game?",
+    "replaceConfirm": "A game is in progress: replace it with the new one?"
   },
   "browse": {
     "games": {
@@ -193,7 +197,8 @@
     "rematch": "Replay with the same players",
     "newLobby": "New registration",
     "revenge": "New game",
-    "back": "Back"
+    "back": "Back",
+    "lateJoin": "{name} joins the game ({team})"
   },
   "roster": {
     "title": "Registered players",
@@ -203,7 +208,8 @@
     "kick": "Remove this player",
     "add": "Add",
     "addPlaceholder": "twitch_name",
-    "invalid": "Invalid Twitch name"
+    "invalid": "Invalid Twitch name",
+    "lateJoinHint": "Chat can type join at any time, even during the game."
   },
   "live": {
     "card": {
@@ -257,6 +263,9 @@
   },
   "browsePage": {
     "desc": "Live games and Puzzle Rush records. To play, go to New.",
-    "empty": "Start a Multi game from New!"
+    "empty": "Start a game from New!",
+    "players": "player(s)",
+    "chat": "Twitch chat",
+    "anonymous": "Anonymous channel"
   }
 }

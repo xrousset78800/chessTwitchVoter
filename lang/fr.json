@@ -6,7 +6,8 @@
     "live": "🔴 Live Chess",
     "tournament": "Tournoi",
     "new": "Nouveau",
-    "browse": "Parcourir"
+    "browse": "Parcourir",
+    "game": "Partie en cours"
   },
   "app": {
     "tagline": "Connecte ton échiquier Phantom et ton compte Twitch pour des parties interactives avec ta communauté"
@@ -83,7 +84,10 @@
     "configuration": {
       "title": "Configurations sauvegardées",
       "no-config": "Aucune configuration"
-    }
+    },
+    "quit": "Terminer",
+    "quitConfirm": "Terminer la partie en cours ?",
+    "replaceConfirm": "Une partie est en cours : la remplacer par la nouvelle ?"
   },
   "browse": {
     "games": {
@@ -193,7 +197,8 @@
     "rematch": "Rejouer avec les mêmes joueurs",
     "newLobby": "Nouvelles inscriptions",
     "revenge": "Nouvelle partie",
-    "back": "Retour"
+    "back": "Retour",
+    "lateJoin": "{name} rejoint la partie ({team})"
   },
   "roster": {
     "title": "Joueurs inscrits",
@@ -203,7 +208,8 @@
     "kick": "Retirer ce joueur",
     "add": "Ajouter",
     "addPlaceholder": "pseudo_twitch",
-    "invalid": "Pseudo Twitch invalide"
+    "invalid": "Pseudo Twitch invalide",
+    "lateJoinHint": "Le chat peut taper join à tout moment, même pendant la partie."
   },
   "live": {
     "card": {
@@ -257,6 +263,9 @@
   },
   "browsePage": {
     "desc": "Les parties en cours et les records Puzzle Rush. Pour jouer, passe par Nouveau.",
-    "empty": "Lance une partie Multi depuis Nouveau !"
+    "empty": "Lance une partie depuis Nouveau !",
+    "players": "inscrit(s)",
+    "chat": "Chat Twitch",
+    "anonymous": "Chaîne anonyme"
   }
 }

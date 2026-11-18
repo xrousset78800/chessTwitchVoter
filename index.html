@@ -48,6 +48,7 @@
             </a>
             
             <div class="nav__links">
+                <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
                 <a class="nav__link" data-navigate="/sandbox" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
                 <a class="nav__link" data-navigate="/live" data-i18n="nav.live">🔴 Live Chess</a>
@@ -154,6 +155,7 @@
                             </div>
                         </div>
                         <button class="btn btn--sm tool-btn" id="btn-settings" data-i18n-title="setup.settings" title="Réglages"><i class="fas fa-cog"></i></button>
+                        <button class="btn btn--sm game-only btn-quit-game" id="btn-quit-game" data-i18n-title="game.quit" title="Terminer la partie"><i class="fas fa-stop"></i> <span data-i18n="game.quit">Terminer</span></button>
                     </div>
                 </div>
 
@@ -486,6 +488,7 @@
                         <div class="panel" id="roster-panel" style="display:none;">
                             <div class="panel__header"><i class="fas fa-users"></i> <span data-i18n="roster.title">Joueurs inscrits</span></div>
                             <div class="panel__content">
+                                <p class="roster__hint" data-i18n="roster.lateJoinHint">Le chat peut taper join à tout moment, même pendant la partie.</p>
                                 <div class="roster" id="roster-list"></div>
                                 <div class="roster__add">
                                     <input type="text" class="input input--sm" id="roster-add" autocomplete="off" spellcheck="false" data-i18n-placeholder="roster.addPlaceholder" placeholder="pseudo_twitch">

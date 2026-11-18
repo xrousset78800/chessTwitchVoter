@@ -8,6 +8,8 @@
  *  - multi      : les inscrits de la chaîne jouent la couleur de cette chaîne
  *
  * Le streamer peut retirer ou ajouter un joueur à tout moment, partie comprise.
+ * Le chat peut aussi taper join pendant la partie : l'inscrit rejoint son camp
+ * (en format teams, l'équipe la moins nombreuse).
  */
 
 const JOIN_COMMAND = /^!?(join|rejoindre)$/i;
@@ -31,9 +33,10 @@ class Lobby {
         this.isEligible = null;    // (tags) => bool, filtre subs de Twitch
         this.verifyJoin = null;    // (tags) => Promise<bool>, filtre followers (appel à Twitch)
         this.onChange   = null;
+        this.onLateJoin = null;    // (player) => void, inscription pendant la partie
     }
 
-    start({ format, channel, streamer = null, color = null, isEligible = null, verifyJoin = null, onChange = null }) {
+    start({ format, channel, streamer = null, color = null, isEligible = null, verifyJoin = null, onChange = null, onLateJoin = null }) {
         this.active     = true;
         this.open       = true;
         this.format     = format;
@@ -43,15 +46,16 @@ class Lobby {
         this.isEligible = isEligible;
         this.verifyJoin = verifyJoin;
         this.onChange   = onChange;
+        this.onLateJoin = onLateJoin;
         this.players.clear();
         this.kicked.clear();
         this.checking.clear();
         this.notify();
     }
 
-    /** Message du chat Twitch : seul "join" ou "!join" a un effet */
+    /** Message du chat Twitch : seul "join" ou "!join" a un effet, inscriptions ouvertes ou partie en cours */
     handleMessage({ channel, username, displayName, message, tags }) {
-        if (!this.open || !JOIN_COMMAND.test(String(message).trim())) return false;
+        if (!this.active || !JOIN_COMMAND.test(String(message).trim())) return false;
         if (normalizeLogin(channel) !== this.channel) return false;
         if (this.isEligible && !this.isEligible(tags)) return false;
 
@@ -69,8 +73,8 @@ class Lobby {
         this.checking.add(login);
         this.verifyJoin(tags).then(allowed => {
             this.checking.delete(login);
-            // Les inscriptions ont pu fermer et le streamer a pu trancher pendant la vérification
-            if (allowed && this.open && !this.kicked.has(login) && !this.players.has(login)) {
+            // La session a pu s'arrêter et le streamer a pu trancher pendant la vérification
+            if (allowed && this.active && !this.kicked.has(login) && !this.players.has(login)) {
                 this.register(login, name);
             }
         });
@@ -78,13 +82,16 @@ class Lobby {
     }
 
     register(login, name) {
-        this.players.set(login, { name, team: this.defaultTeam() });
+        const player = { name, team: this.defaultTeam() };
+        this.players.set(login, player);
         this.notify();
+        if (!this.open) this.onLateJoin?.({ login, ...player });
     }
 
-    /** L'équipe d'un inscrit, sauf en format teams où le tirage se fait à la clôture */
+    /** L'équipe d'un inscrit. En format teams : tirage à la clôture, puis l'équipe la moins nombreuse */
     defaultTeam() {
-        return this.format === 'teams' ? null : this.color;
+        if (this.format !== 'teams') return this.color;
+        return this.open ? null : this.smallestTeam();
     }
 
     /** Ferme les inscriptions et répartit les équipes */

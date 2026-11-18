@@ -244,3 +244,18 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
     .new-tabs { width: 100%; }
     .new-tab { padding: 8px 12px; }
 }
+
+.roster__hint {
+    margin: 0 0 6px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+/* Terminer la partie */
+.btn-quit-game {
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.btn-quit-game:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+}

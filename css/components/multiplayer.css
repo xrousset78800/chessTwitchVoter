@@ -245,12 +245,11 @@ body.multi-their-turn .multi-turn-indicator { color: #f87171; }
 
 /* ==================== ROUTE /battle : transformation de la sandbox ==================== */
 
-/* Éléments cachés en mode Bataille */
-body.battle-mode .sandbox-only { display: none !important; }
+/* Partie préconfigurée (Mono, Multi, Rush) : uniquement le live, aucune configuration */
+body.game-mode.preset-game .config-only { display: none !important; }
 
-/* Route /game : uniquement le live, aucune configuration */
-body.game-mode .sandbox-only,
-body.game-mode .config-only { display: none !important; }
+/* Bouton Terminer : seulement sur la page de la partie */
+body:not(.game-mode) .game-only { display: none !important; }
 
 /* Bannières multi intégrées dans la sandbox (visibles uniquement en mode Bataille) */
 #multi-pre-ready-banner,
