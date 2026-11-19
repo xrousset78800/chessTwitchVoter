@@ -180,7 +180,8 @@ async function pollGame() {
 
 
             
-            const updatedGame = data.games.find(game => game.slug === g.slug);
+            // Par id : en match, les mêmes joueurs ont plusieurs parties avec le même slug
+            const updatedGame = data.games.find(game => g.id != null ? game.id === g.id : game.slug === g.slug);
 
 
 
