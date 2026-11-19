@@ -211,6 +211,10 @@ function updateTurnIndicator() {
         .classList.toggle('is-turn', turn === 'b');
 }
 
+// À la connexion du Phantom, c'est la partie suivie ici qu'il faut poser sur l'échiquier
+window.phantomPositionProviders = window.phantomPositionProviders || {};
+window.phantomPositionProviders.live = () => state.polling ? state.chess.fen() : null;
+
 // ── Mettre à jour l'UI ──
 function updateUI(gameInfo) {
     const fen = state.chess.fen();

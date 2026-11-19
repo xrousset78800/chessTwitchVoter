@@ -118,6 +118,14 @@ class PhantomChessboard {
      * 🆕 Synchronise la position actuelle au Phantom (appelé à la connexion)
      */
     syncCurrentPosition() {
+        // La page affichée (Tournoi, Live) peut suivre sa propre partie : c'est elle qui fait foi
+        const route = (window.location.hash.split('/')[1] || '').split('?')[0];
+        const provided = window.phantomPositionProviders?.[route]?.();
+        if (provided) {
+            this.log('📋 Partie suivie détectée, synchronisation...', 'info');
+            this.syncPosition(provided);
+            return;
+        }
         if (typeof chess === 'undefined') {
             this.log('⚠️ Pas de partie en cours', 'info');
             return;

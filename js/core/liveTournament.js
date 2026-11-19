@@ -147,6 +147,10 @@ function renderGames(games, roundId) {
     });
 }
 
+// À la connexion du Phantom, c'est la partie suivie ici qu'il faut poser sur l'échiquier
+window.phantomPositionProviders = window.phantomPositionProviders || {};
+window.phantomPositionProviders.tournament = () => stateT.currentGame ? stateT.chess.fen() : null;
+
 async function startGamePolling(game) {
     stopGamePolling();
     stopClockT();  // ← reset
@@ -213,8 +217,8 @@ async function pollGame() {
 
                 // Phantom
                 if (window.phantomChessboard?.isConnected && document.getElementById('phantomAutoSyncT')?.checked !== false) {
-                    await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
-                    logT('Phantom synchronisé', 'ok');
+                    const sent = await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
+                    logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
                 }
             }
             renderGames(data.games, activeRoundId);
@@ -469,6 +473,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Réactiver la sync automatique remet tout de suite l'échiquier à jour
+    document.getElementById('phantomAutoSyncT')?.addEventListener('change', async function () {
+        if (!this.checked || !stateT.currentGame || !window.phantomChessboard?.isConnected) return;
+        const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
+        logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
+    });
+
     document.getElementById('btnSyncT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
         if (!stateT.chess) return;
