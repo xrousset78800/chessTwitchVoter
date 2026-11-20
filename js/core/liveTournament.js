@@ -74,12 +74,23 @@ function roundStartedAt(r, games) {
     return starts.length ? new Date(Math.min(...starts)).toISOString() : null;
 }
 
+// Pas commencée alors que l'horaire est passé : c'est l'heure du début du match, pas de la ronde
+const roundIsOverdue = (r, games) => !roundStartedAt(r, games) && Date.parse(r.startAt) < Date.now();
+
+/** Libellé court : heure réelle de début, sinon heure prévue, ou « à suivre » si elle n'a plus de sens */
+const roundTimeLabel = (r, games) => {
+    const started = roundStartedAt(r, games);
+    if (started) return formatRoundStart(started);
+    return roundIsOverdue(r, games) ? 'à suivre' : formatRoundStart(r.startAt);
+};
+
 function roundTooltip(r, games) {
     const full = { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
     const hm = { hour: '2-digit', minute: '2-digit' };
     const lines = [`Ronde ${r.slug}`, `Prévue : ${new Date(r.startAt).toLocaleString(roundLocale(), full)}`];
     const started = roundStartedAt(r, games);
     if (started) lines.push(`Commencée à ${new Date(started).toLocaleTimeString(roundLocale(), hm)}`);
+    else if (roundIsOverdue(r, games)) lines.push(`Horaire du match (chess.com) : commencera après la ronde précédente`);
     const tc = formatTimeControl(r.timeControl);
     if (tc) lines.push(tc);
     const roundGames = games.filter(g => g.roundId === r.id);
@@ -231,7 +242,7 @@ function renderRounds(data) {
         const btn = document.createElement('button');
         btn.className = `round-btn is-${st}` + (r.id === activeRoundId ? ' is-active' : '');
         btn.innerHTML = `${statusMarker(st)}<span class="round-btn__name">${grouped ? roundShortName(r) : 'R' + r.slug}</span>`
-                      + `<span class="round-btn__time">${formatRoundStart(roundStartedAt(r, data.games) ?? r.startAt)}</span>`;
+                      + `<span class="round-btn__time">${roundTimeLabel(r, data.games)}</span>`;
         btn.title = roundTooltip(r, data.games);
         btn.dataset.roundId = r.id;
         btn.addEventListener('click', () => select(r.id));
