@@ -1182,6 +1182,9 @@ body.showTimer .board-timer-container {
 .wheel-center.winner-reveal {
     background: var(--winner-color, #10b981) !important;
 }
+/* Live Chess et Tournoi : seulement avec le Phantom connecté (sauf page ouverte) */
+body:not(.phantom-connected) .nav__link--phantom:not(.is-active) { display: none; }
+
 /* Coordonnées hors de l'échiquier (js/components/boardCoords.js) */
 .board-coords {
     position: relative;
@@ -1218,3 +1221,38 @@ body.showTimer .board-timer-container {
     align-items: center;
     justify-content: center;
 }
+
+/* Restrictions Twitch : pastilles Followers / Subs */
+.restrict-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.restrict-row__label {
+    margin-right: auto;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #a0a0b8);
+}
+.restrict-row__label .fa-twitch { color: #9146ff; }
+.toggle.toggle--chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background: transparent;
+    color: var(--text-muted, #6b6b80);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.toggle.toggle--chip::after { display: none; }
+.toggle.toggle--chip:hover { color: var(--text-primary, #fff); }
+.toggle--follow.is-active { background: rgba(145, 70, 255, 0.18); border-color: #9146ff; color: #c4a5ff; }
+.toggle--sub.is-active    { background: rgba(245, 158, 11, 0.16); border-color: #f59e0b; color: #fbbf24; }
+.toggle--follow.is-active .fa-heart { color: #9146ff; }
+.toggle--sub.is-active .fa-star { color: #f59e0b; }

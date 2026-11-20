@@ -51,8 +51,8 @@
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
                 <a class="nav__link" data-navigate="/sandbox" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
-                <a class="nav__link" data-navigate="/live"><span class="nav__game-dot nav__follow-dot"></span><span data-i18n="nav.live">Live Chess</span></a>
-                <a class="nav__link" data-navigate="/tournament">
+                <a class="nav__link nav__link--phantom" data-navigate="/live"><span class="nav__game-dot nav__follow-dot"></span><span data-i18n="nav.live">Live Chess</span></a>
+                <a class="nav__link nav__link--phantom" data-navigate="/tournament">
                     <span class="nav__game-dot nav__follow-dot"></span>
                     <i class="fas fa-chess-board"></i>
                     <span data-i18n="nav.tournament">Tournoi</span>
@@ -344,17 +344,12 @@
 
                             <!-- Twitch restrictions (only when connected) -->
                             <div class="panel conditional-section twitch-only config-only">
-                                <div class="panel__header" data-i18n="gameMode.twitchOptions.restrictions"><i class="fab fa-twitch"></i> Restrictions</div>
                                 <div class="panel__content">
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.twitchOptions.followMode">Followers uniquement</span>
-                                        <div class="toggle" id="toggle-followers"></div>
+                                    <div class="restrict-row">
+                                        <span class="restrict-row__label" data-i18n-title="gameMode.twitchOptions.hint" title="Mods, VIPs et streamer autorisés"><i class="fab fa-twitch"></i> <span data-i18n="gameMode.twitchOptions.restrictions">Restrictions</span></span>
+                                        <button type="button" class="toggle toggle--chip toggle--follow" id="toggle-followers" data-i18n-title="gameMode.twitchOptions.followMode" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
+                                        <button type="button" class="toggle toggle--chip toggle--sub" id="toggle-subs" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                                     </div>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.twitchOptions.subMode">Abonnés uniquement</span>
-                                        <div class="toggle" id="toggle-subs"></div>
-                                    </div>
-                                    <p class="form-hint" data-i18n="gameMode.twitchOptions.hint">Mods, VIPs et broadcaster passent toujours</p>
                                 </div>
                             </div>
 
@@ -579,17 +574,11 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="preset__row">
-                            <div class="form-row">
-                                <span><i class="fab fa-twitch" style="color:#9146ff"></i> Followers only</span>
-                                <div class="toggle" id="mono-follow-toggle"></div>
-                            </div>
-                            <div class="form-row">
-                                <span><i class="fas fa-star" style="color:#f59e0b"></i> Subs only</span>
-                                <div class="toggle" id="mono-sub-toggle"></div>
-                            </div>
+                        <div class="restrict-row">
+                            <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel">Réservé aux</span></span>
+                            <button type="button" class="toggle toggle--chip toggle--follow" id="mono-follow-toggle" data-i18n-title="presets.followersHint" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
+                            <button type="button" class="toggle toggle--chip toggle--sub" id="mono-sub-toggle" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                         </div>
-                        <p class="form-hint" data-i18n="presets.followersHint">Followers only : seuls les followers, subs, modos et VIP peuvent s'inscrire. Twitch te demandera une fois l'autorisation de lire tes followers.</p>
                     <button class="btn btn--primary btn--full" id="mono-start">
                         <i class="fas fa-play"></i> <span data-i18n="mono.start">Ouvrir les inscriptions</span>
                     </button>
@@ -626,17 +615,11 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="preset__row">
-                            <div class="form-row">
-                                <span><i class="fab fa-twitch" style="color:#9146ff"></i> Followers only</span>
-                                <div class="toggle" id="multi-follow-toggle"></div>
-                            </div>
-                            <div class="form-row">
-                                <span><i class="fas fa-star" style="color:#f59e0b"></i> Subs only</span>
-                                <div class="toggle" id="multi-sub-toggle"></div>
-                            </div>
+                        <div class="restrict-row">
+                            <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel">Réservé aux</span></span>
+                            <button type="button" class="toggle toggle--chip toggle--follow" id="multi-follow-toggle" data-i18n-title="presets.followersHint" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
+                            <button type="button" class="toggle toggle--chip toggle--sub" id="multi-sub-toggle" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                         </div>
-                        <p class="form-hint" data-i18n="presets.followersHint">Followers only : seuls les followers, subs, modos et VIP peuvent s'inscrire. Twitch te demandera une fois l'autorisation de lire tes followers.</p>
                     <button class="btn btn--primary btn--full" id="multi-start">
                         <i class="fas fa-link"></i> <span data-i18n="multi.start">Créer le lien et entrer</span>
                     </button>
@@ -1026,6 +1009,15 @@
             </div>
             <div class="modal__body">
                 <p class="pm-intro" data-i18n="phantomModal.intro">Phantom est un vrai échiquier en bois qui déplace ses pièces tout seul. Connecté au site, il rejoue sous tes yeux les coups votés par le chat Twitch, ceux d'une partie Live Chess ou d'un tournoi suivi.</p>
+                <div class="pm-unlocks">
+                    <p class="pm-unlocks__title"><i class="fas fa-unlock"></i> <span data-i18n="phantomModal.unlockTitle">Une fois connecté</span></p>
+                    <ul>
+                        <li><i class="fas fa-users"></i> <span data-i18n-html data-i18n="phantomModal.unlock1"><b>Parties Twitch</b> : les coups votés par ton chat sont joués sur l'échiquier.</span></li>
+                        <li><i class="fas fa-bolt"></i> <span data-i18n-html data-i18n="phantomModal.unlock2"><b>Live Chess</b> : suis une partie Chess.com en direct, coup par coup.</span></li>
+                        <li><i class="fas fa-chess-board"></i> <span data-i18n-html data-i18n="phantomModal.unlock3"><b>Tournoi</b> : choisis une partie d'un tournoi Chess.com en cours et regarde-la se jouer.</span></li>
+                    </ul>
+                    <p class="pm-unlocks__hint" data-i18n="phantomModal.unlockHint">Les onglets Live Chess et Tournoi apparaissent dans le menu dès que le Phantom est connecté.</p>
+                </div>
                 <div class="pm-reqs">
                     <p class="pm-reqs__title"><i class="fab fa-bluetooth-b"></i> <span data-i18n="phantomModal.reqTitle">Avant de te connecter</span></p>
                     <ul>

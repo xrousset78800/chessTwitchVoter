@@ -129,6 +129,7 @@
   },
   "presets": {
     "rushCard": "Your chat solves puzzle after puzzle",
+    "restrictLabel": "Only for",
     "monoCard": "One channel, registered viewers play",
     "multiCard": "Two channels face off",
     "voteTime": "Voting time (s)",
@@ -287,6 +288,11 @@
   "phantomModal": {
     "title": "Phantom chessboard",
     "intro": "Phantom is a real wooden chessboard that moves its own pieces. Connected to the site, it plays out the moves voted by Twitch chat, or those of a Live Chess game or a followed tournament.",
+    "unlockTitle": "Once connected",
+    "unlock1": "<b>Twitch games</b>: the moves your chat votes for are played on the board.",
+    "unlock2": "<b>Live Chess</b>: follow a Chess.com game live, move by move.",
+    "unlock3": "<b>Tournament</b>: pick a game from an ongoing Chess.com tournament and watch it being played.",
+    "unlockHint": "The Live Chess and Tournament tabs appear in the menu as soon as the Phantom is connected.",
     "reqTitle": "Before connecting",
     "req1": "Bluetooth turned on on your computer",
     "req2": "Chrome or Edge on desktop (Web Bluetooth: not Firefox or Safari)",

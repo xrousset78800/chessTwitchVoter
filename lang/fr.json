@@ -129,6 +129,7 @@
   },
   "presets": {
     "rushCard": "Ton chat enchaîne les puzzles",
+    "restrictLabel": "Réservé aux",
     "monoCard": "Une chaîne, les inscrits jouent",
     "multiCard": "Deux chaînes s'affrontent",
     "voteTime": "Temps de vote (s)",
@@ -287,6 +288,11 @@
   "phantomModal": {
     "title": "Échiquier Phantom",
     "intro": "Phantom est un vrai échiquier en bois qui déplace ses pièces tout seul. Connecté au site, il rejoue sous tes yeux les coups votés par le chat Twitch, ceux d'une partie Live Chess ou d'un tournoi suivi.",
+    "unlockTitle": "Une fois connecté",
+    "unlock1": "<b>Parties Twitch</b> : les coups votés par ton chat sont joués sur l'échiquier.",
+    "unlock2": "<b>Live Chess</b> : suis une partie Chess.com en direct, coup par coup.",
+    "unlock3": "<b>Tournoi</b> : choisis une partie d'un tournoi Chess.com en cours et regarde-la se jouer.",
+    "unlockHint": "Les onglets Live Chess et Tournoi apparaissent dans le menu dès que le Phantom est connecté.",
     "reqTitle": "Avant de te connecter",
     "req1": "Bluetooth activé sur l'ordinateur",
     "req2": "Chrome ou Edge sur ordinateur (Web Bluetooth : pas Firefox ni Safari)",

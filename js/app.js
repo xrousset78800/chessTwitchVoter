@@ -485,6 +485,9 @@ function isPuzzleMode(mode = AppState.gameMode) {
 function syncWheelModeClass() {
     const wheelMode = !AppState.config.majorityMode && !isPuzzleMode();
     document.body.classList.toggle('wheel-mode', wheelMode);
+    // Sans temps pour voter, pas de minuteur ni de tirage (roue / bande)
+    document.body.classList.toggle('no-vote-timer', !AppState.config.timerEnabled);
+    document.body.classList.toggle('has-draw', wheelMode && !!AppState.config.timerEnabled);
     if (!wheelMode) window.gameEngine?.hideWheel?.();
 }
 
@@ -1367,8 +1370,7 @@ fullReset() {
         if (votingPanel) {
             votingPanel.classList.toggle('is-visible', AppState.config.timerEnabled);
         }
-        // Sans temps pour voter, pas de minuteur à côté de l'échiquier
-        document.body.classList.toggle('no-vote-timer', !AppState.config.timerEnabled);
+        syncWheelModeClass();
     },
 
     updateConditionalUI() {
