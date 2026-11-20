@@ -1080,3 +1080,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 2000);
 });
+
+// ── Menu Phantom des pages Live et Tournoi (comme celui de la page de jeu) ──
+document.addEventListener('DOMContentLoaded', () => {
+    const menus = [...document.querySelectorAll('.live-phantom-menu')];
+    const setMenu = (menu, open) => {
+        menu.classList.toggle('is-open', open);
+        menu.querySelector('.live-phantom-menu__btn')?.setAttribute('aria-expanded', String(open));
+    };
+    menus.forEach(menu => {
+        menu.querySelector('.live-phantom-menu__btn')?.addEventListener('click', e => {
+            e.stopPropagation();
+            setMenu(menu, !menu.classList.contains('is-open'));
+        });
+        // Une action lancée referme le menu (pas la connexion : on veut voir le résultat)
+        menu.querySelectorAll('.phantom-action').forEach(b => b.addEventListener('click', () => setMenu(menu, false)));
+    });
+    document.addEventListener('click', e => menus.forEach(m => { if (!m.contains(e.target)) setMenu(m, false); }));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') menus.forEach(m => setMenu(m, false)); });
+    // Pastille verte quand le Phantom est connecté
+    setInterval(() => {
+        const on = !!window.phantomChessboard?.isConnected;
+        menus.forEach(m => m.classList.toggle('is-connected', on));
+    }, 1000);
+});
