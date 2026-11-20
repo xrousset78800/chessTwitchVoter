@@ -1060,6 +1060,16 @@
                     <button class="btn btn--primary" id="tfConfirm"><i class="fas fa-chess-board"></i> <span data-i18n="tournamentFollow.confirm">Position actuelle</span></button>
                     <button class="btn" id="tfReplay" disabled><i class="fas fa-backward"></i> <span id="tfReplayLabel">Rejouer depuis le début</span></button>
                 </div>
+                <label class="tf-delay">Pause entre les coups rejoués
+                    <select id="tfDelay">
+                        <option value="0" selected>0 s</option>
+                        <option value="1">1 s</option>
+                        <option value="2">2 s</option>
+                        <option value="3">3 s</option>
+                        <option value="5">5 s</option>
+                        <option value="10">10 s</option>
+                    </select>
+                </label>
             </div>
             <div class="modal__footer">
                 <button class="btn" data-close-modal data-i18n="tournamentFollow.cancel">Annuler</button>

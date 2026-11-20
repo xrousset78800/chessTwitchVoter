@@ -687,3 +687,9 @@ input[type=range] {
 @media (max-width: 900px) {
     #page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child { max-width: 640px; }
 }
+
+.tf-delay { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: .78rem; color: var(--text-secondary, #8888a0); }
+.tf-delay select {
+    background: var(--bg-card, #12121a); color: var(--text-primary, #e2e8f0);
+    border: 1px solid var(--border-subtle, #2a2a3a); border-radius: 4px; font-size: .75rem; padding: 2px 6px;
+}

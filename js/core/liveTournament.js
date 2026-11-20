@@ -481,13 +481,9 @@ function renderGames(games, roundId) {
                 document.getElementById('playerBlackT').textContent = bName;
                 document.getElementById('ratingBlackT').textContent = g.blackElo ? `(${g.blackElo})` : '';
                 logT(`${wName} vs ${bName} — suivi démarré`, 'ok');
-                if (choice.replay) {
-                    // Position de départ d'abord (le Phantom vide sa file et remet l'échiquier à zéro),
-                    // puis chaque coup ; le suivi normal enchaîne derrière dans la même file
-                    for (const fen of choice.replay) await window.phantomChessboard.syncPosition(fen);
-                    logT(`Phantom : remise à zéro puis ${choice.replay.length - 1} coups rejoués`, 'ok');
-                }
-                startGamePolling(g);  // ← remplace l'ancien log statique
+                startGamePolling(g);
+                // Après le démarrage (qui annule un éventuel replay précédent), avant le premier poll
+                if (choice.replay) runPhantomReplayT(g, choice.replay, choice.delay);
             });
         } else if (reviewable) {
             row.title = 'Revoir la partie coup par coup';
@@ -657,7 +653,7 @@ function confirmFollowT(g, wName, bName, { force = false, fen = g.currentFEN } =
             resolve(value);
         };
         const onOk = () => done({ replay: null });
-        const onReplay = () => replayFens && done({ replay: replayFens });
+        const onReplay = () => replayFens && done({ replay: replayFens, delay: +document.getElementById('tfDelay')?.value || 0 });
         ok.addEventListener('click', onOk);
         replayBtn.addEventListener('click', onReplay);
         // Fermée autrement (croix, Annuler, clic à côté) : on ne suit pas la partie
@@ -685,13 +681,60 @@ async function placePhantomOnFollowedT() {
     }
     if (stateT.currentGame !== g || !window.phantomChessboard?.isConnected) return;
     if (!choice) { logT('Phantom : position non envoyée (bouton Synchroniser pour la poser)', 'warn'); return; }
-    if (choice.replay) {
-        for (const fen of choice.replay) await window.phantomChessboard.syncPosition(fen);
-        logT(`Phantom : remise à zéro puis ${choice.replay.length - 1} coups rejoués`, 'ok');
-    }
+    if (choice.replay) { runPhantomReplayT(g, choice.replay, choice.delay); return; }
     // Position la plus récente (des coups ont pu être joués pendant le choix)
     const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
-    if (!choice.replay) logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
+    logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
+}
+
+// Rejouer la partie sur le Phantom : un coup à la fois, en attendant qu'il ait fini, puis la pause choisie.
+// Une fois au bout, on rattrape les coups joués en direct entre-temps, puis le suivi normal reprend.
+const sameBoardT = (a, b) => String(a || '').split(' ')[0] === String(b || '').split(' ')[0];
+async function runPhantomReplayT(g, fens, delayS = 0) {
+    const token = {};
+    stateT.phantomReplay = token;
+    const phantom = window.phantomChessboard;
+    const alive = () => stateT.phantomReplay === token && stateT.currentGame?.id === g.id && phantom?.isConnected;
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const idle = async () => {
+        await wait(200);
+        while (alive() && phantom.isBusy?.()) await wait(150);
+    };
+    logT(`Phantom : remise à zéro puis ${fens.length - 1} coups rejoués un par un${delayS ? ` (pause ${delayS} s)` : ''}`, 'info');
+    let i = 0;
+    try {
+        for (;;) {
+            for (; i < fens.length; i++) {
+                if (!alive()) return;
+                if (i > 0 && delayS) await wait(delayS * 1000);
+                if (!alive()) return;
+                await phantom.syncPosition(fens[i]);
+                await idle();
+                const n = fens.length - 1;
+                if (i > 0 && (i % 10 === 0 || i === n)) logT(`Phantom : coup ${i}/${n} rejoué`, 'info');
+            }
+            if (!alive()) return;
+            // Coups joués en direct pendant le replay : on les rejoue aussi, un par un
+            const live = stateT.chess.fen();
+            if (sameBoardT(fens.at(-1), live)) break;
+            let more = null;
+            try {
+                more = replayFensT(await fetchGameMovesT(g), live);
+            } catch { /* coups indisponibles : on pose directement la position */ }
+            if (!alive()) return;
+            const prefixOk = more && more.length > fens.length && sameBoardT(more[fens.length - 1], fens.at(-1));
+            if (!prefixOk) { await phantom.syncPosition(live); await idle(); break; }
+            logT(`Phantom : rattrapage de ${more.length - fens.length} coup(s) joué(s) entre-temps`, 'info');
+            fens = more;
+        }
+        if (alive()) {
+            // Dernière vérification : un coup a pu tomber pendant le dernier déplacement
+            if (!sameBoardT(fens.at(-1), stateT.chess.fen())) await phantom.syncPosition(stateT.chess.fen());
+            logT('Phantom à jour : suivi en direct', 'ok');
+        }
+    } finally {
+        if (stateT.phantomReplay === token) stateT.phantomReplay = null;
+    }
 }
 
 // À la connexion du Phantom, c'est la partie suivie ici qu'il faut poser sur l'échiquier
@@ -714,6 +757,7 @@ async function startGamePolling(game) {
 }
 
 function stopGamePolling() {
+    stateT.phantomReplay = null;
     stateT.polling = false;
     clearTimeout(stateT.pollTimer);
     stopClockT();  // ← reset
@@ -770,7 +814,7 @@ async function pollGame() {
 
                 // Phantom
                 if (window.phantomChessboard?.isConnected && document.getElementById('phantomAutoSyncT')?.checked !== false
-                    && !stateT.choosingPhantom) {
+                    && !stateT.choosingPhantom && !stateT.phantomReplay) {
                     const sent = await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
                     logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
                 }
@@ -1082,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Réactiver la sync automatique remet tout de suite l'échiquier à jour
     document.getElementById('phantomAutoSyncT')?.addEventListener('change', async function () {
+        if (!this.checked && stateT.phantomReplay) { stateT.phantomReplay = null; logT('Replay du Phantom interrompu', 'warn'); }
         if (!this.checked || !stateT.currentGame || !window.phantomChessboard?.isConnected) return;
         placePhantomOnFollowedT();
     });
@@ -1089,6 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnSyncT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
         if (!stateT.chess) return;
+        if (stateT.phantomReplay) { stateT.phantomReplay = null; logT('Replay du Phantom interrompu', 'warn'); }
         const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
         logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Synchronisation envoyée', sent === false ? 'warn' : 'ok');
     });
