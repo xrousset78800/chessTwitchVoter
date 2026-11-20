@@ -123,44 +123,67 @@ function autoRoundId(rounds, games) {
 const gameNames = g => `${g.white?.preferredShortName?.trim() || g.slug.split('-')[0]} – ${g.black?.preferredShortName?.trim() || g.slug.split('-')[1]}`;
 
 /** refresh = mise à jour périodique de la même salle (garde la ronde choisie, signale les nouvelles parties) */
-// ── Score des joueurs de la partie affichée : « points / parties jouées » ──
-// Match (les deux joueurs se rencontrent plusieurs fois dans la salle) : score du match.
-// Sinon (suisse, toutes rondes) : points dans le tournoi.
-const RESULT_POINTS_T = { '1-0': [1, 0], '0-1': [0, 1], '1/2-1/2': [0.5, 0.5], '½-½': [0.5, 0.5] };
+// ── Score des joueurs de la partie affichée ──
+// Barème propre à chaque ronde (round.scoring, sinon room.scoring) :
+//   « 1-1/2 » = victoire-nulle, « 4-2 » (rapide), « 8-4 » (classique),
+//   « w(1 0 0), b(1 1 0) » = Armageddon (victoire / nulle / défaite selon la couleur).
+// Portée : knockout par sets → set en cours (ronde « 02-02-07 » → set « 02-02 ») ;
+// les deux joueurs se rencontrent plusieurs fois → match ; sinon points dans le tournoi.
+const RESULT_INDEX_T = { '1-0': [0, 2], '0-1': [2, 0], '1/2-1/2': [1, 1], '½-½': [1, 1] }; // 0 victoire, 1 nulle, 2 défaite
 const playerKeyT = (g, side) => g[side + 'Id'] ?? g[side]?.id ?? g[side]?.preferredShortName ?? null;
 const fmtPointsT = p => (Math.floor(p) || (p % 1 ? '' : '0')) + (p % 1 ? '½' : '');
+const numT = t => { const [n, d] = String(t).split('/'); return d ? +n / +d : +n; };
 
-function computeScoresT(g, games) {
+function scoringTableT(str) {
+    str = String(str || '1-1/2').trim();
+    const arm = str.match(/w\(([^)]*)\).*b\(([^)]*)\)/i);
+    if (arm) {
+        const row = x => x.trim().split(/\s+/).map(numT);
+        return { white: row(arm[1]), black: row(arm[2]) };
+    }
+    const [win, draw] = str.split('-').map(numT);
+    const row = [isFinite(win) ? win : 1, isFinite(draw) ? draw : 0.5, 0];
+    return { white: row, black: row };
+}
+
+function computeScoresT(g, games, rounds = [], room = {}) {
     const w = playerKeyT(g, 'white'), b = playerKeyT(g, 'black');
     if (w == null || b == null) return null;
+    const roundOf = x => rounds.find(r => r.id === x.roundId);
     const has = (x, k) => playerKeyT(x, 'white') === k || playerKeyT(x, 'black') === k;
     const pair = games.filter(x => has(x, w) && has(x, b));
-    const isMatch = pair.length > 1;
-    const pool = isMatch ? pair : games;
+    const setOf = x => String(roundOf(x)?.slug ?? '').match(/^(.+)-\d+$/)?.[1] ?? null;
+    let pool = games, scope = 'tournament', label = '';
+    const set = /sets/i.test(room.eventType || '') ? setOf(g) : null;
+    if (set) { pool = pair.filter(x => setOf(x) === set); scope = 'set'; label = set; }
+    else if (pair.length > 1) { pool = pair; scope = 'match'; }
     const tally = k => {
         let pts = 0, n = 0;
         for (const x of pool) {
-            const r = RESULT_POINTS_T[x.result];
-            if (!r || !has(x, k)) continue;
+            const idx = RESULT_INDEX_T[x.result];
+            if (!idx || !has(x, k)) continue;
+            const side = playerKeyT(x, 'white') === k ? 'white' : 'black';
+            const table = scoringTableT(roundOf(x)?.scoring ?? room.scoring);
+            pts += table[side][idx[side === 'white' ? 0 : 1]] || 0;
             n++;
-            pts += playerKeyT(x, 'white') === k ? r[0] : r[1];
         }
         return { pts, n };
     };
-    return { isMatch, white: tally(w), black: tally(b) };
+    return { scope, label, white: tally(w), black: tally(b) };
 }
 
 function updateScoresT(g = reviewT.game || stateT.currentGame) {
     const els = [document.getElementById('scoreWhiteT'), document.getElementById('scoreBlackT')];
-    const sc = g && tournamentData?.games ? computeScoresT(g, tournamentData.games) : null;
+    const sc = g && tournamentData?.games
+        ? computeScoresT(g, tournamentData.games, tournamentData.rounds || [], tournamentData.room || {}) : null;
     if (!sc) { els.forEach(el => { if (el) { el.textContent = ''; el.title = ''; } }); return; }
+    const what = sc.scope === 'set' ? `Score du set ${sc.label}`
+        : sc.scope === 'match' ? 'Score du match' : 'Points dans le tournoi';
     [['white', els[0]], ['black', els[1]]].forEach(([side, el]) => {
         if (!el) return;
         const { pts, n } = sc[side];
-        el.textContent = `${fmtPointsT(pts)} / ${n}`;
-        el.title = sc.isMatch
-            ? `Score du match : ${fmtPointsT(pts)} point(s) sur ${n} partie(s) terminée(s)`
-            : `Points dans le tournoi : ${fmtPointsT(pts)} sur ${n} partie(s) terminée(s)`;
+        el.textContent = fmtPointsT(pts);
+        el.title = `${what} : ${fmtPointsT(pts)} point(s) sur ${n} partie(s) terminée(s)`;
     });
 }
 
