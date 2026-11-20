@@ -1259,6 +1259,11 @@ document.addEventListener('DOMContentLoaded', () => {
         logT('Centrage des pièces demandé', 'ok');
     });
 
+    document.getElementById('btnRepairT')?.addEventListener('click', () => {
+        if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
+        window.repairPhantomCentering?.();
+    });
+
     document.getElementById('btnCalibrateT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
         logT('Recalibration : arrêt, calibration puis remise en place', 'info');

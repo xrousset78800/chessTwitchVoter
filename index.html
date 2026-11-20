@@ -152,6 +152,7 @@
                                     <button class="phantom-action phantom-action--reset" id="btn-reset-sync" disabled><i class="fas fa-undo"></i> Reset + Sync</button>
                                     <button class="phantom-action phantom-action--calibrate" id="btn-snap-center" disabled><i class="fas fa-crosshairs"></i> <span data-i18n="setup.snapCenter">Centrer les pièces</span></button>
                                     <button class="phantom-action phantom-action--calibrate" id="btn-calibrate" disabled><i class="fas fa-tools"></i> <span data-i18n="setup.calibrate">Calibrer</span></button>
+                                    <button class="phantom-action phantom-action--danger" id="btn-repair-centering" disabled title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                                     <button class="phantom-action phantom-action--end" id="btn-game-end" disabled><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                                 </div>
                             </div>
@@ -742,6 +743,7 @@
                                 <button class="phantom-action phantom-action--reset" id="btnResetLive"><i class="fas fa-undo"></i> Reset + Sync</button>
                                 <button class="phantom-action phantom-action--calibrate" id="btnSnapCenterLive"><i class="fas fa-crosshairs"></i> <span data-i18n="setup.snapCenter">Centrer les pièces</span></button>
                                 <button class="phantom-action phantom-action--calibrate" id="btnCalibrateLive"><i class="fas fa-tools"></i> Calibrer</button>
+                                <button class="phantom-action phantom-action--danger" id="btnRepairLive" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                                 <button class="phantom-action phantom-action--end" id="btnGameEndLive"><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                             </div>
 
@@ -876,6 +878,7 @@
                                 <button class="phantom-action phantom-action--reset" id="btnResetT"><i class="fas fa-undo"></i> Reset + Sync</button>
                                 <button class="phantom-action phantom-action--calibrate" id="btnSnapCenterT"><i class="fas fa-crosshairs"></i> <span data-i18n="setup.snapCenter">Centrer les pièces</span></button>
                                 <button class="phantom-action phantom-action--calibrate" id="btnCalibrateT"><i class="fas fa-tools"></i> Calibrer</button>
+                                <button class="phantom-action phantom-action--danger" id="btnRepairT" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                                 <button class="phantom-action phantom-action--end" id="btnGameEndT"><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                             </div>
 
@@ -1070,10 +1073,11 @@
                 </div>
                 <p class="pm-unsupported" id="pmUnsupported" hidden><i class="fas fa-exclamation-triangle"></i> <span data-i18n="phantomModal.unsupported">Ce navigateur ne gère pas le Bluetooth : ouvre le site dans Chrome ou Edge.</span></p>
                 <p class="pm-status" id="pmStatus"></p>
-                <div class="pm-repair" id="pmRepair" hidden>
-                    <p><strong>Dépannage</strong> : si les pièces sont posées à côté du centre des cases (même décalage partout), la réinitialisation usine remet à zéro les réglages de la mécanique. Le Phantom redémarre, il faudra le reconnecter puis lancer « Calibrer ».</p>
-                    <button class="btn btn--secondary btn--sm" id="pmFactoryReset"><i class="fas fa-undo-alt"></i> Réinitialisation usine</button>
-                </div>
+                <details class="pm-repair" id="pmRepair" hidden>
+                    <summary>L'échiquier pose les pièces à côté des cases ?</summary>
+                    <p>Si toutes les pièces ont le même décalage et que le journal montre des erreurs de capteurs en boucle, la mécanique est désynchronisée. La réparation remet le Phantom aux réglages d'usine (ce qui recentre le chariot), le reconnecte tout seul puis remet les pièces en place. Compter environ une minute.</p>
+                    <button class="pm-repair__btn" id="pmFactoryReset"><i class="fas fa-exclamation-triangle"></i> Réparer le centrage</button>
+                </details>
                 <p class="pm-credits">
                     <span data-i18n="phantomModal.credits">Pour en savoir plus sur l'échiquier et son équipe :</span>
                     <a href="https://www.indiegogo.com/projects/phantom-the-robotic-chessboard-made-of-real-wood" target="_blank" rel="noopener"><span data-i18n="phantomModal.link">Le projet Phantom sur Indiegogo</span> <i class="fas fa-external-link-alt"></i></a>

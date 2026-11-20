@@ -258,6 +258,7 @@
     "wheelStyle": "Wheel style",
     "calibrate": "Calibrate",
     "snapCenter": "Center pieces",
+    "repairCentering": "Fix centering",
     "phantomOff": "Phantom not connected",
     "phantomOn": "Phantom connected",
     "phantomHint": "Connect the Phantom to adjust its speed and sync."

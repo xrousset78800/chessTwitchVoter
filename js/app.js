@@ -930,6 +930,8 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             }
         });
 
+        document.getElementById('btn-repair-centering')?.addEventListener('click', () => window.repairPhantomCentering());
+
         document.getElementById('btn-calibrate')?.addEventListener('click', async () => {
             if (window.phantomChessboard?.isConnected) {
                 Toast.info('Recalibration du Phantom : arrêt, calibration puis remise en place des pièces');
@@ -1399,7 +1401,7 @@ fullReset() {
         document.querySelectorAll('.phantom-only').forEach(el => {
             el.classList.toggle('is-visible', phantomConnected);
         });
-        ['btn-sync', 'btn-reset-sync', 'btn-snap-center', 'btn-calibrate', 'btn-game-end'].forEach(id => {
+        ['btn-sync', 'btn-reset-sync', 'btn-snap-center', 'btn-calibrate', 'btn-repair-centering', 'btn-game-end'].forEach(id => {
             document.getElementById(id)?.toggleAttribute('disabled', !phantomConnected);
         });
         document.body.classList.toggle('phantom-connected', !!phantomConnected);
@@ -1892,17 +1894,9 @@ function setupPhantomModal() {
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
-    document.getElementById('pmFactoryReset')?.addEventListener('click', async () => {
-        const phantom = window.phantomChessboard;
-        if (!phantom?.isConnected) return;
-        if (!window.confirm('Réinitialiser le Phantom aux réglages d\'usine ?\n\nTous ses réglages (vitesse, son, mécanique) reviennent aux valeurs d\'origine et il redémarre. Il faudra le reconnecter, puis lancer « Calibrer ».')) return;
-        try {
-            await phantom.factoryReset();
-            Toast.info('Réinitialisation envoyée : le Phantom redémarre, reconnecte-le dans quelques secondes');
-            setTimeout(() => { updateConnectionUI(); render(); }, 1500);
-        } catch (e) {
-            Toast.error(`Réinitialisation impossible : ${e.message}`);
-        }
+    document.getElementById('pmFactoryReset')?.addEventListener('click', () => {
+        close();
+        window.repairPhantomCentering?.();
     });
 
     btn.addEventListener('click', async () => {
@@ -2640,6 +2634,21 @@ async function initApp() {
         setTimeout(() => SandboxPage.applyConfigAfterReload(), 100);
         GameAnnouncer.start();
     }
+    // Réparation du centrage, commune aux menus Phantom et à la fenêtre Phantom.
+    // Position à reposer : partie suivie par la page (Live, Tournoi) ou partie de l'app.
+    window.repairPhantomCentering = async () => {
+        const phantom = window.phantomChessboard;
+        if (!phantom?.isConnected || !phantom.confirmRepair()) return;
+        const route = (window.location.hash.split('/')[1] || '').split('?')[0];
+        const provider = window.phantomPositionProviders?.[route];
+        const fen = provider ? provider() : (gameEngine.isRunning ? gameEngine.chess?.fen() : null);
+        Toast.show('Réparation du centrage : le Phantom redémarre puis se reconnecte tout seul (environ une minute)', 'info', 8000);
+        const ok = await phantom.repairCentering(() => fen);
+        updateConnectionUI();
+        if (ok) Toast.success('Phantom reconnecté, remise en place des pièces');
+        else Toast.show('Réparation interrompue : reconnecte le Phantom à la main (menu Phantom)', 'error', 10000);
+    };
+
     window.addEventListener('phantomError', (e) => {
         Toast.show(`Phantom : ${String(e.detail).slice(0, 160)}`, 'warning', 10000);
     });

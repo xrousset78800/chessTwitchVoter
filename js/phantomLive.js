@@ -347,6 +347,11 @@ document.getElementById('btnSnapCenterLive')?.addEventListener('click', async ()
     log('Centrage des pièces demandé', 'ok');
 });
 
+document.getElementById('btnRepairLive')?.addEventListener('click', () => {
+    if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
+    window.repairPhantomCentering?.();
+});
+
 document.getElementById('btnCalibrateLive')?.addEventListener('click', async () => {
     if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
     log('Recalibration : arrêt, calibration puis remise en place', 'info');

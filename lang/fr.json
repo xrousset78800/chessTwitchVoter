@@ -258,6 +258,7 @@
     "wheelStyle": "Style de roue",
     "calibrate": "Calibrer",
     "snapCenter": "Centrer les pièces",
+    "repairCentering": "Réparer le centrage",
     "phantomOff": "Phantom non connecté",
     "phantomOn": "Phantom connecté",
     "phantomHint": "Connecte le Phantom pour régler sa vitesse et la synchronisation."

@@ -249,11 +249,13 @@ class PhantomChessboard {
             this.moveDoneResolver = resolve;
             
             // Timeout de sécurité
+            // Mise en place complète (nouvelle partie, après réparation) : bien plus long qu'un coup
+            const timeoutMs = this.lastFenSent === null ? 120000 : this.MOVE_TIMEOUT_MS;
             this.moveTimeout = setTimeout(() => {
-                this.log('⚠️ Timeout mouvement (30s)', 'warn');
+                this.log(`⚠️ Timeout mouvement (${timeoutMs / 1000}s)`, 'warn');
                 this.moveDoneResolver = null;
                 resolve(); // On continue quand même
-            }, this.MOVE_TIMEOUT_MS);
+            }, timeoutMs);
             
             try {
                 // Convertir FEN en matrice 10x10
@@ -356,14 +358,27 @@ class PhantomChessboard {
                 this.updateUI(false);
             });
             
+            return await this.connectGatt();
+        } catch (error) {
+            this.log(`❌ Erreur: ${error.message}`, 'error');
+            return false;
+        }
+    }
+
+    /**
+     * Connexion GATT à l'appareil déjà choisi. Sert aussi à se reconnecter sans
+     * fenêtre de choix quand le Phantom redémarre (réparation du centrage).
+     */
+    async connectGatt({ quiet = false, afterRepair = false } = {}) {
+        try {
             this.server = await this.device.gatt.connect();
             this.service = await this.server.getPrimaryService(this.SERVICE_UUID);
             
             // Caractéristique de jeu
             this.characteristics.game = await this.service.getCharacteristic(this.UUID_GAME);
             await this.characteristics.game.startNotifications();
-            this.characteristics.game.addEventListener('characteristicvaluechanged', 
-                (e) => this.handleGameNotification(e));
+            this._onGame ??= (e) => this.handleGameNotification(e);
+            this.characteristics.game.addEventListener('characteristicvaluechanged', this._onGame);
             
             // Caractéristiques optionnelles
             try {
@@ -371,6 +386,7 @@ class PhantomChessboard {
                 // Lire la vitesse actuelle
                 const speedValue = await this.characteristics.speed.readValue();
                 const currentSpeed = parseInt(new TextDecoder().decode(speedValue));
+                this.currentSpeed = currentSpeed;
                 this.log(`⚡ Vitesse actuelle: ${currentSpeed}/5`, 'info');
                 
                 // Mettre à jour le slider si présent
@@ -405,12 +421,13 @@ class PhantomChessboard {
                 this.boardState = await readText(this.UUID_SETSTATE, 'state');
                 this.log(`📊 État: ${this.boardState}`, 'info');
                 await this.characteristics.state.startNotifications();
-                this.characteristics.state.addEventListener('characteristicvaluechanged', (e) => {
+                this._onState ??= (e) => {
                     const state = new TextDecoder().decode(e.target.value);
                     if (state === this.boardState) return;
                     this.boardState = state;
                     this.log(`📊 État: ${state}`, 'received');
-                });
+                };
+                this.characteristics.state.addEventListener('characteristicvaluechanged', this._onState);
             } catch (e) { }
 
             this.isConnected = true;
@@ -421,15 +438,15 @@ class PhantomChessboard {
             // 🆕 Sauvegarder l'état en localStorage
             this.saveState();
             
-            // 🆕 Lancer la webcam
-            this.startWebcam();
-            
-            // 🆕 Synchroniser le FEN en cours si une partie est active
-            this.syncCurrentPosition();
-            
+            // 🆕 Webcam et position en cours (la réparation repose elle-même la position)
+            if (!afterRepair) {
+                this.startWebcam();
+                this.syncCurrentPosition();
+            }
+
             return true;
         } catch (error) {
-            this.log(`❌ Erreur: ${error.message}`, 'error');
+            if (!quiet) this.log(`❌ Erreur: ${error.message}`, 'error');
             return false;
         }
     }
@@ -473,8 +490,12 @@ class PhantomChessboard {
                 }
                 this.lastError = dataStr;
                 this.lastErrorCount = 1;
-                this.log(`⚠️ [ERROR_MSG] ${dataStr}`, 'warn');
                 const d = this.describeSensorError(dataStr);
+                if (dataStr.startsWith('CLEAN')) {   // « CLEAN: Match. » : capteurs conformes
+                    this.log(d ? `🧲 Capteurs OK : ${d.seen}/${d.total} pièces détectées` : '🧲 Capteurs OK', 'success');
+                    return;
+                }
+                this.log(`⚠️ [ERROR_MSG] ${dataStr}`, 'warn');
                 if (d) this.log(`🧲 Capteurs : ${d.seen}/${d.total} pièces détectées` +
                     (d.extra.length ? `, détection sur cases vides : ${d.extra.join(' ')}` : '') +
                     (d.missing.length && d.missing.length <= 12 ? `, manquantes : ${d.missing.join(' ')}` : ''), 'warn');
@@ -579,6 +600,94 @@ class PhantomChessboard {
         await c.writeValue(new TextEncoder().encode('1'));
         this.log('♻️ Réinitialisation usine envoyée, le Phantom redémarre', 'warn');
         setTimeout(() => this.disconnect(), 1000);
+        return true;
+    }
+
+    /** Confirmation commune à tous les boutons « Réparer le centrage » */
+    confirmRepair() {
+        return window.confirm('Réparer le centrage du Phantom ?\n\n' +
+            'À utiliser quand les pièces sont posées à côté du centre des cases (même décalage partout, erreurs capteurs en boucle).\n\n' +
+            'Le Phantom revient à ses réglages d\'usine, redémarre, se reconnecte tout seul puis remet les pièces en place. ' +
+            'Compter environ une minute ; la vitesse est conservée.');
+    }
+
+    /**
+     * Répare un décalage de la mécanique (pièces posées à côté des cases) :
+     * réinitialisation usine (recentre le chariot), reconnexion automatique,
+     * vitesse restaurée, puis la position est reposée par un GAME_START complet.
+     * Après le redémarrage le Phantom lance tout seul une partie de démonstration :
+     * GAME_END ne l'arrête pas, seul le GAME_START de la position la remplace.
+     * @param {() => string|null} getFen position à reposer (null : position initiale)
+     */
+    async repairCentering(getFen = () => null) {
+        if (!this.isConnected || this.repairing || this.recalibrating) return false;
+        const device = this.device;
+        const speed = this.currentSpeed;
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        this.repairing = true;
+        this.recalibrating = true;   // positions reçues pendant la réparation : gardées pour après
+        this.pendingFen = null;
+        window.dispatchEvent(new CustomEvent('phantomMoveStart'));
+        this.showBlockingOverlay?.('Réparation du centrage...', 0);
+        let ok = false;
+        try {
+            this.moveQueue = [];
+            if (this.moveTimeout) { clearTimeout(this.moveTimeout); this.moveTimeout = null; }
+            const pending = this.moveDoneResolver;
+            this.moveDoneResolver = null;
+            pending?.();
+
+            this.log('🛠️ Réparation du centrage : réinitialisation usine, le Phantom redémarre', 'warn');
+            const gone = new Promise(r => {
+                device.addEventListener('gattserverdisconnected', r, { once: true });
+                setTimeout(r, 8000);
+            });
+            const c = await this.service.getCharacteristic(this.UUID_FACTORY_RESET);
+            await c.writeValue(new TextEncoder().encode('1'));
+            await gone;
+            if (device.gatt.connected) device.gatt.disconnect();
+
+            // Reconnexion au même appareil, sans fenêtre de choix
+            this.log('🔄 Attente du redémarrage...', 'info');
+            for (let i = 0; i < 25 && !ok; i++) {
+                await sleep(this.repairRetryMs ?? 2000);
+                ok = await this.connectGatt({ quiet: true, afterRepair: true });
+            }
+            if (!ok) {
+                this.log('❌ Le Phantom ne s\'est pas reconnecté : reconnecte-le à la main', 'error');
+                return false;
+            }
+            if (speed && speed !== this.currentSpeed) {
+                await this.setSpeed(speed);
+                this.currentSpeed = speed;
+            }
+            await this.sendGameEnd();
+            await sleep(1000);
+        } catch (error) {
+            this.log(`❌ Réparation : ${error.message}`, 'error');
+            ok = false;
+            return false;
+        } finally {
+            this.repairing = false;
+            this.recalibrating = false;
+            this.isMoving = false;
+            if (!ok) {
+                this.hideBlockingOverlay?.();
+                window.dispatchEvent(new CustomEvent('phantomMoveComplete'));
+            }
+        }
+        const target = this.pendingFen || getFen();
+        this.pendingFen = null;
+        this.lastFenSent = null;
+        if (typeof target === 'function') {   // la page propose elle-même la mise en place (Tournoi)
+            this.hideBlockingOverlay?.();
+            window.dispatchEvent(new CustomEvent('phantomMoveComplete'));
+            target();
+            return true;
+        }
+        const fen = target || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+        this.log('♟️ Remise en place des pièces', 'info');
+        this.queuePosition(fen);
         return true;
     }
 

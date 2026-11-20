@@ -282,6 +282,7 @@
 .phantom-action:hover { background: color-mix(in srgb, var(--action-color) 22%, transparent); }
 .phantom-action--reset     { --action-color: #8b5cf6; }
 .phantom-action--calibrate { --action-color: #f59e0b; }
+.phantom-action--danger    { --action-color: #ef4444; }
 .phantom-action--end       { --action-color: #ef4444; }
 
 /* Toggle switch */
