@@ -130,15 +130,33 @@
     "available": "Coups disponibles"
   },
   "presets": {
-    "rushCard": "Ton chat enchaîne les puzzles",
-    "restrictLabel": "Réservé aux",
-    "monoCard": "Une chaîne, les inscrits jouent",
-    "multiCard": "Deux chaînes s'affrontent",
-    "voteTime": "Temps de vote (s)",
-    "choice": "Choix du coup",
-    "wheel": "🎡 Roue",
-    "majority": "📊 Majorité",
-    "followersHint": "Followers only : seuls les followers, subs, modos et VIP peuvent s'inscrire. Twitch te demandera une fois l'autorisation de lire tes followers."
+    "title": "Configurations suggérées",
+    "applied": "« {name} » appliquée : ajuste si besoin, puis Lancer",
+    "chipInstant": "instantané",
+    "chipSeconds": "{n} s",
+    "chipMajority": "majorité",
+    "chipWheel": "roue",
+    "chipVotes": "{n} votes / viewer",
+    "instant": {
+      "name": "Test rapide",
+      "desc": "Sans timer : le premier vote reçu est joué tout de suite. Idéal pour essayer avec ton chat."
+    },
+    "democracy": {
+      "name": "Démocratie",
+      "desc": "30 s pour voter, le coup le plus voté est joué."
+    },
+    "wheel": {
+      "name": "Roue du chaos",
+      "desc": "Jusqu'à 3 coups par viewer, la roue tire au sort parmi les votes."
+    },
+    "vsChat": {
+      "name": "Toi contre le chat",
+      "desc": "Un joueur affronte le chat, qui a 45 s pour choisir chaque coup."
+    },
+    "puzzles": {
+      "name": "Problèmes",
+      "desc": "Le chat résout des puzzles, 30 s par coup."
+    }
   },
   "rushPage": {
     "desc": "Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.",
@@ -397,8 +415,8 @@
     "topViewers": "Top viewers"
   },
   "tips": {
-    "timer": "Activé : chaque coup a une durée de vote, puis le coup est choisi (roue ou majorité). Désactivé : pas de minuteur, le PREMIER vote reçu est joué immédiatement.",
-    "turnDuration": "Temps laissé au chat pour voter à chaque coup.",
+    "timer": "Activé : chaque coup a une durée de vote (10 à 120 s), puis le coup est choisi (roue ou majorité). Désactivé : pas de minuteur, le PREMIER vote reçu est joué immédiatement, et les autres réglages de vote ne servent pas.",
+    "turnDuration": "Temps laissé au chat pour voter à chaque coup, de 10 à 120 s. Compte le délai du stream : 30 s est un bon début.",
     "wheelDuration": "Durée de l'animation de la roue qui tire le coup au sort parmi les votes.",
     "votesPerViewer": "Nombre de coups différents qu'un viewer peut proposer à chaque tour. Pour les stats, il ne compte qu'une fois par coup.",
     "majority": "Activé : le coup le plus voté est joué. Désactivé : tirage au sort à la roue, chaque vote donne une chance au coup.",

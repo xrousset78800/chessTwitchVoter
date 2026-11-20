@@ -764,8 +764,70 @@ body.no-vote-timer .board-timer-container .timer-instant {
 /* Tirage (roue / bande) : seulement avec le temps de vote et sans majorité */
 body:not(.has-draw) #btn-wheel-style,
 body:not(.has-draw) .form-row:has(#wheel-duration) { display: none; }
-/* Sans timer, la durée du tour n'a plus de sens */
-body.no-vote-timer .form-row:has(#timer-duration) { display: none; }
+/* Sans timer, le premier vote est joué : durée, votes par viewer, majorité et roue n'ont plus de sens */
+body.no-vote-timer .form-row:has(#timer-duration),
+body.no-vote-timer .form-row:has(#votes-per-viewer),
+body.no-vote-timer .form-row:has(#toggle-majority),
+body.no-vote-timer .form-row:has(#toggle-majority) + .form-hint,
+body.no-vote-timer .form-row:has(#wheel-duration),
+body.no-vote-timer #btn-wheel-style { display: none; }
+
+/* ----- Configurations suggérées ----- */
+.setup-presets { margin-bottom: 14px; }
+
+.presets-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+    gap: 8px;
+}
+
+.preset-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    font: inherit;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.preset-card:hover { background: rgba(255, 255, 255, 0.06); }
+
+.preset-card:focus-visible { outline: 2px solid var(--accent-purple, #a855f7); outline-offset: 2px; }
+
+.preset-card.is-active {
+    border-color: var(--accent-purple, #a855f7);
+    background: rgba(168, 85, 247, 0.1);
+}
+
+.preset-card__icon { font-size: 1.3rem; line-height: 1.3; }
+
+.preset-card__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.preset-card__name { font-weight: 700; }
+
+.preset-card__desc {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: var(--text-secondary);
+}
+
+.preset-card__chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+
+.preset-card__chips span {
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.08);
+    white-space: nowrap;
+}
 
 /* Réinitialiser la partie : seulement en partie libre */
 body:not([data-game-mode="sandbox"]) #btn-reset,

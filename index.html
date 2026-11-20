@@ -198,7 +198,7 @@
                                 <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
                                 <div class="panel__content">
                                     <div class="mode-selector">
-                                        <div class="mode-option is-active" data-mode="yolo">
+                                        <div class="mode-option is-active" data-mode="sandbox">
                                             <span class="mode-option__icon">🎲</span>
                                             <span class="mode-option__label">YOLO</span>
                                         </div>
@@ -303,6 +303,11 @@
                                     </div>
                                 </div>
                             </div>
+                                <!-- Configurations suggérées : prêtes à l'emploi, au-dessus des sauvegardées -->
+                                <div class="setup-configs setup-presets">
+                                    <h3 class="setup-configs__title"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="presets.title">Configurations suggérées</span></h3>
+                                    <div id="presets-list" class="presets-list"></div>
+                                </div>
                                 <!-- Configurations sauvegardées : simple liste sous les modes -->
                                 <div class="setup-configs">
                                     <h3 class="setup-configs__title"><i class="fas fa-folder"></i> <span data-i18n="game.configuration.title">Configurations</span></h3>
@@ -327,7 +332,7 @@
                                     <div class="form-row">
                                         <span data-i18n="gameMode.voteOptions.turnDuration" data-info="turnDuration">Durée du tour</span>
                                         <div class="flex items-center gap-sm">
-                                            <input type="number" class="input input--sm input--inline" id="timer-duration" value="25" min="5" max="120" style="width:60px">
+                                            <input type="number" class="input input--sm input--inline" id="timer-duration" value="30" min="10" max="120" style="width:60px">
                                             <span>s</span>
                                         </div>
                                     </div>

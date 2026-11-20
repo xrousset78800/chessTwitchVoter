@@ -42,7 +42,7 @@ const AppState = {
         
         // Timer/Vote
         timerEnabled: false,
-        timerDuration: 25,
+        timerDuration: 30,       // 10 à 120 s : en dessous, le délai du stream ne laisse pas le temps de voter
         wheelDuration: 5,
         pauseAfterEnd: 5,
         votesPerViewer: 1,       // votes par viewer et par coup (les stats n'en comptent qu'un)
@@ -135,8 +135,10 @@ const Storage = {
     loadConfig() {
         const saved = Storage.get(Storage.KEYS.CONFIG);
         if (saved) {
-            AppState.gameMode = saved.gameMode || 'sandbox';
+            // « yolo » : ancien nom de la partie libre dans l'écran Nouveau
+            AppState.gameMode = (saved.gameMode === 'yolo' ? 'sandbox' : saved.gameMode) || 'sandbox';
             Object.assign(AppState.config, saved.config || {});
+            AppState.config.timerDuration = clampTurn(AppState.config.timerDuration);
             Object.assign(AppState.players, saved.players || {});
             Object.assign(AppState.problems, saved.problems || {});
             console.log('📦 Config chargée depuis localStorage');
@@ -495,6 +497,23 @@ function isPuzzleMode(mode = AppState.gameMode) {
  * body.wheel-mode : la roue n'est visible pendant le vote que dans ce cas.
  * Majorité active ou mode puzzle (toujours majorité) → pas de roue.
  */
+/** Durée du tour : 10 à 120 s (30 par défaut) */
+function clampTurn(v) {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? Math.min(120, Math.max(10, n)) : 30;
+}
+
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/** Configurations suggérées de l'écran Nouveau (textes dans presets.<id>) */
+const SETUP_PRESETS = [
+    { id: 'instant',   icon: '⚡', mode: 'sandbox',  config: { timerEnabled: false } },
+    { id: 'democracy', icon: '🗳️', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
+    { id: 'wheel',     icon: '🎡', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: false, votesPerViewer: 3 } },
+    { id: 'vsChat',    icon: '👤', mode: 'oneVsAll', config: { timerEnabled: true, timerDuration: 45, majorityMode: true,  votesPerViewer: 1 } },
+    { id: 'puzzles',   icon: '🧩', mode: 'problems', config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } }
+];
+
 /** Le gestionnaire de puzzles n'est configuré qu'une fois : chaque lancement lui redonne le minuteur de la partie */
 function syncProblemsTimer() {
     Object.assign(problemsManager.config, {
@@ -1085,8 +1104,19 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
         // ========== INPUTS NUMÉRIQUES ==========
         document.getElementById('timer-duration')?.addEventListener('change', (e) => {
-            AppState.config.timerDuration = parseInt(e.target.value) || 25;
+            AppState.config.timerDuration = clampTurn(e.target.value);
+            e.target.value = AppState.config.timerDuration;
         });
+
+        // Configurations suggérées
+        document.getElementById('presets-list')?.addEventListener('click', (e) => {
+            const card = e.target.closest('[data-preset]');
+            if (card) this.applyPreset(card.dataset.preset);
+        });
+        // La carte suggérée reste surlignée tant que les réglages lui correspondent
+        const setup = document.getElementById('sandbox-setup');
+        ['click', 'change'].forEach(type => setup?.addEventListener(type, () => setTimeout(() => this.markPreset(), 0)));
+        window.addEventListener('languageChanged', () => this.renderPresets());
         
         document.getElementById('wheel-duration')?.addEventListener('change', (e) => {
             AppState.config.wheelDuration = parseInt(e.target.value) || 5;
@@ -1436,24 +1466,77 @@ fullReset() {
         this.renderConfigs();
     },
 
+    /** Libellé court d'une config : ⚡ instantané, ou durée + majorité/roue (+ votes par viewer) */
+    presetChips(mode, c) {
+        const label = document.querySelector(`.mode-option[data-mode="${mode}"] .mode-option__label`)?.textContent.trim() || mode;
+        const chips = [label];
+        if (!c.timerEnabled) chips.push(`⚡ ${tr('presets.chipInstant')}`);
+        else {
+            chips.push(tr('presets.chipSeconds', { n: c.timerDuration }));
+            const majority = c.majorityMode || isPuzzleMode(mode);
+            chips.push(tr(majority ? 'presets.chipMajority' : 'presets.chipWheel'));
+            if (!majority && c.votesPerViewer > 1) chips.push(tr('presets.chipVotes', { n: c.votesPerViewer }));
+        }
+        return chips;
+    },
+
+    renderPresets() {
+        const list = document.getElementById('presets-list');
+        if (!list) return;
+        list.innerHTML = SETUP_PRESETS.map(p => `
+            <button type="button" class="preset-card" data-preset="${p.id}">
+                <span class="preset-card__icon" aria-hidden="true">${p.icon}</span>
+                <span class="preset-card__body">
+                    <span class="preset-card__name">${escapeHtml(tr(`presets.${p.id}.name`))}</span>
+                    <span class="preset-card__desc">${escapeHtml(tr(`presets.${p.id}.desc`))}</span>
+                    <span class="preset-card__chips">${this.presetChips(p.mode, { votesPerViewer: 1, ...p.config }).map(c => `<span>${escapeHtml(c)}</span>`).join('')}</span>
+                </span>
+            </button>`).join('');
+        this.markPreset();
+    },
+
+    markPreset() {
+        const c = AppState.config;
+        document.querySelectorAll('#presets-list [data-preset]').forEach(card => {
+            const p = SETUP_PRESETS.find(x => x.id === card.dataset.preset);
+            const on = !!p && p.mode === AppState.gameMode && Object.entries(p.config).every(([k, v]) => c[k] === v);
+            card.classList.toggle('is-active', on);
+            card.setAttribute('aria-pressed', on);
+        });
+    },
+
+    /** Remplit l'écran avec une configuration suggérée (sans lancer : on peut encore ajuster) */
+    applyPreset(id) {
+        const p = SETUP_PRESETS.find(x => x.id === id);
+        if (!p) return;
+        // Même chemin qu'un clic sur le mode (chargement des puzzles compris)
+        document.querySelector(`.mode-option[data-mode="${p.mode}"]`)?.click();
+        Object.assign(AppState.config, p.config);
+        this.syncUIFromState();
+        Storage.saveConfig();
+        this.markPreset();
+        Toast.success(tr('presets.applied', { name: tr(`presets.${p.id}.name`) }));
+    },
+
     renderConfigs() {
+        this.renderPresets();
         const container = document.getElementById('configs-list');
         if (!container) return;
 
         if (AppState.savedConfigs.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>Aucune configuration</p></div>';
+            container.innerHTML = `<div class="empty-state"><p>${escapeHtml(tr('game.configuration.no-config'))}</p></div>`;
             return;
         }
 
         container.innerHTML = AppState.savedConfigs.map(config => `
-            <div class="config-card" data-id="${config.id}">
+            <div class="config-card" data-id="${escapeHtml(config.id)}">
                 <div class="config-card__header">
-                    <span class="config-card__name">${config.name}</span>
+                    <span class="config-card__name">${escapeHtml(config.name)}</span>
                     <button class="btn btn--icon btn--sm" data-delete="${config.id}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <span class="badge badge--purple">${config.gameMode}</span>
+                <span class="badge badge--purple">${escapeHtml(config.gameMode)}</span>
             </div>
         `).join('');
 
@@ -1480,8 +1563,9 @@ fullReset() {
         const config = AppState.savedConfigs.find(c => c.id === id);
         if (!config) return;
 
-        AppState.gameMode = config.gameMode;
+        AppState.gameMode = config.gameMode === 'yolo' ? 'sandbox' : config.gameMode;
         Object.assign(AppState.config, config.config);
+        AppState.config.timerDuration = clampTurn(AppState.config.timerDuration);
         Object.assign(AppState.players, config.players);
         if (config.problems) {
             Object.assign(AppState.problems, config.problems);

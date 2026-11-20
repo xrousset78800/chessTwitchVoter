@@ -130,15 +130,33 @@
     "available": "Available moves"
   },
   "presets": {
-    "rushCard": "Your chat solves puzzle after puzzle",
-    "restrictLabel": "Only for",
-    "monoCard": "One channel, registered viewers play",
-    "multiCard": "Two channels face off",
-    "voteTime": "Voting time (s)",
-    "choice": "Move selection",
-    "wheel": "🎡 Wheel",
-    "majority": "📊 Majority",
-    "followersHint": "Followers only: only followers, subs, mods and VIPs can register. Twitch will ask once for permission to read your followers."
+    "title": "Suggested setups",
+    "applied": "“{name}” applied: adjust if needed, then Launch",
+    "chipInstant": "instant",
+    "chipSeconds": "{n}s",
+    "chipMajority": "majority",
+    "chipWheel": "wheel",
+    "chipVotes": "{n} votes / viewer",
+    "instant": {
+      "name": "Quick test",
+      "desc": "No timer: the first vote received is played right away. Great to try things with your chat."
+    },
+    "democracy": {
+      "name": "Democracy",
+      "desc": "30s to vote, the most voted move is played."
+    },
+    "wheel": {
+      "name": "Chaos wheel",
+      "desc": "Up to 3 moves per viewer, the wheel draws among the votes."
+    },
+    "vsChat": {
+      "name": "You vs chat",
+      "desc": "A player takes on chat, which has 45s to pick each move."
+    },
+    "puzzles": {
+      "name": "Puzzles",
+      "desc": "Chat solves puzzles, 30s per move."
+    }
   },
   "rushPage": {
     "desc": "Your chat solves harder and harder puzzles. Three mistakes and the run is over.",
@@ -397,8 +415,8 @@
     "topViewers": "Top viewers"
   },
   "tips": {
-    "timer": "On: each move has a voting time, then the move is picked (wheel or majority). Off: no timer, the FIRST vote received is played immediately.",
-    "turnDuration": "How long chat has to vote on each move.",
+    "timer": "On: each move has a voting time (10 to 120s), then the move is picked (wheel or majority). Off: no timer, the FIRST vote received is played immediately, and the other voting settings don't apply.",
+    "turnDuration": "How long chat has to vote on each move, from 10 to 120s. Mind the stream delay: 30s is a good start.",
     "wheelDuration": "Length of the wheel animation that draws the move among the votes.",
     "votesPerViewer": "How many different moves a viewer can suggest each turn. Stats only count them once per move.",
     "majority": "On: the most voted move is played. Off: a wheel draw, each vote gives the move a chance.",
