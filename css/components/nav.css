@@ -216,3 +216,7 @@
         display: none;
     }
 }
+
+/* Pastille verte « partie suivie » à côté de Live Chess / Tournoi */
+.nav__follow-dot { display: none; margin-right: 6px; vertical-align: middle; }
+.nav__link.is-following .nav__follow-dot { display: inline-block; }

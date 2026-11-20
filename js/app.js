@@ -1773,17 +1773,74 @@ function setupConnectionHandlers() {
         }
     });
 
-    document.querySelectorAll('[data-action="connect-phantom"]').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            try {
-                await window.phantomChessboard?.connect();
-                updateConnectionUI();
-                Toast.success('Phantom connecté !');
-            } catch (e) {
-                Toast.error('Connexion Phantom échouée');
-            }
-        });
+    setupPhantomModal();
+}
+
+/**
+ * Modale Phantom : point d'entrée unique. Le badge en haut à droite l'ouvre, et tant que
+ * le Phantom n'est pas connecté, les menus « Phantom ▾ » des pages l'ouvrent au lieu
+ * d'afficher leurs options.
+ */
+function setupPhantomModal() {
+    const overlay = document.getElementById('modal-phantom');
+    const btn = document.getElementById('pmConnect');
+    if (!overlay || !btn) return;
+    const t = (k, fb) => { const v = window.i18n?.t?.(k); return v && v !== k ? v : fb; };
+    const supported = !!navigator.bluetooth;
+
+    const render = () => {
+        const on = !!window.phantomChessboard?.isConnected;
+        document.getElementById('pmUnsupported').hidden = supported || on;
+        const status = document.getElementById('pmStatus');
+        status.textContent = on ? t('phantomModal.connected', 'Phantom connecté') : '';
+        status.classList.toggle('is-on', on);
+        btn.disabled = !supported && !on;
+        btn.classList.toggle('btn--danger', on);
+        btn.querySelector('span').textContent = on ? t('phantomModal.disconnect', 'Déconnecter') : t('phantomModal.connect', 'Connecter');
+    };
+    const open = () => { render(); overlay.classList.add('is-active'); };
+    const close = () => overlay.classList.remove('is-active');
+    window.openPhantomModal = open;
+
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay || e.target.closest('[data-close-modal]')) close();
     });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+    btn.addEventListener('click', async () => {
+        const phantom = window.phantomChessboard;
+        if (!phantom) return;
+        if (phantom.isConnected) {
+            await phantom.disconnect();
+            updateConnectionUI();
+            render();
+            return;
+        }
+        btn.disabled = true;
+        try {
+            await phantom.connect();
+            if (!phantom.isConnected) throw new Error('non connecté');
+            updateConnectionUI();
+            Toast.success('Phantom connecté !');
+            close();
+        } catch (e) {
+            Toast.error('Connexion Phantom échouée');
+        } finally {
+            render();
+        }
+    });
+
+    document.querySelectorAll('[data-action="connect-phantom"]').forEach(b => b.addEventListener('click', open));
+
+    // Menus « Phantom ▾ » : sans connexion, on passe par la modale (capture : avant leurs propres gestionnaires)
+    document.addEventListener('click', e => {
+        const menuBtn = e.target.closest('#btn-phantom-menu, .live-phantom-menu__btn');
+        if (!menuBtn || window.phantomChessboard?.isConnected) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        document.querySelectorAll('.phantom-menu.is-open').forEach(m => m.classList.remove('is-open'));
+        open();
+    }, true);
 }
 
 function updateConnectionUI() {

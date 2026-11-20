@@ -51,10 +51,11 @@
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
                 <a class="nav__link" data-navigate="/sandbox" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
-                <a class="nav__link" data-navigate="/live" data-i18n="nav.live">🔴 Live Chess</a>
-                <a class="nav__link" data-navigate="/tournament" data-i18n="nav.tournament">
+                <a class="nav__link" data-navigate="/live"><span class="nav__game-dot nav__follow-dot"></span><span data-i18n="nav.live">Live Chess</span></a>
+                <a class="nav__link" data-navigate="/tournament">
+                    <span class="nav__game-dot nav__follow-dot"></span>
                     <i class="fas fa-chess-board"></i>
-                    <span>Tournoi</span>
+                    <span data-i18n="nav.tournament">Tournoi</span>
                 </a>                
             </div>
             
@@ -1043,6 +1044,37 @@
             <div class="modal__footer">
                 <button class="btn" data-close-modal>Annuler</button>
                 <button class="btn btn--primary" id="btn-confirm-save" data-i18n="modalsave.config.save">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phantom : point d'entrée unique (présentation, prérequis, connexion) -->
+    <div class="modal-overlay" id="modal-phantom">
+        <div class="modal modal--phantom">
+            <div class="modal__header">
+                <h2 class="modal__title"><i class="fas fa-chess-knight"></i> <span data-i18n="phantomModal.title">Échiquier Phantom</span></h2>
+                <button class="modal__close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal__body">
+                <p class="pm-intro" data-i18n="phantomModal.intro">Phantom est un vrai échiquier en bois qui déplace ses pièces tout seul. Connecté au site, il rejoue sous tes yeux les coups votés par le chat Twitch, ceux d'une partie Live Chess ou d'un tournoi suivi.</p>
+                <div class="pm-reqs">
+                    <p class="pm-reqs__title"><i class="fab fa-bluetooth-b"></i> <span data-i18n="phantomModal.reqTitle">Avant de te connecter</span></p>
+                    <ul>
+                        <li data-i18n="phantomModal.req1">Bluetooth activé sur l'ordinateur</li>
+                        <li data-i18n="phantomModal.req2">Chrome ou Edge sur ordinateur (Web Bluetooth : pas Firefox ni Safari)</li>
+                        <li data-i18n="phantomModal.req3">Échiquier allumé et à proximité</li>
+                    </ul>
+                </div>
+                <p class="pm-unsupported" id="pmUnsupported" hidden><i class="fas fa-exclamation-triangle"></i> <span data-i18n="phantomModal.unsupported">Ce navigateur ne gère pas le Bluetooth : ouvre le site dans Chrome ou Edge.</span></p>
+                <p class="pm-status" id="pmStatus"></p>
+                <p class="pm-credits">
+                    <span data-i18n="phantomModal.credits">Phantom est conçu par Carlos Pendas et l'équipe Phantom.</span>
+                    <a href="https://www.indiegogo.com/projects/phantom-the-robotic-chessboard-made-of-real-wood" target="_blank" rel="noopener"><span data-i18n="phantomModal.link">Découvrir Phantom</span> <i class="fas fa-external-link-alt"></i></a>
+                </p>
+            </div>
+            <div class="modal__footer">
+                <button class="btn" data-close-modal data-i18n="phantomModal.close">Fermer</button>
+                <button class="btn btn--primary" id="pmConnect"><i class="fab fa-bluetooth-b"></i> <span data-i18n="phantomModal.connect">Connecter</span></button>
             </div>
         </div>
     </div>

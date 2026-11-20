@@ -10,6 +10,14 @@ const stateT = {
     clockInterval: null, clockWhite: 0, clockBlack: 0  // ← nouveau
 };
 
+/** Badge de statut de la page Tournoi (idle, polling, live, ended) */
+function setStatusT(type, text) {
+    const badge = document.getElementById('statusBadgeT');
+    const label = document.getElementById('statusTextT');
+    if (badge) badge.className = `live-badge ${type}`;
+    if (label) label.textContent = text;
+}
+
 function logT(msg, type = 'info') {
     const el = document.getElementById('liveLogT');
     if (!el) return;
@@ -471,8 +479,7 @@ function endReviewT(restoreLayout = true) {
     if (!reviewT.game) return;
     reviewT.game = null;
     document.getElementById('tReview').style.display = 'none';
-    const status = document.getElementById('statusTextT');
-    if (status) status.textContent = 'En attente';
+    if (!stateT.currentGame) setStatusT('idle', 'En attente');
     if (restoreLayout) setFollowLayoutT(false);
     if (tournamentData) renderGames(tournamentData.games, activeRoundId);
 }
@@ -820,6 +827,7 @@ async function startGamePolling(game) {
     endReviewT(false);
     setFollowLayoutT(true);
     logT(`Suivi de ${game.white?.preferredShortName} vs ${game.black?.preferredShortName}`, 'info');
+    setStatusT('polling', 'Connexion…');
     await pollGame();
 }
 
@@ -829,6 +837,7 @@ function stopGamePolling() {
     clearTimeout(stateT.pollTimer);
     stopClockT();  // ← reset
     stateT.currentGame = null;
+    setStatusT('idle', 'En attente');
 }
 
 async function pollGame() {
@@ -845,6 +854,10 @@ async function pollGame() {
             
             // Par id : en match, les mêmes joueurs ont plusieurs parties avec le même slug
             const updatedGame = data.games.find(game => g.id != null ? game.id === g.id : game.slug === g.slug);
+            if (updatedGame && stateT.currentGame === g) {
+                if (updatedGame.result && updatedGame.result !== '*') setStatusT('ended', `Terminée (${updatedGame.result})`);
+                else setStatusT('live', 'En direct');
+            }
 
 
 
@@ -1224,10 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('clockWhiteT').textContent = '—';
         document.getElementById('clockBlackT').textContent = '—';
-        const badgeT = document.getElementById('statusBadgeT');
-        if (badgeT) badgeT.className = 'live-badge idle';
-        const statusTextT = document.getElementById('statusTextT');
-        if (statusTextT) statusTextT.textContent = 'En attente';
+        setStatusT('idle', 'En attente');
         if (window.phantomChessboard?.isConnected) {
             window.phantomChessboard.sendGameStart();
             await window.phantomChessboard.syncPosition(stateT.chess.fen());
@@ -1279,9 +1289,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('click', e => menus.forEach(m => { if (!m.contains(e.target)) setMenu(m, false); }));
     document.addEventListener('keydown', e => { if (e.key === 'Escape') menus.forEach(m => setMenu(m, false)); });
-    // Pastille verte quand le Phantom est connecté
+    // Pastille verte quand le Phantom est connecté ; pastille « partie suivie » dans le menu de navigation
     setInterval(() => {
         const on = !!window.phantomChessboard?.isConnected;
         menus.forEach(m => m.classList.toggle('is-connected', on));
+        document.querySelectorAll('.status-dot--phantom').forEach(d => d.classList.toggle('is-connected', on));
+        const following = {
+            '/live': typeof state !== 'undefined' && !!state.polling,
+            '/tournament': !!(stateT.polling && stateT.currentGame),
+        };
+        for (const [route, isOn] of Object.entries(following)) {
+            const link = document.querySelector(`.nav__link[data-navigate="${route}"]`);
+            if (!link) continue;
+            link.classList.toggle('is-following', isOn);
+            link.title = isOn ? 'Partie suivie en direct' : '';
+        }
     }, 1000);
 });

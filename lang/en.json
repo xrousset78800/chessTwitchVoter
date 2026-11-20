@@ -3,7 +3,7 @@
     "rush": "Puzzle Rush",
     "mono": "Mono",
     "multi": "Multi",
-    "live": "🔴 Live Chess",
+    "live": "Live Chess",
     "tournament": "Tournament",
     "new": "New",
     "browse": "Browse",
@@ -279,5 +279,20 @@
     "replay": "Replay from the start",
     "loading": "Loading moves…",
     "replayUnavailable": "Moves unavailable"
+  },
+  "phantomModal": {
+    "title": "Phantom chessboard",
+    "intro": "Phantom is a real wooden chessboard that moves its own pieces. Connected to the site, it plays out the moves voted by Twitch chat, or those of a Live Chess game or a followed tournament.",
+    "reqTitle": "Before connecting",
+    "req1": "Bluetooth turned on on your computer",
+    "req2": "Chrome or Edge on desktop (Web Bluetooth: not Firefox or Safari)",
+    "req3": "Board switched on and nearby",
+    "unsupported": "This browser doesn't support Bluetooth: open the site in Chrome or Edge.",
+    "credits": "Phantom is designed by Carlos Pendas and the Phantom team.",
+    "link": "Discover Phantom",
+    "close": "Close",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connected": "Phantom connected"
   }
 }
