@@ -47,6 +47,52 @@ function formatElapsed(seconds) {
     return m > 0 ? `${m}m${s.toString().padStart(2,'0')}` : `${s}s`;
 }
 
+// ── Horaires des rondes (chess.com donne le début ; la fin = dernière partie terminée) ──
+const roundLocale = () => (window.i18n?.currentLang === 'en' ? 'en-GB' : 'fr-FR');
+
+/** "15:00" aujourd'hui, sinon "mar. 17, 15:00" */
+function formatRoundStart(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const time = d.toLocaleTimeString(roundLocale(), { hour: '2-digit', minute: '2-digit' });
+    if (d.toDateString() === new Date().toDateString()) return time;
+    const day = d.toLocaleDateString(roundLocale(), { weekday: 'short', day: 'numeric' });
+    return `${day}, ${time}`;
+}
+
+function formatTimeControl(tc) {
+    const [base, inc] = String(tc || '').split('+').map(Number);
+    if (!base) return '';
+    const b = base >= 60 ? `${base / 60} min` : `${base} s`;
+    return inc ? `${b} + ${inc} s` : b;
+}
+
+// chess.com programme un match en bloc (même heure pour toutes ses rondes) : l'heure réelle
+// est celle de la première partie de la ronde
+function roundStartedAt(r, games) {
+    const starts = games.filter(g => g.roundId === r.id).map(g => Date.parse(g.startAt)).filter(Number.isFinite);
+    return starts.length ? new Date(Math.min(...starts)).toISOString() : null;
+}
+
+function roundTooltip(r, games) {
+    const full = { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
+    const hm = { hour: '2-digit', minute: '2-digit' };
+    const lines = [`Ronde ${r.slug}`, `Prévue : ${new Date(r.startAt).toLocaleString(roundLocale(), full)}`];
+    const started = roundStartedAt(r, games);
+    if (started) lines.push(`Commencée à ${new Date(started).toLocaleTimeString(roundLocale(), hm)}`);
+    const tc = formatTimeControl(r.timeControl);
+    if (tc) lines.push(tc);
+    const roundGames = games.filter(g => g.roundId === r.id);
+    const ends = roundGames.map(g => Date.parse(g.endAt)).filter(Number.isFinite);
+    if (roundGames.length && ends.length === roundGames.length) {
+        const end = new Date(Math.max(...ends)).toLocaleTimeString(roundLocale(), hm);
+        lines.push(`Terminée à ${end}`);
+    } else if (roundGames.some(isLiveGame)) {
+        lines.push('En cours');
+    }
+    return lines.join('\n');
+}
+
 // Une partie pas encore jouée a aussi le résultat '*', mais pas d'heure de début
 const isLiveGame = g => g.result === '*' && !!(g.startAt || g.currentFEN);
 
@@ -75,7 +121,9 @@ function renderTournament(data) {
         if (!r.startAt) return;
         const btn = document.createElement('button');
         btn.className = 'round-btn' + (r.id === activeRoundId ? ' is-active' : '');
-        btn.textContent = `R${r.slug}`;
+        btn.innerHTML = `<span class="round-btn__name">R${r.slug}</span>`
+                      + `<span class="round-btn__time">${formatRoundStart(roundStartedAt(r, data.games) ?? r.startAt)}</span>`;
+        btn.title = roundTooltip(r, data.games);
         btn.dataset.roundId = r.id;
         btn.addEventListener('click', () => {
             activeRoundId = r.id;
