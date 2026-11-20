@@ -285,6 +285,34 @@
 .phantom-action--danger    { --action-color: #ef4444; }
 .phantom-action--end       { --action-color: #ef4444; }
 
+/* Réglages Phantom compacts (vitesse, synchro) sous les actions */
+.ph-settings {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle, #2a2a3a);
+    font-size: 0.8rem;
+    color: var(--text-secondary, #8888a0);
+}
+.ph-settings__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ph-speed {
+    display: inline-flex;
+    border: 1px solid var(--border-subtle, #2a2a3a);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.ph-speed button {
+    width: 26px; height: 24px;
+    border: 0; background: transparent;
+    color: inherit; font: inherit; font-size: 0.75rem;
+    cursor: pointer;
+}
+.ph-speed button + button { border-left: 1px solid var(--border-subtle, #2a2a3a); }
+.ph-speed button:hover { background: rgba(6, 182, 212, 0.15); }
+.ph-speed button.is-active { background: #06b6d4; color: #000; font-weight: 700; }
+body:not(.phantom-connected) .ph-speed { opacity: 0.4; pointer-events: none; }
+
 /* Toggle switch */
 .toggle-switch {
     position: relative;

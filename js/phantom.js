@@ -389,11 +389,7 @@ class PhantomChessboard {
                 this.currentSpeed = currentSpeed;
                 this.log(`⚡ Vitesse actuelle: ${currentSpeed}/5`, 'info');
                 
-                // Mettre à jour le slider si présent
-                const speedSlider = document.getElementById('phantom-speed');
-                const speedValueEl = document.getElementById('phantom-speed-value');
-                if (speedSlider) speedSlider.value = currentSpeed;
-                if (speedValueEl) speedValueEl.textContent = currentSpeed;
+                refreshPhantomSpeedControls();
             } catch (e) { 
                 this.log('⚠️ Vitesse non disponible', 'warn');
             }
@@ -798,10 +794,12 @@ class PhantomChessboard {
         }
         
         try {
-            const value = Math.max(0, Math.min(100, speed));
+            const value = Math.max(1, Math.min(5, speed));
             const encoded = new TextEncoder().encode(value.toString());
             await this.characteristics.speed.writeValue(encoded);
-            this.log(`⚡ Vitesse: ${value}%`, 'info');
+            this.currentSpeed = value;
+            this.log(`⚡ Vitesse: ${value}/5`, 'info');
+            refreshPhantomSpeedControls();
             return true;
         } catch (error) {
             this.log(`❌ Erreur vitesse: ${error.message}`, 'error');
@@ -1339,3 +1337,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 console.log('🎯 Phantom.js chargé - Version avec file d\'attente et blocage UI');
+
+// ========== RÉGLAGES PHANTOM COMPACTS (menus Partie, Live, Tournoi) ==========
+// Sélecteurs de vitesse 1..5 [data-ph-speed] : tous affichent la vitesse réelle du Phantom
+function refreshPhantomSpeedControls() {
+    const speed = window.phantomChessboard?.currentSpeed;
+    document.querySelectorAll('[data-ph-speed] button').forEach(b => {
+        b.classList.toggle('is-active', Number(b.dataset.speed) === speed);
+    });
+}
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-ph-speed] button');
+    if (!btn) return;
+    const phantom = window.phantomChessboard;
+    if (!phantom?.isConnected) return;
+    await phantom.setSpeed(Number(btn.dataset.speed));
+});

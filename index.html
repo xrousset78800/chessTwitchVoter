@@ -155,6 +155,13 @@
                                     <button class="phantom-action phantom-action--danger" id="btn-repair-centering" disabled title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                                     <button class="phantom-action phantom-action--end" id="btn-game-end" disabled><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                                 </div>
+                                <div class="ph-settings">
+                                    <div class="ph-settings__row"><span data-i18n="setup.phantomSpeed">Vitesse</span><div class="ph-speed" data-ph-speed role="group" aria-label="Vitesse"><button type="button" data-speed="1">1</button><button type="button" data-speed="2">2</button><button type="button" data-speed="3">3</button><button type="button" data-speed="4">4</button><button type="button" data-speed="5">5</button></div></div>
+                                    <div class="ph-settings__row">
+                                        <span data-i18n="live.phantom.autosync">Sync automatique</span>
+                                        <div class="toggle is-active" id="toggle-auto-sync"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <button class="btn btn--sm tool-btn" id="btn-settings" data-i18n-title="setup.settings" title="Réglages"><i class="fas fa-cog"></i></button>
@@ -351,36 +358,6 @@
                                 </div>
                             </div>
 
-                            <!-- Phantom settings (only when connected) -->
-                            <div class="panel conditional-section phantom-only">
-                                <div class="panel__header" data-i18n="gameMode.phantom.title"><i class="fas fa-chess-board"></i> Paramètres Phantom</div>
-                                <div class="panel__content">
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.phantom.battery">Batterie</span>
-                                        <span id="phantom-battery">---%</span>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" data-i18n="gameMode.phantom.speed">Vitesse mécanisme</label>
-                                        <div class="flex items-center gap-sm">
-                                            <input type="range" class="range" id="phantom-speed" min="1" max="5" value="3" style="flex:1">
-                                            <span id="phantom-speed-value">3</span>
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.phantom.autosync">Auto-sync</span>
-                                        <div class="toggle is-active" id="toggle-auto-sync"></div>
-                                    </div>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.phantom.autoO-O-O">Auto Roque</span>
-                                        <div class="toggle is-active" id="toggle-castling"></div>
-                                    </div>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.phantom.snapOption">Snap au centre</span>
-                                        <div class="toggle is-active" id="toggle-snap"></div>
-                                    </div>
-                                </div>
-                            </div>
-                                <p class="form-hint setup-modal-only setup-phantom-hint" data-i18n="setup.phantomHint">Connecte le Phantom pour régler sa vitesse et la synchronisation.</p>
                             </div>
                         </div>
                         <div class="sandbox-setup__footer launch-only">
@@ -747,20 +724,12 @@
                                 <button class="phantom-action phantom-action--end" id="btnGameEndLive"><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                             </div>
 
-                            <div class="phantom-toggle">
-                                <span data-i18n="live.phantom.autosync">Sync automatique</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="phantomAutoSync" checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-
-                            <div class="speed-control">
-                                <label>
-                                    <span data-i18n="live.phantom.speed">Vitesse Phantom</span>
-                                    <span id="speedVal">50%</span>
-                                </label>
-                                <input type="range" id="phantomSpeed" min="1" max="5" value="3" step="1">
+                            <div class="ph-settings">
+                                <div class="ph-settings__row"><span data-i18n="setup.phantomSpeed">Vitesse</span><div class="ph-speed" data-ph-speed role="group" aria-label="Vitesse"><button type="button" data-speed="1">1</button><button type="button" data-speed="2">2</button><button type="button" data-speed="3">3</button><button type="button" data-speed="4">4</button><button type="button" data-speed="5">5</button></div></div>
+                                <div class="ph-settings__row">
+                                    <span data-i18n="live.phantom.autosync">Sync automatique</span>
+                                    <label class="toggle-switch"><input type="checkbox" id="phantomAutoSync" checked><span class="toggle-slider"></span></label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -882,20 +851,12 @@
                                 <button class="phantom-action phantom-action--end" id="btnGameEndT"><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                             </div>
 
-                            <div class="phantom-toggle">
-                                <span data-i18n="live.phantom.autosync">Sync automatique</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="phantomAutoSyncT" checked>
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-
-                            <div class="speed-control">
-                                <label>
-                                    <span data-i18n="live.phantom.speed">Vitesse Phantom</span>
-                                    <span id="speedValT">3</span>
-                                </label>
-                                <input type="range" id="phantomSpeedT" min="1" max="5" value="3" step="1">
+                            <div class="ph-settings">
+                                <div class="ph-settings__row"><span data-i18n="setup.phantomSpeed">Vitesse</span><div class="ph-speed" data-ph-speed role="group" aria-label="Vitesse"><button type="button" data-speed="1">1</button><button type="button" data-speed="2">2</button><button type="button" data-speed="3">3</button><button type="button" data-speed="4">4</button><button type="button" data-speed="5">5</button></div></div>
+                                <div class="ph-settings__row">
+                                    <span data-i18n="live.phantom.autosync">Sync automatique</span>
+                                    <label class="toggle-switch"><input type="checkbox" id="phantomAutoSyncT" checked><span class="toggle-slider"></span></label>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1067,6 +1067,8 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         
         this.setupToggle('toggle-auto-sync', (active) => {
             AppState.config.phantomAutoSync = active;
+            // Réglable depuis le menu Phantom pendant la partie : effet immédiat
+            if (gameEngine.config) gameEngine.config.phantomAutoSync = active;
         });
 
         // ========== INPUTS NUMÉRIQUES ==========
@@ -1952,36 +1954,6 @@ function updateConnectionUI() {
     SandboxPage.updateConditionalUI();
 }
 
-// ============================================
-// PHANTOM SPEED CONTROL
-// ============================================
-document.getElementById('phantom-speed')?.addEventListener('input', (e) => {
-    const speed = parseInt(e.target.value);
-    document.getElementById('phantom-speed-value').textContent = speed;
-});
-
-document.getElementById('phantom-speed')?.addEventListener('change', async (e) => {
-    const speed = parseInt(e.target.value);
-    console.log(`⚡ Modification vitesse: ${speed}`);
-    
-    if (window.phantomChessboard?.isConnected) {
-        await window.phantomChessboard.setSpeed(speed);
-        Toast.success(`Vitesse réglée à ${speed}`);
-    }
-});
-
-window.addEventListener('phantomConnected', async () => {
-    if (window.phantomChessboard) {
-        const speed = await window.phantomChessboard.getSpeed();
-        const slider = document.getElementById('phantom-speed');
-        const valueEl = document.getElementById('phantom-speed-value');
-        
-        if (slider) slider.value = speed;
-        if (valueEl) valueEl.textContent = speed;
-        
-        console.log(`⚡ Vitesse actuelle du Phantom: ${speed}`);
-    }
-});
 
 // ============================================
 // ROUTES PRÉCONFIGURÉES : PAGES DE RÉGLAGE

@@ -373,14 +373,6 @@ document.getElementById('btnPhantom').addEventListener('click', async () => {
             window.phantomChessboard.syncPosition(state.chess.fen());
             log('Phantom synchronisé sur la position actuelle', 'ok');
         }
-        try {
-            const speedValue = await window.phantomChessboard.characteristics.speed?.readValue();
-            if (speedValue) {
-                const currentSpeed = parseInt(new TextDecoder().decode(speedValue));
-                document.getElementById('phantomSpeed').value = currentSpeed;
-                document.getElementById('speedVal').textContent = currentSpeed;
-            }
-        } catch(e) { /* optionnel */ }
 
     } else {
         log('Connexion Phantom échouée', 'error');
@@ -462,18 +454,6 @@ document.getElementById('btnStop').addEventListener('click', () => {
     log('Arrêté manuellement', 'warn');
 });
 
-document.getElementById('phantomSpeed').addEventListener('input', function() {
-    document.getElementById('speedVal').textContent = this.value;
-});
-
-document.getElementById('phantomSpeed').addEventListener('change', async function() {
-    if (window.phantomChessboard?.isConnected) {
-        await window.phantomChessboard.setSpeed(parseInt(this.value));
-        log(`Vitesse réglée à ${this.value}/5`, 'ok');
-    } else {
-        log('Phantom non connecté', 'warn');
-    }
-});
 
 setInterval(() => {
     const el = document.getElementById('phantomStatus');

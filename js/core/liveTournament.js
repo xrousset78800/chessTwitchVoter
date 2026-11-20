@@ -1194,15 +1194,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logT(connected ? 'Phantom connecté' : 'Connexion échouée', connected ? 'ok' : 'error');
     });
 
-    document.getElementById('phantomSpeedT')?.addEventListener('input', function() {
-        document.getElementById('speedValT').textContent = this.value;
-    });
-    document.getElementById('phantomSpeedT')?.addEventListener('change', async function() {
-        if (window.phantomChessboard?.isConnected) {
-            await window.phantomChessboard.setSpeed(parseInt(this.value));
-            logT(`Vitesse réglée à ${this.value}/5`, 'ok');
-        }
-    });
     
     // Réactiver la sync automatique remet tout de suite l'échiquier à jour
     document.getElementById('phantomAutoSyncT')?.addEventListener('change', async function () {
