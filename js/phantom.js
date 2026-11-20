@@ -18,6 +18,7 @@ class PhantomChessboard {
         this.UUID_SETSTATE = 'acb6543c-92ca-11ee-b9d1-0242ac120002';
         this.UUID_JUMP_TO_CENTER = '5e316147-4550-4cf3-8e2b-edc098312a43';
         this.UUID_VERSION = '392d9e66-937a-11ee-b9d1-0242ac120002';
+        this.UUID_FACTORY_RESET = 'b583ff00-b77a-42f5-a53f-a9bf4c291d80';
         
         // OpCodes
         this.OP_CODES = {
@@ -473,6 +474,10 @@ class PhantomChessboard {
                 this.lastError = dataStr;
                 this.lastErrorCount = 1;
                 this.log(`⚠️ [ERROR_MSG] ${dataStr}`, 'warn');
+                const d = this.describeSensorError(dataStr);
+                if (d) this.log(`🧲 Capteurs : ${d.seen}/${d.total} pièces détectées` +
+                    (d.extra.length ? `, détection sur cases vides : ${d.extra.join(' ')}` : '') +
+                    (d.missing.length && d.missing.length <= 12 ? `, manquantes : ${d.missing.join(' ')}` : ''), 'warn');
                 window.dispatchEvent(new CustomEvent('phantomError', { detail: dataStr }));
                 return;
             }
@@ -565,7 +570,44 @@ class PhantomChessboard {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
     }
 
-    /** Recentre toutes les pièces sur leurs cases (SNAPTOCENTERCOM) */
+    /**
+     * Réglages d'usine : l'échiquier redémarre (il faut ensuite le reconnecter).
+     * Remet aussi à zéro les réglages de la mécanique enregistrés dans le Phantom.
+     */
+    async factoryReset() {
+        const c = await this.service.getCharacteristic(this.UUID_FACTORY_RESET);
+        await c.writeValue(new TextEncoder().encode('1'));
+        this.log('♻️ Réinitialisation usine envoyée, le Phantom redémarre', 'warn');
+        setTimeout(() => this.disconnect(), 1000);
+        return true;
+    }
+
+    /**
+     * Lit « ERROR: Chessboard and sensor matrix do not match.,<attendu>,<capteurs> ».
+     * Matrices 10×10 colonne par colonne (bordure comprise) : colonne 1..8 = a..h,
+     * ligne 1..8 = rangée 8..1. Capteurs : '0' = pièce détectée (actif bas).
+     */
+    describeSensorError(text) {
+        const parts = String(text).split(',');
+        const expected = parts.find(p => p.length === 100 && /[a-zA-Z.]/.test(p) && !/^[01]+$/.test(p));
+        const sensors = parts.find(p => p.length === 100 && /^[01]+$/.test(p));
+        if (!expected || !sensors) return null;
+        const square = i => 'abcdefgh'[Math.floor(i / 10) - 1] + (9 - (i % 10));
+        const inside = i => i % 10 >= 1 && i % 10 <= 8 && i >= 10 && i < 90;
+        const missing = [], extra = [];
+        let seen = 0, total = 0;
+        for (let i = 0; i < 100; i++) {
+            if (!inside(i)) continue;
+            const piece = expected[i] !== '.';
+            const detected = sensors[i] === '0';
+            if (piece) total++;
+            if (piece && detected) seen++;
+            if (piece && !detected) missing.push(square(i));
+            if (!piece && detected) extra.push(square(i));
+        }
+        return { seen, total, missing, extra };
+    }
+
     async snapToCenter() {
         this.lastError = null;
         return await this.sendCommand(this.OP_CODES.SNAPTOCENTERCOM);

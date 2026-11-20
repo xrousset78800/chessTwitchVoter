@@ -1770,7 +1770,7 @@ const Toast = {
         }
     },
 
-    show(message, type = 'info', duration = 3000) {
+    show(message, type = 'info', duration = 4000) {
         const toast = document.createElement('div');
         toast.className = `toast toast--${type}`;
         toast.innerHTML = `
@@ -1782,10 +1782,12 @@ const Toast = {
             toast.remove();
         });
 
+        // is-visible : sans elle, main.css garde le toast à opacity 0 une fois l'animation d'entrée finie
+        toast.classList.add('is-visible');
         this.container.appendChild(toast);
 
         setTimeout(() => {
-            toast.classList.add('toast--fade-out');
+            toast.classList.add('is-leaving');
             setTimeout(() => toast.remove(), 300);
         }, duration);
     },
@@ -1876,6 +1878,7 @@ function setupPhantomModal() {
         const status = document.getElementById('pmStatus');
         status.textContent = on ? t('phantomModal.connected', 'Phantom connecté') : '';
         status.classList.toggle('is-on', on);
+        document.getElementById('pmRepair').hidden = !on;
         btn.disabled = !supported && !on;
         btn.classList.toggle('btn--danger', on);
         btn.querySelector('span').textContent = on ? t('phantomModal.disconnect', 'Déconnecter') : t('phantomModal.connect', 'Connecter');
@@ -1888,6 +1891,19 @@ function setupPhantomModal() {
         if (e.target === overlay || e.target.closest('[data-close-modal]')) close();
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+    document.getElementById('pmFactoryReset')?.addEventListener('click', async () => {
+        const phantom = window.phantomChessboard;
+        if (!phantom?.isConnected) return;
+        if (!window.confirm('Réinitialiser le Phantom aux réglages d\'usine ?\n\nTous ses réglages (vitesse, son, mécanique) reviennent aux valeurs d\'origine et il redémarre. Il faudra le reconnecter, puis lancer « Calibrer ».')) return;
+        try {
+            await phantom.factoryReset();
+            Toast.info('Réinitialisation envoyée : le Phantom redémarre, reconnecte-le dans quelques secondes');
+            setTimeout(() => { updateConnectionUI(); render(); }, 1500);
+        } catch (e) {
+            Toast.error(`Réinitialisation impossible : ${e.message}`);
+        }
+    });
 
     btn.addEventListener('click', async () => {
         const phantom = window.phantomChessboard;
