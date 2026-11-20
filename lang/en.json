@@ -273,8 +273,11 @@
   },
   "tournamentFollow": {
     "title": "Sync the Phantom",
-    "hint": "The Phantom will set up this position, then follow the moves of the game.",
-    "confirm": "Follow and sync",
-    "cancel": "Cancel"
+    "hint": "Set this position directly, or reset the board and replay the game move by move. The Phantom then follows the moves played.",
+    "confirm": "Current position",
+    "cancel": "Cancel",
+    "replay": "Replay from the start",
+    "loading": "Loading moves…",
+    "replayUnavailable": "Moves unavailable"
   }
 }

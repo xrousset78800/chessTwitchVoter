@@ -133,7 +133,8 @@ function renderGames(games, roundId) {
             row.style.cursor = 'pointer';
             row.addEventListener('click', async () => {
                 hidePreviewT();
-                if (!(await confirmFollowT(g, wName, bName))) return;
+                const choice = await confirmFollowT(g, wName, bName);
+                if (!choice) return;
                 // L'état interne doit suivre l'échiquier affiché : c'est lui que Synchroniser envoie au Phantom
                 stateT.chess.load(g.currentFEN);
                 stateT.board.position(g.currentFEN);
@@ -144,6 +145,12 @@ function renderGames(games, roundId) {
                 document.getElementById('playerBlackT').textContent = bName;
                 document.getElementById('ratingBlackT').textContent = g.blackElo ? `(${g.blackElo})` : '';
                 logT(`${wName} vs ${bName} — suivi démarré`, 'ok');
+                if (choice.replay) {
+                    // Position de départ d'abord (le Phantom vide sa file et remet l'échiquier à zéro),
+                    // puis chaque coup ; le suivi normal enchaîne derrière dans la même file
+                    for (const fen of choice.replay) await window.phantomChessboard.syncPosition(fen);
+                    logT(`Phantom : remise à zéro puis ${choice.replay.length - 1} coups rejoués`, 'ok');
+                }
                 startGamePolling(g);  // ← remplace l'ancien log statique
             });
         }
@@ -151,6 +158,12 @@ function renderGames(games, roundId) {
         el.appendChild(row);
     });
 }
+
+// Traduction si le module i18n est chargé, sinon le texte français
+const trT = (key, fallback) => {
+    const v = window.i18n?.t?.(key);
+    return v && v !== key ? v : fallback;
+};
 
 // ── Aperçu de la position au survol d'une partie ──
 const previewGames = new Map(); // clé -> { fen, title }, remis à jour à chaque actualisation de la liste
@@ -223,27 +236,86 @@ function bindPreviewT() {
     list.addEventListener('mouseleave', hidePreviewT);
 }
 
+// ── Rejouer le début : coups de la partie depuis chess.com ──
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+async function fetchGameMovesT(g) {
+    const room = tournamentData?.room?.slug || stateT.tournamentSlug;
+    const round = tournamentData?.rounds?.find(r => r.id === g.roundId)?.slug;
+    if (!room || !round || !g.slug) throw new Error('ronde introuvable');
+    const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event-game/${[room, round, g.slug].map(encodeURIComponent).join('/')}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (g.id != null && data.id != null && data.id !== g.id) throw new Error('autre partie');
+    return data.moves || [];
+}
+
+/** Positions successives depuis le départ ; `cbn` = "e2e4_e4" (coordonnées_SAN) */
+function replayFensT(moves, currentFEN) {
+    const chess = new Chess();
+    const fens = [START_FEN];
+    for (const cbn of moves) {
+        const [uci = '', san = ''] = String(cbn).split('_');
+        let mv = null;
+        try { mv = chess.move(san); } catch { mv = null; }
+        if (!mv) {
+            const promo = uci[4] || (san.match(/=([QRBN])/)?.[1] || '').toLowerCase() || undefined;
+            try { mv = chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: promo }); } catch { mv = null; }
+        }
+        if (!mv) break; // coup illisible : on termine par la position actuelle
+        fens.push(chess.fen());
+    }
+    const board = f => String(f || '').split(' ')[0];
+    if (currentFEN && board(fens.at(-1)) !== board(currentFEN)) fens.push(currentFEN);
+    return fens;
+}
+
 // ── Confirmation avant d'envoyer une partie sur le Phantom ──
+// Résout { replay: null } (position actuelle), { replay: [fen…] } (rejouer le début) ou false (annulé)
 function confirmFollowT(g, wName, bName) {
     const modal = document.getElementById('modal-tournament-follow');
     const phantomWillMove = window.phantomChessboard?.isConnected
         && document.getElementById('phantomAutoSyncT')?.checked !== false;
-    if (!modal || !phantomWillMove) return Promise.resolve(true);
+    if (!modal || !phantomWillMove) return Promise.resolve({ replay: null });
 
     document.getElementById('tfTitle').textContent = `${wName} – ${bName}`;
     document.getElementById('tfBoard').innerHTML = miniBoardHTML(g.currentFEN);
     modal.classList.add('is-active');
 
+    // Coups chargés pendant que la fenêtre est ouverte
+    const replayBtn = document.getElementById('tfReplay');
+    const replayLabel = document.getElementById('tfReplayLabel');
+    let replayFens = null;
+    replayBtn.disabled = true;
+    replayLabel.textContent = trT('tournamentFollow.loading', 'Chargement des coups…');
+    const token = {};
+    confirmFollowT.token = token;
+    fetchGameMovesT(g).then(moves => {
+        if (confirmFollowT.token !== token) return;
+        replayFens = replayFensT(moves, g.currentFEN);
+        const n = replayFens.length - 1;
+        replayLabel.textContent = trT('tournamentFollow.replay', 'Rejouer depuis le début') + ` (${n})`;
+        replayBtn.disabled = n < 1;
+    }).catch(err => {
+        if (confirmFollowT.token !== token) return;
+        replayLabel.textContent = trT('tournamentFollow.replayUnavailable', 'Coups indisponibles');
+        logT(`Coups de la partie indisponibles : ${err.message}`, 'warn');
+    });
+
     return new Promise(resolve => {
         const ok = document.getElementById('tfConfirm');
         const done = (value) => {
+            confirmFollowT.token = null;
             modal.classList.remove('is-active');
             ok.removeEventListener('click', onOk);
+            replayBtn.removeEventListener('click', onReplay);
             observer.disconnect();
             resolve(value);
         };
-        const onOk = () => done(true);
+        const onOk = () => done({ replay: null });
+        const onReplay = () => replayFens && done({ replay: replayFens });
         ok.addEventListener('click', onOk);
+        replayBtn.addEventListener('click', onReplay);
         // Fermée autrement (croix, Annuler, clic à côté) : on ne suit pas la partie
         const observer = new MutationObserver(() => {
             if (!modal.classList.contains('is-active')) done(false);

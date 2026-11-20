@@ -166,6 +166,25 @@ app.get('/proxy/chess-event/:slug', async (req, res) => {
     }
 });
 
+// Coups d'une partie de tournoi (la salle ne donne que la position actuelle).
+// La réponse de chess.com contient aussi l'analyse moteur (~200 Ko) : on ne garde que les coups.
+app.get('/proxy/chess-event-game/:room/:round/:game', async (req, res) => {
+    try {
+        const { room, round, game } = req.params;
+        const url = `https://www.chess.com/events/v1/api/game/${[room, round, game].map(encodeURIComponent).join('/')}`;
+        const r = await fetch(url, { method: 'POST', headers: CHESS_COM_EVENT_HEADERS, body: JSON.stringify({}) });
+        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        const data = await r.json();
+        res.json({
+            id: data.game?.id,
+            currentFEN: data.game?.currentFEN,
+            moves: (data.moves || []).slice().sort((a, b) => a.ply - b.ply).map(m => m.cbn)
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Événement chess.com qui regroupe plusieurs salles (groupes, brackets…) :
 // chaque salle a son propre slug, c'est lui qui donne accès aux parties
 app.get('/proxy/chess-event-index/:slug', async (req, res) => {

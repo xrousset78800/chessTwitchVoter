@@ -1017,11 +1017,14 @@
             <div class="modal__body">
                 <p class="tf-title" id="tfTitle"></p>
                 <div class="tf-board" id="tfBoard"></div>
-                <p class="form-hint" data-i18n="tournamentFollow.hint">Le Phantom va placer cette position, puis suivre les coups de la partie.</p>
+                <p class="form-hint" data-i18n="tournamentFollow.hint">Placer directement cette position, ou remettre l'échiquier à zéro et rejouer la partie coup par coup. Le Phantom suit ensuite les coups joués.</p>
+                <div class="tf-actions">
+                    <button class="btn btn--primary" id="tfConfirm"><i class="fas fa-chess-board"></i> <span data-i18n="tournamentFollow.confirm">Position actuelle</span></button>
+                    <button class="btn" id="tfReplay" disabled><i class="fas fa-backward"></i> <span id="tfReplayLabel">Rejouer depuis le début</span></button>
+                </div>
             </div>
             <div class="modal__footer">
                 <button class="btn" data-close-modal data-i18n="tournamentFollow.cancel">Annuler</button>
-                <button class="btn btn--primary" id="tfConfirm"><i class="fas fa-sync"></i> <span data-i18n="tournamentFollow.confirm">Suivre et synchroniser</span></button>
             </div>
         </div>
     </div>

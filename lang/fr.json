@@ -273,8 +273,11 @@
   },
   "tournamentFollow": {
     "title": "Synchroniser le Phantom",
-    "hint": "Le Phantom va placer cette position, puis suivre les coups de la partie.",
-    "confirm": "Suivre et synchroniser",
-    "cancel": "Annuler"
+    "hint": "Placer directement cette position, ou remettre l'échiquier à zéro et rejouer la partie coup par coup. Le Phantom suit ensuite les coups joués.",
+    "confirm": "Position actuelle",
+    "cancel": "Annuler",
+    "replay": "Rejouer depuis le début",
+    "loading": "Chargement des coups…",
+    "replayUnavailable": "Coups indisponibles"
   }
 }
