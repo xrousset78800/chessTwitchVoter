@@ -270,5 +270,11 @@
     "players": "player(s)",
     "chat": "Twitch chat",
     "anonymous": "Anonymous channel"
+  },
+  "tournamentFollow": {
+    "title": "Sync the Phantom",
+    "hint": "The Phantom will set up this position, then follow the moves of the game.",
+    "confirm": "Follow and sync",
+    "cancel": "Cancel"
   }
 }

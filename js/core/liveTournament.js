@@ -91,6 +91,7 @@ function renderTournament(data) {
 
 function renderGames(games, roundId) {
     const el = document.getElementById('tournamentGames');
+    bindPreviewT();
     const filtered = games
         .filter(g => g.roundId === roundId)
         .sort((a, b) => (isLiveGame(a) ? 0 : 1) - (isLiveGame(b) ? 0 : 1) || a.board - b.board);
@@ -113,6 +114,8 @@ function renderGames(games, roundId) {
 
         const row = document.createElement('div');
         row.className = 'tournament-game-row' + (isLive ? ' is-live' : ' is-finished');
+        row.dataset.gameKey = gameKey(g);
+        previewGames.set(gameKey(g), { fen: g.currentFEN, title: `${wName} – ${bName}` });
         row.innerHTML = `
             <div class="tg-players">
                 <span class="tg-white">${wTitle}${wName} <span class="tg-elo">${g.whiteElo ?? ''}</span></span>
@@ -128,7 +131,9 @@ function renderGames(games, roundId) {
 
         if (isLive && g.currentFEN) {
             row.style.cursor = 'pointer';
-            row.addEventListener('click', () => {
+            row.addEventListener('click', async () => {
+                hidePreviewT();
+                if (!(await confirmFollowT(g, wName, bName))) return;
                 // L'état interne doit suivre l'échiquier affiché : c'est lui que Synchroniser envoie au Phantom
                 stateT.chess.load(g.currentFEN);
                 stateT.board.position(g.currentFEN);
@@ -144,6 +149,106 @@ function renderGames(games, roundId) {
         }
 
         el.appendChild(row);
+    });
+}
+
+// ── Aperçu de la position au survol d'une partie ──
+const previewGames = new Map(); // clé -> { fen, title }, remis à jour à chaque actualisation de la liste
+const gameKey = g => String(g.id ?? g.slug);
+const PIECE_IMG = p => `https://chessboardjs.com/img/chesspieces/wikipedia/${p}.png`;
+
+/** Petit échiquier statique (blancs en bas) à partir d'un FEN */
+function miniBoardHTML(fen) {
+    const rows = String(fen || '').split(' ')[0].split('/');
+    if (rows.length !== 8) return '';
+    let html = '';
+    rows.forEach((row, r) => {
+        let c = 0;
+        for (const ch of row) {
+            if (/\d/.test(ch)) {
+                for (let k = 0; k < +ch; k++, c++) html += `<div class="mini-board__sq ${(r + c) % 2 ? 'is-dark' : ''}"></div>`;
+            } else {
+                const piece = (ch === ch.toUpperCase() ? 'w' : 'b') + ch.toUpperCase();
+                html += `<div class="mini-board__sq ${(r + c) % 2 ? 'is-dark' : ''}"><img src="${PIECE_IMG(piece)}" alt=""></div>`;
+                c++;
+            }
+        }
+    });
+    return `<div class="mini-board">${html}</div>`;
+}
+
+function previewEl() {
+    let el = document.getElementById('tgPreview');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'tgPreview';
+        el.className = 'tg-preview';
+        document.body.appendChild(el);
+    }
+    return el;
+}
+
+function hidePreviewT() {
+    document.getElementById('tgPreview')?.classList.remove('is-visible');
+}
+
+function showPreviewT(row) {
+    const info = previewGames.get(row.dataset.gameKey);
+    if (!info?.fen) return hidePreviewT();
+    const el = previewEl();
+    if (el.dataset.fen !== info.fen) {
+        el.innerHTML = `<div class="tg-preview__title">${info.title}</div>${miniBoardHTML(info.fen)}`;
+        el.dataset.fen = info.fen;
+    }
+    // À gauche de la liste (colonne de droite), sinon en dessous de la ligne
+    const r = row.getBoundingClientRect();
+    const w = el.offsetWidth || 220, h = el.offsetHeight || 240;
+    let left = r.left - w - 12, top = r.top + r.height / 2 - h / 2;
+    if (left < 8) { left = Math.min(r.left, window.innerWidth - w - 8); top = r.bottom + 8; }
+    el.style.left = `${Math.max(8, left)}px`;
+    el.style.top  = `${Math.max(8, Math.min(top, window.innerHeight - h - 8))}px`;
+    el.classList.add('is-visible');
+}
+
+// Délégation : la liste est reconstruite toutes les 5 s pendant le suivi
+function bindPreviewT() {
+    const list = document.getElementById('tournamentGames');
+    if (!list || list.dataset.previewBound) return;
+    list.dataset.previewBound = '1';
+    if (window.matchMedia?.('(hover: none)').matches) return; // tactile : pas de survol
+    list.addEventListener('mousemove', (e) => {
+        const row = e.target.closest('.tournament-game-row');
+        row ? showPreviewT(row) : hidePreviewT();
+    });
+    list.addEventListener('mouseleave', hidePreviewT);
+}
+
+// ── Confirmation avant d'envoyer une partie sur le Phantom ──
+function confirmFollowT(g, wName, bName) {
+    const modal = document.getElementById('modal-tournament-follow');
+    const phantomWillMove = window.phantomChessboard?.isConnected
+        && document.getElementById('phantomAutoSyncT')?.checked !== false;
+    if (!modal || !phantomWillMove) return Promise.resolve(true);
+
+    document.getElementById('tfTitle').textContent = `${wName} – ${bName}`;
+    document.getElementById('tfBoard').innerHTML = miniBoardHTML(g.currentFEN);
+    modal.classList.add('is-active');
+
+    return new Promise(resolve => {
+        const ok = document.getElementById('tfConfirm');
+        const done = (value) => {
+            modal.classList.remove('is-active');
+            ok.removeEventListener('click', onOk);
+            observer.disconnect();
+            resolve(value);
+        };
+        const onOk = () => done(true);
+        ok.addEventListener('click', onOk);
+        // Fermée autrement (croix, Annuler, clic à côté) : on ne suit pas la partie
+        const observer = new MutationObserver(() => {
+            if (!modal.classList.contains('is-active')) done(false);
+        });
+        observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
     });
 }
 

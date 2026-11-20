@@ -1007,6 +1007,25 @@
         </div>
     </div>
 
+    <!-- Tournoi : confirmation avant d'envoyer une partie sur le Phantom -->
+    <div class="modal-overlay" id="modal-tournament-follow">
+        <div class="modal modal--follow">
+            <div class="modal__header">
+                <h2 class="modal__title"><i class="fas fa-robot"></i> <span data-i18n="tournamentFollow.title">Synchroniser le Phantom</span></h2>
+                <button class="modal__close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal__body">
+                <p class="tf-title" id="tfTitle"></p>
+                <div class="tf-board" id="tfBoard"></div>
+                <p class="form-hint" data-i18n="tournamentFollow.hint">Le Phantom va placer cette position, puis suivre les coups de la partie.</p>
+            </div>
+            <div class="modal__footer">
+                <button class="btn" data-close-modal data-i18n="tournamentFollow.cancel">Annuler</button>
+                <button class="btn btn--primary" id="tfConfirm"><i class="fas fa-sync"></i> <span data-i18n="tournamentFollow.confirm">Suivre et synchroniser</span></button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast container -->
     <div class="toast-container" id="toast-container"></div>
 

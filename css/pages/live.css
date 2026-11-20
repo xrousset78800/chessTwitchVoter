@@ -458,3 +458,72 @@ input[type=range] {
 #liveBoardT {
     width: 100% !important;
 }
+/* Aperçu de la position au survol d'une partie de tournoi */
+.tg-preview {
+    position: fixed;
+    z-index: 1000;
+    width: 220px;
+    padding: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.12s, transform 0.12s;
+}
+
+.tg-preview.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+.tg-preview__title {
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    aspect-ratio: 1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mini-board__sq {
+    background: #f0d9b5;
+}
+
+.mini-board__sq.is-dark {
+    background: #b58863;
+}
+
+.mini-board__sq img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Modale de confirmation avant synchronisation */
+.modal--follow {
+    max-width: 360px;
+}
+
+.tf-title {
+    margin: 0 0 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.tf-board {
+    width: 240px;
+    max-width: 100%;
+    margin: 0 auto 12px;
+}

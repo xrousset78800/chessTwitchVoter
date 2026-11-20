@@ -270,5 +270,11 @@
     "players": "inscrit(s)",
     "chat": "Chat Twitch",
     "anonymous": "Chaîne anonyme"
+  },
+  "tournamentFollow": {
+    "title": "Synchroniser le Phantom",
+    "hint": "Le Phantom va placer cette position, puis suivre les coups de la partie.",
+    "confirm": "Suivre et synchroniser",
+    "cancel": "Annuler"
   }
 }
