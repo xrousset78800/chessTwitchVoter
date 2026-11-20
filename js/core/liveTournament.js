@@ -1253,6 +1253,12 @@ document.addEventListener('DOMContentLoaded', () => {
         logT('Fin de partie envoyée', 'ok');
     });
 
+    document.getElementById('btnSnapCenterT')?.addEventListener('click', async () => {
+        if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
+        await window.phantomChessboard.snapToCenter();
+        logT('Centrage des pièces demandé', 'ok');
+    });
+
     document.getElementById('btnCalibrateT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
         logT('Recalibration : arrêt, calibration puis remise en place', 'info');

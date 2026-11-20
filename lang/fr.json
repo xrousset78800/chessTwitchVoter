@@ -257,6 +257,7 @@
     "settings": "Réglages",
     "wheelStyle": "Style de roue",
     "calibrate": "Calibrer",
+    "snapCenter": "Centrer les pièces",
     "phantomOff": "Phantom non connecté",
     "phantomOn": "Phantom connecté",
     "phantomHint": "Connecte le Phantom pour régler sa vitesse et la synchronisation."

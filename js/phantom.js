@@ -16,6 +16,8 @@ class PhantomChessboard {
         this.UUID_SOUND_SETTINGS = 'acb64a32-92ca-11ee-b9d1-0242ac120002';
         this.UUID_BATTERY = '7b204548-40c4-11eb-adc1-0242ac120002';
         this.UUID_SETSTATE = 'acb6543c-92ca-11ee-b9d1-0242ac120002';
+        this.UUID_JUMP_TO_CENTER = '5e316147-4550-4cf3-8e2b-edc098312a43';
+        this.UUID_VERSION = '392d9e66-937a-11ee-b9d1-0242ac120002';
         
         // OpCodes
         this.OP_CODES = {
@@ -390,6 +392,26 @@ class PhantomChessboard {
                 this.log(`🔋 Batterie: ${batteryStr}%`, 'info');
             } catch (e) { }
             
+            // Diagnostic : version, réglage « jump to center » et état de l'échiquier
+            const readText = async (uuid, key) => {
+                const c = await this.service.getCharacteristic(uuid);
+                this.characteristics[key] = c;
+                return new TextDecoder().decode(await c.readValue());
+            };
+            try { this.version = await readText(this.UUID_VERSION, 'version'); this.log(`ℹ️ Version: ${this.version}`, 'info'); } catch (e) { }
+            try { this.jumpToCenter = await readText(this.UUID_JUMP_TO_CENTER, 'jump'); this.log(`ℹ️ Jump to center: ${this.jumpToCenter}`, 'info'); } catch (e) { }
+            try {
+                this.boardState = await readText(this.UUID_SETSTATE, 'state');
+                this.log(`📊 État: ${this.boardState}`, 'info');
+                await this.characteristics.state.startNotifications();
+                this.characteristics.state.addEventListener('characteristicvaluechanged', (e) => {
+                    const state = new TextDecoder().decode(e.target.value);
+                    if (state === this.boardState) return;
+                    this.boardState = state;
+                    this.log(`📊 État: ${state}`, 'received');
+                });
+            } catch (e) { }
+
             this.isConnected = true;
             this.enabled = true;
             this.log('✅ Connecté!', 'success');
@@ -441,6 +463,20 @@ class PhantomChessboard {
             const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
             const dataStr = strValue.substring(1);
             
+            // Erreur de l'échiquier : texte complet (une fois par message, puis un compteur)
+            if (opCode === this.OP_CODES.ERROR_MSG) {
+                if (dataStr === this.lastError) {
+                    this.lastErrorCount = (this.lastErrorCount || 1) + 1;
+                    if (this.lastErrorCount % 20 === 0) this.log(`⚠️ ERROR_MSG identique ×${this.lastErrorCount}`, 'warn');
+                    return;
+                }
+                this.lastError = dataStr;
+                this.lastErrorCount = 1;
+                this.log(`⚠️ [ERROR_MSG] ${dataStr}`, 'warn');
+                window.dispatchEvent(new CustomEvent('phantomError', { detail: dataStr }));
+                return;
+            }
+
             // Log
             if (dataStr.trim() && dataStr.length < 100) {
                 this.log(`📥 [${opName}] "${dataStr}"`, 'received');
@@ -527,6 +563,12 @@ class PhantomChessboard {
     
     async calibrate() {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
+    }
+
+    /** Recentre toutes les pièces sur leurs cases (SNAPTOCENTERCOM) */
+    async snapToCenter() {
+        this.lastError = null;
+        return await this.sendCommand(this.OP_CODES.SNAPTOCENTERCOM);
     }
 
     /**

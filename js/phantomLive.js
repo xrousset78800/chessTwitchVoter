@@ -341,6 +341,12 @@ document.getElementById('btnGameEndLive')?.addEventListener('click', async () =>
     log('Fin de partie envoyée', 'ok');
 });
 
+document.getElementById('btnSnapCenterLive')?.addEventListener('click', async () => {
+    if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
+    await window.phantomChessboard.snapToCenter();
+    log('Centrage des pièces demandé', 'ok');
+});
+
 document.getElementById('btnCalibrateLive')?.addEventListener('click', async () => {
     if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
     log('Recalibration : arrêt, calibration puis remise en place', 'info');

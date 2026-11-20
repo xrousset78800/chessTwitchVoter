@@ -923,6 +923,13 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             }
         });
 
+        document.getElementById('btn-snap-center')?.addEventListener('click', async () => {
+            if (window.phantomChessboard?.isConnected) {
+                await window.phantomChessboard.snapToCenter();
+                Toast.success('Centrage des pièces demandé');
+            }
+        });
+
         document.getElementById('btn-calibrate')?.addEventListener('click', async () => {
             if (window.phantomChessboard?.isConnected) {
                 Toast.info('Recalibration du Phantom : arrêt, calibration puis remise en place des pièces');
@@ -1392,7 +1399,7 @@ fullReset() {
         document.querySelectorAll('.phantom-only').forEach(el => {
             el.classList.toggle('is-visible', phantomConnected);
         });
-        ['btn-sync', 'btn-reset-sync', 'btn-calibrate', 'btn-game-end'].forEach(id => {
+        ['btn-sync', 'btn-reset-sync', 'btn-snap-center', 'btn-calibrate', 'btn-game-end'].forEach(id => {
             document.getElementById(id)?.toggleAttribute('disabled', !phantomConnected);
         });
         document.body.classList.toggle('phantom-connected', !!phantomConnected);
@@ -2617,6 +2624,10 @@ async function initApp() {
         setTimeout(() => SandboxPage.applyConfigAfterReload(), 100);
         GameAnnouncer.start();
     }
+    window.addEventListener('phantomError', (e) => {
+        Toast.show(`Phantom : ${String(e.detail).slice(0, 160)}`, 'warning', 10000);
+    });
+
     // Écouter les événements Phantom pour pause/resume du timer
     window.addEventListener('phantomMoveStart', () => {
         if (AppState.config.timerEnabled && timer.isRunning) {
