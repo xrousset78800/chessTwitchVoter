@@ -416,12 +416,14 @@ class PhantomChessboard {
             try {
                 this.boardState = await readText(this.UUID_SETSTATE, 'state');
                 this.log(`📊 État: ${this.boardState}`, 'info');
+                this.watchWaitingSide(this.boardState);
                 await this.characteristics.state.startNotifications();
                 this._onState ??= (e) => {
                     const state = new TextDecoder().decode(e.target.value);
                     if (state === this.boardState) return;
                     this.boardState = state;
                     this.log(`📊 État: ${state}`, 'received');
+                    this.watchWaitingSide(state);
                 };
                 this.characteristics.state.addEventListener('characteristicvaluechanged', this._onState);
             } catch (e) { }
@@ -585,6 +587,28 @@ class PhantomChessboard {
     
     async calibrate() {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
+    }
+
+    /**
+     * L'échiquier reste parfois bloqué en « Waiting Side » après la mise en place des pièces
+     * (le côté envoyé juste après GAME_START n'a pas été pris en compte) : on le renvoie.
+     */
+    watchWaitingSide(state) {
+        clearTimeout(this._sideTimer);
+        const waiting = (s) => /waiting\s*side/i.test(s || '');
+        if (!waiting(state)) { this._sideRetries = 0; return; }
+        const max = 3;
+        if ((this._sideRetries || 0) >= max) {
+            this.log('⚠️ Le Phantom attend toujours le côté : essaie « Synchroniser »', 'warn');
+            return;
+        }
+        this._sideTimer = setTimeout(async () => {
+            if (!this.isConnected || this.repairing || !waiting(this.boardState)) return;
+            this._sideRetries = (this._sideRetries || 0) + 1;
+            this.log(`↻ Phantom en attente du côté : renvoi (${this._sideRetries}/${max})`, 'warn');
+            try { await this.sendCommand(this.OP_CODES.SIDE, '2'); } catch (e) { }
+            this.watchWaitingSide(this.boardState);
+        }, this.sideRetryMs ?? 3000);
     }
 
     /**

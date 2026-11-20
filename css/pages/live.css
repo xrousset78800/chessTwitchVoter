@@ -285,6 +285,12 @@
 .phantom-action--danger    { --action-color: #ef4444; }
 .phantom-action--end       { --action-color: #ef4444; }
 
+/* Sous-menu « Dépannage » (centrage, calibration, réparation) */
+.ph-troubleshoot { margin: 0 0 10px; font-size: 0.8rem; color: var(--text-secondary, #8888a0); }
+.ph-troubleshoot > summary { cursor: pointer; padding: 4px 0; user-select: none; }
+.ph-troubleshoot > summary:hover { color: var(--text-primary, #fff); }
+.ph-troubleshoot .phantom-actions { margin: 6px 0 0; }
+
 /* Réglages Phantom compacts (vitesse, synchro) sous les actions */
 .ph-settings {
     display: grid;
