@@ -123,9 +123,51 @@ function autoRoundId(rounds, games) {
 const gameNames = g => `${g.white?.preferredShortName?.trim() || g.slug.split('-')[0]} – ${g.black?.preferredShortName?.trim() || g.slug.split('-')[1]}`;
 
 /** refresh = mise à jour périodique de la même salle (garde la ronde choisie, signale les nouvelles parties) */
+// ── Score des joueurs de la partie affichée : « points / parties jouées » ──
+// Match (les deux joueurs se rencontrent plusieurs fois dans la salle) : score du match.
+// Sinon (suisse, toutes rondes) : points dans le tournoi.
+const RESULT_POINTS_T = { '1-0': [1, 0], '0-1': [0, 1], '1/2-1/2': [0.5, 0.5], '½-½': [0.5, 0.5] };
+const playerKeyT = (g, side) => g[side + 'Id'] ?? g[side]?.id ?? g[side]?.preferredShortName ?? null;
+const fmtPointsT = p => (Math.floor(p) || (p % 1 ? '' : '0')) + (p % 1 ? '½' : '');
+
+function computeScoresT(g, games) {
+    const w = playerKeyT(g, 'white'), b = playerKeyT(g, 'black');
+    if (w == null || b == null) return null;
+    const has = (x, k) => playerKeyT(x, 'white') === k || playerKeyT(x, 'black') === k;
+    const pair = games.filter(x => has(x, w) && has(x, b));
+    const isMatch = pair.length > 1;
+    const pool = isMatch ? pair : games;
+    const tally = k => {
+        let pts = 0, n = 0;
+        for (const x of pool) {
+            const r = RESULT_POINTS_T[x.result];
+            if (!r || !has(x, k)) continue;
+            n++;
+            pts += playerKeyT(x, 'white') === k ? r[0] : r[1];
+        }
+        return { pts, n };
+    };
+    return { isMatch, white: tally(w), black: tally(b) };
+}
+
+function updateScoresT(g = reviewT.game || stateT.currentGame) {
+    const els = [document.getElementById('scoreWhiteT'), document.getElementById('scoreBlackT')];
+    const sc = g && tournamentData?.games ? computeScoresT(g, tournamentData.games) : null;
+    if (!sc) { els.forEach(el => { if (el) { el.textContent = ''; el.title = ''; } }); return; }
+    [['white', els[0]], ['black', els[1]]].forEach(([side, el]) => {
+        if (!el) return;
+        const { pts, n } = sc[side];
+        el.textContent = `${fmtPointsT(pts)} / ${n}`;
+        el.title = sc.isMatch
+            ? `Score du match : ${fmtPointsT(pts)} point(s) sur ${n} partie(s) terminée(s)`
+            : `Points dans le tournoi : ${fmtPointsT(pts)} sur ${n} partie(s) terminée(s)`;
+    });
+}
+
 function renderTournament(data, { refresh = false } = {}) {
     const prevLiveRound = refresh ? tournamentData?.games?.find(isLiveGame)?.roundId : undefined;
     tournamentData = data;
+    updateScoresT();
     const panel = document.getElementById('tournamentPanel');
     const header = document.getElementById('tournamentHeader');
 
@@ -319,9 +361,10 @@ async function startReviewT(g, wName, bName) {
     Object.assign(reviewT, { game: g, fens, moves: info, idx: fens.length - 1 });
 
     document.getElementById('playerWhiteT').textContent = wName;
-    document.getElementById('ratingWhiteT').textContent = g.whiteElo ? `(${g.whiteElo})` : '';
+    document.getElementById('ratingWhiteT').textContent = g.whiteElo || '';
     document.getElementById('playerBlackT').textContent = bName;
-    document.getElementById('ratingBlackT').textContent = g.blackElo ? `(${g.blackElo})` : '';
+    document.getElementById('ratingBlackT').textContent = g.blackElo || '';
+    updateScoresT(g);
     document.getElementById('clockWhiteT').textContent = '—';
     document.getElementById('clockBlackT').textContent = '—';
     const status = document.getElementById('statusTextT');
@@ -477,9 +520,10 @@ function renderGames(games, roundId) {
                 updateTurnIndicatorT();
                 document.getElementById('fenDisplayT').textContent = `FEN : ${g.currentFEN ?? '—'}`;
                 document.getElementById('playerWhiteT').textContent = wName;
-                document.getElementById('ratingWhiteT').textContent = g.whiteElo ? `(${g.whiteElo})` : '';
+                document.getElementById('ratingWhiteT').textContent = g.whiteElo || '';
                 document.getElementById('playerBlackT').textContent = bName;
-                document.getElementById('ratingBlackT').textContent = g.blackElo ? `(${g.blackElo})` : '';
+                document.getElementById('ratingBlackT').textContent = g.blackElo || '';
+    updateScoresT(g);
                 logT(`${wName} vs ${bName} — suivi démarré`, 'ok');
                 startGamePolling(g);
                 // Après le démarrage (qui annule un éventuel replay précédent), avant le premier poll
@@ -1151,6 +1195,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('fenDisplayT').textContent = 'FEN : —';
         document.getElementById('playerWhiteT').textContent = '—';
         document.getElementById('playerBlackT').textContent = '—';
+        ['ratingWhiteT', 'ratingBlackT', 'scoreWhiteT', 'scoreBlackT'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '';
+        });
         document.getElementById('clockWhiteT').textContent = '—';
         document.getElementById('clockBlackT').textContent = '—';
         const badgeT = document.getElementById('statusBadgeT');

@@ -693,3 +693,16 @@ input[type=range] {
     background: var(--bg-card, #12121a); color: var(--text-primary, #e2e8f0);
     border: 1px solid var(--border-subtle, #2a2a3a); border-radius: 4px; font-size: .75rem; padding: 2px 6px;
 }
+
+/* ── Tournoi : Elo en petit à côté du nom, score à droite ── */
+#page-tournament .player-row { gap: 8px; }
+#page-tournament .player-name { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#page-tournament .player-rating { font-size: .68rem; color: var(--text-muted, #55556a); flex-shrink: 0; }
+#page-tournament .player-score {
+    margin-left: auto; flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace; font-size: .8rem; font-weight: 700;
+    color: var(--text-primary, #e2e8f0); white-space: nowrap; cursor: help;
+}
+#page-tournament .player-score:empty { display: none; }
+#page-tournament .player-score:empty + .player-clock { margin-left: auto; }
+#page-tournament .player-clock { flex-shrink: 0; }
