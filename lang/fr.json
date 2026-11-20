@@ -7,7 +7,8 @@
     "tournament": "Tournoi",
     "new": "Nouveau",
     "browse": "Parcourir",
-    "game": "Partie en cours"
+    "game": "Partie en cours",
+    "records": "Records"
   },
   "app": {
     "tagline": "Connecte ton échiquier Phantom et ton compte Twitch pour des parties interactives avec ta communauté"
@@ -25,7 +26,7 @@
   },
   "twitchbattle": {
     "name": "Parcourir",
-    "description": "Parties en cours et records"
+    "description": "Parties en cours des autres chaînes"
   },
   "actions": {
     "reverse": "Retourner",
@@ -57,9 +58,10 @@
       "activateTimer": "Activer le timer",
       "turnDuration": "Durée du tour",
       "wheelAnimation": "Animation roue",
-      "voteUnique": "Vote unique",
       "voteMajority": "Mode majorité",
-      "majorityHint": "Si désactivé, tirage au sort avec la roue"
+      "majorityHint": "Si désactivé, tirage au sort avec la roue",
+      "votesPerViewer": "Votes par viewer",
+      "votesPerViewerHint": "Combien de fois un viewer peut voter pour un même coup. Ses stats n'en comptent qu'un."
     },
     "twitchOptions": {
       "restrictions": "Restrictions",
@@ -270,7 +272,7 @@
     "free": "Partie libre"
   },
   "browsePage": {
-    "desc": "Les parties en cours et les records Puzzle Rush. Pour jouer, passe par Nouveau.",
+    "desc": "Les parties en cours. Pour jouer, passe par Nouveau ; les classements sont dans Records.",
     "empty": "Lance une partie depuis Nouveau !",
     "players": "inscrit(s)",
     "chat": "Chat Twitch",
@@ -304,5 +306,57 @@
     "connect": "Connecter",
     "disconnect": "Déconnecter",
     "connected": "Phantom connecté"
+  },
+  "records": {
+    "desc": "Les meilleurs runs Puzzle Rush, les batailles entre chaînes et les viewers les plus actifs.",
+    "refresh": "Actualiser",
+    "tabMulti": "Batailles",
+    "tabViewers": "Viewers",
+    "unavailable": "Données indisponibles",
+    "ovRuns": "runs Puzzle Rush",
+    "ovRating": "meilleur rating atteint",
+    "ovBattles": "batailles terminées",
+    "ovVotes": "votes comptés",
+    "progress": "Progression des derniers runs",
+    "rushEmpty": "Aucun record pour ce mode. Lance un run pour inscrire ta chaîne !",
+    "ratingMax": "rating max {n}",
+    "runs": "{n} run(s)",
+    "modeUnlimited": "Illimité",
+    "myCard": "Ta fiche",
+    "best": "record",
+    "rank": "rang",
+    "ofTotal": "sur {n} chaînes",
+    "runsLabel": "runs",
+    "ratingLabel": "rating max",
+    "lastRuns": "{n} derniers runs",
+    "needRuns": "Encore un run pour voir ta courbe",
+    "noRun": "Aucun run dans ce mode",
+    "w": "V",
+    "d": "N",
+    "l": "D",
+    "pts": "pts",
+    "multiBoard": "Classement des chaînes",
+    "multiHint": "Victoire 3 pts, nulle 1 pt. Clique une chaîne pour voir ses duels.",
+    "multiEmpty": "Aucune bataille terminée pour l'instant.",
+    "recent": "Dernières batailles",
+    "recentEmpty": "Rien pour l'instant.",
+    "vs": "contre",
+    "moves": "{n} coups",
+    "reason_mate": "mat",
+    "reason_stalemate": "pat",
+    "reason_repetition": "répétition",
+    "reason_material": "matériel insuffisant",
+    "reason_fifty": "règle des 50 coups",
+    "searchChannel": "Autre chaîne…",
+    "viewersEmpty": "Aucune stat de viewers pour l'instant. Elles s'enregistrent quand le streamer est connecté avec Twitch.",
+    "channelEmpty": "Aucune stat pour {name}.",
+    "chanMeta": "{turns} coups votés · {puzzles} coups de puzzle · {viewers} viewers",
+    "noVotes": "Aucun vote en partie pour cette chaîne.",
+    "noPuzzleVotes": "Aucun vote sur des puzzles pour cette chaîne.",
+    "viewer": "Viewer",
+    "colVotes": "Votes",
+    "colPicked": "Coups retenus",
+    "colSolved": "Puzzles résolus",
+    "viewersHint": "Un viewer compte une fois par coup, même s'il a voté plusieurs fois. Stats enregistrées quand le streamer est connecté avec Twitch."
   }
 }

@@ -3,11 +3,14 @@
  * Gestion des votes pour les coups d'échecs
  */
 
+/** 1 à 10 votes par viewer et par coup */
+export const clampVotes = (n) => Math.min(10, Math.max(1, parseInt(n) || 1));
+
 class VotingSystem {
     constructor() {
         this.votes = [];             // Liste des votes [{player, move, color}]
         this.isOpen = false;         // Le vote est-il ouvert ?
-        this.singleVotePerPlayer = false;  // Un seul vote par joueur ?
+        this.votesPerViewer = 1;     // Votes autorisés par viewer Twitch et par coup
         this.majorityMode = true;    // Mode majorité ou roue ?
         
         // Callbacks
@@ -28,14 +31,14 @@ class VotingSystem {
      * Initialise le système de vote
      */
     init(options = {}) {
-        this.singleVotePerPlayer = options.singleVote || false;
+        if (options.votesPerViewer !== undefined) this.votesPerViewer = clampVotes(options.votesPerViewer);
         this.majorityMode = options.majorityMode !== false;
         
         if (options.onVoteAdded) this.onVoteAdded = options.onVoteAdded;
         if (options.onResultReady) this.onResultReady = options.onResultReady;
         
         console.log('🗳️ Système de vote initialisé:', {
-            singleVote: this.singleVotePerPlayer,
+            votesPerViewer: this.votesPerViewer,
             majorityMode: this.majorityMode
         });
         
@@ -65,17 +68,18 @@ class VotingSystem {
      * @param {string} move - Coup voté (ex: "e4", "Nf3")
      * @returns {boolean} - true si le vote a été ajouté
      */
-    addVote(player, move) {
+    addVote(player, move, meta = null) {
         if (!this.isOpen) {
             console.log('❌ Vote rejeté: vote fermé');
             return false;
         }
         
-        // Vérifier si le joueur a déjà voté (si mode vote unique)
-        if (this.singleVotePerPlayer) {
-            const existingVote = this.votes.find(v => v.player === player);
-            if (existingVote) {
-                console.log('❌ Vote rejeté:', player, 'a déjà voté');
+        // Votes Twitch : au plus N votes par viewer pour ce coup.
+        // Les clics du streamer (sans meta) ne sont pas limités.
+        if (meta?.twitch) {
+            const already = this.votes.filter(v => v.twitch && v.player === player).length;
+            if (already >= this.votesPerViewer) {
+                console.log('❌ Vote rejeté:', player, 'a déjà voté', already, 'fois');
                 return false;
             }
         }
@@ -88,6 +92,7 @@ class VotingSystem {
         
         // Ajouter le vote
         const vote = { player, move, color, timestamp: Date.now() };
+        if (meta?.twitch) { vote.twitch = true; vote.name = meta.name || player; }
         this.votes.push(vote);
         
         console.log('✅ Vote ajouté:', player, '→', move);
@@ -223,8 +228,8 @@ class VotingSystem {
      * Configure le mode de vote
      */
     setMode(options) {
-        if (options.singleVote !== undefined) {
-            this.singleVotePerPlayer = options.singleVote;
+        if (options.votesPerViewer !== undefined) {
+            this.votesPerViewer = clampVotes(options.votesPerViewer);
         }
         if (options.majorityMode !== undefined) {
             this.majorityMode = options.majorityMode;

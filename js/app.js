@@ -15,6 +15,8 @@ import twitch from './managers/twitch.js';
 import twitchAuth from './core/twitchAuth.js';
 import { matchLegalMove } from './utils/moveMatch.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
+import './core/viewerStats.js';
+import RecordsPage from './pages/records.js';
 
 // ============================================
 // ÉTAT GLOBAL
@@ -41,7 +43,7 @@ const AppState = {
         timerDuration: 25,
         wheelDuration: 5,
         pauseAfterEnd: 5,
-        singleVote: false,
+        votesPerViewer: 1,       // votes par viewer et par coup (les stats n'en comptent qu'un)
         majorityMode: false,
         
         // Restrictions Twitch
@@ -256,7 +258,7 @@ const GameSession = {
             const c = AppState.config;
             Object.assign(gameEngine.config, {
                 timerEnabled: c.timerEnabled, timerDuration: c.timerDuration, wheelDuration: c.wheelDuration,
-                pauseAfterEnd: c.pauseAfterEnd, majorityMode: c.majorityMode, singleVote: c.singleVote
+                pauseAfterEnd: c.pauseAfterEnd, majorityMode: c.majorityMode, votesPerViewer: c.votesPerViewer || 1
             });
             timer.setDuration?.(c.timerDuration);
         }
@@ -309,6 +311,7 @@ const Router = {
         '/sandbox': 'sandbox',
         '/game': 'game',
         '/browse': 'browse',
+        '/records': 'records',
         '/live': 'live',
         '/tournament': 'tournament',
         '/rush': 'rush',
@@ -413,6 +416,8 @@ const Router = {
             SandboxPage.init();
         } else if (pageName === 'browse') {
             BrowsePage.init();
+        } else if (pageName === 'records') {
+            RecordsPage.init();
         } else if (pageName === 'live') {
             LivePage.init();
         } else if (pageName === 'tournament') {
@@ -521,7 +526,7 @@ const SandboxPage = {
                 wheelDuration: AppState.config.wheelDuration,
                 pauseAfterEnd: AppState.config.pauseAfterEnd,
                 majorityMode: AppState.config.majorityMode,
-                singleVote: AppState.config.singleVote
+                votesPerViewer: AppState.config.votesPerViewer
             });
             
             this.setupEventListeners();
@@ -560,6 +565,7 @@ async applyConfigAfterReload() {
         }
         problemsManager.clearThemes();
         problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+        problemsManager.config.votesPerViewer = 1;
         AppState.problems.isActive = true;
         this.setupRushUI();
         rushManager.config.mode = rushMode();
@@ -577,6 +583,7 @@ async applyConfigAfterReload() {
         problemsManager.clearThemes();
         AppState.problems.selectedThemes.forEach(t => problemsManager.toggleTheme(t));
         problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
+        problemsManager.config.votesPerViewer = AppState.config.votesPerViewer;
         AppState.problems.isActive = true;
         problemsManager.loadRandomProblem();
         Toast.success('🧩 Mode Problèmes activé !');
@@ -592,7 +599,7 @@ async applyConfigAfterReload() {
     gameEngine.config.wheelDuration = AppState.config.wheelDuration;
     gameEngine.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
     gameEngine.config.majorityMode = AppState.config.majorityMode;
-    gameEngine.config.singleVote = AppState.config.singleVote;
+    gameEngine.config.votesPerViewer = AppState.config.votesPerViewer;
 
     gameEngine.mode = AppState.gameMode;
     gameEngine.startGame();
@@ -1036,8 +1043,10 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             this.updateVotingUI();
         });
         
-        this.setupToggle('toggle-single-vote', (active) => {
-            AppState.config.singleVote = active;
+        const votesInput = document.getElementById('votes-per-viewer');
+        votesInput?.addEventListener('change', () => {
+            AppState.config.votesPerViewer = Math.min(10, Math.max(1, parseInt(votesInput.value) || 1));
+            votesInput.value = AppState.config.votesPerViewer;
         });
         
         this.setupToggle('toggle-majority', (active) => {
@@ -1175,7 +1184,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 timerDuration: AppState.config.timerDuration,
                 wheelDuration: AppState.config.wheelDuration,
                 majorityMode: AppState.config.majorityMode,
-                singleVote: AppState.config.singleVote
+                votesPerViewer: AppState.config.votesPerViewer
             });
             twitch.settings.subsOnly = !!AppState.config.subsOnly;
             syncWheelModeClass();
@@ -1307,7 +1316,8 @@ fullReset() {
 
         // Toggles
         this.setToggleState('toggle-voting', AppState.config.timerEnabled);
-        this.setToggleState('toggle-single-vote', AppState.config.singleVote);
+        const votesInput = document.getElementById('votes-per-viewer');
+        if (votesInput) votesInput.value = AppState.config.votesPerViewer || 1;
         this.setToggleState('toggle-majority', AppState.config.majorityMode);
         this.setToggleState('toggle-followers', AppState.config.followersOnly);
         this.setToggleState('toggle-subs', AppState.config.subsOnly);
@@ -1483,15 +1493,10 @@ const BrowsePage = {
             document.getElementById('browse-refresh-btn')?.addEventListener('click', () => {
                 this.socket?.emit('getGames');
             });
-            document.getElementById('rush-records-refresh')?.addEventListener('click', () => {
-                this.loadRushRecords();
-            });
-            this.bindRushModes(document.getElementById('page-browse'));
             this.initialized = true;
         } else {
             this.socket?.emit('getGames');
         }
-        this.loadRushRecords();
     },
 
     // ========== PUZZLE RUSH : RECORDS ==========
@@ -1952,7 +1957,7 @@ const PresetForm = {
         const isOn  = (name) => !!document.getElementById(`${prefix}-${name}-toggle`)?.classList.contains('is-active');
         return {
             timerEnabled:  true,
-            singleVote:    true,
+            votesPerViewer: 1,
             timerDuration: Math.min(300, Math.max(5, parseInt(value('timer')) || 30)),
             majorityMode:  value('mode') === 'majority',
             followersOnly: isOn('follow'),
@@ -2324,7 +2329,7 @@ const MultiRoom = {
         GameSession.activate({
             route: 'multi',
             gameMode: 'multi',
-            config: { ...room.settings, timerEnabled: true, singleVote: true }
+            config: { ...room.settings, timerEnabled: true, votesPerViewer: 1 }
         });
     },
 
@@ -2517,7 +2522,7 @@ async function initApp() {
                     console.log('🗳️ Vote ignoré (coup illégal) :', voteContext.move);
                     return;
                 }
-                voting.addVote(voteContext.username, resolved.san);
+                voting.addVote(voteContext.username, resolved.san, { twitch: true, name: voteContext.displayName });
             }
         };
     }
@@ -2561,7 +2566,7 @@ async function initApp() {
                 timerDuration: timerDuration,
                 wheelDuration: AppState.config.wheelDuration,
                 majorityMode:  majorityMode,
-                singleVote:    AppState.config.singleVote
+                votesPerViewer: AppState.config.votesPerViewer
             });
             SandboxPage.initialized = true;
         } else {

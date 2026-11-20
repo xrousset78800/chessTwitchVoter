@@ -10,7 +10,10 @@ app.use((req, res, next) => {
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
 });
-app.use(express.json({ limit: '16kb' }));
+// Les votes des viewers arrivent par lots (un chat nombreux dépasse vite 16 Ko)
+const jsonSmall = express.json({ limit: '16kb' });
+const jsonLarge = express.json({ limit: '1mb' });
+app.use((req, res, next) => (req.path === '/api/stats/votes' ? jsonLarge : jsonSmall)(req, res, next));
 
 
 const io = require('socket.io')(http, {
@@ -269,7 +272,8 @@ function publicRecord(r, mode) {
         best:        m.best,
         runs:        m.runs || 1,
         lastScore:   m.lastScore,
-        lastAt:      m.lastAt
+        lastAt:      m.lastAt,
+        history:     m.history || []
     };
 }
 
@@ -371,7 +375,9 @@ app.post('/api/rush/records', requireTwitch, (req, res) => {
                 best:      isNewRecord ? run : prevMode.best,
                 runs:      (prevMode?.runs || 0) + 1,
                 lastScore: score,
-                lastAt:    now
+                lastAt:    now,
+                // Derniers runs, pour la courbe de progression
+                history:   [...(prevMode?.history || []), { score, at: now }].slice(-20)
             }
         }
     };
@@ -381,7 +387,23 @@ app.post('/api/rush/records', requireTwitch, (req, res) => {
     res.json({ record: publicRecord(rushRecords[login], mode), isNewRecord });
 });
 
+// Fiche d'une chaîne : tous les modes, avec son rang dans chacun
+app.get('/api/rush/channel/:login', (req, res) => {
+    const r = rushRecords[String(req.params.login).toLowerCase()];
+    if (!r?.modes) return res.status(404).json({ error: 'Aucun record pour cette chaîne' });
+    const modes = {};
+    for (const mode of RUSH_MODES) {
+        if (!r.modes[mode]) continue;
+        const board = leaderboard(Infinity, mode);
+        modes[mode] = { ...publicRecord(r, mode), rank: board.findIndex(x => x.login === r.login) + 1, total: board.length };
+    }
+    res.json({ login: r.login, displayName: r.displayName || r.login, avatar: r.avatar || null, modes });
+});
+
 loadRushRecords();
+
+// Stats Multi et viewers (stats.js)
+const stats = require('./stats')({ app, requireTwitch, dataDir: DATA_DIR, rushRecords: () => rushRecords });
 
 const games = {}; // Stockage des parties actives
 
@@ -585,6 +607,9 @@ io.on('connection', (socket) => {
         if (game) {
             if (data.fen) game.lastFen = data.fen;
             game.moveCount = (game.moveCount || 0) + 1;
+            // Mat, pat ou nulle : le résultat de la bataille est enregistré
+            const result = stats.recordMultiResult(game);
+            if (result) io.to(game.gameId).emit('multi:result', result);
         }
         io.to(data.gameId).emit('movePlayed', {
             player: data.player,

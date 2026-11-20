@@ -1,0 +1,329 @@
+/**
+ * Page Records : Puzzle Rush (podium, fiche de la chaîne, progression),
+ * batailles Multi (classement, duels) et viewers les plus actifs de chaque chat.
+ */
+const t = (key, params) => window.i18n?.t(`records.${key}`, params) ?? key;
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const lang = () => (window.i18n?.currentLang === 'en' ? 'en-US' : 'fr-FR');
+const fmtDate = (ts) => (ts ? new Date(ts).toLocaleDateString(lang(), { day: '2-digit', month: 'short' }) : '');
+const fmtNum = (n) => Number(n || 0).toLocaleString(lang());
+const me = () => (window.twitchAuth?.user?.login || '').toLowerCase();
+const STORE_TAB = 'records_tab';
+
+async function getJson(url) {
+    const r = await fetch(url);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+}
+
+function avatar(p, cls = 'rec-avatar') {
+    const name = p.displayName || p.name || p.login || '?';
+    return p.avatar
+        ? `<img class="${cls}" src="${esc(p.avatar)}" alt="" loading="lazy">`
+        : `<span class="${cls}">${esc(name[0].toUpperCase())}</span>`;
+}
+
+const channelLink = (p) => `<a href="https://twitch.tv/${esc(p.login)}" target="_blank" rel="noopener">${esc(p.displayName || p.login)}</a>`;
+const empty = (msg) => `<div class="rec-empty">${msg}</div>`;
+const failed = (e) => empty(`${esc(t('unavailable'))} (${esc(e.message)})`);
+
+/** Petite courbe SVG des derniers scores */
+function sparkline(history) {
+    if (!history || history.length < 2) return '';
+    const w = 160, h = 40, pad = 4;
+    const max = Math.max(...history.map(p => p.score), 1);
+    const step = (w - pad * 2) / (history.length - 1);
+    const pts = history.map((p, i) => `${(pad + i * step).toFixed(1)},${(h - pad - (p.score / max) * (h - pad * 2)).toFixed(1)}`);
+    const last = pts[pts.length - 1].split(',');
+    return `<svg class="rec-spark" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(t('progress'))}">
+        <polyline points="${pts.join(' ')}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${last[0]}" cy="${last[1]}" r="3" fill="currentColor"/></svg>`;
+}
+
+const RecordsPage = {
+    initialized: false,
+    tab: 'rush',
+    rushMode: '0',
+    viewerChannel: null,
+    viewerSort: 'votes',
+    openDuel: null,
+
+    init() {
+        if (!this.initialized) {
+            this.initialized = true;
+            const page = document.getElementById('page-records');
+            page.querySelectorAll('[data-records-tab]').forEach(b =>
+                b.addEventListener('click', () => this.showTab(b.dataset.recordsTab)));
+            document.getElementById('records-refresh')?.addEventListener('click', () => this.load(true));
+            document.getElementById('records-rush-modes')?.addEventListener('click', (e) => {
+                const b = e.target.closest('[data-rush-mode]');
+                if (!b) return;
+                this.rushMode = b.dataset.rushMode;
+                this.loadRush();
+            });
+            document.getElementById('records-viewer-sort')?.addEventListener('click', (e) => {
+                const b = e.target.closest('[data-sort]');
+                if (!b) return;
+                this.viewerSort = b.dataset.sort;
+                this.loadViewers();
+            });
+            document.getElementById('records-channels')?.addEventListener('click', (e) => {
+                const b = e.target.closest('[data-channel]');
+                if (!b) return;
+                this.viewerChannel = b.dataset.channel;
+                this.loadViewers();
+            });
+            document.getElementById('records-channel-search')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const v = e.target.querySelector('input').value.trim().toLowerCase();
+                if (!v) return;
+                this.viewerChannel = v;
+                this.loadViewers();
+            });
+            document.getElementById('records-multi-list')?.addEventListener('click', (e) => {
+                const row = e.target.closest('[data-duel]');
+                if (!row || e.target.closest('a')) return;
+                this.toggleDuels(row.dataset.duel);
+            });
+            window.addEventListener('languageChanged', () => { if (document.getElementById('page-records').classList.contains('is-active')) this.load(); });
+            window.addEventListener('twitchAuthChange', () => { this.viewerChannel = null; });
+            try { this.tab = localStorage.getItem(STORE_TAB) || 'rush'; } catch {}
+        }
+        this.showTab(this.tab);
+        this.load();
+    },
+
+    showTab(tab) {
+        if (!['rush', 'multi', 'viewers'].includes(tab)) tab = 'rush';
+        this.tab = tab;
+        try { localStorage.setItem(STORE_TAB, tab); } catch {}
+        document.querySelectorAll('#page-records [data-records-tab]').forEach(b => {
+            const on = b.dataset.recordsTab === tab;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-selected', on);
+        });
+        document.querySelectorAll('#page-records [data-records-panel]').forEach(p =>
+            p.classList.toggle('is-active', p.dataset.recordsPanel === tab));
+    },
+
+    load() {
+        this.loadOverview();
+        this.loadRush();
+        this.loadMulti();
+        this.loadViewers();
+    },
+
+    // ========== VUE D'ENSEMBLE ==========
+
+    async loadOverview() {
+        const box = document.getElementById('records-overview');
+        try {
+            const o = await getJson('/api/stats/overview');
+            const tiles = [
+                ['🔥', o.rush.runs, t('ovRuns')],
+                ['📈', String(o.rush.bestRating || '—'), t('ovRating')],
+                ['⚔', o.multi.games, t('ovBattles')],
+                ['💬', o.viewers.votes, t('ovVotes')],
+            ];
+            box.innerHTML = tiles.map(([i, v, l]) => `
+                <div class="rec-tile"><span class="rec-tile__icon">${i}</span>
+                <span class="rec-tile__value">${typeof v === 'number' ? fmtNum(v) : v}</span>
+                <span class="rec-tile__label">${esc(l)}</span></div>`).join('');
+        } catch {
+            box.innerHTML = '';
+        }
+    },
+
+    // ========== PUZZLE RUSH ==========
+
+    async loadRush() {
+        const mode = this.rushMode;
+        document.querySelectorAll('#records-rush-modes [data-rush-mode]').forEach(b => {
+            const on = b.dataset.rushMode === mode;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-pressed', on);
+        });
+        const podium = document.getElementById('records-rush-podium');
+        const list = document.getElementById('records-rush-list');
+        const login = me();
+        try {
+            const [board, mine] = await Promise.all([
+                getJson(`/api/rush/records?limit=50&mode=${mode}`),
+                login ? getJson(`/api/rush/channel/${encodeURIComponent(login)}`) : null
+            ]);
+            if (mode !== this.rushMode) return;
+            this.renderMyRush(mine);
+            const records = board?.records || [];
+            if (!records.length) {
+                podium.innerHTML = '';
+                list.innerHTML = empty(t('rushEmpty'));
+                return;
+            }
+            const order = [1, 0, 2].filter(i => records[i]);
+            podium.innerHTML = order.map(i => {
+                const r = records[i];
+                return `<div class="rec-podium__step rec-podium__step--${i + 1} ${r.login === login ? 'is-me' : ''}">
+                    <span class="rec-podium__medal">${['🥇', '🥈', '🥉'][i]}</span>
+                    ${avatar(r, 'rec-avatar rec-avatar--lg')}
+                    <span class="rec-podium__name">${channelLink(r)}</span>
+                    <span class="rec-podium__score">${r.best.score}</span>
+                    <span class="rec-podium__meta">${esc(t('ratingMax', { n: r.best.maxRating || '—' }))}</span>
+                    <span class="rec-podium__block">${i + 1}</span>
+                </div>`;
+            }).join('');
+            list.innerHTML = records.slice(3, 20).map((r, k) => `
+                <div class="rush-list__row ${r.login === login ? 'rush-list__row--me' : ''}">
+                    <span class="rush-list__rank">${k + 4}</span>
+                    ${avatar(r, 'rush-list__avatar')}
+                    <span class="rush-list__name">${channelLink(r)}
+                        <span class="rush-list__meta">${esc(t('ratingMax', { n: r.best.maxRating || '—' }))} · ${fmtDate(r.best.at)}</span>
+                    </span>
+                    <span class="rush-list__score" title="${esc(t('runs', { n: r.runs || 1 }))}">${r.best.score}</span>
+                </div>`).join('');
+        } catch (e) {
+            podium.innerHTML = '';
+            list.innerHTML = failed(e);
+        }
+    },
+
+    renderMyRush(mine) {
+        const box = document.getElementById('records-rush-me');
+        if (!me()) { box.innerHTML = ''; return; }
+        const user = window.twitchAuth.user;
+        const m = mine?.modes?.[this.rushMode];
+        const modes = ['0', '30', '60', '120'];
+        const label = (k) => (k === '0' ? t('modeUnlimited') : k === '60' ? '1 min' : k === '120' ? '2 min' : '30 s');
+        box.innerHTML = `
+            <div class="rec-me">
+                <div class="rec-me__who">${avatar({ ...user, login: user.login })}
+                    <div><div class="rec-me__title">${esc(t('myCard'))}</div><div class="rec-me__name">${esc(user.displayName)}</div></div>
+                </div>
+                <div class="rec-me__stats">
+                    <div><span class="rec-me__big">${m ? m.best.score : '—'}</span><span class="rec-me__small">${esc(t('best'))}</span></div>
+                    <div><span class="rec-me__big">${m ? `#${m.rank}` : '—'}</span><span class="rec-me__small">${m ? esc(t('ofTotal', { n: m.total })) : esc(t('rank'))}</span></div>
+                    <div><span class="rec-me__big">${m ? m.runs : 0}</span><span class="rec-me__small">${esc(t('runsLabel'))}</span></div>
+                    <div><span class="rec-me__big">${m?.best.maxRating || '—'}</span><span class="rec-me__small">${esc(t('ratingLabel'))}</span></div>
+                </div>
+                <div class="rec-me__spark">${m ? sparkline(m.history) : ''}
+                    <span class="rec-me__small">${m?.history?.length > 1 ? esc(t('lastRuns', { n: m.history.length })) : esc(m ? t('needRuns') : t('noRun'))}</span></div>
+                <div class="rec-me__modes">${modes.map(k => {
+                    const x = mine?.modes?.[k];
+                    return `<span class="rec-chip ${k === this.rushMode ? 'is-active' : ''}">${esc(label(k))} : <b>${x ? x.best.score : '—'}</b></span>`;
+                }).join('')}</div>
+            </div>`;
+    },
+
+    // ========== MULTI ==========
+
+    async loadMulti() {
+        const list = document.getElementById('records-multi-list');
+        const recent = document.getElementById('records-multi-recent');
+        const login = me();
+        try {
+            const data = await getJson('/api/multi/leaderboard?limit=50');
+            const channels = data?.channels || [];
+            list.innerHTML = channels.length ? channels.map((c, i) => {
+                const rate = c.games ? Math.round((c.w / c.games) * 100) : 0;
+                return `<div class="rec-row rec-row--click ${c.login === login ? 'is-me' : ''}" data-duel="${esc(c.login)}" tabindex="0">
+                    <span class="rec-row__rank">${['🥇', '🥈', '🥉'][i] || i + 1}</span>
+                    ${avatar(c)}
+                    <span class="rec-row__name">${channelLink(c)}
+                        <span class="rec-row__meta"><span class="rec-w">${c.w}${esc(t('w'))}</span> · <span class="rec-d">${c.d}${esc(t('d'))}</span> · <span class="rec-l">${c.l}${esc(t('l'))}</span></span>
+                        <span class="rec-bar"><span style="width:${rate}%"></span></span>
+                    </span>
+                    <span class="rec-row__score">${c.points}<small>${esc(t('pts'))}</small></span>
+                </div>
+                <div class="rec-duels" data-duels="${esc(c.login)}"></div>`;
+            }).join('') : empty(t('multiEmpty'));
+            recent.innerHTML = (data?.recent || []).length ? data.recent.map(g => {
+                const win = g.result;
+                const side = (p, color) => `<span class="rec-battle__side ${win === color ? 'is-win' : ''}">${avatar(p, 'rec-avatar rec-avatar--sm')}${esc(p.displayName)}</span>`;
+                return `<div class="rec-battle">
+                    ${side(g.whiteProfile, 'white')}
+                    <span class="rec-battle__vs">${win === 'draw' ? '½–½' : win === 'white' ? '1–0' : '0–1'}</span>
+                    ${side(g.blackProfile, 'black')}
+                    <span class="rec-battle__meta">${esc(t('reason_' + g.reason))} · ${esc(t('moves', { n: Math.ceil((g.moves || 0) / 2) }))} · ${fmtDate(g.at)}</span>
+                </div>`;
+            }).join('') : empty(t('recentEmpty'));
+            if (this.openDuel) this.toggleDuels(this.openDuel, true);
+        } catch (e) {
+            list.innerHTML = failed(e);
+            recent.innerHTML = '';
+        }
+    },
+
+    async toggleDuels(login, keepOpen = false) {
+        const box = document.querySelector(`#records-multi-list [data-duels="${CSS.escape(login)}"]`);
+        if (!box) return;
+        const open = keepOpen || !box.classList.contains('is-open');
+        document.querySelectorAll('#records-multi-list .rec-duels.is-open').forEach(b => { if (b !== box) b.classList.remove('is-open'); });
+        box.classList.toggle('is-open', open);
+        this.openDuel = open ? login : null;
+        if (!open) return;
+        try {
+            const d = await getJson(`/api/multi/channel/${encodeURIComponent(login)}`);
+            box.innerHTML = d?.opponents?.length ? d.opponents.map(o => `
+                <div class="rec-duel">${avatar(o, 'rec-avatar rec-avatar--sm')}
+                    <span class="rec-duel__name">${esc(t('vs'))} ${channelLink(o)}</span>
+                    <span class="rec-duel__score"><span class="rec-w">${o.w}</span>–<span class="rec-d">${o.d}</span>–<span class="rec-l">${o.l}</span></span>
+                </div>`).join('') : empty(t('multiEmpty'));
+        } catch (e) {
+            box.innerHTML = failed(e);
+        }
+    },
+
+    // ========== VIEWERS ==========
+
+    async loadViewers() {
+        const chips = document.getElementById('records-channels');
+        const out = document.getElementById('records-viewers');
+        document.querySelectorAll('#records-viewer-sort [data-sort]').forEach(b => b.classList.toggle('is-active', b.dataset.sort === this.viewerSort));
+        try {
+            const { channels = [] } = await getJson('/api/viewers') || {};
+            if (!this.viewerChannel) {
+                const login = me();
+                this.viewerChannel = channels.find(c => c.login === login)?.login || channels[0]?.login || null;
+            }
+            chips.innerHTML = channels.slice(0, 12).map(c => `
+                <button type="button" class="rec-channel ${c.login === this.viewerChannel ? 'is-active' : ''}" data-channel="${esc(c.login)}">
+                    ${avatar(c, 'rec-avatar rec-avatar--sm')}<span>${esc(c.displayName)}</span><small>${fmtNum(c.viewers)}</small>
+                </button>`).join('');
+            if (!this.viewerChannel) { out.innerHTML = empty(t('viewersEmpty')); return; }
+
+            const channel = this.viewerChannel, sort = this.viewerSort;
+            const data = await getJson(`/api/viewers/${encodeURIComponent(channel)}?sort=${sort}&limit=50`);
+            if (channel !== this.viewerChannel || sort !== this.viewerSort) return;
+            if (!data) { out.innerHTML = empty(t('channelEmpty', { name: esc(channel) })); return; }
+            const c = data.channel;
+            const head = `<div class="rec-chan">
+                ${avatar(c, 'rec-avatar rec-avatar--lg')}
+                <div><div class="rec-chan__name">${channelLink(c)}</div>
+                <div class="rec-row__meta">${esc(t('chanMeta', { turns: fmtNum(c.turns), puzzles: fmtNum(c.puzzleTurns), viewers: fmtNum(c.viewers) }))}</div></div>
+            </div>`;
+            if (!data.viewers.length) { out.innerHTML = head + empty(t(sort === 'solved' ? 'noPuzzleVotes' : 'noVotes')); return; }
+            const top = data.viewers;
+            const max = Math.max(...top.map(v => sort === 'solved' ? v.solved : sort === 'picked' ? v.picked : v.votes), 1);
+            out.innerHTML = head + `<div class="rec-table">
+                <div class="rec-table__head"><span>#</span><span>${esc(t('viewer'))}</span>
+                    <span>${esc(t('colVotes'))}</span><span>${esc(t('colPicked'))}</span><span>${esc(t('colSolved'))}</span></div>
+                ${top.map((v, i) => {
+                    const val = sort === 'solved' ? v.solved : sort === 'picked' ? v.picked : v.votes;
+                    const pickRate = v.votes ? Math.round((v.picked / v.votes) * 100) : 0;
+                    return `<div class="rec-table__row">
+                        <span class="rec-row__rank">${['🥇', '🥈', '🥉'][i] || i + 1}</span>
+                        <span class="rec-table__name">${esc(v.name)}<span class="rec-bar"><span style="width:${Math.round((val / max) * 100)}%"></span></span></span>
+                        <span>${fmtNum(v.votes)}</span>
+                        <span>${fmtNum(v.picked)} <small>${v.votes ? pickRate + ' %' : ''}</small></span>
+                        <span>${v.puzzles ? `${fmtNum(v.solved)}<small>/${fmtNum(v.puzzles)}</small>` : '—'}</span>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        } catch (e) {
+            out.innerHTML = failed(e);
+        }
+    }
+};
+
+window.RecordsPage = RecordsPage;
+export default RecordsPage;

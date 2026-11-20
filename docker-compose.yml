@@ -5,7 +5,13 @@ services:
     restart: unless-stopped
     environment:
       - PORT=3000
+    volumes:
+      # Records Puzzle Rush, batailles Multi et stats viewers : conservés entre les déploiements
+      - chess-data:/app/data
     networks: [web]
+
+volumes:
+  chess-data:
 
 networks:
   web:

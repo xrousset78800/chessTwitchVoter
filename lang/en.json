@@ -7,7 +7,8 @@
     "tournament": "Tournament",
     "new": "New",
     "browse": "Browse",
-    "game": "Game in progress"
+    "game": "Game in progress",
+    "records": "Records"
   },
   "app": {
     "tagline": "Connect your Phantom board and your Twitch account for interactive games with your community"
@@ -25,7 +26,7 @@
   },
   "twitchbattle": {
     "name": "Browse",
-    "description": "Live games and records"
+    "description": "Live games from other channels"
   },
   "actions": {
     "reverse": "Flip",
@@ -57,9 +58,10 @@
       "activateTimer": "Enable timer",
       "turnDuration": "Turn duration",
       "wheelAnimation": "Wheel animation",
-      "voteUnique": "Single vote",
       "voteMajority": "Majority mode",
-      "majorityHint": "If disabled, the wheel decides randomly"
+      "majorityHint": "If disabled, the wheel decides randomly",
+      "votesPerViewer": "Votes per viewer",
+      "votesPerViewerHint": "How many times a viewer can vote on the same move. Their stats only count one."
     },
     "twitchOptions": {
       "restrictions": "Restrictions",
@@ -270,7 +272,7 @@
     "free": "Free play"
   },
   "browsePage": {
-    "desc": "Live games and Puzzle Rush records. To play, go to New.",
+    "desc": "Live games. To play, go to New; leaderboards are in Records.",
     "empty": "Start a game from New!",
     "players": "player(s)",
     "chat": "Twitch chat",
@@ -304,5 +306,57 @@
     "connect": "Connect",
     "disconnect": "Disconnect",
     "connected": "Phantom connected"
+  },
+  "records": {
+    "desc": "Top Puzzle Rush runs, channel battles and the most active viewers.",
+    "refresh": "Refresh",
+    "tabMulti": "Battles",
+    "tabViewers": "Viewers",
+    "unavailable": "Data unavailable",
+    "ovRuns": "Puzzle Rush runs",
+    "ovRating": "highest rating reached",
+    "ovBattles": "finished battles",
+    "ovVotes": "votes counted",
+    "progress": "Recent runs",
+    "rushEmpty": "No record for this mode yet. Start a run to put your channel on the board!",
+    "ratingMax": "max rating {n}",
+    "runs": "{n} run(s)",
+    "modeUnlimited": "Unlimited",
+    "myCard": "Your card",
+    "best": "best",
+    "rank": "rank",
+    "ofTotal": "of {n} channels",
+    "runsLabel": "runs",
+    "ratingLabel": "max rating",
+    "lastRuns": "last {n} runs",
+    "needRuns": "One more run to see your curve",
+    "noRun": "No run in this mode",
+    "w": "W",
+    "d": "D",
+    "l": "L",
+    "pts": "pts",
+    "multiBoard": "Channel leaderboard",
+    "multiHint": "Win 3 pts, draw 1 pt. Click a channel to see its matchups.",
+    "multiEmpty": "No finished battle yet.",
+    "recent": "Latest battles",
+    "recentEmpty": "Nothing yet.",
+    "vs": "vs",
+    "moves": "{n} moves",
+    "reason_mate": "checkmate",
+    "reason_stalemate": "stalemate",
+    "reason_repetition": "repetition",
+    "reason_material": "insufficient material",
+    "reason_fifty": "50-move rule",
+    "searchChannel": "Another channel…",
+    "viewersEmpty": "No viewer stats yet. They are recorded when the streamer is logged in with Twitch.",
+    "channelEmpty": "No stats for {name}.",
+    "chanMeta": "{turns} voted moves · {puzzles} puzzle moves · {viewers} viewers",
+    "noVotes": "No game votes for this channel.",
+    "noPuzzleVotes": "No puzzle votes for this channel.",
+    "viewer": "Viewer",
+    "colVotes": "Votes",
+    "colPicked": "Moves played",
+    "colSolved": "Puzzles solved",
+    "viewersHint": "A viewer counts once per move, even with several votes. Stats are recorded when the streamer is logged in with Twitch."
   }
 }

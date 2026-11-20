@@ -42,6 +42,7 @@ class ProblemsManager {
             timerDuration: 25,
             majorityMode: false,
             wheelDuration: 5,
+            votesPerViewer: 1,
         };
         
         // Callbacks
@@ -386,7 +387,18 @@ receiveVote(voteData) {
     }
     const move = resolved.san;
 
-    this.votesForCurrentTurn.push({ move, username });
+    // Au plus N votes par viewer Twitch pour ce coup
+    const login = typeof voteData === 'object' ? String(voteData.username || '').toLowerCase() : '';
+    if (login) {
+        const limit = Math.min(10, Math.max(1, parseInt(this.config.votesPerViewer) || 1));
+        const already = this.votesForCurrentTurn.filter(v => v.login === login).length;
+        if (already >= limit) {
+            console.log('🗳️ Vote rejeté :', login, 'a déjà voté', already, 'fois');
+            return false;
+        }
+    }
+
+    this.votesForCurrentTurn.push({ move, username, login, name: voteData.displayName || username });
     console.log(`🗳️ Vote enregistré: ${move} par ${username} (total: ${this.votesForCurrentTurn.length})`);
     
     // Log dans la sidebar
@@ -463,6 +475,7 @@ resolveVotes() {
         console.log(`📊 Comparaison: joué="${playedUCI}" vs attendu="${expectedUCI}"`);
 
         const isCorrect = this.compareUCI(playedUCI, expectedUCI);
+        this.recordVoterStats(expectedUCI);
 
         if (isCorrect) {
             const moveObj = this.uciToMoveObject(expectedUCI);
@@ -600,6 +613,16 @@ resolveVotes() {
     }
 
     // ========== UTILITAIRES DE CONVERSION ==========
+
+    /** Stats viewers : chaque votant du coup, et s'il avait trouvé la bonne réponse */
+    recordVoterStats(expectedUCI) {
+        const votes = (this.votesForCurrentTurn || []).filter(v => v.login && !v.counted);
+        if (!votes.length) return;
+        votes.forEach(v => { v.counted = true; });
+        window.ViewerStats?.recordTurn('puzzle',
+            votes.map(v => ({ login: v.login, name: v.name, move: v.move })),
+            (m) => { const u = this.normalizeToUCI(m); return !!u && this.compareUCI(u, expectedUCI); });
+    }
 
     normalizeToUCI(move) {
         if (!move) return null;

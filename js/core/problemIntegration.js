@@ -276,7 +276,7 @@ async function applyConfigWithProblems() {
         wheelDuration: AppState.config.wheelDuration,
         pauseAfterEnd: AppState.config.pauseAfterEnd,
         majorityMode: AppState.config.majorityMode,
-        singleVote: AppState.config.singleVote
+        votesPerViewer: AppState.config.votesPerViewer
     });
     
     gameEngine.startGame();

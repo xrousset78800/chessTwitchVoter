@@ -26,7 +26,7 @@ class GameEngine {
             wheelDuration: 5,
             pauseAfterEnd: 15,
             majorityMode: true,
-            singleVote: false
+            votesPerViewer: 1
         };
         
         // Mode de jeu
@@ -88,7 +88,7 @@ class GameEngine {
         
         // Initialiser le système de vote
         voting.init({
-            singleVote: this.config.singleVote,
+            votesPerViewer: this.config.votesPerViewer,
             majorityMode: this.config.majorityMode,
             onVoteAdded: (vote, results) => this.onVoteAdded(vote, results)
         });
@@ -235,7 +235,7 @@ class GameEngine {
         // Mettre à jour les sous-modules
         timer.setDuration(this.config.timerDuration);
         voting.setMode({
-            singleVote: this.config.singleVote,
+            votesPerViewer: this.config.votesPerViewer,
             majorityMode: this.config.majorityMode
         });
     }
@@ -381,6 +381,7 @@ startTurn() {
 
     if (this.config.timerEnabled) {
         voting.reset();
+        voting.setMode({ votesPerViewer: this.config.votesPerViewer });
         voting.open();
         timer.start(this.config.timerDuration);
         if (this.votingWheel) this.votingWheel.clear();
@@ -699,6 +700,15 @@ showWheelAnimation(results) {
         const move = this.chess.move(moveStr);
 
         if (move) {
+            // Stats viewers : qui a voté pour ce coup, et qui avait proposé le coup joué
+            if (!fromNetwork) {
+                const twitchVotes = voting.getAllVotes().filter(v => v.twitch);
+                if (twitchVotes.length) {
+                    window.ViewerStats?.recordTurn('game',
+                        twitchVotes.map(v => ({ login: v.player, name: v.name, move: v.move })),
+                        (m) => m === move.san);
+                }
+            }
             const fen = this.chess.fen();
 
             if (fromNetwork) {
