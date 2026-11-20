@@ -156,6 +156,11 @@ class PhantomChessboard {
      * Ajoute un FEN à la file d'attente et lance le traitement
      */
     queuePosition(fen) {
+        // Recalibration en cours : on garde la dernière position pour après
+        if (this.recalibrating) {
+            this.pendingFen = fen;
+            return;
+        }
         // 🆕 Détecter si c'est un reset vers la position initiale
         const initialFenStart = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
         const fenPosition = fen.split(' ')[0];
@@ -181,7 +186,7 @@ class PhantomChessboard {
             this.processQueue();
         } else {
             // Mettre à jour l'overlay avec le nombre en attente
-            this.showBlockingOverlay('Déplacement en cours...', this.moveQueue.length);
+            this.showBlockingOverlay?.('Déplacement en cours...', this.moveQueue.length);
         }
     }
     
@@ -213,6 +218,12 @@ class PhantomChessboard {
         // Petit délai entre les mouvements pour laisser le board se stabiliser
         await new Promise(resolve => setTimeout(resolve, 300));
         
+        // Recalibration lancée pendant ce coup : elle reprend la main
+        if (this.recalibrating) {
+            this.isMoving = false;
+            return;
+        }
+
         // Si la queue est vide, le Phantom a terminé tous ses mouvements
         if (this.moveQueue.length === 0) {
             this.isMoving = false;
@@ -439,6 +450,12 @@ class PhantomChessboard {
                 this.log(`📥 [${opName}]`, 'received');
             }
             
+            if (this.calibrationResolver && (opCode === this.OP_CODES.CALIBRATION || opCode === this.OP_CODES.BLE_MOVE_DONE)) {
+                const done = this.calibrationResolver;
+                this.calibrationResolver = null;
+                done();
+            }
+
             // 🆕 BLE_MOVE_DONE - Résoudre la promesse en attente
             if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
                 this.log(`🎯 MOVE_DONE reçu!`, 'success');
@@ -510,6 +527,57 @@ class PhantomChessboard {
     
     async calibrate() {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
+    }
+
+    /**
+     * Recale la mécanique quand le chariot vise à côté des cases.
+     * Pendant une partie l'échiquier ne tient pas compte de CALIBRATION seule :
+     * on abandonne les coups en attente, on termine la partie, on calibre,
+     * puis on repose la position (GAME_START complet). Les positions reçues
+     * entre-temps (partie suivie) sont gardées : seule la dernière est rejouée.
+     * @param {() => string|null} getFen position à reposer ensuite (null : rien)
+     */
+    async recalibrate(getFen = () => null) {
+        if (!this.isConnected || this.recalibrating) return false;
+        this.recalibrating = true;
+        this.pendingFen = null;
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        window.dispatchEvent(new CustomEvent('phantomMoveStart'));   // le minuteur de vote attend
+        this.showBlockingOverlay?.('Calibration du Phantom...', 0);
+        try {
+            // Abandonner le mouvement en cours et la file
+            this.moveQueue = [];
+            if (this.moveTimeout) { clearTimeout(this.moveTimeout); this.moveTimeout = null; }
+            const pending = this.moveDoneResolver;
+            this.moveDoneResolver = null;
+            pending?.();
+
+            this.log('🛠️ Recalibration : fin de partie, calibration, remise en place', 'info');
+            await this.sendGameEnd();
+            await sleep(1500);
+            // Fin de calibration : retour de l'échiquier (CALIBRATION ou MOVE_DONE), sinon 20 s
+            const finished = new Promise(resolve => {
+                this.calibrationResolver = resolve;
+                setTimeout(resolve, 20000);
+            });
+            await this.calibrate();
+            await finished;
+            this.calibrationResolver = null;
+            await sleep(1000);
+        } finally {
+            this.recalibrating = false;
+            this.isMoving = false;
+        }
+        const fen = this.pendingFen || getFen();
+        this.pendingFen = null;
+        this.lastFenSent = null;   // forcer un GAME_START complet
+        if (fen) {
+            this.queuePosition(fen);
+        } else {
+            this.hideBlockingOverlay?.();
+            window.dispatchEvent(new CustomEvent('phantomMoveComplete'));
+        }
+        return true;
     }
     
     // ========== MÉTHODE PRINCIPALE DE SYNC ==========

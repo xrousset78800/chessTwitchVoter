@@ -69,6 +69,19 @@ const AppState = {
     savedConfigs: []
 };
 
+// Réglages d'origine : une nouvelle partie repart de là, comme après un rechargement
+const APP_DEFAULTS = JSON.stringify({
+    gameMode: AppState.gameMode, config: AppState.config, players: AppState.players, problems: AppState.problems
+});
+function resetAppStateDefaults() {
+    const d = JSON.parse(APP_DEFAULTS);
+    AppState.gameMode = d.gameMode;
+    ['config', 'players', 'problems'].forEach(k => {
+        Object.keys(AppState[k]).forEach(key => delete AppState[k][key]);
+        Object.assign(AppState[k], d[k]);
+    });
+}
+
 // ============================================
 // STORAGE MANAGER
 // ============================================
@@ -174,12 +187,9 @@ const GameSession = {
     hash: '#/game',   // Où la retrouver
     liveMode: null,   // Mode de la partie en cours (l'écran Nouveau peut changer AppState.gameMode)
 
-    /** Même mécanique que "Appliquer" : rechargement pour repartir d'un état propre */
+    /** Même mécanique que "Appliquer" : on repart d'un état propre */
     launch(session) {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-        sessionStorage.setItem('autoStart', '1');
-        window.location.hash = '#/game';
-        window.location.reload();
+        this.restart('#/game', { session, start: true });
     },
 
     /** Avant de lancer une partie par-dessus celle en cours */
@@ -189,10 +199,68 @@ const GameSession = {
 
     /** Arrête la partie en cours et revient à une page de réglage */
     quit(hash) {
+        this.restart(hash);
+    },
+
+    /**
+     * Arrête tout ce qu'une partie a mis en route et remet les réglages tels qu'au chargement.
+     * Remplace l'ancien rechargement de page : la connexion Bluetooth au Phantom, qui ne
+     * peut pas être rétablie sans un clic de l'utilisateur, survit ainsi aux changements de partie.
+     */
+    reset() {
+        SandboxPage.fullReset();
+        rushManager.stop?.();
+        problemsManager.reset?.();
+        PresetGame.stopCountdown();
+        PresetGame.setBanner(null);
+        Object.assign(lobby, new lobby.constructor());
+        const roster = document.getElementById('roster-panel');
+        if (roster) roster.style.display = 'none';
+        MultiRoom.leave();
+        GameAnnouncer.stop();
+        if (window.gameEngine) {
+            gameEngine.session = null;
+            gameEngine.onGameEnd = null;
+            gameEngine.board?.orientation('white');
+            gameEngine.hideWheel?.();
+        }
+        [...document.body.classList].forEach(c => {
+            if (c.startsWith('preset-') || c.startsWith('problem-') || ['multi-active', 'randomWheel', 'showTimer', 'accepting-moves'].includes(c)) {
+                document.body.classList.remove(c);
+            }
+        });
+
         this.clear();
         sessionStorage.removeItem('autoStart');
-        history.replaceState(null, '', hash);
-        window.location.reload();
+        this.running = false;
+        this.liveMode = null;
+        this.hash = '#/game';
+        resetAppStateDefaults();
+        Storage.loadConfig();
+    },
+
+    /** Équivalent d'un rechargement de page, sans recharger */
+    restart(hash, { session = null, start = false } = {}) {
+        this.reset();
+        if (session) sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        if (start) sessionStorage.setItem('autoStart', '1');
+        this.restore();
+        sessionStorage.removeItem('autoStart');
+        if (window.gameEngine?.config && SandboxPage.initialized) {
+            const c = AppState.config;
+            Object.assign(gameEngine.config, {
+                timerEnabled: c.timerEnabled, timerDuration: c.timerDuration, wheelDuration: c.wheelDuration,
+                pauseAfterEnd: c.pauseAfterEnd, majorityMode: c.majorityMode, singleVote: c.singleVote
+            });
+            timer.setDuration?.(c.timerDuration);
+        }
+        if (window.location.hash !== hash) history.pushState(null, '', hash);
+        Router.handleRoute();
+        updateConnectionUI();
+        if (start) {
+            SandboxPage.applyConfigAfterReload();
+            GameAnnouncer.start();
+        }
     },
 
     restore() {
@@ -269,16 +337,14 @@ const Router = {
                 return;
             }
             // Entrer dans un autre salon : état propre
-            if (this.started) {
-                GameSession.clear();
-                window.location.reload();
-                return;
-            }
+            if (this.started) GameSession.reset();
             MultiRoom.prepare(room);
             GameSession.running = true;
             GameSession.liveMode = AppState.gameMode;
             GameSession.hash = '#' + hash;
             this.showPage('game');
+            // Au démarrage, initApp entre dans le salon après la restauration de Twitch
+            if (this.started) MultiRoom.enter();
             return;
         }
 
@@ -859,8 +925,10 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
         document.getElementById('btn-calibrate')?.addEventListener('click', async () => {
             if (window.phantomChessboard?.isConnected) {
-                await window.phantomChessboard.calibrate();
-                Toast.success('Calibration lancée');
+                Toast.info('Recalibration du Phantom : arrêt, calibration puis remise en place des pièces');
+                const fen = gameEngine.chess?.fen();
+                await window.phantomChessboard.recalibrate(() => fen);
+                Toast.success('Phantom recalibré');
             }
         });
 
@@ -1177,9 +1245,7 @@ async applyConfig() {
     // Une partie libre remplace aussi une partie préconfigurée en cours
     GameSession.clear();
     Storage.saveConfig();
-    sessionStorage.setItem('autoStart', '1');
-    window.location.hash = '#/game';
-    window.location.reload();
+    GameSession.restart('#/game', { start: true });
 },
 fullReset() {
     console.log('🔄 Full reset de l\'état applicatif...');
@@ -1648,7 +1714,16 @@ const GameAnnouncer = {
         if (typeof io === 'undefined' || this.socket) return;
         this.socket = io({ transports: ['websocket', 'polling'] });
         this.socket.on('connect', () => { this.last = null; this.send(); });
-        setInterval(() => this.send(), 4000);
+        this.intervalId = setInterval(() => this.send(), 4000);
+    },
+
+    /** Plus de partie : le serveur la retire de Parcourir à la déconnexion */
+    stop() {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+        this.socket?.disconnect();
+        this.socket = null;
+        this.last = null;
     },
 
     snapshot() {
@@ -1855,9 +1930,9 @@ function updateConnectionUI() {
         dot.classList.toggle('is-connected', phantomConnected);
     });
 
-    if (['sandbox', 'game'].includes(AppState.currentPage)) {
-        SandboxPage.updateConditionalUI();
-    }
+    // Les boutons du menu Phantom de la partie doivent suivre la connexion même
+    // quand elle change depuis une autre page (sinon ils restent grisés)
+    SandboxPage.updateConditionalUI();
 }
 
 // ============================================
@@ -2112,9 +2187,7 @@ const PresetGame = {
     startMono() {
         const login = twitchAuth.user?.login;
         if (!login) {
-            GameSession.clear();
-            window.location.hash = '#/mono';
-            window.location.reload();
+            GameSession.restart('#/mono');
             return;
         }
         const { format, streamerColor } = GameSession.current;
@@ -2235,7 +2308,7 @@ const PresetGame = {
             'login':     () => twitchAuth.login(),
             'rematch':   () => this.rematch(),
             'new-lobby': () => GameSession.launch(GameSession.current),
-            'revenge':   () => window.location.reload(),
+            'revenge':   () => GameSession.restart(window.location.hash),
             'back':      () => GameSession.quit('#/multi')
         };
         document.querySelectorAll('[data-lobby-action]').forEach(btn => {
@@ -2290,9 +2363,12 @@ const MultiRoom = {
         const { a, b, settings } = this.room;
         const login = normalizeLogin(twitchAuth.user?.login);
 
-        window.addEventListener('multiRoomState', (e) => this.onState(e.detail));
-        window.addEventListener('multiRoomDenied', (e) => this.deny(e.detail.reason));
-        window.addEventListener('multiPartnerLeft', () => this.onPartnerLeft());
+        if (!this.listening) {
+            this.listening = true;
+            window.addEventListener('multiRoomState', (e) => this.room && this.onState(e.detail));
+            window.addEventListener('multiRoomDenied', (e) => this.room && this.deny(e.detail.reason));
+            window.addEventListener('multiPartnerLeft', () => this.room && this.onPartnerLeft());
+        }
 
         if (!login) {
             PresetGame.setBanner({
@@ -2359,6 +2435,28 @@ const MultiRoom = {
             params: { a, b },
             actions: reason === 'auth' ? ['login', 'back'] : ['back']
         });
+    },
+
+    /** Quitte le salon : socket fermé, gestionnaire neuf pour le prochain */
+    leave() {
+        const manager = window.multiplayerManager;
+        if (manager?.socket) {
+            manager.roomEntry = null;          // pas de "partenaire parti" pour une sortie volontaire
+            manager.partnerConnected = false;
+            manager.socket.disconnect();
+        }
+        if (manager?.gameId || manager?.socket) window.multiplayerManager = new manager.constructor();
+        window.multiplayerMode = false;
+        window.currentGameId = null;
+        window.playerColor = null;
+        window.streamer1Channel = null;
+        window.streamer2Channel = null;
+        ['multi-active-banner', 'multi-pre-ready-banner'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        this.room = null;
+        this.opponent = null;
     },
 
     onGameReady() {
@@ -2535,6 +2633,12 @@ async function initApp() {
     });
 
     updateConnectionUI();
+    // Connexion ou coupure du Phantom/Twitch hors des boutons de l'app (échiquier éteint, reconnexion…)
+    let lastConn = '';
+    setInterval(() => {
+        const conn = `${!!window.phantomChessboard?.isConnected}|${!!window.twitch?.isConnected}`;
+        if (conn !== lastConn) { lastConn = conn; updateConnectionUI(); }
+    }, 1000);
 
     console.log('✅ Phantom Twitchess prêt !');
 }

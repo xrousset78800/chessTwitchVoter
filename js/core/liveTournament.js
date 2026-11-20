@@ -1255,8 +1255,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnCalibrateT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
-        await window.phantomChessboard.calibrate();
-        logT('Calibration lancée', 'ok');
+        logT('Recalibration : arrêt, calibration puis remise en place', 'info');
+        await window.phantomChessboard.recalibrate(() => (stateT.currentGame || reviewT.game) ? stateT.chess.fen() : null);
+        logT('Phantom recalibré', 'ok');
     });
 
     setInterval(() => {

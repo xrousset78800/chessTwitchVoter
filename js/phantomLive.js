@@ -343,8 +343,9 @@ document.getElementById('btnGameEndLive')?.addEventListener('click', async () =>
 
 document.getElementById('btnCalibrateLive')?.addEventListener('click', async () => {
     if (!window.phantomChessboard?.isConnected) { log('Phantom non connecté', 'warn'); return; }
-    await window.phantomChessboard.calibrate();
-    log('Calibration lancée', 'ok');
+    log('Recalibration : arrêt, calibration puis remise en place', 'info');
+    await window.phantomChessboard.recalibrate(() => state.polling ? state.chess.fen() : null);
+    log('Phantom recalibré', 'ok');
 });
 
 document.getElementById('btnPhantom').addEventListener('click', async () => {
