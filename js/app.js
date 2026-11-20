@@ -17,6 +17,8 @@ import { matchLegalMove } from './utils/moveMatch.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import RecordsPage from './pages/records.js';
+import WatchPage from './pages/watch.js';
+import './components/infoTip.js';
 
 // ============================================
 // ÉTAT GLOBAL
@@ -312,6 +314,7 @@ const Router = {
         '/game': 'game',
         '/browse': 'browse',
         '/records': 'records',
+        '/watch': 'watch',
         '/live': 'live',
         '/tournament': 'tournament',
         '/rush': 'rush',
@@ -350,7 +353,7 @@ const Router = {
             MultiRoom.prepare(room);
             GameSession.running = true;
             GameSession.liveMode = AppState.gameMode;
-            GameSession.hash = '#' + hash;
+            GameSession.hash = window.location.hash;
             this.showPage('game');
             // Au démarrage, initApp entre dans le salon après la restauration de Twitch
             if (this.started) MultiRoom.enter();
@@ -411,6 +414,9 @@ const Router = {
             );
         });
 
+        // Quitter la page spectateur coupe son flux
+        if (pageName !== 'watch') WatchPage.stop();
+
         // Init spécifique à la page
         if (pageName === 'sandbox' || pageName === 'game') {
             SandboxPage.init();
@@ -418,6 +424,8 @@ const Router = {
             BrowsePage.init();
         } else if (pageName === 'records') {
             RecordsPage.init();
+        } else if (pageName === 'watch') {
+            WatchPage.init();
         } else if (pageName === 'live') {
             LivePage.init();
         } else if (pageName === 'tournament') {
@@ -487,6 +495,16 @@ function isPuzzleMode(mode = AppState.gameMode) {
  * body.wheel-mode : la roue n'est visible pendant le vote que dans ce cas.
  * Majorité active ou mode puzzle (toujours majorité) → pas de roue.
  */
+/** Le gestionnaire de puzzles n'est configuré qu'une fois : chaque lancement lui redonne le minuteur de la partie */
+function syncProblemsTimer() {
+    Object.assign(problemsManager.config, {
+        timerEnabled:  !!AppState.config.timerEnabled,
+        timerDuration: AppState.config.timerDuration,
+        majorityMode:  AppState.config.majorityMode,
+        wheelDuration: AppState.config.wheelDuration
+    });
+}
+
 function syncWheelModeClass() {
     const wheelMode = !AppState.config.majorityMode && !isPuzzleMode();
     document.body.classList.toggle('wheel-mode', wheelMode);
@@ -564,6 +582,7 @@ async applyConfigAfterReload() {
             if (!success) { Toast.error('Erreur initialisation Puzzle Rush'); return; }
         }
         problemsManager.clearThemes();
+        syncProblemsTimer();
         problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
         problemsManager.config.votesPerViewer = 1;
         AppState.problems.isActive = true;
@@ -582,6 +601,7 @@ async applyConfigAfterReload() {
         }
         problemsManager.clearThemes();
         AppState.problems.selectedThemes.forEach(t => problemsManager.toggleTheme(t));
+        syncProblemsTimer();
         problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
         problemsManager.config.votesPerViewer = AppState.config.votesPerViewer;
         AppState.problems.isActive = true;
@@ -1630,7 +1650,7 @@ const BrowsePage = {
             return `
                 <div class="game-card" data-game-id="${game.gameId}">
                     <div class="game-card__header">
-                        <span class="game-card__mode">⚔ Multi</span>
+                        <span class="game-card__mode">⚔ Multi${game.isPublic === false ? ` <span class="game-card__private">🔒 ${tr('browsePage.private')}</span>` : ''}</span>
                         <span class="game-card__status ${statusClass}">${statusLabel}</span>
                     </div>
                     <div class="game-card__players">
@@ -1645,7 +1665,7 @@ const BrowsePage = {
                         <div class="game-card__player game-card__player--right">
                             <div class="game-card__avatar">♟</div>
                             <div>
-                                <div class="game-card__player-name">${game.guest || '???'}</div>
+                                <div class="game-card__player-name">${game.guest || tr('browsePage.openSeat')}</div>
                                 <div class="game-card__player-rating">Noirs</div>
                             </div>
                         </div>
@@ -1654,9 +1674,21 @@ const BrowsePage = {
                         <span>${game.moveCount || 0} coup${game.moveCount !== 1 ? 's' : ''}</span>
                         ${elapsed ? `<span>${elapsed}</span>` : ''}
                     </div>
+                    ${this.cardActions(game)}
                 </div>
             `;
         }).join('');
+    },
+
+    /** Regarder (toutes les parties) et Rejoindre (salon Multi public avec une place libre) */
+    cardActions(game) {
+        const join = game.join
+            ? `<a class="btn btn--sm btn--primary" data-join href="${MultiRoom.buildHash(normalizeLogin(game.join.host), normalizeLogin(game.join.code), game.settings || {}, true)}">
+                   <i class="fas fa-sign-in-alt"></i> ${tr('browsePage.join')}</a>`
+            : '';
+        return `<div class="game-card__actions">${join}
+            <a class="btn btn--sm btn--ghost" data-watch href="#/watch?g=${encodeURIComponent(game.gameId)}"><i class="fas fa-eye"></i> ${tr('browsePage.watch')}</a>
+        </div>`;
     },
 
     /** Partie d'une seule chaîne : Mono, Puzzle Rush, partie libre… */
@@ -1690,6 +1722,7 @@ const BrowsePage = {
                     <span>${progress}</span>
                     ${elapsed ? `<span>${elapsed}</span>` : ''}
                 </div>
+                ${this.cardActions(game)}
             </div>
         `;
     }
@@ -1711,7 +1744,8 @@ const GameAnnouncer = {
         if (typeof io === 'undefined' || this.socket) return;
         this.socket = io({ transports: ['websocket', 'polling'] });
         this.socket.on('connect', () => { this.last = null; this.send(); });
-        this.intervalId = setInterval(() => this.send(), 4000);
+        // Envoi seulement quand quelque chose change : la position suit presque en direct
+        this.intervalId = setInterval(() => this.send(), 1000);
     },
 
     /** Plus de partie : le serveur la retire de Parcourir à la déconnexion */
@@ -1730,8 +1764,25 @@ const GameAnnouncer = {
             host: normalizeLogin(twitchAuth.user?.login || twitch.channel || ''),
             moveCount: mode === 'rush' ? rushManager.score : (gameEngine.moveHistory?.length || 0),
             players: lobby.active ? lobby.players.size : null,
-            waiting: lobby.active && lobby.open
+            waiting: lobby.active && lobby.open,
+            ...this.position()
         };
+    },
+
+    /** Position, dernier coup et sens de l'échiquier, pour les spectateurs */
+    position() {
+        try {
+            const chess = gameEngine.chess;
+            if (!chess) return {};
+            const last = chess.history({ verbose: true }).slice(-1)[0];
+            return {
+                fen: chess.fen(),
+                lastMove: last ? { from: last.from, to: last.to } : null,
+                orientation: gameEngine.board?.orientation?.() || 'white'
+            };
+        } catch {
+            return {};
+        }
     },
 
     send() {
@@ -2049,20 +2100,19 @@ const MultiPage = {
         if (this.initialized) return;
         this.initialized = true;
         PresetForm.bindToggles('multi');
+        const isPublic = document.getElementById('multi-public');
+        try { isPublic.checked = localStorage.getItem('multi_public') !== '0'; } catch {}
+        const syncVisibility = () => {
+            document.getElementById('multi-visibility').dataset.visibility = isPublic.checked ? 'public' : 'private';
+            try { localStorage.setItem('multi_public', isPublic.checked ? '1' : '0'); } catch {}
+        };
+        isPublic.addEventListener('change', syncVisibility);
+        syncVisibility();
         document.getElementById('multi-start').addEventListener('click', () => {
             const options = PresetForm.read('multi');
             if (PresetForm.needsLogin(options)) { twitchAuth.login(); return; }
-            const me       = normalizeLogin(twitchAuth.user.login);
-            const opponent = normalizeLogin(document.getElementById('multi-opponent').value);
-            if (opponent.length < 2 || opponent === me) {
-                Toast.error(tr('multi.invalidOpponent'));
-                return;
-            }
-            const query = new URLSearchParams({ timer: options.timerDuration, mode: options.majorityMode ? 'majority' : 'wheel' });
-            if (options.subsOnly) query.set('subs', '1');
-            if (options.followersOnly) query.set('followers', '1');
             if (!GameSession.confirmReplace()) return;
-            window.location.hash = `#/multi/${me}/${opponent}?${query}`;
+            MultiRoom.open(normalizeLogin(twitchAuth.user.login), MultiRoom.newCode(), options, isPublic.checked);
         });
     }
 };
@@ -2278,7 +2328,10 @@ const PresetGame = {
                 this.closeMonoLobby();
             },
             'copy-link': () => {
-                navigator.clipboard.writeText(window.location.href).then(() => Toast.success(tr('lobby.linkCopied')));
+                // Salon Multi : le lien contient le code, il n'est jamais affiché (anti stream-hack)
+                const link = MultiRoom.room ? MultiRoom.inviteLink() : window.location.href;
+                navigator.clipboard.writeText(link).then(() =>
+                    Toast.success(tr(MultiRoom.room ? 'multi.linkCopied' : 'lobby.linkCopied')));
             },
             'login':     () => twitchAuth.login(),
             'rematch':   () => this.rematch(),
@@ -2302,25 +2355,68 @@ const PresetGame = {
 
 const MultiRoom = {
     room: null,
+    STORE: 'multiInvite',
 
+    /** Code secret du salon : seul le lien d'invitation le contient */
+    newCode() {
+        const bytes = crypto.getRandomValues(new Uint8Array(8));
+        return [...bytes].map(b => (b % 36).toString(36)).join('');
+    },
+
+    buildHash(host, code, settings, isPublic) {
+        const query = new URLSearchParams({ timer: settings.timerDuration, mode: settings.majorityMode ? 'majority' : 'wheel' });
+        if (settings.subsOnly) query.set('subs', '1');
+        if (settings.followersOnly) query.set('followers', '1');
+        if (isPublic) query.set('public', '1');
+        return `#/multi/${host}/${code}?${query}`;
+    },
+
+    /** Entre dans un nouveau salon sans jamais afficher son code dans la barre d'adresse */
+    open(host, code, settings, isPublic) {
+        const room = { a: host, code, isPublic: !!isPublic, settings: { ...settings } };
+        try { sessionStorage.setItem(this.STORE, JSON.stringify(room)); } catch {}
+        window.location.hash = `#/multi/${host}`;
+    },
+
+    inviteLink() {
+        const r = this.room;
+        return `${location.origin}${location.pathname}${this.buildHash(r.a, r.code, r.settings, r.isPublic)}`;
+    },
+
+    /**
+     * #/multi/<hôte>/<code> : lien d'invitation. Le code part en sessionStorage et
+     * la barre d'adresse redevient #/multi/<hôte> pour qu'il n'apparaisse pas en stream.
+     * #/multi/<hôte> : reprise (F5, retour à la partie) grâce à la session.
+     */
     parse(path, query) {
-        const match = /^\/multi\/([^/]+)\/([^/]+)$/.exec(path);
+        const match = /^\/multi\/([^/?]+)(?:\/([^/?]+))?$/.exec(path);
         if (!match) return null;
-        const params = new URLSearchParams(query || '');
-        return {
-            a: normalizeLogin(match[1]),
-            b: normalizeLogin(match[2]),
-            settings: {
-                timerDuration: Math.min(300, Math.max(5, parseInt(params.get('timer')) || 30)),
-                majorityMode:  params.get('mode') === 'majority',
-                followersOnly: params.get('followers') === '1',
-                subsOnly:      params.get('subs') === '1'
-            }
-        };
+        const host = normalizeLogin(match[1]);
+        if (match[2]) {
+            const params = new URLSearchParams(query || '');
+            const room = {
+                a: host,
+                code: normalizeLogin(match[2]),
+                isPublic: params.get('public') === '1',
+                settings: {
+                    timerDuration: Math.min(300, Math.max(5, parseInt(params.get('timer')) || 30)),
+                    majorityMode:  params.get('mode') === 'majority',
+                    followersOnly: params.get('followers') === '1',
+                    subsOnly:      params.get('subs') === '1'
+                }
+            };
+            try { sessionStorage.setItem(this.STORE, JSON.stringify(room)); } catch {}
+            history.replaceState(null, '', `#/multi/${host}`);
+            return room;
+        }
+        let saved = null;
+        try { saved = JSON.parse(sessionStorage.getItem(this.STORE) || 'null'); } catch {}
+        if (saved?.a === host && saved.code) return saved;
+        return { a: host, code: null, isPublic: false, settings: { timerDuration: 30, majorityMode: false, followersOnly: false, subsOnly: false } };
     },
 
     isSame(room) {
-        return !!this.room && room.a === this.room.a && room.b === this.room.b;
+        return !!this.room && room.a === this.room.a && room.code === this.room.code;
     },
 
     /** Avant SandboxPage.init : le moteur démarre avec les réglages du lien */
@@ -2335,8 +2431,9 @@ const MultiRoom = {
 
     /** Après la restauration de Twitch : entrée réelle dans le salon */
     enter() {
-        const { a, b, settings } = this.room;
+        const { a, code, settings, isPublic } = this.room;
         const login = normalizeLogin(twitchAuth.user?.login);
+        const title = tr('multi.roomTitle', { host: a });
 
         if (!this.listening) {
             this.listening = true;
@@ -2345,21 +2442,21 @@ const MultiRoom = {
             window.addEventListener('multiPartnerLeft', () => this.room && this.onPartnerLeft());
         }
 
+        if (!code) {
+            this.deny('invalid');
+            return;
+        }
         if (!login) {
             PresetGame.setBanner({
-                title: `${a} ⚔ ${b}`,
+                title,
                 hintKey: 'multi.loginRequired',
                 actions: ['login', 'back']
             });
             return;
         }
-        if (login !== a && login !== b) {
-            this.deny('notParticipant');
-            return;
-        }
         if (settings.followersOnly && !twitchAuth.canCheckFollowers) {
             PresetGame.setBanner({
-                title: `${a} ⚔ ${b}`,
+                title,
                 hintKey: 'multi.followersScope',
                 actions: ['login', 'back']
             });
@@ -2374,21 +2471,28 @@ const MultiRoom = {
             streamer: login,
             color: login === a ? 'w' : 'b'
         });
-        this.opponent = login === a ? b : a;
-        window.multiplayerManager.enterRoom({ a, b, login, token: twitchAuth.token, settings });
+        this.opponent = login === a ? null : a;
+        window.multiplayerManager.enterRoom({ host: a, code, login, token: twitchAuth.token, settings, isPublic });
     },
 
-    onState({ present, remainingMs, settings }) {
-        // Le premier arrivé fixe les réglages de la partie
+    onState({ a, b, present, remainingMs, settings, isPublic }) {
+        // L'hôte fixe les réglages de la partie
         twitch.settings.subsOnly = settings.subsOnly;
         lobby.verifyJoin = PresetGame.followerCheck(settings.followersOnly);
+        Object.assign(this.room, { settings, isPublic: !!isPublic });
+        const login = normalizeLogin(twitchAuth.user?.login);
+        this.opponent = login === a ? b : a;
 
         if (present.length < 2) {
             PresetGame.stopCountdown();
-            PresetGame.setBanner({
+            PresetGame.setBanner(this.opponent ? {
                 titleKey: 'multi.waiting',
                 params: { name: this.opponent },
                 hintKey: 'multi.waitingHint',
+                actions: ['copy-link', 'back']
+            } : {
+                titleKey: 'multi.waitingAny',
+                hintKey: isPublic ? 'multi.waitingPublicHint' : 'multi.waitingPrivateHint',
                 actions: ['copy-link', 'back']
             });
             return;
@@ -2404,10 +2508,9 @@ const MultiRoom = {
     deny(reason) {
         PresetGame.stopCountdown();
         lobby.open = false;
-        const { a, b } = this.room;
         PresetGame.setBanner({
             titleKey: `multi.denied.${reason}`,
-            params: { a, b },
+            params: { host: this.room?.a || '' },
             actions: reason === 'auth' ? ['login', 'back'] : ['back']
         });
     },

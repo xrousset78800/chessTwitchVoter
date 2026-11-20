@@ -271,6 +271,10 @@ window.timer = timer;
                 <i class="fas fa-pause"></i>
                 <span>Pause</span>
             </button>
+            <div class="timer-instant" role="note">
+                <span class="timer-instant__title">⚡ <span data-i18n="timerOff.badge">${window.i18n?.t('timerOff.badge') || 'Vote instantané'}</span></span>
+                <span class="timer-instant__hint" data-i18n="timerOff.badgeHint">${window.i18n?.t('timerOff.badgeHint') || 'Le premier vote est joué'}</span>
+            </div>
         `;
 
         // S'assurer que le parent est en position relative

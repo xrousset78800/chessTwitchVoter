@@ -91,6 +91,11 @@ class I18n {
             }
         });
 
+        // Placeholders traduits (champs sans data-i18n)
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = this.t(el.dataset.i18nPlaceholder);
+        });
+
         // Update title attribute translations
         document.querySelectorAll('[data-i18n-title]').forEach(el => {
             el.title = this.t(el.dataset.i18nTitle);

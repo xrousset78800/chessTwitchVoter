@@ -24,7 +24,18 @@ function avatar(p, cls = 'rec-avatar') {
         : `<span class="${cls}">${esc(name[0].toUpperCase())}</span>`;
 }
 
-const channelLink = (p) => `<a href="https://twitch.tv/${esc(p.login)}" target="_blank" rel="noopener">${esc(p.displayName || p.login)}</a>`;
+const profileHref = (login) => `#/records?c=${encodeURIComponent(String(login || '').toLowerCase())}`;
+const twitchIcon = (login) => `<a class="rec-twitch" href="https://twitch.tv/${esc(login)}" target="_blank" rel="noopener" aria-label="Twitch" title="twitch.tv/${esc(login)}"><i class="fab fa-twitch"></i></a>`;
+/** Nom de chaîne : ouvre sa fiche dans Records (petit lien Twitch à côté) */
+const channelLink = (p) => `<a href="${profileHref(p.login)}" class="rec-link">${esc(p.displayName || p.login)}</a>${twitchIcon(p.login)}`;
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+const RUSH_MODES = ['0', '30', '60', '120'];
+const modeLabel = (k) => (k === '0' ? t('modeUnlimited') : k === '60' ? '1 min' : k === '120' ? '2 min' : '30 s');
+const currentChannel = () => {
+    const q = window.location.hash.split('?')[1] || '';
+    const c = new URLSearchParams(q).get('c');
+    return c && /^[a-z0-9_]{1,25}$/i.test(c) ? c.toLowerCase() : null;
+};
 const empty = (msg) => `<div class="rec-empty">${msg}</div>`;
 const failed = (e) => empty(`${esc(t('unavailable'))} (${esc(e.message)})`);
 
@@ -86,12 +97,237 @@ const RecordsPage = {
                 if (!row || e.target.closest('a')) return;
                 this.toggleDuels(row.dataset.duel);
             });
-            window.addEventListener('languageChanged', () => { if (document.getElementById('page-records').classList.contains('is-active')) this.load(); });
+            window.addEventListener('languageChanged', () => {
+                if (!document.getElementById('page-records').classList.contains('is-active')) return;
+                if (this.channel) this.loadChannel(this.channel); else this.load();
+            });
             window.addEventListener('twitchAuthChange', () => { this.viewerChannel = null; });
             try { this.tab = localStorage.getItem(STORE_TAB) || 'rush'; } catch {}
+            this.bindSearch();
+        }
+        // #/records?c=<login> : fiche détaillée d'une chaîne
+        const channel = currentChannel();
+        this.channel = channel;
+        document.getElementById('records-main').hidden = !!channel;
+        document.getElementById('records-channel').hidden = !channel;
+        if (channel) {
+            this.loadChannel(channel);
+            return;
         }
         this.showTab(this.tab);
         this.load();
+    },
+
+    // ========== RECHERCHE ==========
+
+    bindSearch() {
+        const input = document.getElementById('records-search');
+        const list = document.getElementById('records-suggest');
+        if (!input || !list) return;
+        let timer = null, seq = 0, active = -1, items = [];
+
+        const close = () => {
+            list.hidden = true;
+            list.innerHTML = '';
+            input.setAttribute('aria-expanded', 'false');
+            active = -1;
+        };
+        const open = (login) => {
+            close();
+            input.value = '';
+            input.blur();
+            window.location.hash = profileHref(login);
+        };
+        const mark = () => list.querySelectorAll('[role=option]').forEach((li, i) => {
+            li.classList.toggle('is-active', i === active);
+            li.setAttribute('aria-selected', i === active);
+        });
+        const render = (q) => {
+            const badges = (c) => [c.rush && '🔥', c.multi && '⚔', c.viewers && '💬'].filter(Boolean).join(' ');
+            list.innerHTML = items.length
+                ? items.map((c, i) => `<li role="option" id="rec-sug-${i}" data-login="${esc(c.login)}" aria-selected="false">
+                    ${avatar(c, 'rec-avatar rec-avatar--sm')}<span class="rec-suggest__name">${esc(c.displayName)}</span>
+                    <span class="rec-suggest__badges">${badges(c)}</span></li>`).join('')
+                : `<li class="rec-suggest__empty">${esc(t('searchEmpty', { q }))}</li>`;
+            list.hidden = false;
+            input.setAttribute('aria-expanded', 'true');
+            active = -1;
+        };
+        const search = async () => {
+            const q = input.value.trim().toLowerCase();
+            const mine = ++seq;
+            if (!q) { close(); return; }
+            try {
+                const data = await getJson(`/api/channels/search?q=${encodeURIComponent(q)}`);
+                if (mine !== seq) return;
+                items = data?.channels || [];
+                render(q);
+            } catch {
+                if (mine === seq) close();
+            }
+        };
+
+        input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(search, 180); });
+        input.addEventListener('focus', () => { if (input.value.trim()) search(); });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                if (!items.length || list.hidden) return;
+                e.preventDefault();
+                active = (active + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+                mark();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const pick = items[active] || items[0];
+                const typed = input.value.trim().toLowerCase();
+                if (pick) open(pick.login);
+                else if (/^[a-z0-9_]{2,25}$/.test(typed)) open(typed);
+            } else if (e.key === 'Escape') {
+                close();
+            }
+        });
+        list.addEventListener('mousedown', (e) => {
+            const li = e.target.closest('[data-login]');
+            if (!li) return;
+            e.preventDefault();
+            open(li.dataset.login);
+        });
+        input.addEventListener('blur', () => setTimeout(close, 120));
+    },
+
+    // ========== FICHE D'UNE CHAÎNE ==========
+
+    async loadChannel(login) {
+        const box = document.getElementById('records-channel');
+        box.innerHTML = `<div class="rec-empty">${esc(t('loading'))}</div>`;
+        try {
+            const [rush, multi, viewers] = await Promise.all([
+                getJson(`/api/rush/channel/${encodeURIComponent(login)}`),
+                getJson(`/api/multi/channel/${encodeURIComponent(login)}`),
+                getJson(`/api/viewers/${encodeURIComponent(login)}?sort=votes&limit=10`)
+            ]);
+            if (login !== this.channel) return;
+            box.innerHTML = this.renderProfile(login, rush, multi, viewers);
+        } catch (e) {
+            if (login === this.channel) box.innerHTML = this.profileBack() + failed(e);
+        }
+    },
+
+    profileBack() {
+        return `<a class="btn btn--sm btn--ghost rec-profile__back" href="#/records"><i class="fas fa-arrow-left"></i> ${esc(t('profileBack'))}</a>`;
+    },
+
+    renderProfile(login, rush, multi, viewers) {
+        const who = rush || multi || viewers?.channel || { login, displayName: login };
+        const isMe = login === me();
+        const head = `${this.profileBack()}
+            <div class="rec-profile__head">
+                ${avatar(who, 'rec-avatar rec-avatar--xl')}
+                <div class="rec-profile__id">
+                    <h2 class="rec-profile__name">${esc(who.displayName || login)}${isMe ? ` <span class="rec-chip is-active">${esc(t('itsYou'))}</span>` : ''}</h2>
+                    <a class="rec-profile__twitch" href="https://twitch.tv/${esc(login)}" target="_blank" rel="noopener"><i class="fab fa-twitch"></i> twitch.tv/${esc(login)}</a>
+                </div>
+            </div>`;
+        if (!rush && !multi && !viewers) return head + empty(esc(t('profileNoData', { name: who.displayName || login })));
+        return head + `<div class="rec-profile__grid">
+            ${this.profileRush(rush)}
+            ${this.profileMulti(login, multi)}
+            ${this.profileViewers(viewers)}
+        </div>`;
+    },
+
+    profileRush(rush) {
+        const modes = RUSH_MODES.filter(k => rush?.modes?.[k]);
+        if (!modes.length) return `<section class="rec-card"><h3 class="rec-card__title">🔥 Puzzle Rush</h3>${empty(esc(t('profileNoRush')))}</section>`;
+        const totalRuns = modes.reduce((n, k) => n + (rush.modes[k].runs || 0), 0);
+        const bestRating = Math.max(...modes.map(k => rush.modes[k].best?.maxRating || 0));
+        return `<section class="rec-card">
+            <h3 class="rec-card__title">🔥 Puzzle Rush <small>${esc(t('runs', { n: totalRuns }))} · ${esc(t('ratingMax', { n: bestRating || '—' }))}</small></h3>
+            <div class="rec-modes">${modes.map(k => {
+                const m = rush.modes[k];
+                const last = m.history?.length ? m.history[m.history.length - 1] : null;
+                const avg = m.history?.length ? Math.round(m.history.reduce((s, h) => s + (h.score || 0), 0) / m.history.length) : null;
+                return `<div class="rec-mode">
+                    <div class="rec-mode__head"><span class="rec-chip">${esc(modeLabel(k))}</span>
+                        <span class="rec-mode__rank">#${m.rank} <small>${esc(t('ofTotal', { n: m.total }))}</small></span></div>
+                    <div class="rec-mode__stats">
+                        <div><b>${m.best.score}</b><small>${esc(t('best'))}</small></div>
+                        <div><b>${m.best.maxRating || '—'}</b><small>${esc(t('ratingLabel'))}</small></div>
+                        <div><b>${m.runs || 1}</b><small>${esc(t('runsLabel'))}</small></div>
+                        <div><b>${avg ?? '—'}</b><small>${esc(t('avgScore'))}</small></div>
+                    </div>
+                    ${sparkline(m.history)}
+                    <div class="rec-mode__foot">${esc(t('bestOn', { date: fmtDate(m.best.at) }))}${last ? ` · ${esc(t('lastScore', { n: last.score }))}` : ''}</div>
+                </div>`;
+            }).join('')}</div>
+        </section>`;
+    },
+
+    profileMulti(login, multi) {
+        if (!multi) return `<section class="rec-card"><h3 class="rec-card__title">⚔ ${esc(t('tabMultiFull'))}</h3>${empty(esc(t('profileNoMulti')))}</section>`;
+        const rate = pct(multi.w, multi.games);
+        const recent = (multi.recent || []).map(g => {
+            const color = g.white === login ? 'white' : 'black';
+            const opp = color === 'white' ? g.blackProfile : g.whiteProfile;
+            const res = g.result === 'draw' ? 'd' : g.result === color ? 'w' : 'l';
+            return `<div class="rec-game rec-game--${res}">
+                <span class="rec-game__res">${esc(t(res))}</span>
+                ${avatar(opp, 'rec-avatar rec-avatar--sm')}
+                <span class="rec-game__name">${esc(t('vs'))} ${channelLink(opp)} <small>${esc(t(color === 'white' ? 'asWhite' : 'asBlack'))}</small></span>
+                <span class="rec-game__meta">${esc(t('reason_' + g.reason))} · ${esc(t('moves', { n: Math.ceil((g.moves || 0) / 2) }))} · ${fmtDate(g.at)}</span>
+            </div>`;
+        }).join('');
+        const opponents = (multi.opponents || []).map(o => `
+            <div class="rec-duel">${avatar(o, 'rec-avatar rec-avatar--sm')}
+                <span class="rec-duel__name">${channelLink(o)}</span>
+                <span class="rec-duel__score"><span class="rec-w">${o.w}</span>–<span class="rec-d">${o.d}</span>–<span class="rec-l">${o.l}</span></span>
+            </div>`).join('');
+        return `<section class="rec-card">
+            <h3 class="rec-card__title">⚔ ${esc(t('tabMultiFull'))} <small>#${multi.rank} ${esc(t('ofTotal', { n: multi.total }))}</small></h3>
+            <div class="rec-mode__stats">
+                <div><b>${multi.points}</b><small>${esc(t('pts'))}</small></div>
+                <div><b class="rec-w">${multi.w}</b><small>${esc(t('wins'))}</small></div>
+                <div><b class="rec-d">${multi.d}</b><small>${esc(t('draws'))}</small></div>
+                <div><b class="rec-l">${multi.l}</b><small>${esc(t('losses'))}</small></div>
+            </div>
+            <div class="rec-wdl" title="${esc(t('winRate', { n: rate }))}">
+                <span class="rec-wdl__w" style="flex:${multi.w}"></span><span class="rec-wdl__d" style="flex:${multi.d}"></span><span class="rec-wdl__l" style="flex:${multi.l}"></span>
+            </div>
+            <div class="rec-mode__foot">${esc(t('winRate', { n: rate }))} · ${esc(t('battles', { n: multi.games }))}</div>
+            ${opponents ? `<h4 class="rec-card__sub">${esc(t('opponents'))}</h4>${opponents}` : ''}
+            ${recent ? `<h4 class="rec-card__sub">${esc(t('recent'))}</h4>${recent}` : ''}
+        </section>`;
+    },
+
+    profileViewers(data) {
+        if (!data) return `<section class="rec-card"><h3 class="rec-card__title">💬 ${esc(t('tabViewers'))}</h3>${empty(esc(t('profileNoViewers')))}</section>`;
+        const c = data.channel;
+        const top = data.viewers || [];
+        const avgVoters = c.turns ? (c.votes / c.turns) : 0;
+        const fmt1 = (n) => n.toLocaleString(lang(), { maximumFractionDigits: 1 });
+        const sharpest = top.filter(v => v.votes >= 5).sort((a, b) => (b.picked / b.votes) - (a.picked / a.votes))[0];
+        const max = Math.max(...top.map(v => v.votes), 1);
+        return `<section class="rec-card">
+            <h3 class="rec-card__title">💬 ${esc(t('tabViewers'))}</h3>
+            <div class="rec-mode__stats">
+                <div><b>${fmtNum(c.viewers)}</b><small>${esc(t('viewersLabel'))}</small></div>
+                <div><b>${fmtNum(c.votes)}</b><small>${esc(t('colVotes'))}</small></div>
+                <div><b>${fmtNum(c.turns)}</b><small>${esc(t('turnsLabel'))}</small></div>
+                <div><b>${fmt1(avgVoters)}</b><small>${esc(t('avgVoters'))}</small></div>
+            </div>
+            ${sharpest ? `<div class="rec-mode__foot">🎯 ${esc(t('sharpest', { name: sharpest.name, n: pct(sharpest.picked, sharpest.votes) }))}</div>` : ''}
+            ${top.length ? `<h4 class="rec-card__sub">${esc(t('topViewers'))}</h4>
+            <div class="rec-table rec-table--compact">
+                <div class="rec-table__head"><span>#</span><span>${esc(t('viewer'))}</span>
+                    <span>${esc(t('colVotes'))}</span><span>${esc(t('colPicked'))}</span><span>${esc(t('colSolved'))}</span></div>
+                ${top.map((v, i) => `<div class="rec-table__row">
+                    <span class="rec-row__rank">${['🥇', '🥈', '🥉'][i] || i + 1}</span>
+                    <span class="rec-table__name">${esc(v.name)}<span class="rec-bar"><span style="width:${Math.round((v.votes / max) * 100)}%"></span></span></span>
+                    <span>${fmtNum(v.votes)}</span>
+                    <span>${fmtNum(v.picked)} <small>${pct(v.picked, v.votes)} %</small></span>
+                    <span>${v.puzzles ? `${fmtNum(v.solved)}<small>/${fmtNum(v.puzzles)}</small>` : '—'}</span>
+                </div>`).join('')}
+            </div>` : empty(esc(t('noVotes')))}
+        </section>`;
     },
 
     showTab(tab) {

@@ -287,6 +287,8 @@ class GameEngine {
      * Réinitialise l'échiquier
      */
     reset() {
+        // Moteur pas encore initialisé (partie lancée avant toute visite de Nouveau) : rien à remettre
+        if (!this.chess || !this.board) return;
         this.chess.reset();
         this.board.position('start');
         this.moveHistory = [];

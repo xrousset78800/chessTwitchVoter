@@ -259,3 +259,44 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .btn-quit-game:hover:not(:disabled) {
     background: rgba(239, 68, 68, 0.2);
 }
+
+/* ----- Multi : partie publique / privée ----- */
+
+.multi-visibility {
+    margin: 4px 0 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+}
+
+.multi-visibility__switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.multi-visibility__switch input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-purple);
+    cursor: pointer;
+}
+
+.multi-visibility__desc {
+    display: none;
+    gap: 8px;
+    margin: 8px 0 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.multi-visibility__desc i { margin-top: 3px; }
+.multi-visibility__desc--public i { color: var(--accent-green); }
+.multi-visibility__desc--private i { color: var(--accent-orange); }
+
+.multi-visibility[data-visibility="public"] .multi-visibility__desc--public,
+.multi-visibility[data-visibility="private"] .multi-visibility__desc--private { display: flex; }

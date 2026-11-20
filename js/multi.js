@@ -12,18 +12,18 @@ class MultiplayerManager {
         this.partnerConnected = false;
     }
 
-    // ==================== ROUTE #/multi/a/b ====================
+    // ==================== ROUTE #/multi/<hôte>/<code> ====================
 
     /** Entre dans le salon : le serveur vérifie le token et lance le compte à rebours */
-    enterRoom({ a, b, login, token, settings }) {
-        this.gameId       = `${a}-${b}`;
-        this.role         = login === a ? 'host' : 'guest';
+    enterRoom({ host, code, login, token, settings, isPublic }) {
+        this.gameId       = `${host}-${code}`;
+        this.role         = login === host ? 'host' : 'guest';
         this.streamerName = login;
-        this.roomEntry    = { a, b, token, settings };
+        this.roomEntry    = { host, code, token, settings, isPublic: !!isPublic };
 
         window.multiplayerMode = true;
         window.currentGameId   = this.gameId;
-        window.playerColor     = login === a ? 'white' : 'black';
+        window.playerColor     = login === host ? 'white' : 'black';
 
         this.initializeSocket();
     }

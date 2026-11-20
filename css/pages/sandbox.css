@@ -720,8 +720,45 @@ body.phantom-connected .phantom-menu__dot {
     }
 }
 
+/* Sans timer : le cadre du minuteur annonce que le premier vote est joué tout de suite */
+.board-timer-container .timer-instant { display: none; }
+
+body.no-vote-timer .board-timer-container > :not(.timer-instant) { display: none !important; }
+
+/* Sous l'échiquier, dans le flux : ne cache aucune case */
+body.no-vote-timer #page-sandbox .board-timer-container,
 body.no-vote-timer .board-timer-container {
-    display: none;
+    position: static;
+    width: fit-content;
+    max-width: 100%;
+    margin: 10px auto 0;
+    padding: 6px 14px;
+    border-color: rgba(245, 158, 11, 0.55);
+    opacity: 1;
+    pointer-events: none;
+}
+
+body.no-vote-timer .board-timer-container .timer-instant {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 4px 10px;
+    text-align: center;
+}
+
+.timer-instant__title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+    white-space: nowrap;
+}
+
+.timer-instant__hint {
+    font-size: 0.75rem;
+    line-height: 1.2;
+    color: var(--text-secondary);
 }
 
 /* Tirage (roue / bande) : seulement avec le temps de vote et sans majorité */

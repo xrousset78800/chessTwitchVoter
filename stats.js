@@ -104,12 +104,13 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
     const points = (c) => c.w * 3 + c.d;
     const publicGame = (g) => ({ ...g, whiteProfile: profile(g.white), blackProfile: profile(g.black) });
 
+    const multiRanking = () => Object.values(multi.data.channels)
+        .map(c => ({ ...profile(c.login), w: c.w, d: c.d, l: c.l, games: c.w + c.d + c.l, points: points(c), lastAt: c.lastAt }))
+        .sort((a, b) => (b.points - a.points) || (b.w - a.w) || (a.games - b.games) || (b.lastAt - a.lastAt));
+
     app.get('/api/multi/leaderboard', (req, res) => {
         const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
-        const channels = Object.values(multi.data.channels)
-            .map(c => ({ ...profile(c.login), w: c.w, d: c.d, l: c.l, games: c.w + c.d + c.l, points: points(c), lastAt: c.lastAt }))
-            .sort((a, b) => (b.points - a.points) || (b.w - a.w) || (a.games - b.games) || (b.lastAt - a.lastAt))
-            .slice(0, limit);
+        const channels = multiRanking().slice(0, limit);
         const recent = multi.data.games.slice(-20).reverse().map(publicGame);
         res.json({ channels, recent, totalGames: multi.data.games.length });
     });
@@ -130,10 +131,32 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
         const opponents = Object.entries(opp)
             .map(([l, o]) => ({ ...profile(l), ...o, games: o.w + o.d + o.l }))
             .sort((a, b) => (b.games - a.games) || (b.lastAt - a.lastAt));
+        const ranking = multiRanking();
         res.json({
             ...profile(login), w: c.w, d: c.d, l: c.l, games: c.w + c.d + c.l, points: points(c),
+            rank: ranking.findIndex(r => r.login === login) + 1, total: ranking.length,
             opponents, recent: mine.slice(-10).reverse().map(publicGame)
         });
+    });
+
+    // ================= RECHERCHE DE CHAÎNE =================
+
+    app.get('/api/channels/search', (req, res) => {
+        const q = String(req.query.q || '').toLowerCase().trim().slice(0, 25);
+        if (!q) return res.json({ channels: [] });
+        const rush = rushRecords();
+        const logins = new Set([...Object.keys(rush), ...Object.keys(multi.data.channels), ...Object.keys(viewers.data)]);
+        const found = [];
+        for (const login of logins) {
+            const p = profile(login);
+            const name = String(p.displayName).toLowerCase();
+            const score = login.startsWith(q) || name.startsWith(q) ? 0
+                : login.includes(q) || name.includes(q) ? 1 : -1;
+            if (score < 0) continue;
+            found.push({ ...p, score, rush: !!rush[login], multi: !!multi.data.channels[login], viewers: !!viewers.data[login] });
+        }
+        found.sort((a, b) => (a.score - b.score) || a.login.localeCompare(b.login));
+        res.json({ channels: found.slice(0, 10).map(({ score, ...c }) => c) });
     });
 
     // ================= VIEWERS =================

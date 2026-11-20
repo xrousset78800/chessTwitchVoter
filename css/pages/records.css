@@ -502,6 +502,19 @@ button.rec-chip { cursor: pointer; }
     white-space: nowrap;
 }
 
+/* Fiche d'une chaîne : tableau dans une carte étroite, le nom garde sa place */
+.rec-table--compact .rec-table__head,
+.rec-table--compact .rec-table__row {
+    grid-template-columns: 24px minmax(80px, 1fr) 48px 72px 52px;
+    gap: 6px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+}
+
+.rec-table--compact .rec-table__head { font-size: 0.65rem; }
+
+.rec-table--compact .rec-table__name { font-size: 0.9rem; }
+
 /* ----- Responsive ----- */
 
 @media (max-width: 900px) {
@@ -516,4 +529,223 @@ button.rec-chip { cursor: pointer; }
     .rec-table__head,
     .rec-table__row { grid-template-columns: 28px minmax(0, 1fr) 56px 70px 70px; padding: 6px 8px; font-size: 0.8rem; }
     .rec-tab { padding: 8px 10px; font-size: 0.9rem; }
+}
+
+/* ----- Recherche de chaîne ----- */
+
+.rec-finder {
+    position: relative;
+    margin-bottom: 18px;
+}
+
+.rec-finder__icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.rec-finder__input {
+    width: 100%;
+    padding-left: 40px;
+}
+
+.rec-suggest {
+    position: absolute;
+    z-index: var(--z-dropdown);
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-card);
+}
+
+.rec-suggest[hidden] { display: none; }
+
+.rec-suggest li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.rec-suggest li.is-active,
+.rec-suggest li[data-login]:hover { background: var(--bg-card-hover); }
+
+.rec-suggest__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rec-suggest__badges { font-size: 0.8rem; }
+.rec-suggest .rec-suggest__empty { cursor: default; color: var(--text-muted); }
+
+.rec-twitch {
+    margin-left: 6px;
+    font-size: 0.8em;
+    color: var(--twitch-purple) !important;
+    opacity: 0.7;
+}
+
+.rec-twitch:hover { opacity: 1; }
+
+a.rec-link:hover { text-decoration: underline; }
+
+/* ----- Fiche d'une chaîne ----- */
+
+.rec-profile[hidden],
+#records-main[hidden] { display: none; }
+
+.rec-profile__back { margin-bottom: 14px; }
+
+.rec-profile__head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.rec-avatar--xl { width: 72px; height: 72px; font-size: 1.8rem; }
+
+.rec-profile__id { min-width: 0; }
+
+.rec-profile__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    overflow-wrap: anywhere;
+}
+
+.rec-profile__twitch {
+    color: var(--twitch-purple);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.rec-profile__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 16px;
+}
+
+.rec-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+}
+
+.rec-profile__grid .rec-card:first-child { grid-column: 1 / -1; }
+
+.rec-card__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: 1.1rem;
+}
+
+.rec-card__title small,
+.rec-mode__rank small { font-size: 0.8rem; font-weight: 400; color: var(--text-muted); }
+
+.rec-card__sub {
+    margin: 16px 0 8px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+}
+
+.rec-modes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 12px;
+}
+
+.rec-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+}
+
+.rec-mode__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rec-mode__rank { font-family: 'Orbitron', sans-serif; font-weight: 700; }
+
+.rec-mode__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    text-align: center;
+}
+
+.rec-mode__stats > div { display: flex; flex-direction: column; min-width: 0; }
+.rec-mode__stats b { font-family: 'Orbitron', sans-serif; font-size: 1.15rem; }
+.rec-mode__stats small { font-size: 0.7rem; color: var(--text-muted); }
+.rec-mode .rec-spark { width: 100%; }
+
+.rec-mode__foot {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.rec-wdl {
+    display: flex;
+    height: 8px;
+    margin-top: 12px;
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: var(--bg-input);
+}
+
+.rec-wdl__w { background: var(--accent-green); }
+.rec-wdl__d { background: var(--text-muted); }
+.rec-wdl__l { background: var(--accent-red); }
+
+.rec-game {
+    display: grid;
+    grid-template-columns: 26px auto minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.rec-game__res {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-xs);
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.rec-game--w .rec-game__res { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+.rec-game--d .rec-game__res { background: rgba(136, 136, 160, 0.2); color: var(--text-secondary); }
+.rec-game--l .rec-game__res { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+
+.rec-game__name { min-width: 0; overflow-wrap: anywhere; }
+.rec-game__name a { color: inherit; text-decoration: none; }
+.rec-game__name small { color: var(--text-muted); }
+.rec-game__meta { grid-column: 3; font-size: 0.75rem; color: var(--text-muted); }
+
+@media (max-width: 640px) {
+    .rec-profile__name { font-size: 1.2rem; }
+    .rec-avatar--xl { width: 56px; height: 56px; }
 }

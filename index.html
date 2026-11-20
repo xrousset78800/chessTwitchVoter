@@ -27,10 +27,12 @@
     <link rel="stylesheet" href="css/components/rush.css">
     <link rel="stylesheet" href="css/components/twitch-connect.css">
     <link rel="stylesheet" href="css/components/multiplayer.css">
+    <link rel="stylesheet" href="css/components/infoTip.css">
     <link rel="stylesheet" href="css/pages/landing.css">
     <link rel="stylesheet" href="css/pages/sandbox.css">
     <link rel="stylesheet" href="css/pages/browse.css">
     <link rel="stylesheet" href="css/pages/records.css">
+    <link rel="stylesheet" href="css/pages/watch.css">
     <link rel="stylesheet" href="css/pages/presets.css">
     <link rel="stylesheet" href="css/pages/live.css">
 </head>
@@ -261,7 +263,7 @@
                                             avant la fin du timer compte comme une erreur.
                                         </p>
                                         <div class="form-row">
-                                            <label class="form-label" for="rush-start-rating">
+                                            <label class="form-label" for="rush-start-rating" data-info="rushRating">
                                                 <i class="fas fa-signal"></i>
                                                 Rating de départ
                                             </label>
@@ -269,7 +271,7 @@
                                                    style="width: 90px;" min="400" max="3000" step="50" value="600">
                                         </div>
                                         <div class="form-row">
-                                            <label class="form-label" for="rush-pause">
+                                            <label class="form-label" for="rush-pause" data-info="rushPause">
                                                 <i class="fas fa-clock"></i>
                                                 Pause entre puzzles
                                             </label>
@@ -285,13 +287,13 @@
                                     <!-- Mode: Problems options -->
                                     <div class="mode-options" id="options-problems">
                                         <div class="form-group">
-                                            <label data-i18n="gameMode.problems.themes" class="form-label">Thèmes</label>
+                                            <label data-i18n="gameMode.problems.themes" data-info="problemThemes" class="form-label">Thèmes</label>
                                             <select class="input select" id="problem-themes" multiple>
 
                                             </select>
                                         </div>
                                         <div class="form-row">
-                                            <label class="form-label" for="problem-pause">
+                                            <label class="form-label" for="problem-pause" data-info="problemPause">
                                                 <i class="fas fa-clock"></i>
                                                 Pause
                                             </label>
@@ -315,29 +317,33 @@
                                 <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
                                 <div class="panel__content">
                                     <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.activateTimer">Activer le timer</span>
+                                        <span data-i18n="gameMode.voteOptions.activateTimer" data-info="timer">Activer le timer</span>
                                         <div class="toggle" id="toggle-voting"></div>
                                     </div>
+                                    <p class="timer-off-warning" role="note">
+                                        <i class="fas fa-bolt"></i>
+                                        <span data-i18n="timerOff.warning">Timer désactivé : le premier vote reçu est joué immédiatement.</span>
+                                    </p>
                                     <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.turnDuration">Durée du tour</span>
+                                        <span data-i18n="gameMode.voteOptions.turnDuration" data-info="turnDuration">Durée du tour</span>
                                         <div class="flex items-center gap-sm">
                                             <input type="number" class="input input--sm input--inline" id="timer-duration" value="25" min="5" max="120" style="width:60px">
                                             <span>s</span>
                                         </div>
                                     </div>
                                     <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.wheelAnimation">Animation roue</span>
+                                        <span data-i18n="gameMode.voteOptions.wheelAnimation" data-info="wheelDuration">Animation roue</span>
                                         <div class="flex items-center gap-sm">
                                             <input type="number" class="input input--sm input--inline" id="wheel-duration" value="5" min="1" max="15" style="width:60px">
                                             <span>s</span>
                                         </div>
                                     </div>
-                                    <div class="form-row" title="Les stats des viewers ne comptent qu'un vote par coup" data-i18n-title="gameMode.voteOptions.votesPerViewerHint">
-                                        <span data-i18n="gameMode.voteOptions.votesPerViewer">Votes par viewer</span>
+                                    <div class="form-row">
+                                        <span data-i18n="gameMode.voteOptions.votesPerViewer" data-info="votesPerViewer">Votes par viewer</span>
                                         <input type="number" class="input input--sm input--inline" id="votes-per-viewer" value="1" min="1" max="10" style="width:60px">
                                     </div>
                                     <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.voteMajority">Mode majorité</span>
+                                        <span data-i18n="gameMode.voteOptions.voteMajority" data-info="majority">Mode majorité</span>
                                         <div class="toggle" id="toggle-majority"></div>
                                     </div>
                                     <p data-i18n="gameMode.voteOptions.majorityHint" class="form-hint">Si désactivé, tirage au sort avec la roue</p>
@@ -348,7 +354,7 @@
                             <div class="panel conditional-section twitch-only config-only">
                                 <div class="panel__content">
                                     <div class="restrict-row">
-                                        <span class="restrict-row__label" data-i18n-title="gameMode.twitchOptions.hint" title="Mods, VIPs et streamer autorisés"><i class="fab fa-twitch"></i> <span data-i18n="gameMode.twitchOptions.restrictions">Restrictions</span></span>
+                                        <span class="restrict-row__label" data-i18n-title="gameMode.twitchOptions.hint" title="Mods, VIPs et streamer autorisés"><i class="fab fa-twitch"></i> <span data-i18n="gameMode.twitchOptions.restrictions" data-info="restrictions">Restrictions</span></span>
                                         <button type="button" class="toggle toggle--chip toggle--follow" id="toggle-followers" data-i18n-title="gameMode.twitchOptions.followMode" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
                                         <button type="button" class="toggle toggle--chip toggle--sub" id="toggle-subs" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                                     </div>
@@ -510,7 +516,7 @@
                 <h1 class="browse__title">🔥 Puzzle Rush</h1>
                 <p class="browse__desc" data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</p>
                 <div class="battle-setup__card battle-setup__card--rush preset__card">
-                    <label class="form-label" data-i18n="rushPage.mode">Temps pour voter</label>
+                    <label class="form-label" data-i18n="rushPage.mode" data-info="rushMode">Temps pour voter</label>
                     <div class="rush-modes" data-records="rush-page-records" role="group" aria-label="Temps pour voter">
                         <button type="button" class="rush-mode" data-rush-mode="0" data-i18n="rushPage.modeUnlimited">Illimité</button>
                         <button type="button" class="rush-mode" data-rush-mode="30">30 s</button>
@@ -520,11 +526,11 @@
                     <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.</p>
                     <div class="preset__row">
                         <div class="form-group">
-                            <label class="form-label" data-i18n="rushPage.rating">Rating de départ</label>
+                            <label class="form-label" data-i18n="rushPage.rating" data-info="rushRating">Rating de départ</label>
                             <input type="number" id="rush-page-rating" class="input input--sm" min="400" max="3000" step="50" value="600">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" data-i18n="rushPage.pause">Pause (s)</label>
+                            <label class="form-label" data-i18n="rushPage.pause" data-info="rushPause">Pause (s)</label>
                             <input type="number" id="rush-page-pause" class="input input--sm" min="1" max="60" value="5">
                         </div>
                     </div>
@@ -556,7 +562,7 @@
                         </button>
                     </div>
                     <div class="form-group" id="mono-color-group">
-                        <label class="form-label" data-i18n="mono.color">Ta couleur</label>
+                        <label class="form-label" data-i18n="mono.color" data-info="monoColor">Ta couleur</label>
                         <select class="input input--sm" id="mono-color">
                             <option value="w" data-i18n="mono.colorWhite">Blancs</option>
                             <option value="b" data-i18n="mono.colorBlack">Noirs</option>
@@ -565,11 +571,11 @@
                     </div>
                         <div class="preset__row">
                             <div class="form-group">
-                                <label class="form-label"><i class="fas fa-clock"></i> <span data-i18n="presets.voteTime">Temps de vote (s)</span></label>
+                                <label class="form-label"><i class="fas fa-clock"></i> <span data-i18n="presets.voteTime" data-info="voteTime">Temps de vote (s)</span></label>
                                 <input type="number" class="input input--sm" id="mono-timer" value="30" min="5" max="300">
                             </div>
                             <div class="form-group">
-                                <label class="form-label"><i class="fas fa-dice"></i> <span data-i18n="presets.choice">Choix du coup</span></label>
+                                <label class="form-label"><i class="fas fa-dice"></i> <span data-i18n="presets.choice" data-info="choice">Choix du coup</span></label>
                                 <select class="input input--sm" id="mono-mode">
                                     <option value="wheel" data-i18n="presets.wheel">🎡 Roue</option>
                                     <option value="majority" data-i18n="presets.majority">📊 Majorité</option>
@@ -577,7 +583,7 @@
                             </div>
                         </div>
                         <div class="restrict-row">
-                            <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel">Réservé aux</span></span>
+                            <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel" data-info="restrictions">Réservé aux</span></span>
                             <button type="button" class="toggle toggle--chip toggle--follow" id="mono-follow-toggle" data-i18n-title="presets.followersHint" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
                             <button type="button" class="toggle toggle--chip toggle--sub" id="mono-sub-toggle" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                         </div>
@@ -592,25 +598,31 @@
         <div class="page" id="page-multi">
             <div class="preset">
                 <h1 class="browse__title">⚔ Multi</h1>
-                <p class="browse__desc" data-i18n="multi.desc">Deux chaînes s'affrontent. Quand les deux streamers sont sur le lien, leurs chats ont 2 minutes pour s'inscrire.</p>
+                <p class="browse__desc" data-i18n="multi.desc">Deux chaînes s'affrontent. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</p>
                 <div class="battle-setup__card preset__card">
-                    <div class="preset__row">
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="multi.channel">Ta chaîne (Blancs)</label>
-                            <input type="text" class="input" id="multi-channel" readonly data-i18n-placeholder="multi.channelEmpty" placeholder="Connecte-toi avec Twitch">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="multi.opponent">Chaîne adverse (Noirs)</label>
-                            <input type="text" class="input" id="multi-opponent" autocomplete="off" spellcheck="false" placeholder="chaine_adverse">
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="multi.channel" data-info="multiChannel">Ta chaîne (Blancs)</label>
+                        <input type="text" class="input" id="multi-channel" readonly data-i18n-placeholder="multi.channelEmpty" placeholder="Connecte-toi avec Twitch">
+                    </div>
+                    <div class="multi-visibility" id="multi-visibility" data-visibility="public">
+                        <label class="multi-visibility__switch">
+                            <input type="checkbox" id="multi-public" checked>
+                            <span class="multi-visibility__label" data-i18n="multi.public" data-info="multiPublic">Partie publique</span>
+                        </label>
+                        <p class="multi-visibility__desc multi-visibility__desc--public">
+                            <i class="fas fa-globe"></i> <span data-i18n="multi.publicDesc">Affichée dans Parcourir : la première chaîne qui clique sur Rejoindre devient ton adversaire.</span>
+                        </p>
+                        <p class="multi-visibility__desc multi-visibility__desc--private">
+                            <i class="fas fa-lock"></i> <span data-i18n="multi.privateDesc">Visible dans Parcourir (on peut regarder) mais seule la chaîne qui a le lien peut la rejoindre. Le lien n'apparaît jamais à l'écran.</span>
+                        </p>
                     </div>
                         <div class="preset__row">
                             <div class="form-group">
-                                <label class="form-label"><i class="fas fa-clock"></i> <span data-i18n="presets.voteTime">Temps de vote (s)</span></label>
+                                <label class="form-label"><i class="fas fa-clock"></i> <span data-i18n="presets.voteTime" data-info="voteTime">Temps de vote (s)</span></label>
                                 <input type="number" class="input input--sm" id="multi-timer" value="30" min="5" max="300">
                             </div>
                             <div class="form-group">
-                                <label class="form-label"><i class="fas fa-dice"></i> <span data-i18n="presets.choice">Choix du coup</span></label>
+                                <label class="form-label"><i class="fas fa-dice"></i> <span data-i18n="presets.choice" data-info="choice">Choix du coup</span></label>
                                 <select class="input input--sm" id="multi-mode">
                                     <option value="wheel" data-i18n="presets.wheel">🎡 Roue</option>
                                     <option value="majority" data-i18n="presets.majority">📊 Majorité</option>
@@ -618,12 +630,12 @@
                             </div>
                         </div>
                         <div class="restrict-row">
-                            <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel">Réservé aux</span></span>
+                            <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel" data-info="restrictions">Réservé aux</span></span>
                             <button type="button" class="toggle toggle--chip toggle--follow" id="multi-follow-toggle" data-i18n-title="presets.followersHint" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
                             <button type="button" class="toggle toggle--chip toggle--sub" id="multi-sub-toggle" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                         </div>
                     <button class="btn btn--primary btn--full" id="multi-start">
-                        <i class="fas fa-link"></i> <span data-i18n="multi.start">Créer le lien et entrer</span>
+                        <i class="fas fa-play"></i> <span data-i18n="multi.start">Créer la partie</span>
                     </button>
                 </div>
             </div>
@@ -658,6 +670,35 @@
             </div>
         </div>
 
+        <!-- ==================== SPECTATEUR ==================== -->
+        <div class="page" id="page-watch">
+            <div class="watch">
+                <div class="watch__head">
+                    <a href="#/browse" class="btn btn--sm btn--ghost"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.browse">Parcourir</span></a>
+                    <span class="watch__live"><span class="browse__live-dot"></span> <span data-i18n="watch.title">Spectateur</span></span>
+                </div>
+                <div class="watch__layout">
+                    <div class="watch__board-wrap">
+                        <div class="watch__player watch__player--top" id="watch-top"></div>
+                        <div id="watch-board" class="watch__board"></div>
+                        <div class="watch__player watch__player--bottom" id="watch-bottom"></div>
+                    </div>
+                    <aside class="watch__info">
+                        <div class="watch__mode" id="watch-mode"></div>
+                        <div class="watch__status" id="watch-status"></div>
+                        <dl class="watch__meta" id="watch-meta"></dl>
+                        <button type="button" class="btn btn--sm" id="watch-flip"><i class="fas fa-retweet"></i> <span data-i18n="watch.flip">Retourner l'échiquier</span></button>
+                        <p class="watch__note" data-i18n="watch.note">Position en direct, sans le chat ni les votes.</p>
+                    </aside>
+                </div>
+                <div class="watch__message empty-state" id="watch-message" hidden>
+                    <div class="empty-state__icon">👀</div>
+                    <p class="empty-state__title" id="watch-message-title"></p>
+                    <a href="#/browse" class="btn btn--primary btn--sm"><span data-i18n="watch.backToBrowse">Voir les parties en cours</span></a>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== RECORDS ==================== -->
         <div class="page" id="page-records">
             <div class="browse records">
@@ -671,6 +712,17 @@
                     </button>
                 </div>
 
+                <div class="rec-finder" id="records-finder">
+                    <i class="fas fa-search rec-finder__icon"></i>
+                    <input class="input rec-finder__input" id="records-search" type="search" maxlength="25" autocomplete="off" spellcheck="false"
+                           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="records-suggest"
+                           data-i18n-placeholder="records.searchPlaceholder" placeholder="Chercher une chaîne…">
+                    <ul class="rec-suggest" id="records-suggest" role="listbox" hidden></ul>
+                </div>
+
+                <div class="rec-profile" id="records-channel" hidden></div>
+
+                <div id="records-main">
                 <div class="rec-tiles" id="records-overview"></div>
 
                 <div class="rec-tabs" role="tablist">
@@ -724,6 +776,7 @@
                     <div id="records-viewers"></div>
                     <p class="rec-hint" data-i18n="records.viewersHint">Un viewer compte une fois par coup, même s'il a voté plusieurs fois. Stats enregistrées quand le streamer est connecté avec Twitch.</p>
                 </section>
+                </div>
             </div>
         </div>
         <div id="page-live" class="page">
