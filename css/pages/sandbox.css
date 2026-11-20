@@ -727,6 +727,8 @@ body.no-vote-timer .board-timer-container {
 /* Tirage (roue / bande) : seulement avec le temps de vote et sans majorité */
 body:not(.has-draw) #btn-wheel-style,
 body:not(.has-draw) .form-row:has(#wheel-duration) { display: none; }
+/* Sans timer, la durée du tour n'a plus de sens */
+body.no-vote-timer .form-row:has(#timer-duration) { display: none; }
 
 /* Réinitialiser la partie : seulement en partie libre */
 body:not([data-game-mode="sandbox"]) #btn-reset,
