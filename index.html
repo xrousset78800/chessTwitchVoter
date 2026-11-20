@@ -923,6 +923,21 @@
                         <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted,#55556a);" id="fenDisplayT">
                             FEN : —
                         </div>
+                        <!-- Revue d'une partie terminée -->
+                        <div class="t-review" id="tReview" style="display:none;">
+                            <div class="t-review__nav">
+                                <button id="tRevFirst" title="Début (Origine)"><i class="fas fa-fast-backward"></i></button>
+                                <button id="tRevPrev" title="Coup précédent (←)"><i class="fas fa-step-backward"></i></button>
+                                <span class="t-review__move" id="tRevMove">—</span>
+                                <button id="tRevNext" title="Coup suivant (→)"><i class="fas fa-step-forward"></i></button>
+                                <button id="tRevLast" title="Fin (Fin)"><i class="fas fa-fast-forward"></i></button>
+                            </div>
+                            <input type="range" id="tRevSlider" min="0" max="0" value="0">
+                            <div class="t-review__opts">
+                                <label><input type="checkbox" id="tRevPhantom"> Le Phantom suit la revue</label>
+                                <button id="tRevClose"><i class="fas fa-times"></i> Quitter la revue</button>
+                            </div>
+                        </div>
                         <button class="t-list-toggle" id="btnToggleListT" style="display:none;"></button>
                     </div>
 

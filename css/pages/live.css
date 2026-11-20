@@ -620,3 +620,35 @@ input[type=range] {
 @media (max-width: 900px) {
     #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: 1fr; }
 }
+
+/* ── Tournoi : revue d'une partie terminée ── */
+.tournament-game-row.is-reviewable { cursor: pointer; }
+.tournament-game-row.is-reviewable:hover { opacity: .9; border-color: var(--border-subtle, #2a2a3a); background: rgba(255, 255, 255, .04); }
+.tournament-game-row.is-reviewing { opacity: 1; border-color: var(--phantom-blue, #00d4ff); }
+.t-review {
+    width: 100%; max-width: 640px;
+    margin-top: 10px; padding: 10px 12px;
+    border: 1px solid var(--border-subtle, #2a2a3a);
+    border-radius: var(--radius-md, 12px);
+    background: var(--bg-card, #12121a);
+    display: flex; flex-direction: column; gap: 8px;
+    box-sizing: border-box;
+}
+.t-review__nav { display: flex; align-items: center; gap: 6px; }
+.t-review__nav button, .t-review__opts button {
+    background: none; border: 1px solid var(--border-subtle, #2a2a3a); border-radius: 6px;
+    color: var(--text-primary, #e2e8f0); padding: 5px 10px; cursor: pointer; font-size: .8rem;
+}
+.t-review__nav button:hover:not(:disabled) { border-color: var(--accent-purple, #8b5cf6); }
+.t-review__nav button:disabled { opacity: .35; cursor: default; }
+.t-review__move {
+    flex: 1; min-width: 0; text-align: center;
+    font-family: 'JetBrains Mono', monospace; font-size: .85rem; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.t-review__opts {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+    font-size: .75rem; color: var(--text-secondary, #8888a0);
+}
+.t-review__opts label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.t-review__opts button { color: var(--text-secondary, #8888a0); font-size: .72rem; padding: 3px 8px; }

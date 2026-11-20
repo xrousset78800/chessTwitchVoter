@@ -294,8 +294,90 @@ function setFollowLayoutT(following) {
     grid.classList.toggle('t-following', following);
     grid.classList.remove('t-list-open');
     updateListToggleT();
-    requestAnimationFrame(() => stateT.board?.resize());
+    stateT.board?.resize();
 }
+
+// ── Revue d'une partie terminée ──
+const reviewT = { game: null, fens: [], moves: [], idx: 0 };
+
+async function startReviewT(g, wName, bName) {
+    const token = {};
+    startReviewT.token = token;
+    logT(`Revue de ${wName} – ${bName} : chargement des coups…`, 'info');
+    let moves;
+    try {
+        moves = await fetchGameMovesT(g);
+    } catch (err) {
+        if (startReviewT.token === token) logT(`Revue impossible : ${err.message}`, 'error');
+        return;
+    }
+    if (startReviewT.token !== token) return;
+
+    stopGamePolling();
+    const info = [];
+    const fens = replayFensT(moves, g.currentFEN, info);
+    Object.assign(reviewT, { game: g, fens, moves: info, idx: fens.length - 1 });
+
+    document.getElementById('playerWhiteT').textContent = wName;
+    document.getElementById('ratingWhiteT').textContent = g.whiteElo ? `(${g.whiteElo})` : '';
+    document.getElementById('playerBlackT').textContent = bName;
+    document.getElementById('ratingBlackT').textContent = g.blackElo ? `(${g.blackElo})` : '';
+    document.getElementById('clockWhiteT').textContent = '—';
+    document.getElementById('clockBlackT').textContent = '—';
+    const status = document.getElementById('statusTextT');
+    if (status) status.textContent = `Revue · ${g.result}`;
+
+    document.getElementById('tReview').style.display = '';
+    const slider = document.getElementById('tRevSlider');
+    slider.max = fens.length - 1;
+    setFollowLayoutT(true);
+    if (tournamentData) renderGames(tournamentData.games, activeRoundId); // ligne de la partie en évidence
+    logT(`Revue : ${fens.length - 1} coups, résultat ${g.result}. Flèches ← → pour naviguer`, 'ok');
+    showReviewStepT(reviewT.idx);
+}
+
+function reviewMoveLabelT(i) {
+    const n = reviewT.fens.length - 1;
+    if (i === 0) return `Départ · 0/${n}`;
+    const mv = reviewT.moves[i - 1];
+    if (!mv) return `Position finale · ${i}/${n}`;
+    return `${Math.ceil(i / 2)}${i % 2 ? '.' : '…'} ${mv.san} · ${i}/${n}`;
+}
+
+async function showReviewStepT(i) {
+    if (!reviewT.game) return;
+    i = Math.max(0, Math.min(reviewT.fens.length - 1, i));
+    reviewT.idx = i;
+    const fen = reviewT.fens[i];
+    stateT.chess.load(fen);
+    stateT.board.position(fen, false);
+    document.querySelectorAll('.highlight-last-move-live')
+        .forEach(el => el.classList.remove('highlight-last-move-live'));
+    const mv = reviewT.moves[i - 1];
+    if (mv) highlightLastMoveT(mv.from, mv.to);
+    updateTurnIndicatorT();
+    document.getElementById('fenDisplayT').textContent = `FEN : ${fen}`;
+    document.getElementById('tRevMove').textContent = reviewMoveLabelT(i);
+    document.getElementById('tRevSlider').value = i;
+    const last = reviewT.fens.length - 1;
+    document.getElementById('tRevFirst').disabled = document.getElementById('tRevPrev').disabled = i === 0;
+    document.getElementById('tRevLast').disabled = document.getElementById('tRevNext').disabled = i === last;
+    if (document.getElementById('tRevPhantom')?.checked && window.phantomChessboard?.isConnected) {
+        await window.phantomChessboard.syncPosition(fen);
+    }
+}
+
+function endReviewT(restoreLayout = true) {
+    startReviewT.token = null;
+    if (!reviewT.game) return;
+    reviewT.game = null;
+    document.getElementById('tReview').style.display = 'none';
+    const status = document.getElementById('statusTextT');
+    if (status) status.textContent = 'En attente';
+    if (restoreLayout) setFollowLayoutT(false);
+    if (tournamentData) renderGames(tournamentData.games, activeRoundId);
+}
+
 
 function updateListToggleT() {
     const grid = document.querySelector('#page-tournament .live-content');
@@ -331,7 +413,10 @@ function renderGames(games, roundId) {
         const bName = g.black?.preferredShortName?.trim() || g.slug.split('-')[1];
 
         const row = document.createElement('div');
-        row.className = 'tournament-game-row' + (isLive ? ' is-live' : ' is-finished');
+        const reviewable = !isLive && g.result !== '*';
+        row.className = 'tournament-game-row' + (isLive ? ' is-live' : ' is-finished')
+                      + (reviewable ? ' is-reviewable' : '')
+                      + (reviewable && reviewT.game && gameKey(reviewT.game) === gameKey(g) ? ' is-reviewing' : '');
         row.dataset.gameKey = gameKey(g);
         previewGames.set(gameKey(g), { fen: g.currentFEN, title: `${wName} – ${bName}` });
         row.innerHTML = `
@@ -370,6 +455,12 @@ function renderGames(games, roundId) {
                     logT(`Phantom : remise à zéro puis ${choice.replay.length - 1} coups rejoués`, 'ok');
                 }
                 startGamePolling(g);  // ← remplace l'ancien log statique
+            });
+        } else if (reviewable) {
+            row.title = 'Revoir la partie coup par coup';
+            row.addEventListener('click', () => {
+                hidePreviewT();
+                startReviewT(g, wName, bName);
             });
         }
 
@@ -469,7 +560,7 @@ async function fetchGameMovesT(g) {
 }
 
 /** Positions successives depuis le départ ; `cbn` = "e2e4_e4" (coordonnées_SAN) */
-function replayFensT(moves, currentFEN) {
+function replayFensT(moves, currentFEN, info = []) {
     const chess = new Chess();
     const fens = [START_FEN];
     for (const cbn of moves) {
@@ -482,9 +573,10 @@ function replayFensT(moves, currentFEN) {
         }
         if (!mv) break; // coup illisible : on termine par la position actuelle
         fens.push(chess.fen());
+        info.push({ san: mv.san, from: mv.from, to: mv.to });
     }
     const board = f => String(f || '').split(' ')[0];
-    if (currentFEN && board(fens.at(-1)) !== board(currentFEN)) fens.push(currentFEN);
+    if (currentFEN && board(fens.at(-1)) !== board(currentFEN)) { fens.push(currentFEN); info.push(null); }
     return fens;
 }
 
@@ -544,7 +636,8 @@ function confirmFollowT(g, wName, bName) {
 
 // À la connexion du Phantom, c'est la partie suivie ici qu'il faut poser sur l'échiquier
 window.phantomPositionProviders = window.phantomPositionProviders || {};
-window.phantomPositionProviders.tournament = () => stateT.currentGame ? stateT.chess.fen() : null;
+window.phantomPositionProviders.tournament = () =>
+    stateT.currentGame || (reviewT.game && document.getElementById('tRevPhantom')?.checked) ? stateT.chess.fen() : null;
 
 async function startGamePolling(game) {
     stopGamePolling();
@@ -552,6 +645,7 @@ async function startGamePolling(game) {
     stateT.currentGame = game;
     stateT.lastFEN = null;
     stateT.polling = true;
+    endReviewT(false);
     setFollowLayoutT(true);
     logT(`Suivi de ${game.white?.preferredShortName} vs ${game.black?.preferredShortName}`, 'info');
     await pollGame();
@@ -833,6 +927,27 @@ document.addEventListener('DOMContentLoaded', () => {
         renderEventsList(allEvents, document.getElementById('eventSearchInput')?.value || '');
     }, 120000);
 
+    const step = d => showReviewStepT(d === 'first' ? 0 : d === 'last' ? reviewT.fens.length - 1 : reviewT.idx + d);
+    document.getElementById('tRevFirst')?.addEventListener('click', () => step('first'));
+    document.getElementById('tRevPrev')?.addEventListener('click', () => step(-1));
+    document.getElementById('tRevNext')?.addEventListener('click', () => step(1));
+    document.getElementById('tRevLast')?.addEventListener('click', () => step('last'));
+    document.getElementById('tRevSlider')?.addEventListener('input', function () { showReviewStepT(+this.value); });
+    document.getElementById('tRevClose')?.addEventListener('click', () => endReviewT());
+    document.getElementById('tRevPhantom')?.addEventListener('change', async function () {
+        if (!this.checked || !reviewT.game || !window.phantomChessboard?.isConnected) return;
+        const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
+        logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom : position de la revue', sent === false ? 'warn' : 'ok');
+    });
+    document.addEventListener('keydown', e => {
+        if (!reviewT.game || !tournamentPageVisible() || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+        const d = { ArrowLeft: -1, ArrowRight: 1, Home: 'first', End: 'last' }[e.key];
+        if (d === undefined) return;
+        e.preventDefault();
+        step(d);
+    });
+
     document.getElementById('btnChangeEvent')?.addEventListener('click', () => {
         toggleEventPickerT(document.getElementById('tEventPicker')?.style.display === 'none');
     });
@@ -916,6 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnResetT')?.addEventListener('click', async () => {
         stopGamePolling();
+        endReviewT(false);
         setFollowLayoutT(false);
         stateT.chess.reset();
         stateT.board.position('start');
