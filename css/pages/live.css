@@ -397,8 +397,8 @@ input[type=range] {
 }
 .round-btn {
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
+    gap: 5px;
     line-height: 1.25;
 }
 .round-btn__time {
@@ -507,6 +507,7 @@ input[type=range] {
 .mini-board {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     aspect-ratio: 1;
     border-radius: 4px;
     overflow: hidden;
@@ -520,10 +521,12 @@ input[type=range] {
     background: #b58863;
 }
 
+.mini-board__sq { min-width: 0; min-height: 0; aspect-ratio: 1; }
 .mini-board__sq img {
     display: block;
     width: 100%;
     height: 100%;
+    object-fit: contain;
 }
 
 /* Modale de confirmation avant synchronisation */
@@ -547,3 +550,73 @@ input[type=range] {
 .tf-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .tf-actions .btn { width: 100%; justify-content: center; }
 .tf-actions .btn:disabled { opacity: .55; cursor: default; }
+
+/* ── Tournoi : rondes groupées par match, statut ── */
+.round-groups {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    padding-bottom: 6px; margin-bottom: 6px;
+    border-bottom: 1px dashed var(--border-subtle, #2a2a3a);
+}
+.round-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.round-btn.is-done:not(.is-active) { opacity: .5; }
+.round-btn.is-upcoming:not(.is-active) { border-style: dashed; }
+.round-btn.is-live:not(.is-active) { border-color: rgba(239, 68, 68, .6); color: var(--text-primary, #e2e8f0); }
+.round-btn__check { font-size: .6rem; color: #22c55e; }
+.round-btn.is-active .round-btn__check { color: inherit; }
+.round-btn__dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ef4444; flex-shrink: 0;
+    animation: blink 1.2s infinite;
+}
+.round-btn--group .round-btn__name { font-weight: 600; }
+
+/* ── Tournoi : liste des événements compacte ── */
+.t-event {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-size: .78rem;
+    transition: background .15s;
+}
+.t-event:hover { background: rgba(139, 92, 246, .12); }
+.t-event.is-selected { background: rgba(139, 92, 246, .2); border-color: var(--accent-purple, #8b5cf6); }
+.t-event__status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: #22c55e; }
+.t-event.is-upcoming .t-event__status { background: transparent; border: 1px solid var(--text-muted, #55556a); }
+.t-event__name {
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--text-primary, #e2e8f0); font-weight: 500;
+}
+.t-event.is-upcoming .t-event__name { color: var(--text-secondary, #8888a0); }
+.t-event__dates { flex-shrink: 0; font-size: .66rem; color: var(--text-muted, #55556a); }
+
+/* ── Tournoi : étapes ── */
+.t-summary {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; margin-bottom: 8px;
+    border-radius: 6px;
+    background: rgba(139, 92, 246, .08);
+    font-size: .8rem;
+}
+.t-summary > i { color: #22c55e; }
+.t-summary__name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-summary__change {
+    background: none; border: 1px solid var(--border-subtle, #2a2a3a);
+    border-radius: 4px; padding: 2px 8px;
+    color: var(--accent-purple, #8b5cf6); font-size: .7rem; cursor: pointer;
+}
+.t-list-toggle {
+    order: -1; align-self: flex-start;
+    margin-bottom: 8px; padding: 4px 10px;
+    background: none; border: 1px solid var(--border-subtle, #2a2a3a); border-radius: 6px;
+    color: var(--accent-purple, #8b5cf6); font-size: .75rem; cursor: pointer;
+}
+/* Partie suivie : la colonne de choix se masque, l'échiquier prend la place */
+#page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: minmax(0, 1fr) 280px; }
+#page-tournament .live-content.t-following:not(.t-list-open) > :first-child { display: none !important; }
+#page-tournament .live-content.t-following:not(.t-list-open) .board-wrapper > div:first-child { max-width: 640px; }
+@media (max-width: 900px) {
+    #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: 1fr; }
+}

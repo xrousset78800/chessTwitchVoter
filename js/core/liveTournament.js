@@ -96,11 +96,27 @@ function roundTooltip(r, games) {
 // Une partie pas encore jouée a aussi le résultat '*', mais pas d'heure de début
 const isLiveGame = g => g.result === '*' && !!(g.startAt || g.currentFEN);
 
-function renderTournament(data) {
+let roundPinned = false;   // ronde choisie à la main : le rafraîchissement ne la change plus
+let lastLiveKeys = null;   // parties en cours au rafraîchissement précédent
+
+// Ronde d'une partie en cours, sinon la dernière ronde où l'on a joué (chess.com ne donne pas de fin de ronde)
+function autoRoundId(rounds, games) {
+    const liveRoundId = games.find(isLiveGame)?.roundId;
+    const playedRoundIds = new Set(games.filter(g => g.result !== '*' || isLiveGame(g)).map(g => g.roundId));
+    const r = rounds.find(r => r.id === liveRoundId)
+           ?? rounds.filter(r => playedRoundIds.has(r.id)).at(-1)
+           ?? rounds.find(r => r.startAt);
+    return r?.id ?? null;
+}
+
+const gameNames = g => `${g.white?.preferredShortName?.trim() || g.slug.split('-')[0]} – ${g.black?.preferredShortName?.trim() || g.slug.split('-')[1]}`;
+
+/** refresh = mise à jour périodique de la même salle (garde la ronde choisie, signale les nouvelles parties) */
+function renderTournament(data, { refresh = false } = {}) {
+    const prevLiveRound = refresh ? tournamentData?.games?.find(isLiveGame)?.roundId : undefined;
     tournamentData = data;
     const panel = document.getElementById('tournamentPanel');
     const header = document.getElementById('tournamentHeader');
-    const roundsEl = document.getElementById('tournamentRounds');
 
     panel.style.display = 'block';
 
@@ -108,33 +124,176 @@ function renderTournament(data) {
     const liveCount = data.games.filter(isLiveGame).length;
     header.textContent = `${data.room.name} · ${tc >= 60 ? tc/60+'min' : tc+'s'} · ${liveCount} en cours`;
 
-    roundsEl.innerHTML = '';
-    // Ronde d'une partie en cours, sinon la dernière ronde où l'on a joué (chess.com ne donne pas de fin de ronde)
-    const liveRoundId = data.games.find(isLiveGame)?.roundId;
-    const playedRoundIds = new Set(data.games.filter(g => g.result !== '*' || isLiveGame(g)).map(g => g.roundId));
-    const activeRound = data.rounds.find(r => r.id === liveRoundId)
-                     ?? data.rounds.filter(r => playedRoundIds.has(r.id)).at(-1)
-                     ?? data.rounds.find(r => r.startAt);
-    activeRoundId = activeRound?.id ?? null;
+    if (!refresh) { roundPinned = false; lastLiveKeys = null; }
+    const autoId = autoRoundId(data.rounds, data.games);
+    const known = data.rounds.some(r => r.id === activeRoundId);
+    // On suit l'action : ronde automatique, sauf si l'utilisateur en a choisi une autre que celle qui se jouait
+    if (!refresh || !known || !roundPinned || (activeRoundId === prevLiveRound && autoId !== prevLiveRound)) {
+        if (refresh && known && autoId !== activeRoundId) {
+            const r = data.rounds.find(r => r.id === autoId);
+            if (r) logT(`Ronde ${r.slug} en cours`, 'ok');
+        }
+        activeRoundId = autoId;
+        if (refresh && roundPinned) roundPinned = false;
+    }
 
-    data.rounds.forEach(r => {
-        if (!r.startAt) return;
+    const liveKeys = new Set(data.games.filter(isLiveGame).map(gameKey));
+    if (lastLiveKeys) {
+        data.games.filter(g => isLiveGame(g) && !lastLiveKeys.has(gameKey(g)))
+            .forEach(g => logT(`▶ ${gameNames(g)} vient de commencer`, 'ok'));
+    }
+    lastLiveKeys = liveKeys;
+
+    renderRounds(data);
+    renderGames(data.games, activeRoundId);
+}
+
+// ── Rondes : statut et regroupement par match ("01-02-06" = match 01-02, partie 06) ──
+const roundGroupKey = r => { const p = String(r.slug).split('-'); return p.length > 1 ? p.slice(0, -1).join('-') : ''; };
+const roundShortName = r => String(r.slug).split('-').at(-1);
+
+/** 'live' | 'done' | 'upcoming' */
+function roundStatus(r, games) {
+    const gs = games.filter(g => g.roundId === r.id);
+    if (gs.some(isLiveGame)) return 'live';
+    // Partie jamais jouée (départage inutile…) : la ronde compte comme terminée dès qu'une partie l'est
+    return gs.some(g => g.result !== '*') ? 'done' : 'upcoming';
+}
+
+function groupStatus(statuses) {
+    if (statuses.includes('live')) return 'live';
+    if (statuses.every(s => s === 'upcoming')) return 'upcoming';
+    if (statuses.every(s => s === 'done')) return 'done';
+    return 'partial';
+}
+
+/** Dans un groupe : la ronde en cours, sinon la dernière jouée, sinon la première */
+function pickRoundInGroup(rounds, status) {
+    return (rounds.find(r => status.get(r.id) === 'live')
+         ?? rounds.filter(r => status.get(r.id) === 'done').at(-1)
+         ?? rounds[0])?.id ?? null;
+}
+
+const statusMarker = st => st === 'live' ? '<span class="round-btn__dot"></span>'
+                         : st === 'done' ? '<i class="fas fa-check round-btn__check"></i>' : '';
+
+function formatRoundDay(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    if (d.toDateString() === new Date().toDateString()) return d.toLocaleTimeString(roundLocale(), { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString(roundLocale(), { weekday: 'short', day: 'numeric' });
+}
+
+function renderRounds(data) {
+    const roundsEl = document.getElementById('tournamentRounds');
+    const rounds = data.rounds.filter(r => r.startAt);
+    const status = new Map(rounds.map(r => [r.id, roundStatus(r, data.games)]));
+    const groups = new Map();
+    rounds.forEach(r => {
+        const k = roundGroupKey(r);
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(r);
+    });
+    const grouped = groups.size > 1;
+    const active = rounds.find(r => r.id === activeRoundId);
+    const activeKey = active ? roundGroupKey(active) : [...groups.keys()][0];
+    const select = id => {
+        activeRoundId = id;
+        roundPinned = true;
+        renderRounds(data);
+        renderGames(data.games, id);
+    };
+
+    roundsEl.innerHTML = '';
+    if (grouped) {
+        const bar = document.createElement('div');
+        bar.className = 'round-groups';
+        groups.forEach((rs, key) => {
+            const st = groupStatus(rs.map(r => status.get(r.id)));
+            const first = roundStartedAt(rs[0], data.games) ?? rs[0].startAt;
+            const btn = document.createElement('button');
+            btn.className = `round-btn round-btn--group is-${st}` + (key === activeKey ? ' is-active' : '');
+            btn.innerHTML = `${statusMarker(st)}<span class="round-btn__name">R${key}</span>`
+                          + `<span class="round-btn__time">${formatRoundDay(first)}</span>`;
+            const done = rs.filter(r => status.get(r.id) === 'done').length;
+            btn.title = `Match ${key} · ${rs.length} rondes, ${done} jouée${done > 1 ? 's' : ''}`
+                      + (st === 'live' ? ' · en cours' : '');
+            btn.addEventListener('click', () => select(pickRoundInGroup(rs, status)));
+            bar.appendChild(btn);
+        });
+        roundsEl.appendChild(bar);
+    }
+
+    const list = document.createElement('div');
+    list.className = 'round-list';
+    (groups.get(activeKey) || []).forEach(r => {
+        const st = status.get(r.id);
         const btn = document.createElement('button');
-        btn.className = 'round-btn' + (r.id === activeRoundId ? ' is-active' : '');
-        btn.innerHTML = `<span class="round-btn__name">R${r.slug}</span>`
+        btn.className = `round-btn is-${st}` + (r.id === activeRoundId ? ' is-active' : '');
+        btn.innerHTML = `${statusMarker(st)}<span class="round-btn__name">${grouped ? roundShortName(r) : 'R' + r.slug}</span>`
                       + `<span class="round-btn__time">${formatRoundStart(roundStartedAt(r, data.games) ?? r.startAt)}</span>`;
         btn.title = roundTooltip(r, data.games);
         btn.dataset.roundId = r.id;
-        btn.addEventListener('click', () => {
-            activeRoundId = r.id;
-            document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('is-active'));
-            btn.classList.add('is-active');
-            renderGames(data.games, r.id);
-        });
-        roundsEl.appendChild(btn);
+        btn.addEventListener('click', () => select(r.id));
+        list.appendChild(btn);
     });
+    roundsEl.appendChild(list);
+}
 
-    renderGames(data.games, activeRoundId);
+// ── Rafraîchissement automatique de la salle (quand on ne suit pas de partie, pollGame s'en charge sinon) ──
+const tournamentPageVisible = () => document.visibilityState === 'visible'
+    && (document.getElementById('page-tournament')?.getClientRects().length ?? 0) > 0;
+
+let roomRefreshBusy = false;
+async function refreshRoomT() {
+    if (roomRefreshBusy || stateT.polling || !tournamentData || !stateT.tournamentSlug || !tournamentPageVisible()) return;
+    roomRefreshBusy = true;
+    const slug = stateT.tournamentSlug;
+    try {
+        const r = await fetch(`${PROXY_BASE_T}/proxy/chess-event/${slug}`);
+        if (r.ok) {
+            const data = await r.json();
+            if (slug === stateT.tournamentSlug && !stateT.polling) renderTournament(data, { refresh: true });
+        }
+    } catch { /* nouvel essai au prochain tour */ }
+    roomRefreshBusy = false;
+}
+
+// ── Étapes : liste des événements repliée une fois le choix fait, colonne masquée pendant le suivi ──
+function setEventStepT(name) {
+    const summary = document.getElementById('tEventSummary');
+    if (!summary) return;
+    document.getElementById('tEventName').textContent = name;
+    document.getElementById('tEventName').title = name;
+    summary.style.display = 'flex';
+    toggleEventPickerT(false);
+}
+
+function toggleEventPickerT(open) {
+    const picker = document.getElementById('tEventPicker');
+    if (!picker) return;
+    picker.style.display = open ? '' : 'none';
+    const btn = document.getElementById('btnChangeEvent');
+    if (btn) btn.textContent = open ? 'Fermer' : 'Changer';
+}
+
+function setFollowLayoutT(following) {
+    const grid = document.querySelector('#page-tournament .live-content');
+    if (!grid) return;
+    grid.classList.toggle('t-following', following);
+    grid.classList.remove('t-list-open');
+    updateListToggleT();
+    requestAnimationFrame(() => stateT.board?.resize());
+}
+
+function updateListToggleT() {
+    const grid = document.querySelector('#page-tournament .live-content');
+    const btn = document.getElementById('btnToggleListT');
+    if (!grid || !btn) return;
+    btn.style.display = grid.classList.contains('t-following') ? '' : 'none';
+    btn.innerHTML = grid.classList.contains('t-list-open')
+        ? '<i class="fas fa-chevron-left"></i> Masquer la liste'
+        : '<i class="fas fa-list"></i> Parties du tournoi';
 }
 
 function renderGames(games, roundId) {
@@ -382,6 +541,7 @@ async function startGamePolling(game) {
     stateT.currentGame = game;
     stateT.lastFEN = null;
     stateT.polling = true;
+    setFollowLayoutT(true);
     logT(`Suivi de ${game.white?.preferredShortName} vs ${game.black?.preferredShortName}`, 'info');
     await pollGame();
 }
@@ -447,7 +607,7 @@ async function pollGame() {
                     logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
                 }
             }
-            renderGames(data.games, activeRoundId);
+            renderTournament(data, { refresh: true });
         }
     } catch (err) {
         logT(`Poll erreur : ${err.message}`, 'error');
@@ -505,14 +665,18 @@ function renderClocksT() {
 // ── Liste des tournois en cours ──
 let allEvents = [];
 
-async function fetchEventsList() {
+let selectedEventSlug = null;
+
+/** silent : rafraîchissement en arrière-plan, sans « Chargement… » ni effacer la liste en cas d'erreur */
+async function fetchEventsList(silent = false) {
     const el = document.getElementById('eventsList');
-    if (el) el.innerHTML = '<span style="color:var(--text-muted,#55556a); font-size:0.8rem;">Chargement…</span>';
+    if (el && !silent) el.innerHTML = '<span style="color:var(--text-muted,#55556a); font-size:0.8rem;">Chargement…</span>';
     try {
         const r = await fetch(`${PROXY_BASE_T}/proxy/chess-events-list`);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return await r.json();
     } catch (err) {
+        if (silent) return null;
         if (el) el.innerHTML = `<span style="color:#f87171; font-size:0.8rem;">Erreur : ${err.message}</span>`;
         return [];
     }
@@ -539,11 +703,16 @@ function renderRoomPicker(rooms) {
     const select = document.getElementById('tournamentRoomSelect');
     const fmtDate = d => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     select.innerHTML = '';
+    const now = Date.now();
     rooms.forEach(room => {
-        const round = room.currentRound?.startAt
-            ? ` · ronde ${room.currentRound.name || room.currentRound.slug} le ${fmtDate(room.currentRound.startAt)}`
-            : '';
-        select.add(new Option(`${room.name}${round}`, room.slug));
+        const ended = room.endAt && Date.parse(room.endAt) < now;
+        const started = room.currentRound?.startAt && Date.parse(room.currentRound.startAt) <= now;
+        const round = ended ? ' · terminé'
+            : room.currentRound?.startAt
+                ? ` · ronde ${room.currentRound.name || room.currentRound.slug} le ${fmtDate(room.currentRound.startAt)}`
+                : '';
+        const mark = ended ? '✓ ' : started ? '● ' : '';
+        select.add(new Option(`${mark}${room.name}${round}`, room.slug));
     });
     picker.style.display = rooms.length > 1 ? 'block' : 'none';
 }
@@ -596,36 +765,35 @@ function renderEventsList(events, filter = '') {
     }
 
     el.innerHTML = '';
-    const fmtDate = d => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-    const typeLabel = { 'swiss': 'Suisse', 'round-robin': 'Toutes rondes', 'team-round-robin': 'Équipes', 'event': 'Événement' };
+    const fmtDate = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    const fmtFull = d => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    const typeLabel = { 'swiss': 'Suisse', 'round-robin': 'Toutes rondes', 'team-round-robin': 'Équipes', 'event': 'Événement', 'knockout': 'Élimination directe' };
+    const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const now = Date.now();
 
-    shown.forEach(event => {
+    // En cours d'abord, puis à venir
+    const upcoming = e => Date.parse(e.startAt) > now;
+    [...shown].sort((a, b) => upcoming(a) - upcoming(b)).forEach(event => {
+        const isUpcoming = upcoming(event);
         const row = document.createElement('div');
-        row.style.cssText = [
-            'padding:6px 8px', 'border-radius:6px', 'cursor:pointer',
-            'background:rgba(139,92,246,0.05)', 'border:1px solid rgba(139,92,246,0.15)',
-            'transition:background 0.15s', 'display:flex', 'flex-direction:column', 'gap:2px'
-        ].join(';');
+        row.className = 't-event' + (isUpcoming ? ' is-upcoming' : ' is-live')
+                      + (event.slug === selectedEventSlug ? ' is-selected' : '');
 
         const label = typeLabel[event.eventType] ?? event.eventType ?? 'Tournoi';
-        const players = event.playerCount > 0 ? `<span>· ${event.playerCount} joueurs</span>` : '';
-
+        const players = event.playerCount > 0 ? ` · ${event.playerCount} joueurs` : '';
+        row.title = `${event.name}\n${label} · ${fmtFull(event.startAt)} → ${fmtFull(event.endAt)}${players}`;
         row.innerHTML = `
-            <div style="font-size:0.82rem; font-weight:600; color:var(--text-primary,#e2e8f0);
-                        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${event.name}">
-                ${event.name}
-            </div>
-            <div style="font-size:0.7rem; color:var(--text-muted,#55556a); display:flex; gap:6px; flex-wrap:wrap;">
-                <span>${label}</span>
-                <span>· ${fmtDate(event.startAt)} → ${fmtDate(event.endAt)}</span>
-                ${players}
-            </div>`;
+            <span class="t-event__status"></span>
+            <span class="t-event__name">${esc(event.name)}</span>
+            <span class="t-event__dates">${isUpcoming ? 'dès le ' + fmtDate(event.startAt) : 'jusqu\'au ' + fmtDate(event.endAt)}</span>`;
 
-        row.addEventListener('mouseenter', () => row.style.background = 'rgba(139,92,246,0.15)');
-        row.addEventListener('mouseleave', () => row.style.background = 'rgba(139,92,246,0.05)');
         row.addEventListener('click', () => {
             const input = document.getElementById('tournamentInput');
             if (input) input.value = event.slug;
+            selectedEventSlug = event.slug;
+            el.querySelectorAll('.t-event.is-selected').forEach(r => r.classList.remove('is-selected'));
+            row.classList.add('is-selected');
+            setEventStepT(event.name);
             loadAndRenderTournament(event.slug, event.type === 'index');
         });
 
@@ -641,6 +809,26 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchEventsList().then(events => {
         allEvents = events;
         renderEventsList(events);
+    });
+
+    // La salle suivie se met à jour toute seule (nouvelles parties, rondes qui commencent)
+    setInterval(refreshRoomT, 15000);
+    // La liste des événements aussi, sans clignoter
+    setInterval(async () => {
+        if (!tournamentPageVisible()) return;
+        const events = await fetchEventsList(true);
+        if (!events) return;
+        allEvents = events;
+        renderEventsList(allEvents, document.getElementById('eventSearchInput')?.value || '');
+    }, 120000);
+
+    document.getElementById('btnChangeEvent')?.addEventListener('click', () => {
+        toggleEventPickerT(document.getElementById('tEventPicker')?.style.display === 'none');
+    });
+    document.getElementById('btnToggleListT')?.addEventListener('click', () => {
+        document.querySelector('#page-tournament .live-content')?.classList.toggle('t-list-open');
+        updateListToggleT();
+        requestAnimationFrame(() => stateT.board?.resize());
     });
 
     document.getElementById('tournamentRoomSelect')?.addEventListener('change', async function () {
@@ -673,12 +861,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (eventSlug) {
         const input = document.getElementById('tournamentInput');
         if (input) input.value = eventSlug;
+        setEventStepT(eventSlug);
         loadAndRenderTournament(eventSlug);
     }
 
     btn.addEventListener('click', async () => {
         const slug = document.getElementById('tournamentInput')?.value.trim();
         if (!slug) return;
+        setEventStepT(slug);
         loadAndRenderTournament(slug);
     });
 
@@ -715,6 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnResetT')?.addEventListener('click', async () => {
         stopGamePolling();
+        setFollowLayoutT(false);
         stateT.chess.reset();
         stateT.board.position('start');
         stateT.lastFEN = null;

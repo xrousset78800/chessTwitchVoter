@@ -868,6 +868,14 @@
                                 </button>
                             </div>
 
+                            <!-- Étape 1 faite : le tournoi choisi, la liste se replie -->
+                            <div id="tEventSummary" class="t-summary" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="t-summary__name" id="tEventName"></span>
+                                <button class="t-summary__change" id="btnChangeEvent">Changer</button>
+                            </div>
+
+                            <div id="tEventPicker">
                             <!-- Filtre texte -->
                             <input type="text" class="live-input" id="eventSearchInput"
                                    placeholder="Filtrer les tournois…"
@@ -894,6 +902,7 @@
                                     Slug depuis chess.com/events/{slug}/games
                                 </small>
                             </details>
+                            </div>
 
                             <div id="tournamentRoomPicker" style="display:none; margin-top:8px;">
                                 <select class="live-input" id="tournamentRoomSelect" style="width:100%; box-sizing:border-box; font-size:0.75rem; padding:6px 8px;"></select>
@@ -914,6 +923,7 @@
                         <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted,#55556a);" id="fenDisplayT">
                             FEN : —
                         </div>
+                        <button class="t-list-toggle" id="btnToggleListT" style="display:none;"></button>
                     </div>
 
                     <!-- ══ COL 3 : Phantom ══ -->
