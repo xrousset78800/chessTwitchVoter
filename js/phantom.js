@@ -121,6 +121,11 @@ class PhantomChessboard {
         // La page affichée (Tournoi, Live) peut suivre sa propre partie : c'est elle qui fait foi
         const route = (window.location.hash.split('/')[1] || '').split('?')[0];
         const provided = window.phantomPositionProviders?.[route]?.();
+        if (typeof provided === 'function') {
+            // La page gère elle-même la mise en place (ex. Tournoi : choix position actuelle / rejouer)
+            provided();
+            return;
+        }
         if (provided) {
             this.log('📋 Partie suivie détectée, synchronisation...', 'info');
             this.syncPosition(provided);

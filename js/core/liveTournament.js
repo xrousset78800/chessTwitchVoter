@@ -615,14 +615,15 @@ function replayFensT(moves, currentFEN, info = []) {
 
 // ── Confirmation avant d'envoyer une partie sur le Phantom ──
 // Résout { replay: null } (position actuelle), { replay: [fen…] } (rejouer le début) ou false (annulé)
-function confirmFollowT(g, wName, bName) {
+// force : poser le choix même si le Phantom ne bougerait pas encore ; fen : position actuelle connue
+function confirmFollowT(g, wName, bName, { force = false, fen = g.currentFEN } = {}) {
     const modal = document.getElementById('modal-tournament-follow');
     const phantomWillMove = window.phantomChessboard?.isConnected
         && document.getElementById('phantomAutoSyncT')?.checked !== false;
-    if (!modal || !phantomWillMove) return Promise.resolve({ replay: null });
+    if (!modal || (!phantomWillMove && !force)) return Promise.resolve({ replay: null });
 
     document.getElementById('tfTitle').textContent = `${wName} – ${bName}`;
-    document.getElementById('tfBoard').innerHTML = miniBoardHTML(g.currentFEN);
+    document.getElementById('tfBoard').innerHTML = miniBoardHTML(fen);
     modal.classList.add('is-active');
 
     // Coups chargés pendant que la fenêtre est ouverte
@@ -635,7 +636,7 @@ function confirmFollowT(g, wName, bName) {
     confirmFollowT.token = token;
     fetchGameMovesT(g).then(moves => {
         if (confirmFollowT.token !== token) return;
-        replayFens = replayFensT(moves, g.currentFEN);
+        replayFens = replayFensT(moves, fen);
         const n = replayFens.length - 1;
         replayLabel.textContent = trT('tournamentFollow.replay', 'Rejouer depuis le début') + ` (${n})`;
         replayBtn.disabled = n < 1;
@@ -667,10 +668,38 @@ function confirmFollowT(g, wName, bName) {
     });
 }
 
+// Partie déjà suivie quand le Phantom arrive (connexion, sync auto réactivée) :
+// on propose le même choix qu'au clic — position actuelle ou rejouer le début
+async function placePhantomOnFollowedT() {
+    const g = stateT.currentGame;
+    if (!g || stateT.choosingPhantom) return;
+    stateT.choosingPhantom = true;
+    let choice;
+    try {
+        choice = await confirmFollowT(g,
+            document.getElementById('playerWhiteT').textContent,
+            document.getElementById('playerBlackT').textContent,
+            { force: true, fen: stateT.chess.fen() });
+    } finally {
+        stateT.choosingPhantom = false;
+    }
+    if (stateT.currentGame !== g || !window.phantomChessboard?.isConnected) return;
+    if (!choice) { logT('Phantom : position non envoyée (bouton Synchroniser pour la poser)', 'warn'); return; }
+    if (choice.replay) {
+        for (const fen of choice.replay) await window.phantomChessboard.syncPosition(fen);
+        logT(`Phantom : remise à zéro puis ${choice.replay.length - 1} coups rejoués`, 'ok');
+    }
+    // Position la plus récente (des coups ont pu être joués pendant le choix)
+    const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
+    if (!choice.replay) logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
+}
+
 // À la connexion du Phantom, c'est la partie suivie ici qu'il faut poser sur l'échiquier
 window.phantomPositionProviders = window.phantomPositionProviders || {};
-window.phantomPositionProviders.tournament = () =>
-    stateT.currentGame || (reviewT.game && document.getElementById('tRevPhantom')?.checked) ? stateT.chess.fen() : null;
+window.phantomPositionProviders.tournament = () => {
+    if (stateT.currentGame) return () => placePhantomOnFollowedT();
+    return reviewT.game && document.getElementById('tRevPhantom')?.checked ? stateT.chess.fen() : null;
+};
 
 async function startGamePolling(game) {
     stopGamePolling();
@@ -740,7 +769,8 @@ async function pollGame() {
                 }
 
                 // Phantom
-                if (window.phantomChessboard?.isConnected && document.getElementById('phantomAutoSyncT')?.checked !== false) {
+                if (window.phantomChessboard?.isConnected && document.getElementById('phantomAutoSyncT')?.checked !== false
+                    && !stateT.choosingPhantom) {
                     const sent = await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
                     logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
                 }
@@ -1053,8 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Réactiver la sync automatique remet tout de suite l'échiquier à jour
     document.getElementById('phantomAutoSyncT')?.addEventListener('change', async function () {
         if (!this.checked || !stateT.currentGame || !window.phantomChessboard?.isConnected) return;
-        const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
-        logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
+        placePhantomOnFollowedT();
     });
 
     document.getElementById('btnSyncT')?.addEventListener('click', async () => {
