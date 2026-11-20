@@ -688,8 +688,7 @@ function replayFensT(moves, currentFEN, info = []) {
 // force : poser le choix même si le Phantom ne bougerait pas encore ; fen : position actuelle connue
 function confirmFollowT(g, wName, bName, { force = false, fen = g.currentFEN } = {}) {
     const modal = document.getElementById('modal-tournament-follow');
-    const phantomWillMove = window.phantomChessboard?.isConnected
-        && document.getElementById('phantomAutoSyncT')?.checked !== false;
+    const phantomWillMove = window.phantomChessboard?.isConnected;
     if (!modal || (!phantomWillMove && !force)) return Promise.resolve({ replay: null });
 
     document.getElementById('tfTitle').textContent = `${wName} – ${bName}`;
@@ -893,7 +892,7 @@ async function pollGame() {
                 }
 
                 // Phantom
-                if (window.phantomChessboard?.isConnected && document.getElementById('phantomAutoSyncT')?.checked !== false
+                if (window.phantomChessboard?.isConnected
                     && !stateT.choosingPhantom && !stateT.phantomReplay) {
                     const sent = await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
                     logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
@@ -1195,12 +1194,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     
-    // Réactiver la sync automatique remet tout de suite l'échiquier à jour
-    document.getElementById('phantomAutoSyncT')?.addEventListener('change', async function () {
-        if (!this.checked && stateT.phantomReplay) { stateT.phantomReplay = null; logT('Replay du Phantom interrompu', 'warn'); }
-        if (!this.checked || !stateT.currentGame || !window.phantomChessboard?.isConnected) return;
-        placePhantomOnFollowedT();
-    });
 
     document.getElementById('btnSyncT')?.addEventListener('click', async () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }

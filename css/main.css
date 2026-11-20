@@ -1182,3 +1182,39 @@ body.showTimer .board-timer-container {
 .wheel-center.winner-reveal {
     background: var(--winner-color, #10b981) !important;
 }
+/* Coordonnées hors de l'échiquier (js/components/boardCoords.js) */
+.board-coords {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 0 24px 24px;
+}
+.board-coords .notation-322f9 { display: none; }
+.board-coords__ranks,
+.board-coords__files {
+    position: absolute;
+    display: flex;
+    visibility: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    color: #d4d4e6;
+    pointer-events: none;
+    user-select: none;
+}
+.board-coords.is-ready .board-coords__ranks,
+.board-coords.is-ready .board-coords__files { visibility: visible; }
+.board-coords__ranks {
+    flex-direction: column;
+    width: 24px;
+    transform: translateX(-100%);
+}
+.board-coords__files { height: 24px; }
+.board-coords__ranks span,
+.board-coords__files span {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

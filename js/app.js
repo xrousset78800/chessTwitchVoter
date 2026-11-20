@@ -23,7 +23,13 @@ const AppState = {
     currentPage: 'landing',
     
     // Mode de jeu
-    gameMode: 'sandbox', // sandbox, problems, oneVsAll, oneVsOne, chatVsChat
+    // Mode de jeu (sandbox = partie libre, problems, rush, mono, multi…), reflété sur <body data-game-mode>
+    _gameMode: 'sandbox',
+    get gameMode() { return this._gameMode; },
+    set gameMode(mode) {
+        this._gameMode = mode;
+        document.body.dataset.gameMode = mode;
+    },
     
     // Configuration du jeu
     config: {
@@ -46,7 +52,6 @@ const AppState = {
         noBg: false,
         
         // Phantom
-        phantomAutoSync: true,
         phantomSpeed: 3
     },
     
@@ -68,6 +73,7 @@ const AppState = {
     // Configs sauvegardées
     savedConfigs: []
 };
+document.body.dataset.gameMode = AppState.gameMode;
 
 // Réglages d'origine : une nouvelle partie repart de là, comme après un rechargement
 const APP_DEFAULTS = JSON.stringify({
@@ -908,19 +914,11 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             this.applyConfig();
         });
         
-        // Reset
+        // Réinitialiser : partie libre uniquement (bouton masqué dans les autres modes, cf. sandbox.css)
         document.getElementById('btn-reset')?.addEventListener('click', () => {
-            if (AppState.gameMode === 'mono') {
-                PresetGame.rematch();
-            } else if (AppState.gameMode === 'rush' && (rushManager.active || rushManager.ended)) {
-                this.restartRush();
-            } else if (AppState.gameMode === 'problems' && problemsManager.isActive) {
-                problemsManager.loadRandomProblem();
-                Toast.info('Nouveau problème chargé');
-            } else {
-                gameEngine.reset();
-                Toast.success('Échiquier réinitialisé');
-            }
+            if (AppState.gameMode !== 'sandbox') return;
+            gameEngine.reset();
+            Toast.success('Échiquier réinitialisé');
         });
 
         document.getElementById('btn-snap-center')?.addEventListener('click', async () => {
@@ -960,20 +958,6 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             AppState.config.rushStartRating = Math.min(3000, Math.max(400, v));
             e.target.value = AppState.config.rushStartRating;
         });
-        // Undo
-        document.getElementById('btn-undo')?.addEventListener('click', () => {
-            if (isPuzzleMode()) {
-                Toast.warning('Undo désactivé en mode problèmes');
-                return;
-            }
-            const move = gameEngine.undo();
-            if (move) {
-                Toast.success(`Annulé: ${move.san}`);
-            } else {
-                Toast.warning('Aucun coup à annuler');
-            }
-        });
-        
         // Flip
         const renderWheelStyle = () => {
             document.getElementById('wheel-style-label').textContent = tr(`wheelStyle.${gameEngine.wheelStyle}`);
@@ -999,6 +983,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
         // Reset + Sync Phantom
         document.getElementById('btn-reset-sync')?.addEventListener('click', () => {
+            if (AppState.gameMode !== 'sandbox') return;
             gameEngine.reset();
             if (window.phantomChessboard?.isConnected) {
                 window.phantomChessboard.syncPosition(gameEngine.getFen());
@@ -1065,11 +1050,6 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             AppState.config.subsOnly = active;
         });
         
-        this.setupToggle('toggle-auto-sync', (active) => {
-            AppState.config.phantomAutoSync = active;
-            // Réglable depuis le menu Phantom pendant la partie : effet immédiat
-            if (gameEngine.config) gameEngine.config.phantomAutoSync = active;
-        });
 
         // ========== INPUTS NUMÉRIQUES ==========
         document.getElementById('timer-duration')?.addEventListener('change', (e) => {
@@ -1328,7 +1308,6 @@ fullReset() {
         this.setToggleState('toggle-majority', AppState.config.majorityMode);
         this.setToggleState('toggle-followers', AppState.config.followersOnly);
         this.setToggleState('toggle-subs', AppState.config.subsOnly);
-        this.setToggleState('toggle-auto-sync', AppState.config.phantomAutoSync);
 
         // Inputs numériques
         const timerDuration = document.getElementById('timer-duration');

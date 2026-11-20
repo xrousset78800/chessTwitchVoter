@@ -140,7 +140,6 @@
                         <button class="btn btn--sm" id="btn-wheel-style" data-i18n-title="setup.wheelStyle" title="Style de roue"><i class="fas fa-dharmachakra"></i> <span id="wheel-style-label"></span></button>
                         <button class="btn btn--sm tool-btn" id="btn-flip" data-i18n-title="actions.reverse" title="Retourner"><i class="fas fa-sync-alt"></i></button>
                         <button class="btn btn--sm tool-btn" id="btn-reset" data-i18n-title="actions.reset" title="Réinitialiser"><i class="fas fa-undo"></i></button>
-                        <button class="btn btn--sm tool-btn config-only" id="btn-undo" data-i18n-title="actions.undo" title="Annuler"><i class="fas fa-step-backward"></i></button>
                         <div class="phantom-menu" id="phantom-menu">
                             <button class="btn btn--sm" id="btn-phantom-menu" aria-haspopup="true" aria-expanded="false">
                                 <span class="phantom-menu__dot"></span> Phantom <i class="fas fa-caret-down"></i>
@@ -157,10 +156,6 @@
                                 </div>
                                 <div class="ph-settings">
                                     <div class="ph-settings__row"><span data-i18n="setup.phantomSpeed">Vitesse</span><div class="ph-speed" data-ph-speed role="group" aria-label="Vitesse"><button type="button" data-speed="1">1</button><button type="button" data-speed="2">2</button><button type="button" data-speed="3">3</button><button type="button" data-speed="4">4</button><button type="button" data-speed="5">5</button></div></div>
-                                    <div class="ph-settings__row">
-                                        <span data-i18n="live.phantom.autosync">Sync automatique</span>
-                                        <div class="toggle is-active" id="toggle-auto-sync"></div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -726,10 +721,6 @@
 
                             <div class="ph-settings">
                                 <div class="ph-settings__row"><span data-i18n="setup.phantomSpeed">Vitesse</span><div class="ph-speed" data-ph-speed role="group" aria-label="Vitesse"><button type="button" data-speed="1">1</button><button type="button" data-speed="2">2</button><button type="button" data-speed="3">3</button><button type="button" data-speed="4">4</button><button type="button" data-speed="5">5</button></div></div>
-                                <div class="ph-settings__row">
-                                    <span data-i18n="live.phantom.autosync">Sync automatique</span>
-                                    <label class="toggle-switch"><input type="checkbox" id="phantomAutoSync" checked><span class="toggle-slider"></span></label>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -853,10 +844,6 @@
 
                             <div class="ph-settings">
                                 <div class="ph-settings__row"><span data-i18n="setup.phantomSpeed">Vitesse</span><div class="ph-speed" data-ph-speed role="group" aria-label="Vitesse"><button type="button" data-speed="1">1</button><button type="button" data-speed="2">2</button><button type="button" data-speed="3">3</button><button type="button" data-speed="4">4</button><button type="button" data-speed="5">5</button></div></div>
-                                <div class="ph-settings__row">
-                                    <span data-i18n="live.phantom.autosync">Sync automatique</span>
-                                    <label class="toggle-switch"><input type="checkbox" id="phantomAutoSyncT" checked><span class="toggle-slider"></span></label>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1098,6 +1085,7 @@
 
     <!-- App (ES Modules) -->
     <script src="js/components/boardAnnotations.js"></script>
+    <script src="js/components/boardCoords.js"></script>
     <script src="js/phantom.js"></script>
     <script src="js/phantomLive.js"></script>
     <script src="js/core/liveTournament.js"></script>

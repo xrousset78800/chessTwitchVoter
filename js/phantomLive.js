@@ -221,8 +221,7 @@ function updateUI(gameInfo) {
     state.board.position(fen, false);
     document.getElementById('fenDisplay').textContent = `FEN : ${fen}`;
 
-    if (document.getElementById('phantomAutoSync').checked &&
-        window.phantomChessboard?.isConnected) {
+    if (window.phantomChessboard?.isConnected) {
         window.phantomChessboard.syncPosition(fen);
     }
 
