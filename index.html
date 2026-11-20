@@ -854,6 +854,7 @@
                         <span class="dot"></span>
                         <span id="statusTextT">En attente</span>
                     </span>
+                    <button class="t-list-toggle" id="btnToggleListT" style="display:none;"></button>
                     <div class="phantom-menu live-phantom-menu">
                         <button class="btn btn--sm live-phantom-menu__btn" aria-haspopup="true" aria-expanded="false">
                             <span class="phantom-menu__dot"></span> Phantom <i class="fas fa-caret-down"></i>
@@ -966,17 +967,27 @@
                             <div class="t-review__nav">
                                 <button id="tRevFirst" title="Début (Origine)"><i class="fas fa-fast-backward"></i></button>
                                 <button id="tRevPrev" title="Coup précédent (←)"><i class="fas fa-step-backward"></i></button>
+                                <button id="tRevPlay" class="t-review__play" title="Lecture automatique (Espace)"><i class="fas fa-play"></i></button>
                                 <span class="t-review__move" id="tRevMove">—</span>
                                 <button id="tRevNext" title="Coup suivant (→)"><i class="fas fa-step-forward"></i></button>
                                 <button id="tRevLast" title="Fin (Fin)"><i class="fas fa-fast-forward"></i></button>
                             </div>
                             <input type="range" id="tRevSlider" min="0" max="0" value="0">
                             <div class="t-review__opts">
+                                <label title="Pause entre deux coups pendant la lecture. Si le Phantom suit la revue, on attend aussi qu'il ait fini de jouer le coup.">Pause
+                                    <select id="tRevDelay">
+                                        <option value="0" selected>0 s</option>
+                                        <option value="1">1 s</option>
+                                        <option value="2">2 s</option>
+                                        <option value="3">3 s</option>
+                                        <option value="5">5 s</option>
+                                        <option value="10">10 s</option>
+                                    </select>
+                                </label>
                                 <label><input type="checkbox" id="tRevPhantom"> Le Phantom suit la revue</label>
                                 <button id="tRevClose"><i class="fas fa-times"></i> Quitter la revue</button>
                             </div>
                         </div>
-                        <button class="t-list-toggle" id="btnToggleListT" style="display:none;"></button>
                     </div>
 
                     <!-- ══ COL 3 : Phantom ══ -->

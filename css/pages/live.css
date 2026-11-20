@@ -666,3 +666,24 @@ input[type=range] {
     .live-header { flex-wrap: wrap; }
     .live-phantom-menu .phantom-menu__panel { width: min(300px, calc(100vw - 32px)); }
 }
+
+/* ── Tournoi : en-tête compact, tout tient dans la fenêtre ── */
+#page-tournament .live-page { padding-top: calc(var(--nav-height, 70px) + 12px); padding-bottom: 16px; }
+#page-tournament .live-header { margin-bottom: 14px; }
+#page-tournament .live-header__title { font-size: 1.3rem; }
+#page-tournament .t-list-toggle { order: 0; align-self: auto; margin: 0; }
+#page-tournament .board-wrapper { gap: 10px; }
+#page-tournament .board-wrapper .t-review { margin-top: 0; }
+/* Hauteur de l'échiquier limitée à ce qui reste sous l'en-tête (FEN + revue compris) */
+#page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child {
+    max-width: min(640px, max(300px, calc(100vh - 330px)));
+}
+.t-review__nav .t-review__play { color: #22c55e; border-color: rgba(34, 197, 94, .5); padding: 5px 14px; }
+.t-review__nav .t-review__play.is-playing { color: #f59e0b; border-color: rgba(245, 158, 11, .5); }
+.t-review__opts select {
+    background: var(--bg-card, #12121a); color: var(--text-primary, #e2e8f0);
+    border: 1px solid var(--border-subtle, #2a2a3a); border-radius: 4px; font-size: .72rem; padding: 1px 4px;
+}
+@media (max-width: 900px) {
+    #page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child { max-width: 640px; }
+}

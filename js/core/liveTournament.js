@@ -344,8 +344,9 @@ function reviewMoveLabelT(i) {
     return `${Math.ceil(i / 2)}${i % 2 ? '.' : '…'} ${mv.san} · ${i}/${n}`;
 }
 
-async function showReviewStepT(i) {
+async function showReviewStepT(i, fromPlayer = false) {
     if (!reviewT.game) return;
+    if (!fromPlayer) setReviewPlayingT(false); // une navigation manuelle met la lecture en pause
     i = Math.max(0, Math.min(reviewT.fens.length - 1, i));
     reviewT.idx = i;
     const fen = reviewT.fens[i];
@@ -367,8 +368,40 @@ async function showReviewStepT(i) {
     }
 }
 
+// Lecture automatique : un coup, puis (si le Phantom suit) attendre qu'il ait fini, puis la pause choisie
+const REVIEW_MIN_STEP_MS = 500; // rythme minimal à l'écran avec une pause de 0 s
+function setReviewPlayingT(on) {
+    const play = document.getElementById('tRevPlay');
+    if (!on) {
+        reviewT.playToken = null;
+        if (play) { play.innerHTML = '<i class="fas fa-play"></i>'; play.classList.remove('is-playing'); }
+        return;
+    }
+    if (!reviewT.game) return;
+    if (reviewT.idx >= reviewT.fens.length - 1) showReviewStepT(0); // en fin de partie : on repart du début
+    const token = {};
+    reviewT.playToken = token;
+    if (play) { play.innerHTML = '<i class="fas fa-pause"></i>'; play.classList.add('is-playing'); }
+    (async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        while (reviewT.playToken === token && reviewT.game && reviewT.idx < reviewT.fens.length - 1) {
+            const started = Date.now();
+            const delay = (+document.getElementById('tRevDelay')?.value || 0) * 1000;
+            const phantom = window.phantomChessboard;
+            if (document.getElementById('tRevPhantom')?.checked && phantom?.isConnected) {
+                while (reviewT.playToken === token && phantom.isConnected && phantom.isBusy?.()) await wait(150);
+            }
+            await wait(Math.max(delay, REVIEW_MIN_STEP_MS - (Date.now() - started)));
+            if (reviewT.playToken !== token || !reviewT.game) return;
+            await showReviewStepT(reviewT.idx + 1, true);
+        }
+        if (reviewT.playToken === token) setReviewPlayingT(false);
+    })();
+}
+
 function endReviewT(restoreLayout = true) {
     startReviewT.token = null;
+    setReviewPlayingT(false);
     if (!reviewT.game) return;
     reviewT.game = null;
     document.getElementById('tReview').style.display = 'none';
@@ -934,6 +967,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tRevLast')?.addEventListener('click', () => step('last'));
     document.getElementById('tRevSlider')?.addEventListener('input', function () { showReviewStepT(+this.value); });
     document.getElementById('tRevClose')?.addEventListener('click', () => endReviewT());
+    document.getElementById('tRevPlay')?.addEventListener('click', () => setReviewPlayingT(!reviewT.playToken));
     document.getElementById('tRevPhantom')?.addEventListener('change', async function () {
         if (!this.checked || !reviewT.game || !window.phantomChessboard?.isConnected) return;
         const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
@@ -942,6 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', e => {
         if (!reviewT.game || !tournamentPageVisible() || e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+        if (e.key === ' ' && !e.target.closest?.('button')) { e.preventDefault(); setReviewPlayingT(!reviewT.playToken); return; }
         const d = { ArrowLeft: -1, ArrowRight: 1, Home: 'first', End: 'last' }[e.key];
         if (d === undefined) return;
         e.preventDefault();
