@@ -511,6 +511,8 @@ function getPublicGamesList() {
         players:   null,
         isPublic:  r.isPublic,
         spectators: watchers.get(r.publicId)?.size || 0,
+        draw:      null,
+        turn:      r.settings?.timerDuration || null,
         join:      r.isPublic && !r.b ? { host: r.a, code: r.gameId.slice(r.a.length + 1) } : null
     }));
     const live = Object.values(games)
@@ -527,6 +529,9 @@ function getPublicGamesList() {
             players:    g.players ?? null,
             isPublic:   g.isPublic ?? true,
             spectators: watchers.get(g.publicId)?.size || 0,
+            // Vote : roue / bande, durée d'un tour (la dernière connue : pas de minuteur pendant un tirage)
+            draw:       g.detail?.wheel || null,
+            turn:       (g.lastTurn = g.detail?.timer?.total || g.lastTurn || g.settings?.timerDuration || null),
             join:       null
         }));
     return rooms.concat(live);
@@ -557,6 +562,9 @@ function spectateState(g) {
         timer:       g.detail?.timer ? { endsIn: Math.max(0, g.detail.timer.endsAt - Date.now()), total: g.detail.timer.total, paused: !!g.detail.timer.paused, left: g.detail.timer.left } : null,
         history:     g.history || [],
         rush:        g.detail?.rush || null,
+        // Mode roue : style de tirage de l'hôte, et tirage en cours (même gagnant pour tous)
+        wheel:       g.detail?.wheel || null,
+        draw:        g.detail?.draw ? { votes: g.detail.draw.votes, winner: g.detail.draw.winner, duration: g.detail.draw.duration, endsIn: Math.max(0, g.detail.draw.endsAt - Date.now()) } : null,
         spectators:  spectatorsOf(g.publicId)
     };
 }
@@ -565,6 +573,7 @@ function spectateState(g) {
 function spectateKey(g) {
     const s = spectateState(g);
     s.timer = s.timer && { ...s.timer, endsIn: Math.round(s.timer.endsIn / 2000) };
+    s.draw = s.draw && { ...s.draw, endsIn: 0 };
     return JSON.stringify(s);
 }
 
@@ -597,7 +606,21 @@ function sanitizeDetail(data = {}, prev = null) {
             mode:       ['0', '30', '60', '120'].includes(String(data.rush.mode)) ? String(data.rush.mode) : null
         };
     }
-    return { votes, timer, rush };
+    const wheel = ['band', 'classic'].includes(data.wheel) ? data.wheel : null;
+    let draw = null;
+    if (data.draw && typeof data.draw === 'object') {
+        const dv = (Array.isArray(data.draw.votes) ? data.draw.votes : []).slice(0, 12)
+            .map(v => ({ m: String(v?.m || ''), n: clampInt(v?.n, 0, 99999) }))
+            .filter(v => SAN_RE.test(v.m) && v.n > 0);
+        const winner = String(data.draw.winner || '');
+        if (dv.length && dv.some(v => v.m === winner)) {
+            const duration = clampInt(data.draw.duration, 300, 30000);
+            const endsAt = Date.now() + clampInt(data.draw.endsIn, 0, 30000);
+            const same = prev?.draw && prev.draw.winner === winner && JSON.stringify(prev.draw.votes) === JSON.stringify(dv);
+            draw = same ? prev.draw : { votes: dv, winner, duration, endsAt };
+        }
+    }
+    return { votes, timer, rush, wheel, draw };
 }
 
 const sanitizeHistory = (h) => Array.isArray(h) ? h.slice(-400).map(String).filter(m => SAN_RE.test(m)) : null;
@@ -674,6 +697,13 @@ io.on('connection', (socket) => {
 
     socket.on('getGames', () => {
         socket.emit('gamesList', getPublicGamesList());
+    });
+
+    // Aperçu d'une partie dans Parcourir : l'état spectateur, sans compter comme spectateur
+    socket.on('game:peek', (id, ack) => {
+        if (typeof ack !== 'function') return;
+        const g = findByPublicId(String(id || '').slice(0, 64));
+        ack(g ? spectateState(g) : null);
     });
 
     // Regarder une partie de Parcourir (lecture seule)

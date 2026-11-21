@@ -1,0 +1,325 @@
+/**
+ * Parcourir : tableau des parties en cours, filtres et aperçu de la partie choisie
+ *
+ * Une ligne par partie (mode, chaînes, statut, vote, avancement, inscrits,
+ * spectateurs, durée). Le panneau d'aperçu montre l'échiquier, les votes en cours
+ * et les joueurs de la ligne choisie, sans compter comme spectateur (game:peek).
+ */
+import { spectatorsLabel } from '../components/spectators.js';
+
+const t = (key, params) => window.i18n?.t(key, params) ?? key;
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (id) => document.getElementById(id);
+const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
+const MODE_ICON = { multi: '⚔', mono: '👥', rush: '🔥', sandbox: '🧪', problems: '🧩' };
+const MODE_KEY = { multi: 'browsePage.modeMulti', mono: 'browsePage.modeMono', rush: 'browsePage.modeRush', sandbox: 'browsePage.modeSandbox', problems: 'browsePage.modeProblems' };
+const MODES = ['multi', 'mono', 'rush', 'sandbox', 'problems'];
+const VOTE_COLORS = ['#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+const STORE = 'browseFilters';
+const PEEK_MS = 2000;
+
+const BrowseTable = {
+    games: [],
+    filters: { q: '', mode: 'all', status: 'all', sort: 'spectators' },
+    selected: null,
+    peek: null,
+    board: null,
+    boardWidth: 0,
+    socket: null,
+    joinHref: () => null,
+    bound: false,
+    peekTimer: null,
+
+    /** socket : celui de Parcourir ; joinHref(game) : lien Rejoindre d'un salon Multi */
+    setup(socket, joinHref) {
+        this.socket = socket;
+        this.joinHref = joinHref;
+        if (this.bound) return;
+        this.bound = true;
+        try { Object.assign(this.filters, JSON.parse(localStorage.getItem(STORE) || '{}')); } catch {}
+        this.bindToolbar();
+        window.addEventListener('languageChanged', () => { this.renderToolbar(); this.render(); this.renderPreview(); });
+        window.addEventListener('resize', () => this.resizeBoard());
+        // Aperçu rafraîchi tant que Parcourir est affiché
+        this.peekTimer = setInterval(() => { if (this.visible()) this.fetchPeek(); }, PEEK_MS);
+    },
+
+    visible() {
+        return !!$('games-list')?.offsetParent && document.visibilityState !== 'hidden';
+    },
+
+    saveFilters() {
+        try { localStorage.setItem(STORE, JSON.stringify(this.filters)); } catch {}
+    },
+
+    // ==================== Barre de filtres ====================
+
+    bindToolbar() {
+        const search = $('browse-search');
+        if (search) {
+            search.value = this.filters.q || '';
+            search.addEventListener('input', () => { this.filters.q = search.value; this.saveFilters(); this.render(); });
+        }
+        $('browse-modes')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-mode]');
+            if (!btn) return;
+            this.filters.mode = btn.dataset.mode;
+            this.saveFilters();
+            this.renderToolbar();
+            this.render();
+        });
+        for (const key of ['status', 'sort']) {
+            const sel = $('browse-' + key);
+            if (!sel) continue;
+            sel.value = this.filters[key];
+            sel.addEventListener('change', () => { this.filters[key] = sel.value; this.saveFilters(); this.render(); });
+        }
+        $('games-list')?.addEventListener('click', (e) => {
+            if (e.target.closest('a, button')) return;
+            const row = e.target.closest('[data-game-id]');
+            if (row) this.select(row.dataset.gameId, true);
+        });
+        $('games-list')?.addEventListener('keydown', (e) => {
+            const row = e.target.closest('[data-game-id]');
+            if (!row) return;
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.select(row.dataset.gameId, true); }
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const next = e.key === 'ArrowDown' ? row.nextElementSibling : row.previousElementSibling;
+                if (next?.dataset.gameId) { next.focus(); this.select(next.dataset.gameId, true); }
+            }
+        });
+        this.renderToolbar();
+    },
+
+    /** Puces de mode, avec le nombre de parties de chaque mode */
+    renderToolbar() {
+        const box = $('browse-modes');
+        if (!box) return;
+        const counts = {};
+        for (const g of this.games) counts[g.mode || 'multi'] = (counts[g.mode || 'multi'] || 0) + 1;
+        const chip = (mode, label, n) => `<button type="button" class="browse-chip${this.filters.mode === mode ? ' is-active' : ''}" data-mode="${mode}" aria-pressed="${this.filters.mode === mode}">${label}<span class="browse-chip__count">${n}</span></button>`;
+        box.innerHTML = chip('all', esc(t('browsePage.all')), this.games.length)
+            + MODES.map(m => chip(m, `${MODE_ICON[m]} ${esc(t(MODE_KEY[m]))}`, counts[m] || 0)).join('');
+    },
+
+    // ==================== Tableau ====================
+
+    setGames(games) {
+        this.games = (games || []).filter(g => g.status !== 'ended');
+        this.renderToolbar();
+        this.render();
+    },
+
+    filtered() {
+        const f = this.filters;
+        const q = (f.q || '').trim().toLowerCase();
+        const list = this.games.filter(g => {
+            if (f.mode !== 'all' && (g.mode || 'multi') !== f.mode) return false;
+            if (f.status === 'playing' && g.status !== 'playing') return false;
+            if (f.status === 'waiting' && g.status === 'playing') return false;
+            if (f.status === 'open' && !g.join) return false;
+            if (q && !`${g.host || ''} ${g.guest || ''}`.toLowerCase().includes(q)) return false;
+            return true;
+        });
+        const by = {
+            spectators: (a, b) => (b.spectators || 0) - (a.spectators || 0) || (b.moveCount || 0) - (a.moveCount || 0),
+            moves:      (a, b) => (b.moveCount || 0) - (a.moveCount || 0),
+            players:    (a, b) => (b.players || 0) - (a.players || 0),
+            recent:     (a, b) => (b.startedAt || 0) - (a.startedAt || 0)
+        }[f.sort] || (() => 0);
+        return list.sort(by);
+    },
+
+    duration(ms) {
+        if (!ms) return '—';
+        const min = Math.max(0, Math.floor((Date.now() - ms) / 60000));
+        return min < 60 ? `${min} min` : `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')}`;
+    },
+
+    progress(g) {
+        const n = g.moveCount || 0;
+        return g.mode === 'rush' ? t(n > 1 ? 'browsePage.puzzlesMany' : 'browsePage.puzzlesOne', { n })
+            : t(n > 1 ? 'browsePage.movesMany' : 'browsePage.movesOne', { n });
+    },
+
+    voteLabel(g) {
+        const parts = [];
+        if (g.draw === 'band') parts.push(`<i class="fas fa-grip-lines"></i> ${esc(t('browsePage.drawBand'))}`);
+        else if (g.draw === 'classic') parts.push(`<i class="fas fa-dharmachakra"></i> ${esc(t('browsePage.drawWheel'))}`);
+        else if (g.settings?.majorityMode) parts.push(`<i class="fas fa-poll"></i> ${esc(t('browsePage.drawMajority'))}`);
+        if (g.turn) parts.push(`${g.turn} s`);
+        return parts.length ? parts.join(' · ') : '<span class="games-table__muted">—</span>';
+    },
+
+    channel(login) {
+        return login
+            ? `<a href="#/records?c=${encodeURIComponent(login)}" class="games-table__channel">${esc(login)}</a>`
+            : `<span class="games-table__muted">${esc(t('browsePage.anonymous'))}</span>`;
+    },
+
+    row(g) {
+        const mode = g.mode || 'multi';
+        const playing = g.status === 'playing';
+        const channels = mode === 'multi'
+            ? `${this.channel(g.host)} <span class="games-table__vs">⚔</span> ${g.guest ? this.channel(g.guest) : `<span class="games-table__open">${esc(t('browsePage.openSeat'))}</span>`}`
+            : this.channel(g.host);
+        const priv = g.isPublic === false ? ` <span class="game-row__private" title="${esc(t('browsePage.private'))}">🔒</span>` : '';
+        const join = g.join ? this.joinHref(g) : null;
+        return `
+            <tr class="game-row${this.selected === g.gameId ? ' is-selected' : ''}" data-game-id="${esc(g.gameId)}" tabindex="0">
+                <td class="games-table__mode"><span class="mode-pill mode-pill--${mode}">${MODE_ICON[mode] || '♟'} ${esc(t(MODE_KEY[mode] || 'browsePage.modeSandbox'))}</span>${priv}</td>
+                <td class="games-table__channels">${channels}</td>
+                <td><span class="status-dot status-dot--${playing ? 'playing' : 'waiting'}"></span>${esc(t(playing ? 'browsePage.statusPlaying' : 'browsePage.statusWaiting'))}</td>
+                <td class="games-table__vote col-md">${this.voteLabel(g)}</td>
+                <td class="games-table__num">${esc(this.progress(g))}</td>
+                <td class="games-table__num col-md">${g.players != null ? g.players : '<span class="games-table__muted">—</span>'}</td>
+                <td class="games-table__num"><span class="game-row__spectators" title="${esc(spectatorsLabel(g.spectators || 0))}"><i class="fas fa-eye"></i> ${g.spectators || 0}</span></td>
+                <td class="games-table__num col-lg">${this.duration(g.startedAt)}</td>
+                <td class="games-table__actions">
+                    ${join ? `<a class="btn btn--sm btn--primary" data-join href="${esc(join)}"><i class="fas fa-sign-in-alt"></i> <span class="col-lg-inline">${esc(t('browsePage.join'))}</span></a>` : ''}
+                    <a class="btn btn--sm btn--ghost" data-watch href="#/watch?g=${encodeURIComponent(g.gameId)}" title="${esc(t('browsePage.watch'))}"><i class="fas fa-eye"></i> <span class="col-lg-inline">${esc(t('browsePage.watch'))}</span></a>
+                </td>
+            </tr>`;
+    },
+
+    render() {
+        const container = $('games-list');
+        if (!container) return;
+        const list = this.filtered();
+        const count = $('browse-count');
+        if (count) count.textContent = t(list.length > 1 ? 'browsePage.countMany' : 'browsePage.countOne', { n: list.length });
+
+        if (!this.games.length || !list.length) {
+            const none = !this.games.length;
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state__icon">${none ? '⚔' : '🔍'}</div>
+                    <p class="empty-state__title">${esc(t(none ? 'browsePage.noGames' : 'browsePage.noMatch'))}</p>
+                    <p class="empty-state__desc">${esc(t(none ? 'browsePage.empty' : 'browsePage.noMatchHint'))}</p>
+                </div>`;
+            this.select(null);
+            return;
+        }
+
+        // Sur grand écran, la première ligne est prévisualisée d'office
+        if (!list.some(g => g.gameId === this.selected)) this.selected = window.innerWidth > 1100 ? list[0].gameId : null;
+
+        const th = (key, cls = '') => `<th class="${cls}">${esc(t(key))}</th>`;
+        container.innerHTML = `
+            <table class="games-table">
+                <thead><tr>
+                    ${th('browsePage.colMode')}${th('browsePage.colChannels')}${th('browsePage.colStatus')}
+                    ${th('browsePage.colVote', 'col-md')}${th('browsePage.colProgress', 'games-table__num')}
+                    ${th('browsePage.colPlayers', 'games-table__num col-md')}
+                    <th class="games-table__num" title="${esc(t('spectators.title'))}"><i class="fas fa-eye"></i></th>
+                    ${th('browsePage.colTime', 'games-table__num col-lg')}<th></th>
+                </tr></thead>
+                <tbody>${list.map(g => this.row(g)).join('')}</tbody>
+            </table>`;
+        this.select(this.selected);
+    },
+
+    // ==================== Aperçu ====================
+
+    select(id, user = false) {
+        const changed = id !== this.selected;
+        this.selected = id;
+        document.querySelectorAll('#games-list .game-row').forEach(r => r.classList.toggle('is-selected', r.dataset.gameId === id));
+        if (changed) this.peek = null;
+        this.renderPreview();
+        if (id && (changed || !this.peek)) this.fetchPeek();
+        // Petit écran : l'aperçu est sous le tableau
+        if (user && changed && window.innerWidth <= 1100) $('browse-preview')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+
+    fetchPeek() {
+        const id = this.selected;
+        if (!id || !this.socket?.connected) return;
+        this.socket.timeout(4000).emit('game:peek', id, (err, state) => {
+            if (err || id !== this.selected) return;
+            this.peek = state || null;
+            this.renderPreview();
+        });
+    },
+
+    renderPreview() {
+        const box = $('browse-preview');
+        if (!box) return;
+        const g = this.games.find(x => x.gameId === this.selected);
+        box.hidden = !g;
+        if (!g) return;
+        const s = this.peek;
+        const mode = g.mode || 'multi';
+        $('browse-preview-mode').innerHTML = `${MODE_ICON[mode] || '♟'} ${esc(t(MODE_KEY[mode] || 'browsePage.modeSandbox'))}${g.isPublic === false ? ` <span class="game-row__private">🔒 ${esc(t('browsePage.private'))}</span>` : ''}`;
+
+        // Joueurs
+        const players = mode === 'multi'
+            ? `<div class="browse-preview__team"><span class="watch__dot watch__dot--white"></span>${this.channel(g.host)}</div>
+               <div class="browse-preview__team"><span class="watch__dot watch__dot--black"></span>${g.guest ? this.channel(g.guest) : `<span class="games-table__open">${esc(t('browsePage.openSeat'))}</span>`}</div>`
+            : `<div class="browse-preview__team">${this.channel(g.host)}${g.players != null ? ` <span class="games-table__muted">· ${g.players} ${esc(t('browsePage.players'))}</span>` : ''}</div>`;
+        $('browse-preview-players').innerHTML = players;
+
+        // Infos
+        const turn = s?.fen ? (s.fen.split(' ')[1] === 'b' ? t('browsePage.blackToPlay') : t('browsePage.whiteToPlay')) : null;
+        const facts = [
+            [t('browsePage.colStatus'), t(g.status === 'playing' ? 'browsePage.statusPlaying' : 'browsePage.statusWaiting') + (turn && g.status === 'playing' ? ' · ' + turn : '')],
+            [t('browsePage.colProgress'), this.progress(g)],
+            [t('browsePage.colVote'), null, this.voteLabel(g)],
+            [t('spectators.title'), String(g.spectators || 0)],
+            [t('browsePage.colTime'), this.duration(g.startedAt)]
+        ];
+        if (s?.rush) facts.splice(2, 0, ['Score', `${s.rush.score} · ${'❤'.repeat(Math.max(0, s.rush.maxStrikes - s.rush.strikes))}${'🖤'.repeat(Math.min(s.rush.strikes, s.rush.maxStrikes))}`]);
+        $('browse-preview-facts').innerHTML = facts.map(([k, v, html]) => `<dt>${esc(k)}</dt><dd>${html ?? esc(v)}</dd>`).join('');
+
+        // Votes en cours
+        const votes = s?.draw?.votes?.length ? s.draw.votes : (s?.votes || []);
+        const total = votes.reduce((a, v) => a + v.n, 0);
+        $('browse-preview-votes').innerHTML = votes.length
+            ? votes.slice(0, 5).map((v, i) => {
+                const pct = total ? Math.round(v.n * 100 / total) : 0;
+                const win = s?.draw && v.m === s.draw.winner && !s.draw.endsIn;
+                return `<div class="browse-preview__vote${win ? ' is-winner' : ''}"><span class="browse-preview__vote-bar" style="width:${pct}%;background:${VOTE_COLORS[i % VOTE_COLORS.length]}33"></span><span class="browse-preview__vote-move">${esc(v.m)}</span><span class="browse-preview__vote-n">${v.n} · ${pct}%</span></div>`;
+            }).join('')
+            : `<p class="browse-preview__empty">${esc(t(g.status === 'playing' ? 'watch.noVotes' : 'browsePage.notStarted'))}</p>`;
+
+        // Actions
+        const join = g.join ? this.joinHref(g) : null;
+        $('browse-preview-actions').innerHTML = `
+            ${join ? `<a class="btn btn--primary btn--sm" data-preview-join href="${esc(join)}"><i class="fas fa-sign-in-alt"></i> ${esc(t('browsePage.join'))}</a>` : ''}
+            <a class="btn ${join ? 'btn--ghost' : 'btn--primary'} btn--sm" data-preview-watch href="#/watch?g=${encodeURIComponent(g.gameId)}"><i class="fas fa-eye"></i> ${esc(t('browsePage.watch'))}</a>`;
+
+        this.renderBoard(s);
+    },
+
+    renderBoard(s) {
+        const el = $('browse-preview-board');
+        if (!el || typeof Chessboard !== 'function') return;
+        const position = s?.fen ? s.fen.split(' ')[0] : 'start';
+        const orientation = s?.orientation === 'black' ? 'black' : 'white';
+        if (!this.board) {
+            this.board = Chessboard('browse-preview-board', { position, draggable: false, pieceTheme: PIECES, orientation, showNotation: false });
+        } else {
+            this.board.orientation(orientation);
+            this.board.position(position, false);
+        }
+        this.resizeBoard();
+        el.querySelectorAll('.preview-last').forEach(x => x.classList.remove('preview-last'));
+        if (s?.lastMove) for (const sq of [s.lastMove.from, s.lastMove.to]) el.querySelector(`.square-${sq}`)?.classList.add('preview-last');
+        $('browse-preview-board-wrap')?.classList.toggle('is-idle', !s?.fen);
+    },
+
+    resizeBoard() {
+        const el = $('browse-preview-board');
+        if (!el || !this.board) return;
+        const w = el.clientWidth;
+        if (w && w !== this.boardWidth) {
+            this.boardWidth = w;
+            this.board.resize();
+            const s = this.peek;
+            if (s?.lastMove) for (const sq of [s.lastMove.from, s.lastMove.to]) el.querySelector(`.square-${sq}`)?.classList.add('preview-last');
+        }
+    }
+};
+
+export default BrowseTable;

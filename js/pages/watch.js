@@ -9,6 +9,8 @@
  */
 import twitchAuth from '../core/twitchAuth.js';
 import { renderSpectatorList, spectatorsLabel } from '../components/spectators.js';
+import VotingWheel from '../components/wheel.js';
+import WheelBand from '../components/wheelBand.js';
 
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -29,6 +31,9 @@ const WatchPage = {
     bound: false,
     timerEndsAt: null,
     timerId: null,
+    wheel: null,
+    wheelStyle: null,
+    drawSig: null,
 
     init() {
         this.bind();
@@ -41,6 +46,9 @@ const WatchPage = {
         this.spectators = null;
         this.flipped = false;
         this.boardWidth = 0;
+        this.drawSig = null;
+        this.revealing = false;
+        this.hideWheel();
         if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) {
             this.showMessage('watch.notFound');
             return;
@@ -145,6 +153,67 @@ const WatchPage = {
         this.renderHistory();
         this.renderStatus(false);
         this.setTimer(s?.timer || null);
+        this.renderWheel();
+    },
+
+    /** Roue ou bande de l'hôte : votes qui arrivent, puis le même tirage que les joueurs */
+    ensureWheel(style) {
+        const area = $('watch-wheel-area');
+        if (!area) return null;
+        if (this.wheel && (this.wheelStyle === style || this.wheel.isSpinning)) return this.wheel;
+        area.classList.toggle('wheel-area--band', style === 'band');
+        const wheel = style === 'band' ? new WheelBand('watch-wheel-area') : new VotingWheel('watch-wheel-area');
+        // La liste des votes de la page spectateur est gérée ici, pas par la roue
+        wheel.updateVoteList = () => {};
+        wheel.highlightWinner = () => {};
+        wheel.currentTurn = () => (this.state?.fen?.split(' ')[1] === 'b' ? 'b' : 'w');
+        this.wheel = wheel;
+        this.wheelStyle = style;
+        return wheel;
+    },
+
+    setWheelVotes(wheel, votes) {
+        wheel.votes = new Map(votes.map(v => [v.m, { count: v.n, voters: new Map() }]));
+    },
+
+    hideWheel() {
+        const area = $('watch-wheel-area');
+        area?.classList.remove('is-visible', 'is-spinning');
+    },
+
+    renderWheel() {
+        const s = this.state || {};
+        const area = $('watch-wheel-area');
+        if (!area) return;
+        if (s.draw && !s.result) {
+            const sig = s.draw.winner + JSON.stringify(s.draw.votes);
+            if (sig === this.drawSig || this.wheel?.isSpinning || this.revealing) return;
+            const wheel = this.ensureWheel(s.wheel || this.wheelStyle || 'band');
+            if (!wheel) return;
+            this.drawSig = sig;
+            this.setWheelVotes(wheel, s.draw.votes);
+            area.classList.add('is-visible', 'is-spinning');
+            wheel.draw();
+            this.revealing = true;
+            wheel.onSpinEnd = () => {
+                this.revealing = false;
+                area.classList.remove('is-spinning');
+                if (!this.state?.wheel || !this.state?.votes?.length) this.hideWheel();
+            };
+            // Arrivé en plein tirage : il se termine en même temps que chez les joueurs
+            wheel.spin(Math.max(400, s.draw.endsIn), s.draw.winner);
+            return;
+        }
+        if (this.wheel?.isSpinning || this.revealing) return;
+        if (s.wheel && s.votes?.length && !s.result) {
+            const wheel = this.ensureWheel(s.wheel);
+            if (!wheel) return;
+            this.setWheelVotes(wheel, s.votes);
+            area.classList.add('is-visible');
+            wheel.draw();
+        } else {
+            this.hideWheel();
+        }
     },
 
     highlight(move) {

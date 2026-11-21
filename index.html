@@ -647,23 +647,53 @@
                     <p class="browse__desc" data-i18n="browsePage.desc">Les parties en cours. Pour jouer, passe par Nouveau ; les classements sont dans Records.</p>
                 </div>
 
-                <!-- ===== Parties en cours ===== -->
-                <div class="browse__section-header">
-                    <h2 class="browse__section-title">
-                        <span class="browse__live-dot"></span>
-                        Parties en cours
-                    </h2>
-                    <button class="btn btn--sm btn--ghost" id="browse-refresh-btn" title="Actualiser">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
+                <!-- ===== Parties en cours : filtres, tableau, aperçu ===== -->
+                <div class="browse-toolbar">
+                    <div class="browse-toolbar__row">
+                        <label class="browse-search">
+                            <i class="fas fa-search"></i>
+                            <input type="search" id="browse-search" autocomplete="off" data-i18n-placeholder="browsePage.search" placeholder="Chercher une chaîne">
+                        </label>
+                        <select id="browse-status" class="browse-select" data-i18n-title="browsePage.colStatus" title="Statut">
+                            <option value="all" data-i18n="browsePage.statusAll">Tous les statuts</option>
+                            <option value="playing" data-i18n="browsePage.statusPlaying">En cours</option>
+                            <option value="waiting" data-i18n="browsePage.statusWaiting">En attente</option>
+                            <option value="open" data-i18n="browsePage.statusOpen">Place libre</option>
+                        </select>
+                        <select id="browse-sort" class="browse-select" data-i18n-title="browsePage.sort" title="Trier">
+                            <option value="spectators" data-i18n="browsePage.sortSpectators">Plus regardées</option>
+                            <option value="moves" data-i18n="browsePage.sortMoves">Plus avancées</option>
+                            <option value="players" data-i18n="browsePage.sortPlayers">Plus d'inscrits</option>
+                            <option value="recent" data-i18n="browsePage.sortRecent">Plus récentes</option>
+                        </select>
+                        <span class="browse-toolbar__count"><span class="browse__live-dot"></span> <span id="browse-count"></span></span>
+                        <button class="btn btn--sm btn--ghost" id="browse-refresh-btn" data-i18n-title="browsePage.refresh" title="Actualiser">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="browse-chips" id="browse-modes"></div>
                 </div>
 
-                <div class="games-grid" id="games-list">
-                    <div class="empty-state">
-                        <div class="empty-state__icon">⚔</div>
-                        <p class="empty-state__title">Aucune partie en cours</p>
-                        <p class="empty-state__desc" data-i18n="browsePage.empty">Lance une partie Multi depuis Nouveau !</p>
+                <div class="browse-layout">
+                    <div class="browse-table-wrap" id="games-list">
+                        <div class="empty-state">
+                            <div class="empty-state__icon">⚔</div>
+                            <p class="empty-state__title" data-i18n="browsePage.noGames">Aucune partie en cours</p>
+                            <p class="empty-state__desc" data-i18n="browsePage.empty">Lance une partie depuis Nouveau !</p>
+                        </div>
                     </div>
+
+                    <aside class="browse-preview panel" id="browse-preview" hidden>
+                        <div class="panel__header"><span id="browse-preview-mode"></span></div>
+                        <div class="panel__content">
+                            <div class="browse-preview__board" id="browse-preview-board-wrap"><div id="browse-preview-board"></div></div>
+                            <div class="browse-preview__players" id="browse-preview-players"></div>
+                            <dl class="browse-preview__facts" id="browse-preview-facts"></dl>
+                            <h3 class="browse-preview__title" data-i18n="watch.votesTitle">Votes en cours</h3>
+                            <div class="browse-preview__votes" id="browse-preview-votes"></div>
+                            <div class="browse-preview__actions" id="browse-preview-actions"></div>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </div>
@@ -726,6 +756,8 @@
                             </div>
                         </div>
                         <div class="watch__player watch__player--bottom" id="watch-bottom"></div>
+                        <!-- Roue ou bande de tirage, comme chez les joueurs -->
+                        <div id="watch-wheel-area" class="watch-wheel"></div>
                     </div>
 
                     <div class="sandbox__sidebar">

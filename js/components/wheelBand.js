@@ -43,7 +43,7 @@ class WheelBand extends VotingWheel {
     }
 
     getPieceIcon(move) {
-        const turn = window.gameEngine?.chess?.turn() || 'w';
+        const turn = this.currentTurn();
         const pieceKey = move.charAt(0).toUpperCase();
         const piece = ['K', 'Q', 'R', 'B', 'N'].includes(pieceKey) ? pieceKey : 'P';
         return this.pieceIcons[turn][piece];
@@ -110,7 +110,7 @@ class WheelBand extends VotingWheel {
     /**
      * Fait défiler la bande jusqu'au coup tiré au sort
      */
-    spin(duration = 5000) {
+    spin(duration = 5000, forcedWinner = null) {
         if (this.isSpinning || this.votes.size === 0) return null;
 
         this.isSpinning = true;
@@ -125,7 +125,11 @@ class WheelBand extends VotingWheel {
         this.spinVotes = sortedVotes;
         this.spinTotalVotes = totalVotes;
         this.spinPeriod = period;
-        this.winner = this.pickWeightedRandom();
+        this.winner = forcedWinner && sortedVotes.some(v => v.move === forcedWinner)
+            ? forcedWinner
+            : this.pickWeightedRandom();
+        // Les spectateurs rejouent le même tirage (mêmes coups, même gagnant)
+        this.spinInfo = { winner: this.winner, votes: sortedVotes.map(v => ({ m: v.move, n: v.count })), duration, startedAt: Date.now() };
 
         // Case du gagnant sur la bande
         let cellStart = 0;

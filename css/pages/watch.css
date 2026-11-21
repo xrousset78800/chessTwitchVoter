@@ -253,3 +253,48 @@ a.spectators__chip:hover { border-color: rgba(6, 182, 212, 0.6); }
     #page-watch .board-container { max-width: min(560px, calc(100cqi - 220px)); }
     #page-watch .watch__timer { top: 0; right: auto; left: calc(100% + 16px); }
 }
+
+/* ==================== Roue / bande de tirage (spectateur) ==================== */
+#watch-wheel-area { display: none; margin-top: 12px; }
+#watch-wheel-area.is-visible { display: block; }
+
+#watch-wheel-area.wheel-area--band { width: 100%; max-width: 560px; margin-left: auto; margin-right: auto; }
+#watch-wheel-area.is-spinning .wheel-band {
+    outline: 2px solid var(--accent-purple);
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
+}
+
+/* Roue classique : en surimpression en bas à droite, comme chez les joueurs */
+#watch-wheel-area:not(.wheel-area--band) {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 900;
+    margin: 0;
+    animation: wheelSlideIn 0.4s ease-out;
+}
+
+#watch-wheel-area .wheel-container {
+    width: var(--wheel-size);
+    height: var(--wheel-size);
+    background: rgba(10, 10, 20, 0.95);
+    border-radius: 50%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 3px var(--accent-purple, #8b5cf6), 0 0 60px rgba(139, 92, 246, 0.3);
+}
+
+#watch-wheel-area .wheel-canvas {
+    width: var(--wheel-size) !important;
+    height: var(--wheel-size) !important;
+}
+
+#watch-wheel-area .wheel-center {
+    width: var(--wheel-center-size);
+    height: var(--wheel-center-size);
+    font-size: calc(var(--wheel-center-size) * 0.35);
+}
+
+@media (max-width: 768px) {
+    #watch-wheel-area:not(.wheel-area--band) { right: 10px; bottom: 10px; }
+    #watch-wheel-area .wheel-container { width: 200px; height: 200px; padding: 10px; }
+    #watch-wheel-area .wheel-canvas { width: 180px !important; height: 180px !important; }
+}

@@ -240,7 +240,7 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
         const total = Math.max(5, Math.ceil(live.opts.moveMs * 1.4 / 1000));
         const others = candidates.filter(m => m !== winner);
         const tally = new Map();
-        g.detail = { votes: [], timer: noTimer ? null : { endsAt: Date.now() + delay, total, paused: false, left: null }, rush };
+        g.detail = { votes: [], timer: noTimer ? null : { endsAt: Date.now() + delay, total, paused: false, left: null }, rush, wheel: g.wheel || null, draw: null };
         emitSpectate(g);
         const ticks = Math.floor(delay / 1300);
         for (let i = 1; i < ticks; i++) {
@@ -254,23 +254,47 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
                 emitSpectate(cur);
             }, i * 1300);
         }
+        return tally;
+    }
+
+    /** Tirage pondéré par les votes, comme la roue des joueurs */
+    function weightedPick(tally) {
+        const total = [...tally.values()].reduce((a, b) => a + b, 0);
+        let r = Math.random() * total;
+        for (const [m, n] of tally) { r -= n; if (r <= 0) return m; }
+        return [...tally.keys()][0];
     }
 
     function playLoop(id, { channels, multi: isMulti = false }) {
         const chess = new Chess();
-        if (games[id]) games[id].history = [];
+        if (games[id]) {
+            games[id].history = [];
+            // Comme chez les vrais joueurs : bande (souvent), roue classique, ou vote à la majorité
+            games[id].wheel = pick(['band', 'band', 'classic', null]);
+        }
+        const DRAW_MS = 5000;
         const turn = () => {
             const g = games[id]; if (!g) return;
             const move = chooseMove(chess);
             const candidates = shuffle(chess.moves()).slice(0, int(2, 5));
             const delay = rnd(0.6, 1.4) * live.opts.moveMs;
-            voteRound(id, move.san, [move.san, ...candidates], delay);
-            later(() => step(move), delay);
+            const tally = voteRound(id, move.san, [move.san, ...candidates], delay);
+            later(() => {
+                const cur = games[id]; if (!cur) return;
+                if (!tally?.size) return step(move.san);
+                const votes = [...tally].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n);
+                if (!cur.wheel) return step(votes[0].m);
+                // Tirage : la roue / bande tourne, puis le gagnant reste affiché 2 s
+                const winner = weightedPick(tally);
+                cur.detail = { votes, timer: null, rush: null, wheel: cur.wheel, draw: { votes, winner, duration: DRAW_MS, endsAt: Date.now() + DRAW_MS } };
+                emitSpectate(cur);
+                later(() => step(winner), DRAW_MS + 2200);
+            }, delay);
         };
-        const step = (move) => {
+        const step = (san) => {
             const g = games[id]; if (!g) return;
             const ch = channels[chess.turn() === 'w' || channels.length === 1 ? 0 : 1];
-            chess.move(move);
+            const move = chess.move(san) || chess.move(chooseMove(chess));
             addTurn(ch);
             viewers.save();
             g.lastFen = chess.fen(); g.lastMove = { from: move.from, to: move.to }; g.moveCount++;

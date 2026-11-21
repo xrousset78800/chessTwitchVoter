@@ -18,6 +18,7 @@ import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import RecordsPage from './pages/records.js';
 import WatchPage from './pages/watch.js';
+import BrowseTable from './pages/browseTable.js';
 import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
 
@@ -1705,114 +1706,15 @@ const BrowsePage = {
             this.socket.emit('subscribeBrowse');
         });
 
+        // Tableau, filtres et aperçu : js/pages/browseTable.js
+        BrowseTable.setup(this.socket, (game) =>
+            MultiRoom.buildHash(normalizeLogin(game.join.host), normalizeLogin(game.join.code), game.settings || {}, true));
         this.socket.on('gamesList', (games) => this.renderGames(games));
         this.socket.on('gamesListUpdated', (games) => this.renderGames(games));
     },
 
     renderGames(games) {
-        const container = document.getElementById('games-list');
-        if (!container) return;
-
-        const active = (games || []).filter(g => g.status !== 'ended');
-
-        if (active.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state__icon">⚔</div>
-                    <p class="empty-state__title">Aucune partie en cours</p>
-                    <p class="empty-state__desc">${tr('browsePage.empty')}</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = active.map(game => {
-            const elapsed    = game.startedAt ? Math.floor((Date.now() - game.startedAt) / 60000) + ' min' : '';
-            const statusClass = game.status === 'playing' ? 'game-card__status--playing' : 'game-card__status--waiting';
-            const statusLabel = game.status === 'playing' ? '● En cours' : '⏳ En attente';
-
-            const mode = game.mode || 'multi';
-            if (mode !== 'multi') return this.renderSoloCard(game, mode, statusClass, statusLabel, elapsed);
-            return `
-                <div class="game-card" data-game-id="${game.gameId}">
-                    <div class="game-card__header">
-                        <span class="game-card__mode">⚔ Multi${game.isPublic === false ? ` <span class="game-card__private">🔒 ${tr('browsePage.private')}</span>` : ''}</span>
-                        <span class="game-card__status ${statusClass}">${statusLabel}</span>
-                    </div>
-                    <div class="game-card__players">
-                        <div class="game-card__player">
-                            <div class="game-card__avatar">♙</div>
-                            <div>
-                                <div class="game-card__player-name">${game.host}</div>
-                                <div class="game-card__player-rating">Blancs</div>
-                            </div>
-                        </div>
-                        <div class="game-card__vs">⚔</div>
-                        <div class="game-card__player game-card__player--right">
-                            <div class="game-card__avatar">♟</div>
-                            <div>
-                                <div class="game-card__player-name">${game.guest || tr('browsePage.openSeat')}</div>
-                                <div class="game-card__player-rating">Noirs</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="game-card__footer">
-                        <span>${game.moveCount || 0} coup${game.moveCount !== 1 ? 's' : ''}</span>
-                        ${game.spectators ? `<span class="game-card__spectators" title="${spectatorsLabel(game.spectators)}"><i class="fas fa-eye"></i> ${game.spectators}</span>` : ''}
-                        ${elapsed ? `<span>${elapsed}</span>` : ''}
-                    </div>
-                    ${this.cardActions(game)}
-                </div>
-            `;
-        }).join('');
-    },
-
-    /** Regarder (toutes les parties) et Rejoindre (salon Multi public avec une place libre) */
-    cardActions(game) {
-        const join = game.join
-            ? `<a class="btn btn--sm btn--primary" data-join href="${MultiRoom.buildHash(normalizeLogin(game.join.host), normalizeLogin(game.join.code), game.settings || {}, true)}">
-                   <i class="fas fa-sign-in-alt"></i> ${tr('browsePage.join')}</a>`
-            : '';
-        return `<div class="game-card__actions">${join}
-            <a class="btn btn--sm btn--ghost" data-watch href="#/watch?g=${encodeURIComponent(game.gameId)}"><i class="fas fa-eye"></i> ${tr('browsePage.watch')}</a>
-        </div>`;
-    },
-
-    /** Partie d'une seule chaîne : Mono, Puzzle Rush, partie libre… */
-    renderSoloCard(game, mode, statusClass, statusLabel, elapsed) {
-        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        const labels = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono' };
-        const count  = game.moveCount || 0;
-        const progress = mode === 'rush'
-            ? `${count} puzzle${count > 1 ? 's' : ''}`
-            : `${count} coup${count > 1 ? 's' : ''}`;
-        const players = game.players != null ? `${game.players} ${tr('browsePage.players')}` : tr('browsePage.chat');
-        const host = game.host
-            ? `<a href="https://twitch.tv/${esc(game.host)}" target="_blank" rel="noopener">${esc(game.host)}</a>`
-            : esc(tr('browsePage.anonymous'));
-        return `
-            <div class="game-card" data-game-id="${esc(game.gameId)}">
-                <div class="game-card__header">
-                    <span class="game-card__mode">${labels[mode] || '♟ ' + esc(tr('newTabs.free'))}</span>
-                    <span class="game-card__status ${statusClass}">${statusLabel}</span>
-                </div>
-                <div class="game-card__players">
-                    <div class="game-card__player">
-                        <div class="game-card__avatar">♙</div>
-                        <div>
-                            <div class="game-card__player-name">${host}</div>
-                            <div class="game-card__player-rating">${esc(players)}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="game-card__footer">
-                    <span>${progress}</span>
-                    ${game.spectators ? `<span class="game-card__spectators" title="${spectatorsLabel(game.spectators)}"><i class="fas fa-eye"></i> ${game.spectators}</span>` : ''}
-                    ${elapsed ? `<span>${elapsed}</span>` : ''}
-                </div>
-                ${this.cardActions(game)}
-            </div>
-        `;
+        BrowseTable.setGames(games);
     }
 };
 
@@ -1901,6 +1803,17 @@ const SpectatorFeed = {
         if (timer.isRunning || timer.isPaused) {
             d.timer = { left: timer.remaining, total: timer.duration, paused: !!timer.isPaused };
         }
+        // Mode roue : les spectateurs voient la même roue / bande, et le tirage
+        try {
+            if (document.body.classList.contains('has-draw')) d.wheel = gameEngine.wheelStyle;
+            const spin = gameEngine.votingWheel?.spinInfo;
+            // Tirage en cours ou gagnant encore affiché (2 s après l'arrêt)
+            if (spin && Date.now() < spin.startedAt + spin.duration + 2000) {
+                d.wheel = gameEngine.wheelStyle;
+                d.draw = { votes: spin.votes, winner: spin.winner, duration: spin.duration,
+                    endsIn: Math.max(0, spin.startedAt + spin.duration - Date.now()) };
+            }
+        } catch {}
         if (mode === 'rush') {
             const s = rushManager.getState();
             d.rush = { score: s.score, strikes: s.strikes, maxStrikes: s.maxStrikes,

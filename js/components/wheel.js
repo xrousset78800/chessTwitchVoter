@@ -99,6 +99,11 @@ class VotingWheel {
     /**
      * Reset les votes
      */
+    /** Camp qui joue (icônes des pièces) ; la page spectateur le remplace */
+    currentTurn() {
+        return window.gameEngine?.chess?.turn() || 'w';
+    }
+
     clear() {
         this.votes.clear();
         this.winner = null;
@@ -145,7 +150,7 @@ getSortedVotes() {
         const radius = Math.min(width, height) / 2 - 10;
 
 
-        const turn = window.gameEngine?.chess?.turn() || 'w';
+        const turn = this.currentTurn();
         const pieceIcons = {
             w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' },
             b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' }
@@ -260,6 +265,8 @@ spin(duration = 5000, forcedWinner = null) {
     }
     this.winner = winner;
     console.log('🎯 Gagnant tiré:', winner, forcedWinner ? '(imposé)' : '(aléatoire)');
+    // Les spectateurs rejouent le même tirage (mêmes coups, même gagnant)
+    this.spinInfo = { winner, votes: sortedVotes.map(v => ({ m: v.move, n: v.count })), duration, startedAt: Date.now() };
 
     // Angle du milieu du segment gagnant
     let angleAccum = 0;
@@ -351,7 +358,7 @@ for (const v of sortedDbg) {
     }
 
     // Afficher la pièce + le coup au centre, couleur du segment gagnant
-    const turn = window.gameEngine?.chess?.turn() || 'w';
+    const turn = this.currentTurn();
     const pieceKey = this.winner.charAt(0).toUpperCase();
     const isNamedPiece = ['K', 'Q', 'R', 'B', 'N'].includes(pieceKey);
     const piece = isNamedPiece ? pieceKey : 'P';
