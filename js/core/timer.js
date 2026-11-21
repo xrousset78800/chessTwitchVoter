@@ -10,13 +10,13 @@ class Timer {
         this.intervalId = null;      // ID de l'interval
         this.isRunning = false;
         this.isPaused = false;       // Nouveau: état de pause
-        
+
         // Callbacks
         this.onTick = null;          // Appelé chaque seconde
         this.onComplete = null;      // Appelé quand le timer atteint 0
         this.onPause = null;         // Appelé quand le timer est mis en pause
         this.onResume = null;        // Appelé quand le timer reprend
-        
+
         // Éléments DOM
         this.countdownEl = null;
         this.timerValueEl = null;
@@ -29,12 +29,12 @@ class Timer {
         this.duration = options.duration || 25;
         this.countdownEl = document.querySelector('.countdown');
         this.timerValueEl = document.getElementById('timer-value');
-        
+
         if (options.onTick) this.onTick = options.onTick;
         if (options.onComplete) this.onComplete = options.onComplete;
         if (options.onPause) this.onPause = options.onPause;
         if (options.onResume) this.onResume = options.onResume;
-        
+
         console.log('⏱️ Timer initialisé:', this.duration, 'secondes');
         return this;
     }
@@ -45,28 +45,28 @@ class Timer {
     start(duration = null) {
         // Nettoyer l'ancien timer si existant
         this.stop();
-        
+
         if (duration !== null) {
             this.duration = duration;
         }
-        
+
         this.remaining = this.duration;
         this.isRunning = true;
         this.isPaused = false;
-        
+
         // Mettre à jour l'affichage initial
         this.updateDisplay();
-        
+
         // Afficher le timer
         document.body.classList.add('showTimer');
         document.body.classList.toggle('wheel-soon', this.remaining <= 1);
-        
+
         // Configurer les variables CSS pour l'animation
         if (this.countdownEl) {
             this.countdownEl.style.setProperty('--q', this.duration);
             this.countdownEl.style.setProperty('--t', this.duration);
         }
-        
+
         // Démarrer l'interval
         this.intervalId = setInterval(() => this.tick(), 1000);
         if (window.AppState) (AppState._timerIds = AppState._timerIds || []).push(this.intervalId);
@@ -80,12 +80,12 @@ class Timer {
     tick() {
         // Ne pas décrémenter si en pause
         if (this.isPaused) return;
-        
+
         this.remaining--;
-        
+
         // Mettre à jour l'affichage
         this.updateDisplay();
-        
+
         // Roue : elle n'apparaît que dans la dernière seconde du vote
         document.body.classList.toggle('wheel-soon', this.remaining <= 1);
 
@@ -93,7 +93,7 @@ class Timer {
         if (this.onTick) {
             this.onTick(this.remaining);
         }
-        
+
         // Timer terminé
         if (this.remaining <= 0) {
             this.complete();
@@ -105,9 +105,9 @@ class Timer {
      */
     complete() {
         this.stop();
-        
+
         console.log('⏱️ Timer terminé!');
-        
+
         // Callback onComplete
         if (this.onComplete) {
             this.onComplete();
@@ -123,11 +123,11 @@ class Timer {
             if (window.AppState) AppState._timerIds = AppState._timerIds?.filter(id => id !== this.intervalId) ?? []; // ← AJOUTER
             this.intervalId = null;
         }
-        
+
         this.isRunning = false;
         this.isPaused = false;
         document.body.classList.remove('showTimer', 'wheel-soon');
-        
+
         // Retirer la classe urgence et pause
         if (this.countdownEl) {
             this.countdownEl.classList.remove('timer-critical');
@@ -140,19 +140,19 @@ class Timer {
      */
     pause() {
         if (!this.isRunning || this.isPaused) return;
-        
+
         this.isPaused = true;
-        
+
         // Ajouter une indication visuelle de pause
         if (this.countdownEl) {
             this.countdownEl.classList.add('timer-paused');
         }
-        
+
         // Callback
         if (this.onPause) {
             this.onPause(this.remaining);
         }
-        
+
         console.log('⏸️ Timer en pause:', this.remaining, 'secondes restantes');
     }
 
@@ -161,19 +161,19 @@ class Timer {
      */
     resume() {
         if (!this.isRunning || !this.isPaused) return;
-        
+
         this.isPaused = false;
-        
+
         // Retirer l'indication visuelle de pause
         if (this.countdownEl) {
             this.countdownEl.classList.remove('timer-paused');
         }
-        
+
         // Callback
         if (this.onResume) {
             this.onResume(this.remaining);
         }
-        
+
         console.log('▶️ Timer repris:', this.remaining, 'secondes restantes');
     }
 
@@ -182,24 +182,25 @@ class Timer {
      */
     updateDisplay() {
         const seconds = this.remaining;
-        
+        window.setRingTimer?.(seconds, this.isPaused);
+
         // Affichage textuel (MM:SS)
         if (this.timerValueEl) {
             const minutes = Math.floor(seconds / 60);
             const secs = seconds % 60;
             this.timerValueEl.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            
+
             // Ajouter indicateur de pause
             if (this.isPaused) {
                 this.timerValueEl.textContent += ' ⏸';
             }
         }
-        
+
         // Affichage circulaire (variables CSS)
         if (this.countdownEl) {
             this.countdownEl.style.setProperty('--t', seconds);
             this.countdownEl.style.setProperty('--s', seconds);
-            
+
             // Animation urgence pour les dernières secondes (sauf si en pause)
             if (seconds <= 5 && !this.isPaused) {
                 this.countdownEl.classList.add('timer-critical');
@@ -222,7 +223,7 @@ class Timer {
     getRemaining() {
         return this.remaining;
     }
-    
+
     /**
      * Retourne si le timer est en pause
      */
@@ -245,9 +246,9 @@ window.timer = timer;
 
     function initBoardTimer() {
         // Trouver le conteneur de l'échiquier
-        const boardWrapper = document.querySelector('.board-wrapper') || 
+        const boardWrapper = document.querySelector('.board-wrapper') ||
                             document.getElementById('board_wrapper');
-        
+
         if (!boardWrapper) {
             console.warn('⚠️ Board wrapper non trouvé, réessai dans 500ms');
             setTimeout(initBoardTimer, 500);
@@ -266,9 +267,11 @@ window.timer = timer;
         timerContainer.innerHTML = `
             <div class="countdown" id="countdown">
                 <svg viewBox="0 0 100 100">
+                    <defs><linearGradient id="timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
                     <circle cx="50" cy="50" r="45"></circle>
                     <circle cx="50" cy="50" r="45"></circle>
                 </svg>
+                <div class="countdown__inner"><span class="countdown__num" id="countdown-num"></span><span class="countdown__label" id="countdown-label"></span></div>
             </div>
             <div id="timer-value">--:--</div>
             <button class="timer-pause-btn" id="timer-pause-btn" style="display: none;">
@@ -283,7 +286,7 @@ window.timer = timer;
 
         // S'assurer que le parent est en position relative
         boardWrapper.style.position = 'relative';
-        
+
         // Insérer le timer dans le board-wrapper
         boardWrapper.appendChild(timerContainer);
 
@@ -343,17 +346,30 @@ window.timer = timer;
         }
     }
 
+    /** Secondes seules au centre de l'anneau ; « votez ! » sous 5 s */
+    window.setRingTimer = function(seconds, paused) {
+        const num = document.getElementById('countdown-num');
+        const label = document.getElementById('countdown-label');
+        if (!num || !label) return;
+        const s = Math.max(0, Math.round(Number(seconds) || 0));
+        num.textContent = s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : String(s);
+        const tr = (k, f) => { const v = window.i18n?.t(k); return v && v !== k ? v : f; };
+        label.textContent = paused ? tr('timerRing.paused', 'pause')
+            : s <= 5 ? tr('timerRing.hurry', 'votez !') : tr('timerRing.seconds', 'secondes');
+    };
+
     // Exposer une fonction pour mettre à jour l'affichage du timer
     window.updateBoardTimerDisplay = function(seconds) {
         const timerValue = document.getElementById('timer-value');
         const countdown = document.getElementById('countdown');
-        
+
         if (!timerValue || !countdown) return;
 
         // Formater l'affichage MM:SS
         const minutes = Math.floor(seconds / 60);
         const secs = seconds % 60;
         timerValue.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        window.setRingTimer?.(seconds, false);
 
         // Mettre à jour les variables CSS pour le cercle
         countdown.style.setProperty('--t', seconds);

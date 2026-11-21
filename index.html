@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Twitchess</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Chessboard.js CSS -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <link rel="stylesheet" href="css/components/chessboard-sprites.css">
-    
+
     <!-- App CSS -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/components/buttons.css">
@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="css/pages/watch.css">
     <link rel="stylesheet" href="css/pages/presets.css">
     <link rel="stylesheet" href="css/pages/live.css">
+    <link rel="stylesheet" href="css/components/votePanels.css">
 </head>
 <body>
     <!-- Background effects -->
@@ -49,7 +50,7 @@
                 <div class="nav__logo-icon">♞</div>
                 <span class="nav__logo-text">PHANTOM TWITCHESS</span>
             </a>
-            
+
             <div class="nav__links">
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
                 <a class="nav__link" data-navigate="/sandbox" data-i18n="nav.new">Nouveau</a>
@@ -60,21 +61,21 @@
                     <span class="nav__game-dot nav__follow-dot"></span>
                     <i class="fas fa-chess-board"></i>
                     <span data-i18n="nav.tournament">Tournoi</span>
-                </a>                
+                </a>
                 <span class="nav__cursor" aria-hidden="true"></span>
             </div>
-            
+
             <div class="nav__status">
                 <div class="nav__lang">
                     <button class="nav__lang-option is-active" data-lang="fr" type="button">FR</button>
                     <button class="nav__lang-option" data-lang="en" type="button">EN</button>
                 </div>
-                
+
                 <div class="nav__status-badge" data-action="connect-twitch" title="Twitch">
                     <span class="status-dot status-dot--twitch"></span>
                     <span data-twitch-status>Twitch</span>
                 </div>
-                
+
                 <div class="nav__status-badge" data-action="connect-phantom" title="Phantom">
                     <span class="status-dot status-dot--phantom"></span>
                     <span data-phantom-status>Phantom</span>
@@ -303,9 +304,9 @@
                                             <label class="form-label" for="problem-pause" data-info="problemPause">
                                                 <i class="fas fa-clock"></i> <span data-i18n="gameMode.problems.pause">Pause</span>
                                             </label>
-                                            <input type="number" id="problem-pause" class="input input--sm" 
+                                            <input type="number" id="problem-pause" class="input input--sm"
                                                    style="width: 80px;" min="1" max="60" value="5">
-                                        </div>                                    
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -344,6 +345,10 @@
                                         <div class="toggle" id="toggle-majority"></div>
                                     </div>
                                     <p data-i18n="gameMode.voteOptions.majorityHint" class="form-hint">Si désactivé, tirage au sort avec la roue</p>
+                                    <div class="form-row form-row--stack">
+                                        <span data-i18n="palette.title">Couleurs du tirage</span>
+                                        <div class="palette-picker" id="palette-picker" role="radiogroup" data-i18n-aria-label="palette.title" aria-label="Couleurs du tirage"></div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -457,12 +462,17 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Votes du chat, en direct sous l'échiquier -->
+                        <div class="vote-ticker" id="vote-ticker" hidden>
+                            <span class="vote-ticker__label" data-i18n="ticker.label">Votes</span>
+                            <div class="vote-ticker__track" id="vote-ticker-track"></div>
+                        </div>
                         <!-- Voting panel (when enabled) -->
                         <div id="wheel-area"></div>
                         <div class="voting-panel__wheel-area">
                             <div id="chart" class="wheel-chart"></div>
                         </div>
-                    </div>  
+                    </div>
                     <!-- Sidebar -->
                     <div class="sandbox__sidebar">
                         <div class="panel spectators-panel" id="spectators-panel" hidden>
@@ -485,7 +495,7 @@
                                     <button class="btn btn--sm" id="roster-add-btn"><i class="fas fa-plus"></i> <span data-i18n="roster.add">Ajouter</span></button>
                                 </div>
                             </div>
-                        </div>   
+                        </div>
                         <div class="panel">
                             <div class="panel__header" data-i18n="game.history.title"><i class="fas fa-history"></i> Historique</div>
                             <div class="panel__content">
@@ -493,12 +503,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="panel" id="vote-log-panel" style="display:none;">
-                            <div class="panel__header"><i class="fab fa-twitch" style="color:#9146ff"></i> Chat votes</div>
-                            <div class="panel__content" style="padding:8px;">
-                                <div id="vote-log-list" style="max-height:180px; overflow-y:auto; font-size:0.82rem; display:flex; flex-direction:column; gap:2px;"></div>
-                            </div>
-                        </div>                        
                         <div class="panel" id="votes-panel">
                             <div class="panel__header"><i class="fas fa-poll"></i> Votes en cours</div>
                             <div class="panel__content">
@@ -507,7 +511,7 @@
                                 </div>
                                 <div class="vote-total" id="vote-total"></div>
                             </div>
-                        </div>                      
+                        </div>
                     </div>
                 </div>
             </div>
@@ -740,8 +744,8 @@
                             <div class="board-container">
                                 <div id="watch-board" class="watch__board"></div>
                                 <div class="watch__timer" id="watch-timer" hidden>
-                                    <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="watch-timer-arc"></circle></svg></div>
-                                    <div class="watch__timer-value" id="watch-timer-value">--:--</div>
+                                    <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="watch-timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="watch-timer-arc"></circle></svg>
+                                        <div class="countdown__inner"><span class="countdown__num" id="watch-timer-value">--</span><span class="countdown__label" id="watch-timer-label"></span></div></div>
                                 </div>
                             </div>
                         </div>
@@ -1159,11 +1163,11 @@
                     </div>
                 </div>
             </div>
-        </div>          
+        </div>
     </div>
 
     <!-- ==================== MODALS ==================== -->
-    
+
     <!-- Save config modal -->
     <div class="modal-overlay" id="modal-save">
         <div class="modal">
@@ -1265,7 +1269,7 @@
     <div class="toast-container" id="toast-container"></div>
 
     <!-- ==================== SCRIPTS ==================== -->
-    
+
     <!-- Libraries -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
@@ -1282,7 +1286,7 @@
     <script src="js/core/liveTournament.js"></script>
     <script src="js/config.js"></script>
     <script src="js/phantom-form.js"></script>
-    
+
     <!-- Socket.IO (mode multiplayer) -->
     <script src="/socket.io/socket.io.js"></script>
 

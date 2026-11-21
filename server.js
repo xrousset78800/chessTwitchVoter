@@ -564,6 +564,9 @@ function spectateState(g) {
         rush:        g.detail?.rush || null,
         // Mode roue : style de tirage de l'hôte, et tirage en cours (même gagnant pour tous)
         wheel:       g.detail?.wheel || null,
+        // Couleurs du tirage de l'hôte, score du vote de chaque coup (aligné sur la fin de l'historique)
+        pal:         g.detail?.pal || null,
+        hv:          g.detail?.hv || [],
         draw:        g.detail?.draw ? { votes: g.detail.draw.votes, winner: g.detail.draw.winner, duration: g.detail.draw.duration, endsIn: Math.max(0, g.detail.draw.endsAt - Date.now()) } : null,
         spectators:  spectatorsOf(g.publicId)
     };
@@ -579,6 +582,7 @@ function spectateKey(g) {
 
 // ---------- Détail publié par le navigateur d'un joueur ----------
 const SAN_RE = /^(?:O-O(?:-O)?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?)[+#]?$/;
+const PALETTE_IDS = ['violet', 'twitch', 'neon', 'fire', 'ocean', 'pastel', 'access'];
 const clampInt = (v, min, max) => Math.min(Math.max(parseInt(v, 10) || 0, min), max);
 
 function sanitizeDetail(data = {}, prev = null) {
@@ -620,7 +624,10 @@ function sanitizeDetail(data = {}, prev = null) {
             draw = same ? prev.draw : { votes: dv, winner, duration, endsAt };
         }
     }
-    return { votes, timer, rush, wheel, draw };
+    const pal = PALETTE_IDS.includes(data.pal) ? data.pal : null;
+    const hv = (Array.isArray(data.hv) ? data.hv : []).slice(-400)
+        .map(v => v === 'r' ? 'r' : (typeof v === 'number' && Number.isFinite(v) ? clampInt(v, 0, 100) : null));
+    return { votes, timer, rush, wheel, draw, pal, hv };
 }
 
 const sanitizeHistory = (h) => Array.isArray(h) ? h.slice(-400).map(String).filter(m => SAN_RE.test(m)) : null;
@@ -841,15 +848,15 @@ io.on('connection', (socket) => {
             chatHistory[data.gameId] = [];
         }
         chatHistory[data.gameId].push(data);
-        
+
         // Limiter l'historique à 100 messages
         if (chatHistory[data.gameId].length > 100) {
             chatHistory[data.gameId].shift();
         }
-        
+
         // Diffuser à tous les participants de la partie
         io.to(data.gameId).emit('chat:message', data);
-        
+
         console.log(`💬 [${data.gameId}] ${data.author}: ${data.content}`);
     });
 
@@ -857,12 +864,12 @@ io.on('connection', (socket) => {
         socket.join(data.gameId);
         console.log(`Reconnexion à la partie ${data.gameId}`);
     });
-    
+
     socket.on('votesUpdate', (data) => {
         // Transmettre les votes au partenaire
         socket.to(data.gameId).emit('partnerVotes', data.votes);
     });
-    
+
     socket.on('moveSelected', (data) => {
         const game = games[data.gameId];
         // L'identifiant d'une partie multi est public : seuls ses deux streamers jouent
@@ -907,7 +914,7 @@ io.on('connection', (socket) => {
             socket.emit('syncFen', { fen: game.lastFen });
         }
     });
-    
+
     socket.on('disconnect', () => {
         console.log('Déconnexion:', socket.id);
         unwatch(socket);

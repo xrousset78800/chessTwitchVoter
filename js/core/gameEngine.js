@@ -10,6 +10,8 @@ import timer from './timer.js';
 import voting from './voting.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
+import { paletteColors } from '../components/votePalettes.js';
+import { renderPodium, renderHistory, VoteTicker } from '../components/voteViews.js';
 
 class GameEngine {
     constructor() {
@@ -355,6 +357,7 @@ class GameEngine {
 startTurn() {
     clearTimeout(this.previewTimer);
     this.annotations?.setOverlay(null);
+    VoteTicker.clear();
     // Mode problèmes : le timer est géré par problemsManager
     if (window.problemsManager?.isActive) {
         this.updateAvailableMoves();
@@ -511,6 +514,8 @@ highlightMostVoted() {
      * (sauf si la position change entre-temps : coup réseau, nouvelle partie…)
      */
     previewWinner(moveStr, percentage, play) {
+        // Score du vote, affiché sous le coup dans l'historique (🎲 : tirage au sort)
+        this.pendingVote = { move: moveStr, v: percentage == null ? 'r' : percentage };
         const ann = this.annotations;
         const m = this.resolveMove(moveStr);
         if (!ann || !m) { play(); return; }
@@ -780,6 +785,8 @@ showWheelAnimation(results) {
                 requestAnimationFrame(() => requestAnimationFrame(() => this.highlightLastMove(from, to)));
             }
 
+            if (this.pendingVote && this.pendingVote.move === moveStr) move.vote = this.pendingVote.v;
+            this.pendingVote = null;
             this.moveHistory.push(move);
             this.playMoveSound(move);
             this.updateHistoryUI(move);
@@ -806,77 +813,28 @@ showWheelAnimation(results) {
 
     // ========== UI UPDATES ==========
 
-    updateHistoryUI(move) {
-        const historyEl = document.getElementById('history-list') || document.querySelector('.poll ol');
+    updateHistoryUI() {
+        const historyEl = document.getElementById('history-list');
         if (!historyEl) return;
-
-        if (!move) {
-            historyEl.innerHTML = '';
-            return;
-        }
-
-        const moveNum = Math.ceil(this.moveHistory.length / 2);
-        const isWhite = this.moveHistory.length % 2 === 1;
-        
-        if (isWhite) {
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="move-number">${moveNum}.</span> <span class="move-white">${move.san}</span>`;
-            historyEl.appendChild(li);
-        } else {
-            const lastLi = historyEl.lastElementChild;
-            if (lastLi) {
-                lastLi.innerHTML += ` <span class="move-black">${move.san}</span>`;
-            }
-        }
+        const moves = (this.moveHistory || []).filter(m => m?.san).map(m => ({ san: m.san, v: m.vote ?? null }));
+        renderHistory(historyEl, moves, this.moveHistory?.[0]?.color === 'b' ? 'b' : 'w');
     }
 
 updateVotesUI(results) {
-    const votesList = document.getElementById('vote-list') 
-                   || document.querySelector('.vote-list');
-    
-    if (!votesList) {
-        console.warn('⚠️ Aucun conteneur #vote-list trouvé');
-        return;
-    }
-    
-    if (!results || results.length === 0) {
-        votesList.innerHTML = '<div class="no-votes">Aucun vote</div>';
-        return;
-    }
-    
-    // Calculer le total depuis les résultats
-    const total = results.reduce((sum, r) => sum + (r.count || 0), 0);
-    
-    votesList.innerHTML = results.map((r, index) => {
-        const percentage = total > 0 ? Math.round((r.count / total) * 100) : 0;
-        const color = r.color || this.getVoteColor(index);
-        
-        return `
-            <div class="vote-item" data-move="${r.move}" style="--color: ${color}">
-                <span class="vote-bar" style="width: ${percentage}%; background: ${color}"></span>
-                <span class="vote-move">${r.move}</span>
-                <span class="vote-count">${r.count} (${percentage}%)</span>
-            </div>
-        `;
-    }).join('');
-    
-    // Mettre à jour le total
-    const totalEl = document.getElementById('vote-total');
-    if (totalEl) {
-        totalEl.textContent = `Total: ${total} vote${total > 1 ? 's' : ''}`;
-    }
-    
-    console.log('📊 UI votes mise à jour:', results.length, 'coups,', total, 'votes');
+    const votesList = document.getElementById('vote-list') || document.querySelector('.vote-list');
+    if (!votesList) return;
+    // Roue de hasard (tous les coups à 1) : le podium garde les vrais votes
+    if (document.body.classList.contains('randomWheel')) return;
+    renderPodium(votesList, document.getElementById('vote-total'),
+        (results || []).map(r => ({ move: r.move, count: r.count || 0 })),
+        { turn: this.chess?.turn(), colors: paletteColors() });
 }
 
 /**
- * Retourne une couleur pour un index de vote
+ * Retourne une couleur pour un index de vote (palette choisie dans les options du tirage)
  */
 getVoteColor(index) {
-    const colors = [
-        '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', 
-        '#f59e0b', '#ef4444', '#ec4899', '#6366f1'
-    ];
+    const colors = paletteColors();
     return colors[index % colors.length];
 }
 
@@ -1061,7 +1019,8 @@ onMoveClick(move) {
         this.moveHistory = [];
         this.currentTurn = 'w';
         this.isRunning = true;
-        document.getElementById('vote-log-panel')?.style && (document.getElementById('vote-log-panel').style.display = '');
+        const ticker = document.getElementById('vote-ticker');
+        if (ticker) ticker.hidden = false;
 
         this.updateAvailableMoves();
         this.startTurn();
@@ -1070,21 +1029,10 @@ onMoveClick(move) {
     }
 }
 
+// Votes du chat : bandeau sous l'échiquier (ancien panneau « Chat votes »)
 window.VoteLog = {
-    add(username, move) {
-        const list = document.getElementById('vote-log-list');
-        if (!list) return;
-        const item = document.createElement('div');
-        item.style.cssText = 'padding:2px 4px; border-bottom:1px solid rgba(255,255,255,0.05);';
-        item.innerHTML = `<span style="color:#9146ff; font-weight:600;">${username}</span> <span style="color:#aaa;">vote</span> <span style="font-family:monospace; color:#fff; font-weight:bold;">${move}</span>`;
-        list.prepend(item);
-        // Limiter à 50 entrées
-        while (list.children.length > 50) list.removeChild(list.lastChild);
-    },
-    clear() {
-        const list = document.getElementById('vote-log-list');
-        if (list) list.innerHTML = '';
-    }
+    add(username, move) { VoteTicker.add(username, move); },
+    clear() { VoteTicker.clear(); }
 };
 
 // Instance singleton

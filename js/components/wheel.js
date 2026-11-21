@@ -2,6 +2,8 @@
  * PHANTOM TWITCHESS - Voting Wheel Component
  * Roue de vote animée avec design amélioré
  */
+import { paletteColors } from './votePalettes.js';
+import { renderPodium, markPodiumWinner } from './voteViews.js';
 
 class VotingWheel {
     constructor(containerId) {
@@ -9,15 +11,11 @@ class VotingWheel {
         this.canvas = null;
         this.ctx = null;
         this.votes = new Map(); // move -> { count, voters: Set }
-        this.colors = [
-            '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', 
-            '#f59e0b', '#ef4444', '#ec4899', '#6366f1',
-            '#14b8a6', '#f97316', '#84cc16', '#a855f7'
-        ];
+        this.paletteColors = null; // imposé (spectateur : palette du streamer), sinon celle choisie ici
         this.isSpinning = false;
         this.currentRotation = 0;
         this.winner = null;
-        
+
         // Callbacks
         this.onSpinEnd = null;
         this.pieceIcons = {
@@ -27,9 +25,14 @@ class VotingWheel {
         this.init();
     }
 
+    /** Couleurs du tirage : n°1 pour le coup en tête, n°2 pour le suivant… */
+    get colors() {
+        return this.paletteColors || paletteColors();
+    }
+
     init() {
         if (!this.container) return;
-        
+
         // Créer la structure HTML
         this.container.innerHTML = `
             <div class="wheel-container">
@@ -38,11 +41,11 @@ class VotingWheel {
                 <div class="wheel-center">?</div>
             </div>
         `;
-        
+
         this.canvas = this.container.querySelector('.wheel-canvas');
         this.ctx = this.canvas.getContext('2d');
         this.centerEl = this.container.querySelector('.wheel-center');
-        
+
         this.draw();
     }
 
@@ -53,15 +56,15 @@ class VotingWheel {
         if (!this.votes.has(move)) {
             this.votes.set(move, { count: 0, voters: new Set() });
         }
-        
+
         const voteData = this.votes.get(move);
-        
+
         // Vérifier si le voter a déjà voté pour ce coup
         if (!voteData.voters.has(voter)) {
             voteData.voters.add(voter);
             voteData.count++;
         }
-        
+
         this.draw();
         this.updateVoteList();
     }
@@ -211,7 +214,7 @@ getSortedVotes() {
             ctx.save();
             ctx.translate(textX, textY);
             ctx.rotate(midAngle + Math.PI / 2);
-            
+
             ctx.shadowColor = 'rgba(0,0,0,0.7)';
             ctx.shadowBlur = 4;
             ctx.fillStyle = '#fff';
@@ -338,7 +341,7 @@ for (const v of sortedDbg) {
     angleDbg += slice;
 }
 
-    
+
     this.isSpinning = false;
     this.container.querySelector('.wheel-container').classList.remove('is-spinning');
 
@@ -401,10 +404,10 @@ pickWeightedRandom() {
     // ⚠️ CRITIQUE: même ordre que getSortedVotes() pour cohérence avec les angles
     const sorted = this.getSortedVotes();
     console.log('  - sorted:', sorted.map(v => `${v.move}:${v.count}`));
-    
+
     const totalVotes = sorted.reduce((sum, v) => sum + v.count, 0);
     let random = Math.random() * totalVotes;
-    
+
     for (const vote of sorted) {
         random -= vote.count;
         if (random <= 0) {
@@ -412,7 +415,7 @@ pickWeightedRandom() {
             return vote.move;
         }
     }
-    
+
     const fallback = sorted[0]?.move ?? null;
     console.log('  - Fallback:', fallback);
     return fallback;
@@ -424,12 +427,12 @@ pickWeightedRandom() {
     getMajority() {
         const sorted = this.getSortedVotes();
         if (sorted.length === 0) return null;
-        
+
         // Vérifier s'il y a une vraie majorité (pas d'égalité)
         if (sorted.length > 1 && sorted[0].count === sorted[1].count) {
             return null; // Égalité
         }
-        
+
         return sorted[0].move;
     }
 
@@ -439,37 +442,18 @@ pickWeightedRandom() {
     updateVoteList() {
         const listEl = document.getElementById('vote-list');
         if (!listEl) return;
-
-        const sortedVotes = this.getSortedVotes();
-        const totalVotes = this.getTotalVotes();
-
-        if (sortedVotes.length === 0) {
-            listEl.innerHTML = '<div class="empty-state"><p>Aucun vote</p></div>';
-            return;
-        }
-
-        listEl.innerHTML = sortedVotes.map((vote, index) => {
-            const percentage = totalVotes > 0 ? Math.round((vote.count / totalVotes) * 100) : 0;
-            const color = this.colors[index % this.colors.length];
-            
-            return `
-                <div class="vote-item" data-move="${vote.move}">
-                    <span class="vote-item__color" style="background: ${color}"></span>
-                    <span class="vote-item__move">${vote.move}</span>
-                    <span class="vote-item__count">${vote.count} (${percentage}%)</span>
-                </div>
-            `;
-        }).join('');
+        // Roue de hasard (tous les coups à 1) : le podium garde les vrais votes
+        if (document.body.classList.contains('randomWheel')) return;
+        renderPodium(listEl, document.getElementById('vote-total'), this.getSortedVotes(), {
+            turn: this.currentTurn(), colors: this.colors
+        });
     }
 
     /**
      * Highlight le gagnant dans la liste
      */
     highlightWinner() {
-        const items = document.querySelectorAll('.vote-item');
-        items.forEach(item => {
-            item.classList.toggle('is-winner', item.dataset.move === this.winner);
-        });
+        markPodiumWinner(document.getElementById('vote-list'), this.winner);
     }
 }
 

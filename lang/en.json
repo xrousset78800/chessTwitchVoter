@@ -537,5 +537,30 @@
     "anonOne": "{n} anonymous",
     "anonMany": "{n} anonymous",
     "loginHint": "Log in with Twitch to appear with your username."
+  },
+  "podium": {
+    "votesOne": "{n} vote",
+    "votesMany": "{n} votes",
+    "none": "No votes yet",
+    "noMoves": "No moves yet",
+    "random": "Random draw"
+  },
+  "palette": {
+    "title": "Draw colors",
+    "violet": "Violet",
+    "twitch": "Twitch",
+    "neon": "Neon",
+    "fire": "Fire",
+    "ocean": "Ocean",
+    "pastel": "Pastel",
+    "access": "Color-blind"
+  },
+  "timerRing": {
+    "seconds": "seconds",
+    "hurry": "vote!",
+    "paused": "paused"
+  },
+  "ticker": {
+    "label": "Votes"
   }
 }

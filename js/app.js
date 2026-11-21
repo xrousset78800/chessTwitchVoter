@@ -1,7 +1,7 @@
 /**
  * PHANTOM TWITCHESS - Main Application
  * Point d'entrée principal, Router, État global
- * 
+ *
  * MISE À JOUR : Intégration du mode Problèmes via problemsManager
  * FIX: Structure corrigée - initProblemsMode intégré dans SandboxPage
  */
@@ -21,13 +21,14 @@ import WatchPage from './pages/watch.js';
 import BrowseTable from './pages/browseTable.js';
 import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
+import { PALETTES, PALETTE_IDS, getPaletteId, setPaletteId } from './components/votePalettes.js';
 
 // ============================================
 // ÉTAT GLOBAL
 // ============================================
 const AppState = {
     currentPage: 'landing',
-    
+
     // Mode de jeu
     // Mode de jeu (sandbox = partie libre, problems, rush, mono, multi…), reflété sur <body data-game-mode>
     _gameMode: 'sandbox',
@@ -36,12 +37,12 @@ const AppState = {
         this._gameMode = mode;
         document.body.dataset.gameMode = mode;
     },
-    
+
     // Configuration du jeu
     config: {
         // Twitch
         defaultChannel: '',
-        
+
         // Timer/Vote
         timerEnabled: false,
         timerDuration: 30,       // 10 à 120 s : en dessous, le délai du stream ne laisse pas le temps de voter
@@ -49,18 +50,18 @@ const AppState = {
         pauseAfterEnd: 5,
         votesPerViewer: 1,       // votes par viewer et par coup (les stats n'en comptent qu'un)
         majorityMode: false,
-        
+
         // Restrictions Twitch
         followersOnly: false,
         subsOnly: false,
-        
+
         // Affichage
         noBg: false,
-        
+
         // Phantom
         phantomSpeed: 3
     },
-    
+
     // Joueurs selon le mode
     players: {
         solo: '',           // 1vsAll
@@ -69,13 +70,13 @@ const AppState = {
         chat1: '',          // ChatVsChat
         chat2: ''           // ChatVsChat
     },
-    
+
     // Problèmes
     problems: {
         selectedThemes: [],
         isActive: false
     },
-    
+
     // Configs sauvegardées
     savedConfigs: []
 };
@@ -102,7 +103,7 @@ const Storage = {
         CONFIG: 'phantom_twitchess_config',
         SAVED_CONFIGS: 'phantom_twitchess_saved_configs'
     },
-    
+
     get(key) {
         try {
             const data = localStorage.getItem(key);
@@ -112,7 +113,7 @@ const Storage = {
             return null;
         }
     },
-    
+
     set(key, value) {
         try {
             localStorage.setItem(key, JSON.stringify(value));
@@ -122,7 +123,7 @@ const Storage = {
             return false;
         }
     },
-    
+
     saveConfig() {
         // Une route préconfigurée ne remplace pas les réglages du sandbox
         if (GameSession.current) return;
@@ -133,7 +134,7 @@ const Storage = {
             problems: AppState.problems
         });
     },
-    
+
     loadConfig() {
         const saved = Storage.get(Storage.KEYS.CONFIG);
         if (saved) {
@@ -146,7 +147,7 @@ const Storage = {
             console.log('📦 Config chargée depuis localStorage');
         }
     },
-    
+
     saveNamedConfig(name) {
         const config = {
             id: Date.now().toString(),
@@ -158,16 +159,16 @@ const Storage = {
             problems: { ...AppState.problems },
             fen: gameEngine.getFen()
         };
-        
+
         AppState.savedConfigs.unshift(config);
         Storage.set(Storage.KEYS.SAVED_CONFIGS, AppState.savedConfigs);
         return config;
     },
-    
+
     loadSavedConfigs() {
         AppState.savedConfigs = Storage.get(Storage.KEYS.SAVED_CONFIGS) || [];
     },
-    
+
     deleteSavedConfig(id) {
         AppState.savedConfigs = AppState.savedConfigs.filter(c => c.id !== id);
         Storage.set(Storage.KEYS.SAVED_CONFIGS, AppState.savedConfigs);
@@ -592,20 +593,20 @@ const SandboxPage = {
                 majorityMode: AppState.config.majorityMode,
                 votesPerViewer: AppState.config.votesPerViewer
             });
-            
+
             this.setupEventListeners();
             this.initialized = true;
         } else {
             // Resize le board si déjà initialisé
             gameEngine.board?.resize();
         }
-        
+
         // Synchroniser l'UI avec l'état
         this.syncUIFromState();
-        
+
         // Charger les configs sauvegardées
         this.loadConfigs();
-        
+
         // Mettre à jour les sections conditionnelles
         this.updateConditionalUI();
     },
@@ -676,7 +677,7 @@ async applyConfigAfterReload() {
 
     async initProblemsMode() {
         console.log('🧩 Initialisation du mode Problèmes...');
-        
+
         // 1. Charger les problèmes si nécessaire
         if (!problemsManager.isLoaded()) {
             try {
@@ -687,7 +688,7 @@ async applyConfigAfterReload() {
                 return false;
             }
         }
-        
+
         // 2. Injecter les références chess et board
         problemsManager.init({
             chess: gameEngine.chess,
@@ -701,20 +702,20 @@ async applyConfigAfterReload() {
                 wheelDuration: AppState.config.wheelDuration
             }
         });
-        
+
         // 3. Configurer les callbacks
         this.setupProblemsCallbacks();
-        
+
         // 4. Remplir le menu des thèmes
         this.populateThemesSelect();
-        
+
         this.problemsInitialized = true;
-        
+
         return true;
     },
 
     // ========== CALLBACKS PROBLÈMES ==========
-    
+
     setupProblemsCallbacks() {
         // Problème chargé
         problemsManager.onProblemLoaded = (problem) => {
@@ -722,7 +723,7 @@ async applyConfigAfterReload() {
             this.updateProblemUI(problem);
             this.syncPhantom();
         };
-        
+
         // Bot joue
         problemsManager.onBotMove = (move) => {
             console.log('🤖 Bot:', move.san);
@@ -743,7 +744,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         callback(winner);
         return;
     }
-    
+
     gameEngine.votingWheel.clear();
     results.forEach(r => {
         gameEngine.votingWheel.votes.set(r.move, {
@@ -754,7 +755,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
     gameEngine.votingWheel.draw();
     gameEngine.showWheel();
     document.body.classList.add('randomWheel');
-    
+
     const wheelDuration = (AppState.config.wheelDuration || 5) * 1000;
     gameEngine.votingWheel.onSpinEnd = (winner) => {
         document.body.classList.remove('randomWheel');
@@ -772,14 +773,14 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             this.addMoveToHistory(move, 'player');
             this.syncPhantom();
         };
-        
+
         // Joueur erreur
         problemsManager.onWrongMove = (expectedSAN, expectedUCI) => {
             console.log('❌ Erreur! Attendu:', expectedSAN);
             this.showProblemFeedback('wrong', expectedSAN);
             Toast.error(`Mauvais coup ! Le bon était ${expectedSAN}`);
         };
-        
+
         // Problème résolu
         problemsManager.onProblemSolved = (problem) => {
             console.log('🎉 Résolu!');
@@ -787,20 +788,20 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             Toast.success('🎉 Problème résolu !');
             // Le suivant est enchaîné par problemsManager.startPauseTimer()
         };
-        
+
         // Problème échoué
         problemsManager.onProblemFailed = (problem) => {
             console.log('💔 Échoué');
             this.showProblemFeedback('failed');
             // Le suivant est enchaîné par problemsManager.startPauseTimer()
         };
-        
+
         // Changement d'état
         problemsManager.onStateChange = (state) => {
             this.updateProblemStateUI(state);
         };
     },
-    
+
     // ========== PUZZLE RUSH : HUD + ÉCRAN DE FIN ==========
 
     setupRushUI() {
@@ -893,7 +894,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
     },
 
     // ========== UI HELPERS POUR PROBLÈMES ==========
-    
+
     updateProblemUI(problem) {
         const updates = {
             '[data-prob-id]': problem.id,
@@ -902,56 +903,56 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             '[data-fen]': problem.fen,
             '[data-length]': Math.ceil(problem.moves.length / 2)
         };
-        
+
         for (const [selector, value] of Object.entries(updates)) {
             const el = document.querySelector(selector);
             if (el) el.textContent = value;
         }
-        
+
         // Afficher le panneau problème si caché
         const problemPanel = document.getElementById('problem-panel');
         if (problemPanel) problemPanel.classList.add('is-visible');
-        
+
         // Vider l'historique
         const historyEl = document.querySelector('.move-history, .poll ol, #move-history');
         if (historyEl) historyEl.innerHTML = '';
     },
-    
+
     updateProblemStateUI(state) {
         const attemptEl = document.querySelector('[data-attempt]');
         if (attemptEl) {
             attemptEl.textContent = Math.floor(state.attemptIndex / 2);
         }
-        
+
         document.body.classList.toggle('player-turn', state.isPlayerTurn);
         document.body.classList.toggle('bot-turn', !state.isPlayerTurn);
     },
-    
+
     addMoveToHistory(move, player) {
         const historyEl = document.querySelector('.move-history, .poll ol, #move-history');
         if (!historyEl) return;
-        
+
         const moveEl = document.createElement('span');
         moveEl.className = player === 'bot' ? 'move-bot' : 'move-player';
         moveEl.textContent = move.san + ' ';
         historyEl.appendChild(moveEl);
     },
-    
+
     showProblemFeedback(type, message = '') {
         // Retirer les anciens feedbacks
         document.body.classList.remove('problem-correct', 'problem-wrong', 'problem-solved', 'problem-failed');
-        
+
         // Ajouter le nouveau
         document.body.classList.add(`problem-${type}`);
-        
+
         // Créer un élément de feedback temporaire
         const existing = document.getElementById('problem-feedback');
         if (existing) existing.remove();
-        
+
         const feedback = document.createElement('div');
         feedback.id = 'problem-feedback';
         feedback.className = `problem-feedback problem-feedback--${type}`;
-        
+
         switch (type) {
             case 'correct':
                 feedback.innerHTML = '<span class="feedback-icon">✓</span>';
@@ -966,15 +967,15 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 feedback.innerHTML = '<span class="feedback-icon">💔</span>';
                 break;
         }
-        
+
         document.body.appendChild(feedback);
-        
+
         setTimeout(() => {
             feedback.remove();
             document.body.classList.remove(`problem-${type}`);
         }, 2000);
     },
-    
+
     syncPhantom() {
         const fen = gameEngine.chess?.fen?.() || problemsManager.chess?.fen?.();
         if (fen && window.phantomChessboard?.isConnected) {
@@ -984,12 +985,12 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
     setupEventListeners() {
         // ========== BOUTONS DE CONTRÔLE ==========
-        
+
         // Bouton APPLIQUER
         document.getElementById('btn-apply-config')?.addEventListener('click', () => {
             this.applyConfig();
         });
-        
+
         // Réinitialiser : partie libre uniquement (bouton masqué dans les autres modes, cf. sandbox.css)
         document.getElementById('btn-reset')?.addEventListener('click', () => {
             if (AppState.gameMode !== 'sandbox') return;
@@ -1040,6 +1041,30 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         };
         renderWheelStyle();
         window.addEventListener('languageChanged', renderWheelStyle);
+
+        // Couleurs du tirage : roue, bande et podium (transmises aux spectateurs)
+        const picker = document.getElementById('palette-picker');
+        const renderPalettes = () => {
+            if (!picker) return;
+            const current = getPaletteId();
+            picker.innerHTML = PALETTE_IDS.map(id => `
+                <button type="button" class="palette-option${id === current ? ' is-active' : ''}" role="radio" aria-checked="${id === current}" data-palette="${id}">
+                    <span class="palette-option__swatches">${PALETTES[id].slice(0, 6).map(c => `<span style="background:${c}"></span>`).join('')}</span>
+                    <span>${tr(`palette.${id}`)}</span>
+                </button>`).join('');
+        };
+        renderPalettes();
+        window.addEventListener('languageChanged', renderPalettes);
+        picker?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-palette]');
+            if (btn) setPaletteId(btn.dataset.palette);
+        });
+        document.addEventListener('votePaletteChanged', () => {
+            renderPalettes();
+            const wheel = gameEngine.votingWheel;
+            if (wheel && !wheel.isSpinning) wheel.draw?.();
+            try { gameEngine.updateVotesUI(voting.getSortedResults()); } catch {}
+        });
         document.getElementById('btn-wheel-style')?.addEventListener('click', () => {
             gameEngine.setWheelStyle(gameEngine.wheelStyle === 'band' ? 'classic' : 'band');
             renderWheelStyle();
@@ -1048,7 +1073,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         document.getElementById('btn-flip')?.addEventListener('click', () => {
             gameEngine.flip();
         });
-        
+
         // Sync Phantom
         document.getElementById('btn-sync')?.addEventListener('click', () => {
             if (window.phantomChessboard?.isConnected) {
@@ -1068,7 +1093,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 Toast.success('Échiquier réinitialisé');
             }
         });
-        
+
         // Game End Phantom
         document.getElementById('btn-game-end')?.addEventListener('click', async () => {
             if (window.phantomChessboard?.isConnected) {
@@ -1076,7 +1101,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 Toast.success('Game End envoyé');
             }
         });
-        
+
         // Sauvegarder config
         document.getElementById('btn-save-config')?.addEventListener('click', () => {
             this.showSaveModal();
@@ -1092,7 +1117,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
                 if (gameEngine.updateVotingIndicator) {
                     gameEngine.updateVotingIndicator();
-                }                
+                }
 
                 // Précharger les problèmes si mode problèmes sélectionné
                 if (isPuzzleMode(option.dataset.mode) && !problemsManager.isLoaded()) {
@@ -1108,26 +1133,26 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             AppState.config.timerEnabled = active;
             this.updateVotingUI();
         });
-        
+
         const votesInput = document.getElementById('votes-per-viewer');
         votesInput?.addEventListener('change', () => {
             AppState.config.votesPerViewer = Math.min(10, Math.max(1, parseInt(votesInput.value) || 1));
             votesInput.value = AppState.config.votesPerViewer;
         });
-        
+
         this.setupToggle('toggle-majority', (active) => {
             AppState.config.majorityMode = active;
             syncWheelModeClass();
         });
-        
+
         this.setupToggle('toggle-followers', (active) => {
             AppState.config.followersOnly = active;
         });
-        
+
         this.setupToggle('toggle-subs', (active) => {
             AppState.config.subsOnly = active;
         });
-        
+
 
         // ========== INPUTS NUMÉRIQUES ==========
         document.getElementById('timer-duration')?.addEventListener('change', (e) => {
@@ -1144,7 +1169,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         const setup = document.getElementById('sandbox-setup');
         ['click', 'change'].forEach(type => setup?.addEventListener(type, () => setTimeout(() => this.markPreset(), 0)));
         window.addEventListener('languageChanged', () => this.renderPresets());
-        
+
         document.getElementById('wheel-duration')?.addEventListener('change', (e) => {
             AppState.config.wheelDuration = parseInt(e.target.value) || 5;
         });
@@ -1153,31 +1178,31 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         document.getElementById('player-solo')?.addEventListener('blur', (e) => {
             AppState.players.solo = e.target.value;
         });
-        
+
         document.getElementById('player-1')?.addEventListener('blur', (e) => {
             AppState.players.player1 = e.target.value;
         });
-        
+
         document.getElementById('player-2')?.addEventListener('blur', (e) => {
             AppState.players.player2 = e.target.value;
         });
-        
+
         document.getElementById('chat-1')?.addEventListener('blur', (e) => {
             AppState.players.chat1 = e.target.value;
         });
-        
+
         document.getElementById('chat-2')?.addEventListener('blur', (e) => {
             AppState.players.chat2 = e.target.value;
         });
-        
+
         // ========== SÉLECTION THÈMES PROBLÈMES ==========
         document.getElementById('problem-themes')?.addEventListener('change', (e) => {
             const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
             AppState.problems.selectedThemes = selected;
-            
+
             problemsManager.clearThemes();
             selected.forEach(theme => problemsManager.toggleTheme(theme));
-            
+
             const count = problemsManager.getFilteredProblems().length;
             const countEl = document.getElementById('problem-count');
             if (countEl) countEl.textContent = `${count} problèmes`;
@@ -1196,7 +1221,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
                 Toast.error('Veuillez entrer un nom');
             }
         });
-        
+
         this.setupSetupScreen();
 
         // ========== INTERCEPTION DES COUPS EN MODE PROBLÈME ==========
@@ -1272,20 +1297,20 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
     setupProblemsInterception() {
         const originalOnDrop = gameEngine.onDrop?.bind(gameEngine);
-        
+
         gameEngine.onDrop = (source, target, piece, newPos, oldPos, orientation) => {
             // Si mode problèmes actif, déléguer au problemsManager
             if (isPuzzleMode() && problemsManager.isActive) {
                 const move = source + target;
                 const result = problemsManager.validateAndPlayMove(move);
-                
+
                 if (!result.valid || !result.correct) {
                     return 'snapback';
                 }
-                
+
                 return; // Le board est déjà mis à jour par problemsManager
             }
-            
+
             // Sinon comportement normal
             if (originalOnDrop) {
                 return originalOnDrop(source, target, piece, newPos, oldPos, orientation);
@@ -1302,17 +1327,17 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             });
         }
     },
-    
+
     populateThemesSelect() {
         const select = document.getElementById('problem-themes');
         if (!select) return;
-        
+
         const stats = problemsManager.themeStats;
         const sortedThemes = Object.entries(stats)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 30);
-        
-        select.innerHTML = sortedThemes.map(([theme, count]) => 
+
+        select.innerHTML = sortedThemes.map(([theme, count]) =>
             `<option value="${theme}">${theme} (${count})</option>`
         ).join('');
     },
@@ -1402,7 +1427,7 @@ fullReset() {
         // Inputs numériques
         const timerDuration = document.getElementById('timer-duration');
         if (timerDuration) timerDuration.value = AppState.config.timerDuration;
-        
+
         const wheelDuration = document.getElementById('wheel-duration');
         if (wheelDuration) wheelDuration.value = AppState.config.wheelDuration;
 
@@ -1417,16 +1442,16 @@ fullReset() {
         // Inputs joueurs
         const playerSolo = document.getElementById('player-solo');
         if (playerSolo) playerSolo.value = AppState.players.solo || '';
-        
+
         const player1 = document.getElementById('player-1');
         if (player1) player1.value = AppState.players.player1 || '';
-        
+
         const player2 = document.getElementById('player-2');
         if (player2) player2.value = AppState.players.player2 || '';
-        
+
         const chat1 = document.getElementById('chat-1');
         if (chat1) chat1.value = AppState.players.chat1 || '';
-        
+
         const chat2 = document.getElementById('chat-2');
         if (chat2) chat2.value = AppState.players.chat2 || '';
 
@@ -1445,7 +1470,7 @@ fullReset() {
         document.querySelectorAll('.mode-options').forEach(el => {
             el.classList.remove('is-visible');
         });
-        
+
         const modeOptions = document.getElementById(`options-${AppState.gameMode}`);
         if (modeOptions) {
             modeOptions.classList.add('is-visible');
@@ -1849,6 +1874,9 @@ const SpectatorFeed = {
                     endsIn: Math.max(0, spin.startedAt + spin.duration - Date.now()) };
             }
         } catch {}
+        // Couleurs du tirage, et score du vote de chaque coup pour la feuille de partie
+        d.pal = getPaletteId();
+        d.hv = (gameEngine.moveHistory || []).filter(m => m?.san).map(m => m.vote ?? null).slice(-400);
         if (mode === 'rush') {
             const s = rushManager.getState();
             d.rush = { score: s.score, strikes: s.strikes, maxStrikes: s.maxStrikes,
@@ -2097,7 +2125,7 @@ function updateConnectionUI() {
     document.querySelectorAll('.status-dot--twitch').forEach(dot => {
         dot.classList.toggle('is-connected', twitchConnected);
     });
-    
+
     document.querySelectorAll('.status-dot--phantom').forEach(dot => {
         dot.classList.toggle('is-connected', phantomConnected);
     });
@@ -2853,7 +2881,7 @@ async function initApp() {
             timer.pause();
         }
     });
-    
+
     window.addEventListener('phantomMoveComplete', () => {
         if (AppState.config.timerEnabled && timer.isRunning && timer.isPaused) {
             console.log('▶️ Reprise timer - Phantom terminé');

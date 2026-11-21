@@ -11,12 +11,13 @@ import twitchAuth from '../core/twitchAuth.js';
 import { renderSpectatorList, spectatorsLabel } from '../components/spectators.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
+import { PALETTES, isPalette, paletteColors } from '../components/votePalettes.js';
+import { renderPodium, renderHistory } from '../components/voteViews.js';
 
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
 const MODE_LABEL = { multi: '⚔ Multi', rush: '🔥 Puzzle Rush', mono: '👥 Mono', sandbox: '🧪 Partie libre', problems: '🧩 Problèmes', chatVsChat: '⚔ Multi' };
-const VOTE_COLORS = ['#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'];
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
 const $ = (id) => document.getElementById(id);
 const clean = (m) => String(m || '').replace(/[+#]/g, '');
@@ -200,13 +201,17 @@ const WatchPage = {
     ensureWheel(style) {
         const area = $('watch-wheel-area');
         if (!area) return null;
-        if (this.wheel && (this.wheelStyle === style || this.wheel.isSpinning)) return this.wheel;
+        if (this.wheel && (this.wheelStyle === style || this.wheel.isSpinning)) {
+            this.wheel.paletteColors = this.palette();
+            return this.wheel;
+        }
         area.classList.toggle('wheel-area--band', style === 'band');
         const wheel = style === 'band' ? new WheelBand('watch-wheel-area') : new VotingWheel('watch-wheel-area');
         // La liste des votes de la page spectateur est gérée ici, pas par la roue
         wheel.updateVoteList = () => {};
         wheel.highlightWinner = () => {};
         wheel.currentTurn = () => (this.state?.fen?.split(' ')[1] === 'b' ? 'b' : 'w');
+        wheel.paletteColors = this.palette();
         this.wheel = wheel;
         this.wheelStyle = style;
         return wheel;
@@ -370,47 +375,35 @@ const WatchPage = {
         $('watch-moves').classList.toggle('is-empty', !moves.length);
     },
 
+    /** Couleurs du tirage choisies par le streamer */
+    palette() {
+        const id = this.state?.pal;
+        return isPalette(id) ? PALETTES[id] : paletteColors('violet');
+    },
+
+    turn() {
+        return this.state?.fen?.split(' ')[1] === 'b' ? 'b' : 'w';
+    },
+
     renderVotes() {
         const list = $('watch-votes');
-        const totalEl = $('watch-vote-total');
-        if (!list || !totalEl) return;
+        if (!list) return;
         const votes = this.state?.votes || [];
-        const total = votes.reduce((n, v) => n + v.n, 0);
-        if (!total) {
-            list.innerHTML = `<div class="no-votes">${esc(t('watch.noVotes'))}</div>`;
-            totalEl.textContent = '';
-            return;
-        }
-        list.innerHTML = votes.map((v, i) => {
-            const pct = Math.round(v.n / total * 100);
-            const color = VOTE_COLORS[i % VOTE_COLORS.length];
-            return `<div class="vote-item" style="--color: ${color}">
-                <span class="vote-bar" style="width: ${pct}%; background: ${color}"></span>
-                <span class="vote-move">${esc(v.m)}</span>
-                <span class="vote-count">${v.n} (${pct}%)</span>
-            </div>`;
-        }).join('');
-        totalEl.textContent = t(total > 1 ? 'watch.totalMany' : 'watch.totalOne', { n: total });
+        renderPodium(list, $('watch-vote-total'), votes.map(v => ({ move: v.m, count: v.n })), {
+            turn: this.turn(), colors: this.palette()
+        });
     },
 
     renderHistory() {
         const box = $('watch-history');
         if (!box) return;
         const h = this.state?.history || [];
-        if (!h.length) {
-            box.innerHTML = `<div class="empty-state"><p>${esc(t('watch.noHistory'))}</p></div>`;
-            return;
-        }
-        // Plus récent en haut, comme chez les joueurs
-        const rows = [];
-        for (let i = 0; i < h.length; i += 2) {
-            rows.push(`<div class="history-row">
-                <span class="history-row__number">${i / 2 + 1}.</span>
-                <span class="history-row__move">${esc(h[i])}</span>
-                <span class="history-row__move">${esc(h[i + 1] || '')}</span>
-            </div>`);
-        }
-        box.innerHTML = rows.reverse().join('');
+        const hv = Array.isArray(this.state?.hv) ? this.state.hv : [];
+        const offset = h.length - hv.length; // scores alignés sur la fin de la partie
+        const moves = h.map((san, i) => ({ san, v: i >= offset ? hv[i - offset] ?? null : null }));
+        // Camp du premier coup, d'après le trait actuel et le nombre de coups joués
+        const first = (h.length % 2 === 0) === (this.turn() === 'w') ? 'w' : 'b';
+        renderHistory(box, moves, first);
     },
 
     renderSpectators() {
@@ -446,7 +439,10 @@ const WatchPage = {
         this.timerEndsAt = timer.paused ? null : Date.now() + timer.endsIn;
         const draw = () => {
             const left = timer.paused ? (timer.left ?? 0) : Math.max(0, Math.ceil((this.timerEndsAt - Date.now()) / 1000));
-            $('watch-timer-value').textContent = `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}${timer.paused ? ' ⏸' : ''}`;
+            // Secondes seules dans l'anneau ; « votez ! » sous 5 s
+            $('watch-timer-value').textContent = left >= 60 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : String(left);
+            const label = $('watch-timer-label');
+            if (label) label.textContent = timer.paused ? t('timerRing.paused') : left <= 5 ? t('timerRing.hurry') : t('timerRing.seconds');
             const arc = $('watch-timer-arc');
             if (arc) arc.style.strokeDasharray = `${Math.min(1, left / total) * 283} 283`;
             box.classList.toggle('is-critical', !timer.paused && left <= 5);

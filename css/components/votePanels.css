@@ -1,0 +1,439 @@
+/* =====================================================================
+   Panneaux de vote : podium, feuille de partie, bandeau du chat,
+   choix des couleurs du tirage, anneau du minuteur
+   ===================================================================== */
+
+/* ------------------------------------------------------------ Podium */
+.podium {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.podium__steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: end;
+    min-height: 168px;
+}
+
+.podium__slot {
+    --c: #8b5cf6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    transition: opacity 0.3s ease;
+}
+
+.podium__slot.is-empty { opacity: 0.25; }
+.podium__slot.is-empty .podium__piece { visibility: hidden; }
+
+.podium__piece {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    /* Fond clair teinté : pièces blanches et noires lisibles */
+    background: radial-gradient(circle at 50% 40%, #fff, color-mix(in srgb, var(--c) 45%, #e9e5f5));
+    border: 3px solid var(--c);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--c) 45%, transparent);
+}
+
+.podium__piece img {
+    width: 32px;
+    height: 32px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+.podium__slot[data-rank="1"] .podium__piece { width: 48px; height: 48px; }
+.podium__slot[data-rank="1"] .podium__piece img { width: 40px; height: 40px; }
+
+.podium__move {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-height: 1.3em;
+}
+
+.podium__slot[data-rank="1"] .podium__move { font-size: 1.2rem; font-weight: 800; }
+
+.podium__step {
+    width: 100%;
+    height: 40px;
+    border-radius: 10px 10px 4px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    background: color-mix(in srgb, var(--c) 28%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c) 60%, transparent);
+    box-sizing: border-box;
+    transition: height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s ease;
+    overflow: hidden;
+}
+
+.podium__slot[data-rank="1"] .podium__step {
+    background: linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 60%, #000));
+    border-color: transparent;
+    box-shadow: 0 0 20px color-mix(in srgb, var(--c) 40%, transparent);
+}
+
+.podium__slot.is-empty .podium__step {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.podium__pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.podium__slot[data-rank="1"] .podium__pct { font-size: 1.35rem; }
+
+.podium__count {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
+}
+
+.podium__slot.is-winner .podium__step {
+    outline: 2px solid #facc15;
+    outline-offset: 2px;
+    animation: podiumWin 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes podiumWin {
+    from { box-shadow: 0 0 8px rgba(250, 204, 21, 0.4); }
+    to { box-shadow: 0 0 24px rgba(250, 204, 21, 0.8); }
+}
+
+.podium__rest {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    min-height: 1.6em;
+}
+
+.podium__chip {
+    --c: #64748b;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+}
+
+.podium__chip b {
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+}
+
+.podium__chip--more { border-color: rgba(255, 255, 255, 0.15); }
+
+.podium__hint {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* -------------------------------------------------- Feuille de partie */
+.hist-table {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+}
+
+.hist-head,
+.hist-row {
+    display: grid;
+    grid-template-columns: 2.2em 1fr 1fr;
+    gap: 4px;
+    align-items: center;
+}
+
+.hist-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 4px 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.5);
+    background: var(--bg-panel, #16131f);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hist-row {
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.hist-row:nth-child(odd) { background: rgba(255, 255, 255, 0.025); }
+
+.hist-num {
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+}
+
+.hist-move {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    min-width: 0;
+}
+
+.hist-san {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: #fff;
+}
+
+.hist-vote {
+    font-size: 0.72rem;
+    color: #c4b5fd;
+}
+
+.hist-vote--random { font-size: 0.8rem; }
+
+/* Dernier coup en jaune, comme sur l'échiquier */
+.hist-move.is-last {
+    background: rgba(250, 204, 21, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.55);
+}
+
+.hist-move.is-last .hist-san { color: #fde68a; }
+
+.hist-move--none { color: rgba(255, 255, 255, 0.3); }
+
+.hist-empty {
+    padding: 10px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* ------------------------------------------------- Bandeau des votes */
+.vote-ticker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: var(--board-size, 100%);
+    margin: 8px auto 0;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(22, 19, 31, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.vote-ticker[hidden] { display: none; }
+
+.vote-ticker__label {
+    flex: none;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    background: #9146ff;
+}
+
+.vote-ticker__track {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+    height: 1.5em;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    -webkit-mask-image: linear-gradient(90deg, #000 70%, transparent);
+    mask-image: linear-gradient(90deg, #000 70%, transparent);
+}
+
+.vote-ticker:not(.has-votes) .vote-ticker__track::before {
+    content: '…';
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.vote-ticker__item {
+    flex: none;
+    font-size: 0.85rem;
+    animation: tickerIn 0.3s ease-out;
+}
+
+.vote-ticker__item:nth-child(n + 4) { opacity: 0.7; }
+.vote-ticker__item:nth-child(n + 8) { opacity: 0.45; }
+
+.vote-ticker__user { font-weight: 600; }
+
+.vote-ticker__move {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: #fff;
+}
+
+@keyframes tickerIn {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------- Couleurs du tirage */
+.form-row--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.palette-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 6px;
+}
+
+.palette-option {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.8);
+    font: inherit;
+    font-size: 0.78rem;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.palette-option:hover { border-color: rgba(255, 255, 255, 0.3); }
+
+.palette-option.is-active {
+    border-color: #a78bfa;
+    background: rgba(139, 92, 246, 0.15);
+    color: #fff;
+}
+
+.palette-option__swatches {
+    display: flex;
+    height: 10px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.palette-option__swatches span { flex: 1; }
+
+/* ------------------------------------------- Anneau du minuteur */
+.countdown,
+.watch__timer-ring { position: relative; }
+
+.countdown__inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    line-height: 1;
+}
+
+.countdown__num {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 1.9rem;
+    color: #fff;
+    transition: font-size 0.2s ease, color 0.2s ease;
+}
+
+.countdown__label {
+    margin-top: 2px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Le texte MM:SS reste pour les messages des problèmes, sinon caché */
+.board-timer-container #timer-value:not(:has(*)) { display: none; }
+
+.board-timer-container .countdown circle:first-child {
+    stroke: rgba(255, 255, 255, 0.12);
+    stroke-width: 6;
+    opacity: 1;
+}
+
+.board-timer-container .countdown circle:last-child,
+.watch__timer-ring circle:last-child {
+    stroke: url(#timer-grad);
+    stroke-width: 6;
+}
+
+.watch__timer-ring circle:first-child { stroke-width: 6; stroke: rgba(255, 255, 255, 0.12); }
+.watch__timer-ring circle:last-child { stroke: url(#watch-timer-grad); }
+
+/* Moins de 5 s : ambre, chiffre plus gros, « votez ! » */
+.countdown.timer-critical circle:last-child,
+.watch__timer.is-critical .watch__timer-ring circle:last-child { stroke: #f59e0b; }
+
+.countdown.timer-critical .countdown__num,
+.watch__timer.is-critical .countdown__num {
+    font-size: 2.4rem;
+    color: #fbbf24;
+}
+
+.countdown.timer-critical .countdown__label,
+.watch__timer.is-critical .countdown__label {
+    color: #fbbf24;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.timer-critical .countdown,
+.countdown.timer-critical {
+    animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+
+.countdown.timer-paused .countdown__num,
+.watch__timer.is-paused .countdown__num { color: #ff9800; }
+
+.watch__timer-ring { width: 88px; height: 88px; }
+.watch__timer-ring .countdown__num { font-size: 1.6rem; }
+.watch__timer.is-critical .watch__timer-ring .countdown__num { font-size: 2rem; }
+
+@media (max-width: 768px) {
+    .countdown__num { font-size: 1.5rem; }
+    .countdown.timer-critical .countdown__num { font-size: 1.9rem; }
+}

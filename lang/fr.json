@@ -537,5 +537,30 @@
     "anonOne": "{n} anonyme",
     "anonMany": "{n} anonymes",
     "loginHint": "Connecte-toi à Twitch pour apparaître avec ton pseudo."
+  },
+  "podium": {
+    "votesOne": "{n} vote",
+    "votesMany": "{n} votes",
+    "none": "Aucun vote pour l'instant",
+    "noMoves": "Aucun coup joué",
+    "random": "Tirage au sort"
+  },
+  "palette": {
+    "title": "Couleurs du tirage",
+    "violet": "Violet",
+    "twitch": "Twitch",
+    "neon": "Néon",
+    "fire": "Feu",
+    "ocean": "Océan",
+    "pastel": "Pastel",
+    "access": "Daltonien"
+  },
+  "timerRing": {
+    "seconds": "secondes",
+    "hurry": "votez !",
+    "paused": "pause"
+  },
+  "ticker": {
+    "label": "Votes"
   }
 }
