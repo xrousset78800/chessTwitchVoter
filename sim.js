@@ -231,16 +231,51 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
         playLoop(id, { channels: [ensureChannel(name)] });
     }
 
+    /**
+     * Un tour de vote vu par les spectateurs : minuteur, puis votes du chat qui arrivent
+     * peu à peu (le coup finalement joué est le plus voté, en général).
+     */
+    function voteRound(id, winner, candidates, delay, { rush = null, noTimer = false } = {}) {
+        const g = games[id]; if (!g) return;
+        const total = Math.max(5, Math.ceil(live.opts.moveMs * 1.4 / 1000));
+        const others = candidates.filter(m => m !== winner);
+        const tally = new Map();
+        g.detail = { votes: [], timer: noTimer ? null : { endsAt: Date.now() + delay, total, paused: false, left: null }, rush };
+        emitSpectate(g);
+        const ticks = Math.floor(delay / 1300);
+        for (let i = 1; i < ticks; i++) {
+            later(() => {
+                const cur = games[id]; if (!cur?.detail) return;
+                for (let k = int(1, 4); k > 0; k--) {
+                    const m = !others.length || chance(0.55) ? winner : pick(others);
+                    tally.set(m, (tally.get(m) || 0) + 1);
+                }
+                cur.detail.votes = [...tally].map(([m, n]) => ({ m, n })).sort((a, b) => b.n - a.n);
+                emitSpectate(cur);
+            }, i * 1300);
+        }
+    }
+
     function playLoop(id, { channels, multi: isMulti = false }) {
         const chess = new Chess();
-        const step = () => {
+        if (games[id]) games[id].history = [];
+        const turn = () => {
+            const g = games[id]; if (!g) return;
+            const move = chooseMove(chess);
+            const candidates = shuffle(chess.moves()).slice(0, int(2, 5));
+            const delay = rnd(0.6, 1.4) * live.opts.moveMs;
+            voteRound(id, move.san, [move.san, ...candidates], delay);
+            later(() => step(move), delay);
+        };
+        const step = (move) => {
             const g = games[id]; if (!g) return;
             const ch = channels[chess.turn() === 'w' || channels.length === 1 ? 0 : 1];
-            const move = chooseMove(chess);
             chess.move(move);
             addTurn(ch);
             viewers.save();
             g.lastFen = chess.fen(); g.lastMove = { from: move.from, to: move.to }; g.moveCount++;
+            g.history.push(move.san);
+            g.detail = null;
             if (isMulti) {
                 const result = stats.recordMultiResult(g);
                 if (result) g.result = result.result;
@@ -253,9 +288,9 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
                 later(fill, 30000);
                 return;
             }
-            later(step, rnd(0.6, 1.4) * live.opts.moveMs);
+            later(turn, 800);
         };
-        later(step, live.opts.moveMs);
+        later(turn, 1500);
     }
 
     /** Puzzle Rush : position qui change à chaque puzzle, record enregistré en fin de run */
@@ -269,16 +304,22 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
         live.ids.add(id);
         broadcastGamesList();
         let solved = 0, errors = 0;
+        const rushInfo = () => ({ score: solved, strikes: errors, maxStrikes: 3, rating: 600 + solved * 60, mode });
         const puzzle = () => {
             const g = games[id]; if (!g) return;
             const c = new Chess();
             for (let i = int(14, 50); i > 0 && !c.isGameOver(); i--) c.move(chooseMove(c, 0.6));
+            if (c.isGameOver()) return later(puzzle, 500);
             g.lastFen = c.fen(); g.lastMove = null; g.orientation = c.turn() === 'w' ? 'white' : 'black';
-            emitSpectate(g);
+            g.history = [];
+            const delay = rnd(0.6, 1.4) * live.opts.moveMs * 1.5;
+            voteRound(id, chooseMove(c).san, shuffle(c.moves()).slice(0, int(2, 4)), delay, { rush: rushInfo(), noTimer: mode === '0' });
             later(() => {
                 const ok = chance(Math.max(0.35, 0.9 - solved * 0.025));
                 ok ? solved++ : errors++;
                 g.moveCount = solved;
+                g.detail = { votes: [], timer: null, rush: rushInfo() };
+                emitSpectate(g);
                 addTurn(ch, { puzzle: true }); viewers.save();
                 broadcastGamesList();
                 if (errors >= 3) {

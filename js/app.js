@@ -18,6 +18,7 @@ import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import RecordsPage from './pages/records.js';
 import WatchPage from './pages/watch.js';
+import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
 
 // ============================================
@@ -230,6 +231,7 @@ const GameSession = {
         if (roster) roster.style.display = 'none';
         MultiRoom.leave();
         GameAnnouncer.stop();
+        SpectatorsUI.render(null);
         if (window.gameEngine) {
             gameEngine.session = null;
             gameEngine.onGameEnd = null;
@@ -1756,6 +1758,7 @@ const BrowsePage = {
                     </div>
                     <div class="game-card__footer">
                         <span>${game.moveCount || 0} coup${game.moveCount !== 1 ? 's' : ''}</span>
+                        ${game.spectators ? `<span class="game-card__spectators" title="${spectatorsLabel(game.spectators)}"><i class="fas fa-eye"></i> ${game.spectators}</span>` : ''}
                         ${elapsed ? `<span>${elapsed}</span>` : ''}
                     </div>
                     ${this.cardActions(game)}
@@ -1804,6 +1807,7 @@ const BrowsePage = {
                 </div>
                 <div class="game-card__footer">
                     <span>${progress}</span>
+                    ${game.spectators ? `<span class="game-card__spectators" title="${spectatorsLabel(game.spectators)}"><i class="fas fa-eye"></i> ${game.spectators}</span>` : ''}
                     ${elapsed ? `<span>${elapsed}</span>` : ''}
                 </div>
                 ${this.cardActions(game)}
@@ -1849,7 +1853,9 @@ const GameAnnouncer = {
             moveCount: mode === 'rush' ? rushManager.score : (gameEngine.moveHistory?.length || 0),
             players: lobby.active ? lobby.players.size : null,
             waiting: lobby.active && lobby.open,
-            ...this.position()
+            ...this.position(),
+            detail: SpectatorFeed.detail(mode),
+            history: SpectatorFeed.history()
         };
     },
 
@@ -1878,6 +1884,81 @@ const GameAnnouncer = {
         this.socket.emit('game:announce', data);
     }
 };
+
+/**
+ * Ce que les spectateurs voient en plus de la position : votes en cours,
+ * minuteur, historique et Puzzle Rush. Partie d'une chaîne : envoyé avec
+ * l'annonce ; Multi : envoyé par la chaîne dont c'est le tour (game:detail).
+ */
+const SpectatorFeed = {
+    lastMulti: null,
+
+    detail(mode) {
+        const d = { votes: [], timer: null, rush: null };
+        try {
+            d.votes = voting.getSortedResults().slice(0, 12).map(r => ({ m: r.move, n: r.count }));
+        } catch {}
+        if (timer.isRunning || timer.isPaused) {
+            d.timer = { left: timer.remaining, total: timer.duration, paused: !!timer.isPaused };
+        }
+        if (mode === 'rush') {
+            const s = rushManager.getState();
+            d.rush = { score: s.score, strikes: s.strikes, maxStrikes: s.maxStrikes,
+                rating: s.active ? s.targetRating : s.maxRating, mode: rushManager.config.mode };
+        }
+        return d;
+    },
+
+    history() {
+        return (gameEngine.moveHistory || []).map(m => m?.san).filter(Boolean).slice(-400);
+    },
+
+    /** Toutes les secondes : écoute des spectateurs sur les sockets de jeu, détail Multi */
+    start() {
+        setInterval(() => {
+            SpectatorsUI.bind(GameAnnouncer.socket);
+            const manager = window.multiplayerManager;
+            SpectatorsUI.bind(manager?.socket);
+            if (!manager?.gameId || !manager.socket?.connected) { this.lastMulti = null; return; }
+            const data = this.detail('chatVsChat');
+            const key = JSON.stringify(data);
+            if (key === this.lastMulti) return;
+            this.lastMulti = key;
+            manager.socket.emit('game:detail', data);
+        }, 1000);
+    }
+};
+
+/** Côté joueurs : badge 👁 dans la barre de la partie et panneau Spectateurs */
+const SpectatorsUI = {
+    data: null,
+
+    bind(socket) {
+        if (!socket || socket.__spectatorsBound) return;
+        socket.__spectatorsBound = true;
+        socket.on('spectators', (data) => this.render(data));
+    },
+
+    render(data) {
+        this.data = data && data.count ? data : null;
+        const count = this.data?.count || 0;
+        const badge = document.getElementById('spectators-badge');
+        if (badge) {
+            badge.hidden = !count;
+            badge.title = count ? spectatorsLabel(count) : '';
+            const n = document.getElementById('spectators-count');
+            if (n) n.textContent = String(count);
+        }
+        const panel = document.getElementById('spectators-panel');
+        if (panel) {
+            panel.hidden = !count;
+            const c = document.getElementById('spectators-panel-count');
+            if (c) c.textContent = count ? String(count) : '';
+            renderSpectatorList(document.getElementById('spectators-list'), this.data, null);
+        }
+    }
+};
+window.addEventListener('languageChanged', () => SpectatorsUI.render(SpectatorsUI.data));
 
 // ============================================
 // TOAST NOTIFICATIONS
@@ -2641,6 +2722,7 @@ const MultiRoom = {
 // INITIALISATION
 // ============================================
 async function initApp() {
+    SpectatorFeed.start();
     console.log('🚀 Phantom Twitchess - Initialisation...');
 
     // Charger la config sauvegardée

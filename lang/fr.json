@@ -460,9 +460,7 @@
     "badgeHint": "Le premier vote reçu est joué"
   },
   "watch": {
-    "title": "Spectateur",
     "flip": "Retourner l'échiquier",
-    "note": "Position en direct, sans le chat ni les votes.",
     "backToBrowse": "Voir les parties en cours",
     "notFound": "Cette partie n'est plus en cours.",
     "ended": "La partie est terminée ou le streamer l'a quittée.",
@@ -470,10 +468,29 @@
     "whiteToPlay": "Aux Blancs de jouer",
     "blackToPlay": "Aux Noirs de jouer",
     "loading": "Connexion…",
-    "moves": "Coups joués",
     "players": "Inscrits",
     "result_white": "1–0 · Victoire des Blancs",
     "result_black": "0–1 · Victoire des Noirs",
-    "result_draw": "½–½ · Partie nulle"
+    "result_draw": "½–½ · Partie nulle",
+    "bannerTitle": "Mode spectateur",
+    "bannerHint": "Tu vois la partie comme les joueurs, sans pouvoir jouer ni voter. Ils voient que tu regardes.",
+    "votesTitle": "Votes en cours",
+    "historyTitle": "Historique",
+    "noVotes": "Pas encore de vote sur ce tour.",
+    "noHistory": "Aucun coup joué.",
+    "totalOne": "{n} vote",
+    "totalMany": "{n} votes",
+    "rushToPlay": "Le chat cherche le bon coup…",
+    "movesCount": "{n} coups"
+  },
+  "spectators": {
+    "title": "Spectateurs",
+    "countOne": "{n} spectateur",
+    "countMany": "{n} spectateurs",
+    "none": "Personne ne regarde pour l'instant.",
+    "you": "(toi)",
+    "anonOne": "{n} anonyme",
+    "anonMany": "{n} anonymes",
+    "loginHint": "Connecte-toi à Twitch pour apparaître avec ton pseudo."
   }
 }

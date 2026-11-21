@@ -460,9 +460,7 @@
     "badgeHint": "The first vote received is played"
   },
   "watch": {
-    "title": "Spectator",
     "flip": "Flip board",
-    "note": "Live position, without the chat or votes.",
     "backToBrowse": "See live games",
     "notFound": "This game is no longer running.",
     "ended": "The game is over or the streamer left.",
@@ -470,10 +468,29 @@
     "whiteToPlay": "White to play",
     "blackToPlay": "Black to play",
     "loading": "Connecting…",
-    "moves": "Moves played",
     "players": "Signed up",
     "result_white": "1–0 · White wins",
     "result_black": "0–1 · Black wins",
-    "result_draw": "½–½ · Draw"
+    "result_draw": "½–½ · Draw",
+    "bannerTitle": "Spectator mode",
+    "bannerHint": "You see the game just like the players, without playing or voting. They can see you're watching.",
+    "votesTitle": "Current votes",
+    "historyTitle": "History",
+    "noVotes": "No votes yet this turn.",
+    "noHistory": "No moves played.",
+    "totalOne": "{n} vote",
+    "totalMany": "{n} votes",
+    "rushToPlay": "Chat is looking for the right move…",
+    "movesCount": "{n} moves"
+  },
+  "spectators": {
+    "title": "Spectators",
+    "countOne": "{n} spectator",
+    "countMany": "{n} spectators",
+    "none": "Nobody is watching yet.",
+    "you": "(you)",
+    "anonOne": "{n} anonymous",
+    "anonMany": "{n} anonymous",
+    "loginHint": "Log in with Twitch to appear with your username."
   }
 }

@@ -1,44 +1,63 @@
 /* ==================== Page spectateur ==================== */
+/* Même fenêtre que la partie (classes sandbox__*), en lecture seule */
 
-.watch {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 24px 16px 48px;
-}
+.watch__layout[hidden],
+.watch--message .watch__layout,
+.watch--message .spectator-banner,
+.watch--message .multi-banner,
+.watch--message .rush-banner { display: none !important; }
 
-.watch__head {
+.watch .multi-banner[hidden],
+.watch .rush-banner[hidden],
+.watch .sandbox__moves-panel[hidden] { display: none; }
+
+/* Bandeau « Mode spectateur » */
+.spectator-banner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
-    margin-bottom: 16px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(139, 92, 246, 0.10));
 }
 
-.watch__live {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+.spectator-banner__icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(6, 182, 212, 0.2);
+    color: var(--accent-cyan, #06b6d4);
+}
+
+.spectator-banner__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
     color: var(--text-secondary);
 }
 
-.watch__layout {
-    display: grid;
-    grid-template-columns: minmax(0, 560px) minmax(220px, 1fr);
-    gap: 24px;
-    align-items: start;
+.spectator-banner__text strong { color: var(--text-primary); font-size: 0.95rem; }
+.spectator-banner__live { flex-shrink: 0; }
+
+.multi-banner__teams .is-turn {
+    text-decoration: underline;
+    text-decoration-color: #8b5cf6;
+    text-underline-offset: 4px;
 }
 
-.watch__layout[hidden] { display: none; }
-
-.watch__board-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
+/* Coups disponibles : visibles mais pas cliquables */
+#watch-moves .moves-group button {
+    cursor: default;
+    opacity: 1;
+    pointer-events: none;
 }
 
 .watch__board { width: 100%; }
@@ -47,11 +66,69 @@
     box-shadow: inset 0 0 0 100px rgba(245, 200, 66, 0.42);
 }
 
+.watch .board-container { position: relative; }
+
+/* Minuteur du tour, en surimpression comme chez les joueurs */
+.watch__timer {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.watch__timer[hidden] { display: none; }
+
+.watch__timer-ring { width: 72px; height: 72px; }
+.watch__timer-ring svg { width: 100%; height: 100%; }
+
+.watch__timer-ring circle:first-child {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 4;
+}
+
+.watch__timer-ring circle:last-child {
+    fill: none;
+    stroke: #8a9b0f;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 283 283;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dasharray 0.25s linear;
+}
+
+.watch__timer.is-critical .watch__timer-ring circle:last-child { stroke: #e0245e; }
+.watch__timer.is-paused .watch__timer-ring circle:last-child { stroke: #ff9800; }
+
+.watch__timer-value {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    min-width: 56px;
+    text-align: center;
+}
+
+.watch__timer.is-paused .watch__timer-value { color: #ff9800; }
+
 .watch__player {
     display: flex;
     align-items: center;
     gap: 8px;
     min-height: 28px;
+    margin: 6px 0;
     font-weight: 600;
 }
 
@@ -72,53 +149,107 @@
 .watch__twitch { color: var(--twitch-purple); font-size: 0.85rem; }
 .watch__muted { color: var(--text-muted); font-style: italic; }
 
-.watch__info {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 18px;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    background: var(--bg-card);
-}
-
-.watch__mode {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-}
-
 .watch__status {
-    font-size: 1.1rem;
+    margin-bottom: 6px;
+    font-size: 1rem;
     font-weight: 600;
+    text-align: center;
     color: var(--accent-cyan);
 }
 
 .watch__status.is-over { color: var(--accent-orange); }
 
-.watch__meta {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin: 0;
-}
-
-.watch__meta div {
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--bg-input);
-}
-
-.watch__meta dt { font-size: 0.75rem; color: var(--text-muted); }
-.watch__meta dd { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 1.1rem; }
-
-.watch__note { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
-
 .watch__message { margin-top: 40px; }
+.watch__message[hidden] { display: none; }
 
-@media (max-width: 760px) {
-    .watch__layout { grid-template-columns: 1fr; }
+/* ==================== Spectateurs (joueurs et spectateurs) ==================== */
+
+.spectators-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    background: rgba(6, 182, 212, 0.12);
+    color: var(--accent-cyan, #06b6d4);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.spectators-badge[hidden],
+.spectators-panel[hidden] { display: none !important; }
+
+.spectators-panel__count {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-cyan, #06b6d4);
+}
+
+.spectators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.spectators__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    text-decoration: none;
+}
+
+a.spectators__chip:hover { border-color: rgba(6, 182, 212, 0.6); }
+.spectators__chip i { color: var(--text-muted); font-size: 0.7rem; }
+
+.spectators__chip.is-me {
+    border-color: rgba(6, 182, 212, 0.7);
+    background: rgba(6, 182, 212, 0.15);
+}
+
+.spectators__me {
+    font-size: 0.7rem;
+    color: var(--accent-cyan, #06b6d4);
+}
+
+.spectators__chip--anon { color: var(--text-secondary); font-style: italic; }
+
+.spectators__empty,
+.spectators__login {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.spectators__login { margin-top: 8px; }
+.spectators__login[hidden] { display: none; }
+
+.game-card__spectators {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--accent-cyan, #06b6d4);
+}
+
+@media (max-width: 600px) {
+    .spectator-banner__live { display: none; }
+}
+
+/* Grand écran : minuteur à côté de l'échiquier (comme dans la fenêtre des joueurs) */
+#page-watch .board-wrapper { container-type: inline-size; }
+
+#page-watch .watch__player,
+#page-watch .watch__status { max-width: 560px; margin-left: auto; margin-right: auto; }
+
+@container (min-width: 640px) {
+    #page-watch .board-container { max-width: min(560px, calc(100cqi - 220px)); }
+    #page-watch .watch__timer { top: 0; right: auto; left: calc(100% + 16px); }
 }

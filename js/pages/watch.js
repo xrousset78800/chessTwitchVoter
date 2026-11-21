@@ -1,21 +1,34 @@
 /**
  * Page spectateur : #/watch?g=<id public>
  *
- * Suit une partie listée dans Parcourir, en lecture seule. Le serveur ne donne
- * que l'identifiant public : le code d'un salon Multi privé n'est jamais exposé.
+ * La même fenêtre que les joueurs (coups disponibles, échiquier, minuteur, votes
+ * en cours, historique), en lecture seule. Le spectateur est compté par le serveur :
+ * les joueurs et les autres spectateurs voient qu'il regarde (avec son pseudo s'il
+ * est connecté à Twitch). Le serveur ne donne que l'identifiant public : le code
+ * d'un salon Multi privé n'est jamais exposé.
  */
+import twitchAuth from '../core/twitchAuth.js';
+import { renderSpectatorList, spectatorsLabel } from '../components/spectators.js';
+
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
-const MODE_LABEL = { multi: '⚔ Multi', rush: '🔥 Puzzle Rush', mono: '👥 Mono', sandbox: '🧪 Sandbox', problems: '🧩 Problèmes' };
+const MODE_LABEL = { multi: '⚔ Multi', rush: '🔥 Puzzle Rush', mono: '👥 Mono', sandbox: '🧪 Partie libre', problems: '🧩 Problèmes', chatVsChat: '⚔ Multi' };
+const VOTE_COLORS = ['#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'];
+const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
+const $ = (id) => document.getElementById(id);
+const clean = (m) => String(m || '').replace(/[+#]/g, '');
 
 const WatchPage = {
     socket: null,
     board: null,
     id: null,
     state: null,
+    spectators: null,
     flipped: false,
     bound: false,
+    timerEndsAt: null,
+    timerId: null,
 
     init() {
         this.bind();
@@ -25,7 +38,9 @@ const WatchPage = {
         this.stop();
         this.id = id;
         this.state = null;
+        this.spectators = null;
         this.flipped = false;
+        this.boardWidth = 0;
         if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) {
             this.showMessage('watch.notFound');
             return;
@@ -40,24 +55,32 @@ const WatchPage = {
     bind() {
         if (this.bound) return;
         this.bound = true;
-        document.getElementById('watch-flip')?.addEventListener('click', () => {
+        $('watch-flip')?.addEventListener('click', () => {
             this.flipped = !this.flipped;
             this.render();
         });
         window.addEventListener('resize', () => { if (this.socket) this.board?.resize(); });
-        window.addEventListener('languageChanged', () => { if (this.socket || this.state) this.render(); });
+        window.addEventListener('languageChanged', () => { if (this.socket || this.state) { this.render(); this.renderSpectators(); } });
     },
 
     connect() {
         if (typeof io !== 'function') { this.showMessage('watch.notFound'); return; }
         const socket = io({ transports: ['websocket', 'polling'] });
         this.socket = socket;
-        socket.on('connect', () => socket.emit('spectate:join', { id: this.id }));
+        // Le jeton Twitch ne sert qu'à afficher un pseudo vérifié dans la liste des spectateurs
+        socket.on('connect', () => socket.emit('spectate:join', { id: this.id, token: twitchAuth.token || undefined }));
         socket.on('spectate:state', (state) => {
             if (socket !== this.socket || state?.id !== this.id) return;
             this.state = state;
+            if (state.spectators) this.spectators = state.spectators;
             this.showMessage(null);
             this.render();
+            this.renderSpectators();
+        });
+        socket.on('spectators', (data) => {
+            if (socket !== this.socket || data?.id !== this.id) return;
+            this.spectators = data;
+            this.renderSpectators();
         });
         socket.on('spectate:ended', ({ reason } = {}) => {
             if (socket !== this.socket) return;
@@ -71,23 +94,24 @@ const WatchPage = {
         });
     },
 
-    /** Coupe le flux (quitter la page) */
+    /** Coupe le flux (quitter la page) : le serveur retire ce spectateur de la liste */
     stop(clearId = true) {
         if (this.socket) {
             try { this.socket.emit('spectate:leave'); } catch {}
             this.socket.disconnect();
             this.socket = null;
         }
+        this.setTimer(null);
         if (clearId) this.id = null;
     },
 
     showMessage(key) {
-        const box = document.getElementById('watch-message');
-        const layout = document.querySelector('#page-watch .watch__layout');
-        if (!box || !layout) return;
+        const box = $('watch-message');
+        const page = document.querySelector('#page-watch .watch');
+        if (!box || !page) return;
         box.hidden = !key;
-        layout.hidden = !!key;
-        if (key) document.getElementById('watch-message-title').textContent = t(key);
+        page.classList.toggle('watch--message', !!key);
+        if (key) $('watch-message-title').textContent = t(key);
     },
 
     orientation() {
@@ -97,7 +121,7 @@ const WatchPage = {
 
     render() {
         const s = this.state;
-        const el = document.getElementById('watch-board');
+        const el = $('watch-board');
         if (!el || typeof Chessboard !== 'function') return;
         const position = s?.fen ? s.fen.split(' ')[0] : 'start';
         if (!this.board) {
@@ -106,9 +130,21 @@ const WatchPage = {
             this.board.orientation(this.orientation());
             this.board.position(position, false);
         }
+        // Créé pendant que la page était masquée : l'échiquier prend la largeur de sa colonne
+        const width = el.clientWidth;
+        if (width && width !== this.boardWidth) {
+            this.boardWidth = width;
+            this.board.resize();
+        }
         this.highlight(s?.lastMove);
+        this.renderHeader();
         this.renderPlayers();
+        this.renderBanners();
+        this.renderMoves();
+        this.renderVotes();
+        this.renderHistory();
         this.renderStatus(false);
+        this.setTimer(s?.timer || null);
     },
 
     highlight(move) {
@@ -117,6 +153,14 @@ const WatchPage = {
         for (const sq of [move.from, move.to]) {
             if (/^[a-h][1-8]$/.test(sq || '')) document.querySelector(`#watch-board .square-${sq}`)?.classList.add('watch-last');
         }
+    },
+
+    renderHeader() {
+        const s = this.state || {};
+        const title = $('watch-mode');
+        if (!title) return;
+        const lock = s.isPublic === false ? ` <span class="game-card__private">🔒 ${esc(t('browsePage.private'))}</span>` : '';
+        title.innerHTML = `${esc(MODE_LABEL[s.mode] || MODE_LABEL.sandbox)}${lock}`;
     },
 
     player(name, color) {
@@ -129,8 +173,8 @@ const WatchPage = {
 
     renderPlayers() {
         const s = this.state || {};
-        const top = document.getElementById('watch-top');
-        const bottom = document.getElementById('watch-bottom');
+        const top = $('watch-top');
+        const bottom = $('watch-bottom');
         if (!top || !bottom) return;
         // Multi : hôte = Blancs, invité = Noirs. Sinon : la chaîne joue avec son chat.
         const whiteHtml = this.player(s.host, 'white');
@@ -142,26 +186,164 @@ const WatchPage = {
         bottom.hidden = !bottom.innerHTML;
     },
 
+    /** Bannières de la fenêtre de jeu : équipes du Multi, score du Puzzle Rush */
+    renderBanners() {
+        const s = this.state || {};
+        const multi = $('watch-multi');
+        if (multi) {
+            multi.hidden = s.mode !== 'multi';
+            const turn = s.fen?.split(' ')[1];
+            const team = (id, name, color) => {
+                const el = $(id);
+                if (!el) return;
+                el.textContent = name || t('browsePage.openSeat');
+                el.classList.toggle('is-turn', s.status === 'playing' && !s.result && turn === color);
+            };
+            team('watch-team-white', s.host, 'w');
+            team('watch-team-black', s.guest, 'b');
+        }
+        const rush = $('watch-rush');
+        if (rush) {
+            const r = s.rush;
+            rush.hidden = s.mode !== 'rush' || !r;
+            if (r) {
+                $('watch-rush-title').textContent = `🔥 Puzzle Rush · ${r.mode === '0' || !r.mode ? '∞' : `${r.mode} s`}`;
+                $('watch-rush-score').textContent = String(r.score);
+                $('watch-rush-rating').textContent = r.rating ? `~${r.rating}` : '—';
+                const lives = Math.max(0, r.maxStrikes - r.strikes);
+                $('watch-rush-hearts').innerHTML = Array.from({ length: r.maxStrikes }, (_, i) =>
+                    `<span class="rush-heart ${i < lives ? '' : 'rush-heart--lost'}">${i < lives ? '❤️' : '🖤'}</span>`).join('');
+            }
+        }
+    },
+
+    /** Coups disponibles, groupés par pièce comme chez les joueurs ; le plus voté ressort */
+    renderMoves() {
+        const list = $('watch-moves-list');
+        if (!list) return;
+        const fen = this.state?.fen;
+        let moves = [];
+        if (fen && typeof Chess === 'function' && !this.state?.result) {
+            try { moves = new Chess(fen).moves(); } catch { moves = []; }
+        }
+        const turn = fen?.split(' ')[1] === 'b' ? 'b' : 'w';
+        const top = clean(this.state?.votes?.[0]?.m);
+        const groups = { P: [], N: [], B: [], R: [], Q: [], K: [], O: [] };
+        moves.forEach(m => {
+            const c = clean(m);
+            if (c.startsWith('O-')) groups.O.push(c);
+            else if ('KQRBN'.includes(c[0])) groups[c[0]].push(c);
+            else groups.P.push(c);
+        });
+        list.innerHTML = Object.entries(groups).filter(([, g]) => g.length).map(([piece, g]) => `
+            <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : PIECE_ICONS[turn][piece]}</span>${
+                g.map(m => `<li class="${m === top ? 'most-voted' : ''}"><button type="button" tabindex="-1" disabled>${esc(m)}</button></li>`).join('')
+            }</ul>`).join('');
+        $('watch-moves').hidden = !moves.length;
+    },
+
+    renderVotes() {
+        const list = $('watch-votes');
+        const totalEl = $('watch-vote-total');
+        if (!list || !totalEl) return;
+        const votes = this.state?.votes || [];
+        const total = votes.reduce((n, v) => n + v.n, 0);
+        if (!total) {
+            list.innerHTML = `<div class="no-votes">${esc(t('watch.noVotes'))}</div>`;
+            totalEl.textContent = '';
+            return;
+        }
+        list.innerHTML = votes.map((v, i) => {
+            const pct = Math.round(v.n / total * 100);
+            const color = VOTE_COLORS[i % VOTE_COLORS.length];
+            return `<div class="vote-item" style="--color: ${color}">
+                <span class="vote-bar" style="width: ${pct}%; background: ${color}"></span>
+                <span class="vote-move">${esc(v.m)}</span>
+                <span class="vote-count">${v.n} (${pct}%)</span>
+            </div>`;
+        }).join('');
+        totalEl.textContent = t(total > 1 ? 'watch.totalMany' : 'watch.totalOne', { n: total });
+    },
+
+    renderHistory() {
+        const box = $('watch-history');
+        if (!box) return;
+        const h = this.state?.history || [];
+        if (!h.length) {
+            box.innerHTML = `<div class="empty-state"><p>${esc(t('watch.noHistory'))}</p></div>`;
+            return;
+        }
+        // Plus récent en haut, comme chez les joueurs
+        const rows = [];
+        for (let i = 0; i < h.length; i += 2) {
+            rows.push(`<div class="history-row">
+                <span class="history-row__number">${i / 2 + 1}.</span>
+                <span class="history-row__move">${esc(h[i])}</span>
+                <span class="history-row__move">${esc(h[i + 1] || '')}</span>
+            </div>`);
+        }
+        box.innerHTML = rows.reverse().join('');
+    },
+
+    renderSpectators() {
+        const d = this.spectators;
+        const count = d?.count || 0;
+        const badge = $('watch-spectators-badge');
+        if (badge) {
+            badge.hidden = !count;
+            badge.title = count ? spectatorsLabel(count) : '';
+            $('watch-spectators-count').textContent = String(count);
+        }
+        const c = $('watch-spectators-panel-count');
+        if (c) c.textContent = count ? String(count) : '';
+        renderSpectatorList($('watch-spectators'), d, twitchAuth.session?.login || null);
+        const hint = $('watch-login-hint');
+        if (hint) hint.hidden = !!twitchAuth.token;
+    },
+
+    /** Minuteur du tour : le serveur donne le temps restant, le décompte se fait ici */
+    setTimer(timer) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+        const box = $('watch-timer');
+        if (!box) return;
+        if (!timer || this.state?.result) {
+            box.hidden = true;
+            this.timerEndsAt = null;
+            return;
+        }
+        box.hidden = false;
+        box.classList.toggle('is-paused', !!timer.paused);
+        const total = Math.max(1, timer.total || 1);
+        this.timerEndsAt = timer.paused ? null : Date.now() + timer.endsIn;
+        const draw = () => {
+            const left = timer.paused ? (timer.left ?? 0) : Math.max(0, Math.ceil((this.timerEndsAt - Date.now()) / 1000));
+            $('watch-timer-value').textContent = `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}${timer.paused ? ' ⏸' : ''}`;
+            const arc = $('watch-timer-arc');
+            if (arc) arc.style.strokeDasharray = `${Math.min(1, left / total) * 283} 283`;
+            box.classList.toggle('is-critical', !timer.paused && left <= 5);
+            if (!timer.paused && left <= 0) { clearInterval(this.timerId); this.timerId = null; }
+        };
+        draw();
+        if (!timer.paused) this.timerId = setInterval(draw, 250);
+    },
+
     renderStatus(ended) {
         const s = this.state || {};
-        const mode = document.getElementById('watch-mode');
-        const status = document.getElementById('watch-status');
-        const meta = document.getElementById('watch-meta');
-        if (!mode || !status || !meta) return;
-        mode.innerHTML = `${esc(MODE_LABEL[s.mode] || s.mode || '')}${s.isPublic === false ? ` <span class="game-card__private">🔒 ${esc(t('browsePage.private'))}</span>` : ''}`;
-
+        const status = $('watch-status');
+        if (!status) return;
         let text;
         if (['white', 'black', 'draw'].includes(s.result)) text = t(`watch.result_${s.result}`);
         else if (ended) text = t('watch.ended');
         else if (s.status === 'waiting') text = t('watch.waiting');
+        else if (s.mode === 'rush') text = t('watch.rushToPlay');
         else if (s.fen) text = s.fen.split(' ')[1] === 'b' ? t('watch.blackToPlay') : t('watch.whiteToPlay');
         else text = t('watch.loading');
-        status.textContent = text;
+        const moves = s.mode === 'rush' ? '' : ` · ${t('watch.movesCount', { n: s.moveCount ?? 0 })}`;
+        const players = s.players != null ? ` · ${s.players} ${t('watch.players').toLowerCase()}` : '';
+        status.textContent = text + (s.result || ended ? '' : moves + players);
         status.classList.toggle('is-over', !!(s.result || ended));
-
-        const rows = [[t('watch.moves'), String(s.moveCount ?? 0)]];
-        if (s.players != null) rows.push([t('watch.players'), String(s.players)]);
-        meta.innerHTML = rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+        if (ended) this.setTimer(null);
     }
 };
 

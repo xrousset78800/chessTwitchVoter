@@ -141,6 +141,7 @@
                         <h1 class="sandbox__title">🧪 Sandbox</h1>
                     </div>
                     <div class="sandbox__actions game-toolbar">
+                        <span class="spectators-badge game-only" id="spectators-badge" hidden><i class="fas fa-eye"></i> <span id="spectators-count">0</span></span>
                         <button class="btn btn--sm" id="btn-wheel-style" data-i18n-title="setup.wheelStyle" title="Style de roue"><i class="fas fa-dharmachakra"></i> <span id="wheel-style-label"></span></button>
                         <button class="btn btn--sm tool-btn" id="btn-flip" data-i18n-title="actions.reverse" title="Retourner"><i class="fas fa-sync-alt"></i></button>
                         <button class="btn btn--sm tool-btn" id="btn-reset" data-i18n-title="actions.reset" title="Réinitialiser"><i class="fas fa-undo"></i></button>
@@ -463,6 +464,12 @@
                     </div>  
                     <!-- Sidebar -->
                     <div class="sandbox__sidebar">
+                        <div class="panel spectators-panel" id="spectators-panel" hidden>
+                            <div class="panel__header"><i class="fas fa-eye"></i> <span data-i18n="spectators.title">Spectateurs</span> <span class="spectators-panel__count" id="spectators-panel-count"></span></div>
+                            <div class="panel__content">
+                                <div class="spectators" id="spectators-list"></div>
+                            </div>
+                        </div>
                         <div class="panel" id="roster-panel" style="display:none;">
                             <div class="panel__header"><i class="fas fa-users"></i> <span data-i18n="roster.title">Joueurs inscrits</span></div>
                             <div class="panel__content">
@@ -663,25 +670,88 @@
 
         <!-- ==================== SPECTATEUR ==================== -->
         <div class="page" id="page-watch">
-            <div class="watch">
-                <div class="watch__head">
-                    <a href="#/browse" class="btn btn--sm btn--ghost"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.browse">Parcourir</span></a>
-                    <span class="watch__live"><span class="browse__live-dot"></span> <span data-i18n="watch.title">Spectateur</span></span>
+            <div class="sandbox watch">
+                <div class="sandbox__header">
+                    <div class="sandbox__title-area">
+                        <a href="#/browse" class="btn btn--icon" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-arrow-left"></i></a>
+                        <h1 class="sandbox__title" id="watch-mode"></h1>
+                    </div>
+                    <div class="sandbox__actions">
+                        <span class="spectators-badge" id="watch-spectators-badge" hidden><i class="fas fa-eye"></i> <span id="watch-spectators-count">0</span></span>
+                        <button type="button" class="btn btn--sm tool-btn" id="watch-flip" data-i18n-title="watch.flip" title="Retourner l'échiquier"><i class="fas fa-sync-alt"></i></button>
+                    </div>
                 </div>
-                <div class="watch__layout">
-                    <div class="watch__board-wrap">
+
+                <!-- Tout le monde sait qui regarde : le spectateur, les joueurs et les autres spectateurs -->
+                <div class="spectator-banner" id="watch-banner">
+                    <span class="spectator-banner__icon"><i class="fas fa-eye"></i></span>
+                    <span class="spectator-banner__text">
+                        <strong data-i18n="watch.bannerTitle">Mode spectateur</strong>
+                        <span data-i18n="watch.bannerHint">Tu vois la partie comme les joueurs, sans pouvoir jouer ni voter. Ils voient que tu regardes.</span>
+                    </span>
+                    <span class="badge badge--live spectator-banner__live">● LIVE</span>
+                </div>
+
+                <div class="multi-banner" id="watch-multi" hidden>
+                    <div class="multi-banner__teams">
+                        <span class="multi-banner__team--white" id="watch-team-white">—</span>
+                        <span class="multi-banner__vs">⚔</span>
+                        <span class="multi-banner__team--black" id="watch-team-black">—</span>
+                    </div>
+                </div>
+
+                <div class="rush-banner" id="watch-rush" hidden>
+                    <span class="rush-banner__title" id="watch-rush-title">🔥 Puzzle Rush</span>
+                    <span class="rush-banner__stat"><span class="rush-banner__label">Score</span><span class="rush-banner__value" id="watch-rush-score">0</span></span>
+                    <span class="rush-banner__stat rush-banner__hearts" id="watch-rush-hearts"></span>
+                    <span class="rush-banner__stat"><span class="rush-banner__label">Rating</span><span class="rush-banner__value" id="watch-rush-rating">—</span></span>
+                </div>
+
+                <div class="sandbox__content watch__layout">
+                    <!-- Coups disponibles : les mêmes que les joueurs, sans pouvoir cliquer -->
+                    <aside class="sandbox__moves-panel is-locked" id="watch-moves">
+                        <div class="moves-panel__content" id="watch-moves-list"></div>
+                    </aside>
+
+                    <div class="sandbox__main">
+                        <div class="watch__status" id="watch-status"></div>
                         <div class="watch__player watch__player--top" id="watch-top"></div>
-                        <div id="watch-board" class="watch__board"></div>
+                        <div class="board-wrapper">
+                            <div class="board-container">
+                                <div id="watch-board" class="watch__board"></div>
+                                <div class="watch__timer" id="watch-timer" hidden>
+                                    <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="watch-timer-arc"></circle></svg></div>
+                                    <div class="watch__timer-value" id="watch-timer-value">--:--</div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="watch__player watch__player--bottom" id="watch-bottom"></div>
                     </div>
-                    <aside class="watch__info">
-                        <div class="watch__mode" id="watch-mode"></div>
-                        <div class="watch__status" id="watch-status"></div>
-                        <dl class="watch__meta" id="watch-meta"></dl>
-                        <button type="button" class="btn btn--sm" id="watch-flip"><i class="fas fa-retweet"></i> <span data-i18n="watch.flip">Retourner l'échiquier</span></button>
-                        <p class="watch__note" data-i18n="watch.note">Position en direct, sans le chat ni les votes.</p>
-                    </aside>
+
+                    <div class="sandbox__sidebar">
+                        <div class="panel spectators-panel">
+                            <div class="panel__header"><i class="fas fa-eye"></i> <span data-i18n="spectators.title">Spectateurs</span> <span class="spectators-panel__count" id="watch-spectators-panel-count"></span></div>
+                            <div class="panel__content">
+                                <div class="spectators" id="watch-spectators"></div>
+                                <p class="spectators__login" id="watch-login-hint" hidden data-i18n="spectators.loginHint">Connecte-toi à Twitch pour apparaître avec ton pseudo.</p>
+                            </div>
+                        </div>
+                        <div class="panel" id="watch-votes-panel">
+                            <div class="panel__header"><i class="fas fa-poll"></i> <span data-i18n="watch.votesTitle">Votes en cours</span></div>
+                            <div class="panel__content">
+                                <div class="vote-list" id="watch-votes"></div>
+                                <div class="vote-total" id="watch-vote-total"></div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel__header"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span></div>
+                            <div class="panel__content">
+                                <div class="history-list" id="watch-history"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="watch__message empty-state" id="watch-message" hidden>
                     <div class="empty-state__icon">👀</div>
                     <p class="empty-state__title" id="watch-message-title"></p>

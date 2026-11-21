@@ -467,6 +467,7 @@ function launchMultiRoom(room) {
     });
     console.log(`Partie multi lancée : ${room.a} vs ${room.b}`);
     emitSpectate(games[room.gameId]);
+    if (watchers.has(room.publicId)) emitSpectators(room.publicId);
     broadcastGamesList();
 }
 
@@ -509,6 +510,7 @@ function getPublicGamesList() {
         mode:      'multi',
         players:   null,
         isPublic:  r.isPublic,
+        spectators: watchers.get(r.publicId)?.size || 0,
         join:      r.isPublic && !r.b ? { host: r.a, code: r.gameId.slice(r.a.length + 1) } : null
     }));
     const live = Object.values(games)
@@ -524,6 +526,7 @@ function getPublicGamesList() {
             mode:       g.mode || 'multi',
             players:    g.players ?? null,
             isPublic:   g.isPublic ?? true,
+            spectators: watchers.get(g.publicId)?.size || 0,
             join:       null
         }));
     return rooms.concat(live);
@@ -548,8 +551,98 @@ function spectateState(g) {
         orientation: g.orientation === 'black' ? 'black' : 'white',
         players:     g.players ?? null,
         isPublic:    g.isPublic ?? true,
-        result:      g.result || null
+        result:      g.result || null,
+        // Ce que voient les joueurs : votes en cours, minuteur, historique, Puzzle Rush
+        votes:       g.detail?.votes || [],
+        timer:       g.detail?.timer ? { endsIn: Math.max(0, g.detail.timer.endsAt - Date.now()), total: g.detail.timer.total, paused: !!g.detail.timer.paused, left: g.detail.timer.left } : null,
+        history:     g.history || [],
+        rush:        g.detail?.rush || null,
+        spectators:  spectatorsOf(g.publicId)
     };
+}
+
+/** Clé de comparaison : le temps qui s'écoule seul ne compte pas comme un changement */
+function spectateKey(g) {
+    const s = spectateState(g);
+    s.timer = s.timer && { ...s.timer, endsIn: Math.round(s.timer.endsIn / 2000) };
+    return JSON.stringify(s);
+}
+
+// ---------- Détail publié par le navigateur d'un joueur ----------
+const SAN_RE = /^(?:O-O(?:-O)?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?)[+#]?$/;
+const clampInt = (v, min, max) => Math.min(Math.max(parseInt(v, 10) || 0, min), max);
+
+function sanitizeDetail(data = {}, prev = null) {
+    if (!data || typeof data !== 'object') return null;
+    const votes = (Array.isArray(data.votes) ? data.votes : []).slice(0, 12)
+        .map(v => ({ m: String(v?.m || ''), n: clampInt(v?.n, 0, 99999) }))
+        .filter(v => SAN_RE.test(v.m) && v.n > 0);
+    let timer = null;
+    if (data.timer && typeof data.timer === 'object') {
+        const left   = clampInt(data.timer.left, 0, 3600);
+        const total  = clampInt(data.timer.total, 1, 3600);
+        const paused = !!data.timer.paused;
+        const endsAt = Date.now() + left * 1000;
+        // Même échéance à ±1,5 s près : on garde l'ancienne (pas de renvoi chaque seconde)
+        const keep = prev?.timer && !paused && !prev.timer.paused && prev.timer.total === total && Math.abs(prev.timer.endsAt - endsAt) < 1500;
+        timer = keep ? prev.timer : { endsAt, total, paused, left: paused ? left : null };
+    }
+    let rush = null;
+    if (data.rush && typeof data.rush === 'object') {
+        rush = {
+            score:      clampInt(data.rush.score, 0, 9999),
+            strikes:    clampInt(data.rush.strikes, 0, 10),
+            maxStrikes: clampInt(data.rush.maxStrikes, 1, 10),
+            rating:     clampInt(data.rush.rating, 0, 4000),
+            mode:       ['0', '30', '60', '120'].includes(String(data.rush.mode)) ? String(data.rush.mode) : null
+        };
+    }
+    return { votes, timer, rush };
+}
+
+const sanitizeHistory = (h) => Array.isArray(h) ? h.slice(-400).map(String).filter(m => SAN_RE.test(m)) : null;
+
+// ---------- Spectateurs : qui regarde quelle partie ----------
+const watchers = new Map();   // publicId -> Map(socketId -> login | null)
+
+function spectatorsOf(publicId) {
+    const m = watchers.get(publicId);
+    if (!m) return { count: 0, names: [], anon: 0 };
+    const values = [...m.values()];
+    const logins = [...new Set(values.filter(Boolean))].sort();
+    return { count: m.size, names: logins.slice(0, 40), anon: values.filter(l => !l).length };
+}
+
+/** Sockets des joueurs d'une partie (pour leur dire qui les regarde) */
+function playerSockets(publicId) {
+    const room = Object.values(multiRooms).find(r => r.publicId === publicId);
+    if (room) return Object.values(room.sockets);
+    const entry = Object.entries(games).find(([, g]) => g.publicId === publicId && g.status !== 'ended');
+    if (!entry) return [];
+    const [id, g] = entry;
+    if (id.startsWith('live-') && !g.sim) return [id.slice(5)];
+    return [g.hostSocket, g.guestSocket].filter(Boolean);
+}
+
+function emitSpectators(publicId) {
+    if (!publicId) return;
+    const payload = { id: publicId, ...spectatorsOf(publicId) };
+    io.to('spec:' + publicId).emit('spectators', payload);
+    playerSockets(publicId).forEach(sid => io.to(sid).emit('spectators', payload));
+    broadcastGamesList();
+}
+
+function unwatch(socket) {
+    const id = socket.data.spectating;
+    if (!id) return;
+    socket.leave('spec:' + id);
+    socket.data.spectating = null;
+    const m = watchers.get(id);
+    if (m) {
+        m.delete(socket.id);
+        if (!m.size) watchers.delete(id);
+    }
+    emitSpectators(id);
 }
 
 function findByPublicId(id) {
@@ -584,20 +677,31 @@ io.on('connection', (socket) => {
     });
 
     // Regarder une partie de Parcourir (lecture seule)
-    socket.on('spectate:join', (data = {}) => {
-        if (socket.data.spectating) socket.leave('spec:' + socket.data.spectating);
-        socket.data.spectating = null;
+    socket.on('spectate:join', async (data = {}) => {
+        unwatch(socket);
         const g = findByPublicId(String(data.id || ''));
         if (!g) return socket.emit('spectate:ended', { reason: 'notFound' });
-        socket.data.spectating = g.publicId;
-        socket.join('spec:' + g.publicId);
+        const id = g.publicId;
+        socket.data.spectating = id;
+        socket.join('spec:' + id);
+        if (!watchers.has(id)) watchers.set(id, new Map());
+        watchers.get(id).set(socket.id, null);
         socket.emit('spectate:state', spectateState(g));
+        emitSpectators(id);
+        // Connecté à Twitch : son pseudo (vérifié) apparaît dans la liste des spectateurs
+        if (typeof data.token === 'string' && data.token) {
+            try {
+                const { login } = await verifyTwitchToken(data.token);
+                const m = watchers.get(id);
+                if (m?.has(socket.id) && socket.data.spectating === id) {
+                    m.set(socket.id, login);
+                    emitSpectators(id);
+                }
+            } catch { /* reste anonyme */ }
+        }
     });
 
-    socket.on('spectate:leave', () => {
-        if (socket.data.spectating) socket.leave('spec:' + socket.data.spectating);
-        socket.data.spectating = null;
-    });
+    socket.on('spectate:leave', () => unwatch(socket));
 
     // Partie d'une seule chaîne (Mono, Rush, partie libre) : le navigateur du streamer
     // en publie un résumé pour Parcourir. Une entrée par connexion, retirée à la déconnexion.
@@ -622,13 +726,28 @@ io.on('connection', (socket) => {
             moveCount: Math.min(Math.max(parseInt(data.moveCount, 10) || 0, 0), 99999),
             players:   Number.isInteger(data.players) ? Math.min(Math.max(data.players, 0), 99999) : null,
             startedAt: prev?.startedAt || Date.now(),
-            settings:  null
+            settings:  null,
+            detail:    sanitizeDetail(data.detail, prev?.detail),
+            history:   sanitizeHistory(data.history) || prev?.history || []
         };
         const g = games[id];
         // La position change souvent : seuls les spectateurs la reçoivent
         const pub = (x) => x && [x.host, x.mode, x.status, x.moveCount, x.players].join('|');
         if (!prev || pub(prev) !== pub(g)) broadcastGamesList();
-        if (!prev || JSON.stringify(spectateState(prev)) !== JSON.stringify(spectateState(g))) emitSpectate(g);
+        if (!prev || spectateKey(prev) !== spectateKey(g)) emitSpectate(g);
+        if (!prev && watchers.has(g.publicId)) socket.emit('spectators', { id: g.publicId, ...spectatorsOf(g.publicId) });
+    });
+
+    // Multi : le navigateur dont c'est le tour publie ses votes et son minuteur
+    socket.on('game:detail', (data = {}) => {
+        const g = Object.values(games).find(x => x.status === 'playing' && (x.hostSocket === socket.id || x.guestSocket === socket.id));
+        if (!g) return;
+        const turn = (g.lastFen || 'x w').split(' ')[1];
+        const mine = socket.id === g.hostSocket ? 'w' : 'b';
+        if (turn !== mine) return;
+        const before = spectateKey(g);
+        g.detail = sanitizeDetail(data, g.detail);
+        if (spectateKey(g) !== before) emitSpectate(g);
     });
 
     socket.on('multi:enter', async (data = {}) => {
@@ -683,6 +802,7 @@ io.on('connection', (socket) => {
         emitMultiRoom(room);
         emitSpectate(room);
         broadcastGamesList();
+        if (watchers.has(room.publicId)) socket.emit('spectators', { id: room.publicId, ...spectatorsOf(room.publicId) });
     });
 
     socket.on('chat:message', (data) => {
@@ -723,10 +843,15 @@ io.on('connection', (socket) => {
                 let lastMove = null;
                 try {
                     const m = new Chess(game.lastFen || undefined).move(String(data.move || ''));
-                    if (m) lastMove = { from: m.from, to: m.to };
+                    if (m) {
+                        lastMove = { from: m.from, to: m.to };
+                        (game.history ||= []).push(m.san);
+                        if (game.history.length > 400) game.history.shift();
+                    }
                 } catch { /* coup illisible : pas de surlignage */ }
                 game.lastFen  = data.fen;
                 game.lastMove = lastMove;
+                game.detail   = null;   // au tour de l'autre chaîne de voter
             }
             game.moveCount = (game.moveCount || 0) + 1;
             // Mat, pat ou nulle : le résultat de la bataille est enregistré
@@ -755,6 +880,7 @@ io.on('connection', (socket) => {
     
     socket.on('disconnect', () => {
         console.log('Déconnexion:', socket.id);
+        unwatch(socket);
         leaveMultiRoom(socket);
         if (games[`live-${socket.id}`]) {
             io.to('spec:' + games[`live-${socket.id}`].publicId).emit('spectate:ended', { reason: 'left' });
