@@ -1,6 +1,6 @@
 /**
  * 🧩 PROBLEMS MANAGER v3 - CORRECTIONS COMPLÈTES
- * 
+ *
  * CORRECTIONS:
  * - Pas de modale, utilise le timer existant
  * - Pas de double timer (clearInterval correct)
@@ -17,7 +17,7 @@ class ProblemsManager {
         this.currentProblem = null;
         this.attemptIndex = 0;
         this.isActive = false;
-        
+
         // Timer de pause entre problèmes
         this.pauseTimerId = null;
         this.votingTimerId = null;
@@ -28,11 +28,11 @@ class ProblemsManager {
         // Filtres
         this.selectedThemes = new Set();
         this.themeStats = {};
-        
+
         // Références externes
         this.chess = null;
         this.board = null;
-        
+
         // Configuration
         this.config = {
             csvPath: 'js/problemsV2.csv',
@@ -44,7 +44,7 @@ class ProblemsManager {
             wheelDuration: 5,
             votesPerViewer: 1,
         };
-        
+
         // Callbacks
         this.onProblemLoaded = null;
         this.onCorrectMove = null;
@@ -57,10 +57,10 @@ class ProblemsManager {
 
         // Puzzle Rush : fournit le prochain puzzle (null = plus rien, false = ignorer l'appel)
         this.nextProblemProvider = null;
-        
+
         // Sons
         this.sounds = {};
-        
+
         console.log('🧩 ProblemsManager v3 initialisé');
     }
 
@@ -70,7 +70,7 @@ class ProblemsManager {
         if (options.chess) this.chess = options.chess;
         if (options.board) this.board = options.board;
         if (options.config) Object.assign(this.config, options.config);
-        
+
         this.loadSounds();
         console.log('🧩 ProblemsManager configuré, pauseAfterEnd:', this.config.pauseAfterEnd);
     }
@@ -94,16 +94,16 @@ class ProblemsManager {
     async loadProblems(csvPath = null) {
         const path = csvPath || this.config.csvPath;
         console.log('🧩 Chargement:', path);
-        
+
         try {
             const response = await fetch(path);
             const data = await response.text();
             const lines = data.split('\n').filter(line => line.trim());
             const parsed = lines.map(line => this.parseCSVLine(line));
-            
+
             this.problems = parsed.slice(1).filter(row => row.length >= 3);
             console.log(`✅ ${this.problems.length} problèmes chargés`);
-            
+
             this.analyzeThemes();
             return this.problems.length;
         } catch (error) {
@@ -116,7 +116,7 @@ class ProblemsManager {
         const result = [];
         let current = '';
         let inQuotes = false;
-        
+
         for (const char of line) {
             if (char === '"') {
                 inQuotes = !inQuotes;
@@ -133,13 +133,13 @@ class ProblemsManager {
 
     analyzeThemes() {
         this.themeStats = {};
-        
+
         for (const problem of this.problems) {
             const themesStr = (problem[7] || '').replace(/^"|"$/g, '');
-            const themes = themesStr.includes(',') 
+            const themes = themesStr.includes(',')
                 ? themesStr.split(',').map(t => t.trim())
                 : themesStr.split(' ').map(t => t.trim());
-            
+
             for (const theme of themes) {
                 if (theme) {
                     this.themeStats[theme] = (this.themeStats[theme] || 0) + 1;
@@ -152,13 +152,13 @@ class ProblemsManager {
 
     getFilteredProblems() {
         if (this.selectedThemes.size === 0) return this.problems;
-        
+
         return this.problems.filter(problem => {
             const themesStr = (problem[7] || '').replace(/^"|"$/g, '');
             const themes = themesStr.includes(',')
                 ? themesStr.split(',').map(t => t.trim())
                 : themesStr.split(' ').map(t => t.trim());
-            
+
             return themes.some(t => this.selectedThemes.has(t));
         });
     }
@@ -194,14 +194,14 @@ class ProblemsManager {
             }
             return this.loadProblem(next);
         }
-        
+
         const filtered = this.getFilteredProblems();
-        
+
         if (filtered.length === 0) {
             console.warn('⚠️ Aucun problème disponible');
             return null;
         }
-        
+
         const problem = filtered[Math.floor(Math.random() * filtered.length)];
         return this.loadProblem(problem);
     }
@@ -241,7 +241,7 @@ class ProblemsManager {
 
         // Orientation
         const orientation = this.chess?.turn() === 'b' ? 'white' : 'black';
-        
+
         if (this.board) {
             this.board.position(this.currentProblem.fen, false);
             this.board.orientation(orientation);
@@ -273,7 +273,7 @@ class ProblemsManager {
 
     playBotMove() {
         if (!this.isActive || !this.currentProblem) return null;
-        
+
         if (this.attemptIndex % 2 !== 0) {
             console.warn('🧩 Ce n\'est pas le tour du bot');
             return null;
@@ -368,7 +368,7 @@ cancelVotingTimer() {
 receiveVote(voteData) {
     const rawMove = typeof voteData === 'string' ? voteData : voteData.move;
     const username = typeof voteData === 'string' ? 'anonyme' : (voteData.displayName || voteData.username || 'anonyme');
-    
+
     if (!this.votingOpen) {
         console.log('🗳️ Vote rejeté : votes fermés');
         return false;
@@ -377,7 +377,7 @@ receiveVote(voteData) {
         console.log('🗳️ Vote rejeté : pas le tour du joueur');
         return false;
     }
-    
+
     // "kh1" → "Kh1" : on résout contre les coups légaux (casse ignorée).
     // Un coup illégal n'est pas un vote.
     const resolved = matchLegalMove(this.chess, rawMove);
@@ -400,31 +400,33 @@ receiveVote(voteData) {
 
     this.votesForCurrentTurn.push({ move, username, login, name: voteData.displayName || username });
     console.log(`🗳️ Vote enregistré: ${move} par ${username} (total: ${this.votesForCurrentTurn.length})`);
-    
+
     // Log dans la sidebar
     if (window.VoteLog) window.VoteLog.add(username, move);
-    
+
     this.syncWheelDisplay();
-    
+
     if (!this.config.timerEnabled) {
         this.votingOpen = false;
         const result = this.validateAndPlayMove(move);
         if (result && result.valid === false) this.votingOpen = true; // coup non jouable : on reste ouvert
     }
-    
+
     return true;
 }
 
 syncWheelDisplay() {
-    const wheel = window.gameEngine?.votingWheel;
-    if (!wheel || wheel.isSpinning) return;
-
     const counts = {};
     this.votesForCurrentTurn.forEach(v => {
         const mv = typeof v === 'string' ? v : v.move;
         counts[mv] = (counts[mv] || 0) + 1;
     });
 
+    // Flèche du coup en tête sur l'échiquier, comme dans les autres modes
+    this.showLeadArrow(counts);
+
+    const wheel = window.gameEngine?.votingWheel;
+    if (!wheel || wheel.isSpinning) return;
     if (Object.keys(counts).length === 0) return;
 
     wheel.votes.clear();
@@ -436,6 +438,15 @@ syncWheelDisplay() {
     wheel.updateVoteList();
     // Mode problèmes/rush : toujours majorité, la roue reste masquée
 }
+/** Flèche « coup en tête » (ou rien sans vote) ; ne touche pas à la flèche du coup joué */
+showLeadArrow(counts = {}) {
+    const ge = window.gameEngine;
+    if (!ge?.showLeadArrow) return;
+    const results = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([move, count]) => ({ move, count }));
+    if (!results.length && ge.annotations?.overlay?.kind !== 'lead') return;
+    ge.showLeadArrow(results);
+}
+
 resolveVotes() {
     const counts = {};
     this.votesForCurrentTurn.forEach(v => {
@@ -445,7 +456,7 @@ resolveVotes() {
 
     // Mode problèmes : TOUJOURS majorité, jamais de roue
     if (Object.keys(counts).length === 0) return null;
-    
+
     return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
     validateAndPlayMove(move) {
@@ -467,7 +478,7 @@ resolveVotes() {
         console.log(`🎯 Coup attendu:`, expectedUCI);
 
         let playedUCI = this.normalizeToUCI(move);
-        
+
         if (!playedUCI) {
             return { valid: false, correct: false, reason: 'Format de coup invalide' };
         }
@@ -480,7 +491,7 @@ resolveVotes() {
         if (isCorrect) {
             const moveObj = this.uciToMoveObject(expectedUCI);
             const result = this.chess?.move(moveObj);
-            
+
             if (!result) {
                 console.error('❌ Coup devrait être légal mais échoue');
                 return { valid: false, correct: false, reason: 'Erreur interne' };
@@ -498,6 +509,7 @@ resolveVotes() {
             this.cancelVotingTimer();
             document.body.classList.remove('showTimer');
             this.votesForCurrentTurn = [];
+            this.showLeadArrow();
 
             // Reset de la roue
             const wheel = window.gameEngine?.votingWheel;
@@ -565,7 +577,7 @@ resolveVotes() {
         // Sinon, mise à jour manuelle
         const moves = this.chess?.moves() || [];
         const groups = {};
-        
+
         moves.forEach(move => {
             let key;
             if (move.startsWith('O-O')) {
@@ -578,17 +590,17 @@ resolveVotes() {
             if (!groups[key]) groups[key] = [];
             groups[key].push(move);
         });
-        
+
         const order = ['P', 'N', 'B', 'R', 'Q', 'K', 'O'];
-        
+
         order.forEach(piece => {
             const list = document.getElementById(`availableList${piece}`);
             if (!list) return;
-            
+
             const icon = list.querySelector('.piece-icon');
             list.innerHTML = '';
             if (icon) list.appendChild(icon);
-            
+
             if (groups[piece]) {
                 groups[piece].forEach(move => {
                     const li = document.createElement('li');
@@ -608,7 +620,7 @@ resolveVotes() {
                 });
             }
         });
-        
+
         console.log('📋 Coups disponibles mis à jour:', moves.length, 'coups');
     }
 
@@ -684,7 +696,7 @@ resolveVotes() {
 
     uciToMoveObject(uci) {
         if (!uci || uci.length < 4) return null;
-        
+
         return {
             from: uci.slice(0, 2),
             to: uci.slice(2, 4),
@@ -695,7 +707,7 @@ resolveVotes() {
     uciToSAN(uci) {
         const moveObj = this.uciToMoveObject(uci);
         if (!moveObj) return uci;
-        
+
         try {
             const result = this.chess?.move(moveObj);
             if (result) {
@@ -704,13 +716,14 @@ resolveVotes() {
                 return san;
             }
         } catch (e) {}
-        
+
         return uci;
     }
 
     // ========== FIN DE PROBLÈME ==========
 _resetWheel() {
     this.votesForCurrentTurn = [];
+    this.showLeadArrow();
     const wheel = window.gameEngine?.votingWheel;
     if (wheel) {
         wheel.isSpinning = false;
@@ -788,10 +801,10 @@ skipPause() {
     showTimerMessage(status, seconds) {
         const timerValue = document.getElementById('timer-value');
         if (!timerValue) return;
-        
+
         const icon = status === 'solved' ? '🎉' : '💔';
         const text = status === 'solved' ? 'Résolu!' : 'Raté!';
-        
+
         timerValue.innerHTML = `
             <div class="problem-timer-message problem-timer-message--${status}">
                 <span class="problem-timer-icon">${icon}</span>
@@ -799,7 +812,7 @@ skipPause() {
                 <span class="problem-timer-countdown">${seconds}s</span>
             </div>
         `;
-        
+
         // Ajouter un bouton skip si pas déjà présent
         let skipBtn = document.getElementById('problem-skip-btn');
         if (!skipBtn) {
@@ -817,7 +830,7 @@ skipPause() {
         if (timerValue) {
             timerValue.innerHTML = '';
         }
-        
+
         // Retirer le bouton skip
         document.getElementById('problem-skip-btn')?.remove();
     }
@@ -827,12 +840,12 @@ skipPause() {
     highlightSquares(from, to, type = 'player') {
         // Retirer les anciens highlights
         this.clearHighlights();
-        
+
         const className = `highlight-${type}`;
-        
+
         const fromSquare = document.querySelector(`[data-square="${from}"]`);
         const toSquare = document.querySelector(`[data-square="${to}"]`);
-        
+
         if (fromSquare) fromSquare.classList.add(className);
         if (toSquare) toSquare.classList.add(className);
     }
@@ -891,14 +904,15 @@ cancelPauseTimer() {
         this.cancelVotingTimer();
         this.votingOpen = false;
         this.votesForCurrentTurn = [];
+        this.showLeadArrow();
 
         // ⭐ Reset les highlights
         this.clearHighlights();
-        
+
         // Masquer le timer
         document.body.classList.remove('showTimer');
         this.hideTimerMessage();
-        
+
         this.currentProblem = null;
         this.attemptIndex = 0;
         this.isActive = false;
