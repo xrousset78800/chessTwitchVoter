@@ -560,6 +560,11 @@ body.randomWheel .sandbox__main {
     pointer-events: none;
 }
 
+/* ...sauf l'échiquier : le clic droit pour tracer des flèches reste actif (le déplacement est bloqué en JS) */
+body.randomWheel .sandbox__main .board-container {
+    pointer-events: auto;
+}
+
 /* Turn indicator */
 body[data-turn="w"] .sandbox__title::after {
     content: ' ⬜';

@@ -562,5 +562,18 @@
   },
   "ticker": {
     "label": "Votes"
+  },
+  "drawMenu": {
+    "style": "Draw style",
+    "band": "Band",
+    "classic": "Wheel"
+  },
+  "settingsSummary": {
+    "title": "Game settings",
+    "timer": "Vote timer",
+    "hint": "These settings are set at launch. To change them, end the game and start a new one.",
+    "on": "Yes",
+    "off": "No",
+    "none": "None"
   }
 }

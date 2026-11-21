@@ -1065,10 +1065,29 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             if (wheel && !wheel.isSpinning) wheel.draw?.();
             try { gameEngine.updateVotesUI(voting.getSortedResults()); } catch {}
         });
-        document.getElementById('btn-wheel-style')?.addEventListener('click', () => {
-            gameEngine.setWheelStyle(gameEngine.wheelStyle === 'band' ? 'classic' : 'band');
-            renderWheelStyle();
+        // Menu « Tirage ▾ » : style (bande / roue) et couleurs
+        const drawMenu = document.getElementById('draw-menu');
+        const drawBtn = document.getElementById('btn-wheel-style');
+        const setDrawMenu = (open) => {
+            drawMenu?.classList.toggle('is-open', open);
+            drawBtn?.setAttribute('aria-expanded', String(open));
+        };
+        const renderStyles = () => drawMenu?.querySelectorAll('[data-wheel-style]').forEach(b => {
+            b.classList.toggle('is-active', b.dataset.wheelStyle === gameEngine.wheelStyle);
         });
+        renderStyles();
+        drawBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            renderStyles();
+            setDrawMenu(!drawMenu.classList.contains('is-open'));
+        });
+        drawMenu?.querySelectorAll('[data-wheel-style]').forEach(b => b.addEventListener('click', () => {
+            gameEngine.setWheelStyle(b.dataset.wheelStyle);
+            renderWheelStyle();
+            renderStyles();
+        }));
+        document.addEventListener('click', (e) => { if (drawMenu && !drawMenu.contains(e.target)) setDrawMenu(false); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDrawMenu(false); });
 
         document.getElementById('btn-flip')?.addEventListener('click', () => {
             gameEngine.flip();
@@ -1268,15 +1287,30 @@ problemsManager.onResolveWithWheel = (results, callback) => {
     },
 
     openSettings() {
+        this.renderSettingsSummary();
         document.getElementById('sandbox-setup')?.classList.add('is-open');
     },
 
-    /** Ferme la modale ⚙ et applique les réglages à la partie en cours */
-    closeSettings(apply = true) {
-        const setup = document.getElementById('sandbox-setup');
-        if (!setup?.classList.contains('is-open')) return;
-        setup.classList.remove('is-open');
-        if (apply) this.applyLiveSettings();
+    /** Ferme la modale ⚙ (en cours de partie, les réglages sont en lecture seule) */
+    closeSettings() {
+        document.getElementById('sandbox-setup')?.classList.remove('is-open');
+    },
+
+    /** Réglages réellement appliqués à la partie en cours, en lecture seule */
+    renderSettingsSummary() {
+        const el = document.getElementById('settings-summary');
+        if (!el) return;
+        const c = gameEngine.config || {};
+        const yes = tr('settingsSummary.on'), no = tr('settingsSummary.off');
+        const restrictions = [twitch.settings?.followersOnly && 'Followers', twitch.settings?.subsOnly && 'Subs'].filter(Boolean).join(' + ') || tr('settingsSummary.none');
+        const rows = [
+            ['fa-stopwatch', tr('settingsSummary.timer'), c.timerEnabled ? `${c.timerDuration} s` : tr('timerOff.badge')],
+            ['fa-scale-balanced', tr('gameMode.voteOptions.voteMajority'), c.majorityMode ? yes : no],
+            ...(c.timerEnabled && !c.majorityMode ? [['fa-dharmachakra', tr('gameMode.voteOptions.wheelAnimation'), `${c.wheelDuration} s`]] : []),
+            ['fa-user-check', tr('gameMode.voteOptions.votesPerViewer'), String(c.votesPerViewer || 1)],
+            ['fa-lock', tr('gameMode.twitchOptions.restrictions'), restrictions]
+        ];
+        el.innerHTML = rows.map(([icon, k, v]) => `<div class="settings-summary__row"><dt><i class="fas ${icon}"></i> ${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd></div>`).join('');
     },
 
     applyLiveSettings() {

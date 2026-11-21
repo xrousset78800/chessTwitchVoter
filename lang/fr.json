@@ -562,5 +562,18 @@
   },
   "ticker": {
     "label": "Votes"
+  },
+  "drawMenu": {
+    "style": "Style du tirage",
+    "band": "Bande",
+    "classic": "Roue"
+  },
+  "settingsSummary": {
+    "title": "Réglages de la partie",
+    "timer": "Minuteur du vote",
+    "hint": "Ces réglages sont fixés au lancement. Pour les changer, termine la partie et lances-en une nouvelle.",
+    "on": "Oui",
+    "off": "Non",
+    "none": "Aucune"
   }
 }

@@ -129,6 +129,8 @@ class GameEngine {
     onDragStart(source, piece, position, orientation) {
         // Ne pas autoriser si partie terminée
         if (this.chess.game_over()) return false;
+        // Pendant le tirage : flèches au clic droit oui, déplacement de pièce non
+        if (document.body.classList.contains('randomWheel')) return false;
         
         // ========== MODE PROBLÈMES ==========
         if (window.problemsManager?.isActive) {
