@@ -832,3 +832,35 @@ body.no-vote-timer #btn-wheel-style { display: none; }
 /* Réinitialiser la partie : seulement en partie libre */
 body:not([data-game-mode="sandbox"]) #btn-reset,
 body:not([data-game-mode="sandbox"]) #btn-reset-sync { display: none; }
+
+/* ------------------------------------------------ Plus de bandeau titre : titre à gauche, boutons à droite */
+.sandbox__left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    height: fit-content;
+    position: sticky;
+    top: calc(var(--nav-height) + 20px);
+}
+
+.sandbox__left .sandbox__moves-panel { position: static; }
+
+.sandbox__left .sandbox__title-area { gap: 10px; min-width: 0; }
+
+.sandbox__left .sandbox__title {
+    font-size: 1.35rem;
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sandbox__sidebar > .sandbox__actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+/* Menu Phantom de la partie : seulement quand Phantom est connecté (badge du header actif) */
+body:not(.phantom-connected) #phantom-menu { display: none; }

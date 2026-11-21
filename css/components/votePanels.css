@@ -615,7 +615,7 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
     transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.65, 0, 0.35, 1), filter 0.6s ease;
 }
 
-.votes-slot--wheel { min-height: 280px; }
+.votes-slot--wheel { min-height: calc(min(340px, 80vw) + 20px); }
 
 .votes-slot.is-drawing .votes-slot__podium {
     opacity: 0;
@@ -633,9 +633,9 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
 
 /* La roue classique quitte l'overlay flottant et se pose à la place du podium */
 body #votes-panel #wheel-area.wheel-area--docked {
-    --wheel-size: 250px;
-    --wheel-inner-size: 250px;
-    --wheel-center-size: 54px;
+    --wheel-size: min(340px, 80vw);
+    --wheel-inner-size: var(--wheel-size);
+    --wheel-center-size: 70px;
     position: absolute;
     inset: 0;
     z-index: 2;
@@ -653,14 +653,14 @@ body #votes-panel.is-drawing #wheel-area.wheel-area--docked {
 }
 
 body #votes-panel #wheel-area.wheel-area--docked .wheel-container {
-    width: 250px;
-    height: 250px;
+    width: var(--wheel-size);
+    height: var(--wheel-size);
     padding: 0;
 }
 
 body #votes-panel #wheel-area.wheel-area--docked .wheel-canvas {
-    width: 250px !important;
-    height: 250px !important;
+    width: var(--wheel-size) !important;
+    height: var(--wheel-size) !important;
 }
 
 body #votes-panel #wheel-area.wheel-area--docked .wheel-pointer::after { display: none; }
