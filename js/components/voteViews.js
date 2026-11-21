@@ -5,6 +5,7 @@
  * - bandeau des votes du chat sous l'échiquier
  */
 import { paletteColors } from './votePalettes.js';
+import { hideVoterNames, secretVotes } from './voteAnonymity.js';
 
 const t = (key, params, fallback) => {
     const s = window.i18n?.t(key, params);
@@ -55,8 +56,12 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
     const podium = listEl.querySelector(':scope > .podium') || buildPodium(listEl);
     const colors = opts.colors || paletteColors();
     const turn = opts.turn === 'b' ? 'b' : 'w';
-    const list = (votes || []).filter(v => v && v.count > 0);
-    const total = list.reduce((n, v) => n + v.count, 0);
+    // Vote secret : podium vide, seul le nombre de votes s'affiche (opts.secret = true, ou ce nombre côté spectateur)
+    const secret = opts.secret != null && opts.secret !== false;
+    const all = (votes || []).filter(v => v && v.count > 0);
+    const list = secret ? [] : all;
+    const total = secret && typeof opts.secret === 'number' ? opts.secret : all.reduce((n, v) => n + v.count, 0);
+    listEl.classList.toggle('is-secret', secret);
     const top = list[0]?.count || 1;
 
     podium.classList.toggle('is-empty', !list.length);
@@ -91,7 +96,9 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
 
     const rest = list.slice(3);
     const restEl = podium.querySelector('.podium__rest');
-    if (!list.length) {
+    if (secret) {
+        restEl.innerHTML = `<span class="podium__hint podium__hint--secret"><i class="fas fa-eye-slash"></i> ${esc(t('anonymity.podium', null, 'Vote secret'))}<small>${esc(t('anonymity.podiumHint', null, 'Résultat à la fin du vote'))}</small></span>`;
+    } else if (!list.length) {
         restEl.innerHTML = `<span class="podium__hint">${esc(t('podium.none', null, 'Aucun vote pour l\'instant'))}</span>`;
     } else {
         const shown = rest.slice(0, 6);
@@ -168,12 +175,27 @@ export const VoteTicker = {
         }
         return track;
     },
+    /** Contenu d'un vote du bandeau, selon l'anonymat choisi */
+    paint(item) {
+        const { user, move } = item.dataset;
+        const anon = hideVoterNames();
+        const name = anon ? t('anonymity.viewer', null, 'Anonyme') : user;
+        const shown = secretVotes() ? t('anonymity.voted', null, 'a voté') : move;
+        item.classList.toggle('is-anon', anon);
+        item.innerHTML = `<span class="vote-ticker__user"${anon ? '' : ` style="color:${nameColor(user)}"`}>${anon ? '<i class="fas fa-user-secret"></i> ' : ''}${esc(name)}</span> <span class="vote-ticker__move">${esc(shown)}</span>`;
+    },
+    /** Après un changement d'anonymat : on repeint les votes déjà affichés */
+    repaint() {
+        this.el()?.querySelectorAll('.vote-ticker__item').forEach(item => this.paint(item));
+    },
     add(username, move) {
         const track = this.el();
         if (!track) return;
         const item = document.createElement('span');
         item.className = 'vote-ticker__item';
-        item.innerHTML = `<span class="vote-ticker__user" style="color:${nameColor(username)}">${esc(username)}</span> <span class="vote-ticker__move">${esc(move)}</span>`;
+        item.dataset.user = username;
+        item.dataset.move = move;
+        this.paint(item);
         const keep = track.scrollLeft > 4; // l'utilisateur lit plus loin : on ne le fait pas sauter
         track.prepend(item);
         if (keep) track.scrollLeft += item.offsetWidth + 16;

@@ -539,6 +539,8 @@
     "you": "(toi)",
     "anonOne": "{n} anonyme",
     "anonMany": "{n} anonymes",
+    "anonymity": "Visible : pseudos et votes en direct. Pseudos cachés : on voit les coups votés, pas qui les vote. Vote secret : rien pendant le tour (ni podium, ni flèche, ni pseudos), le résultat se découvre au tirage ou quand le coup est joué. Les votes restent écrits dans le chat Twitch : masque-le sur ton stream pour un vrai vote à l'aveugle.",
+    "anonymityMulti": "Tu choisis pour les deux chaînes : ton adversaire suit obligatoirement ce réglage. Visible : pseudos et votes en direct. Pseudos cachés : les coups votés sans les pseudos. Vote secret : rien pendant le tour, le résultat se découvre au tirage ou quand le coup est joué.",
     "loginHint": "Connecte-toi à Twitch pour apparaître avec ton pseudo."
   },
   "podium": {
@@ -565,6 +567,20 @@
   },
   "ticker": {
     "label": "Votes"
+  },
+  "anonymity": {
+    "title": "Anonymat du vote",
+    "none": "Visible",
+    "names": "Pseudos cachés",
+    "secret": "Vote secret",
+    "hintNone": "Pseudos et votes affichés en direct.",
+    "hintNames": "Les votes restent visibles, sans les pseudos des viewers.",
+    "hintSecret": "Ni pseudos ni votes pendant le tour : le résultat se découvre au tirage ou quand le coup est joué.",
+    "viewer": "Anonyme",
+    "voted": "a voté",
+    "podium": "Vote secret",
+    "podiumHint": "Résultat à la fin du vote",
+    "forced": "Fixé par le créateur de la partie Multi."
   },
   "drawMenu": {
     "style": "Style du tirage",

@@ -427,7 +427,9 @@ function sanitizeMultiSettings(s = {}) {
         timerDuration: Math.min(300, Math.max(5, parseInt(s.timerDuration) || 30)),
         majorityMode:  !!s.majorityMode,
         followersOnly: !!s.followersOnly,
-        subsOnly:      !!s.subsOnly
+        subsOnly:      !!s.subsOnly,
+        // Anonymat du vote choisi par le créateur, suivi par les deux chaînes
+        anonymity:     ['names', 'secret'].includes(s.anonymity) ? s.anonymity : 'none'
     };
 }
 
@@ -567,6 +569,8 @@ function spectateState(g) {
         // Couleurs du tirage de l'hôte, score du vote de chaque coup (aligné sur la fin de l'historique)
         pal:         g.detail?.pal || null,
         hv:          g.detail?.hv || [],
+        // Vote secret de l'hôte : seulement le nombre de votes, pas les coups
+        sec:         g.detail?.sec ?? null,
         draw:        g.detail?.draw ? { votes: g.detail.draw.votes, winner: g.detail.draw.winner, duration: g.detail.draw.duration, endsIn: Math.max(0, g.detail.draw.endsAt - Date.now()) } : null,
         spectators:  spectatorsOf(g.publicId)
     };
@@ -627,7 +631,8 @@ function sanitizeDetail(data = {}, prev = null) {
     const pal = PALETTE_IDS.includes(data.pal) ? data.pal : null;
     const hv = (Array.isArray(data.hv) ? data.hv : []).slice(-400)
         .map(v => v === 'r' ? 'r' : (typeof v === 'number' && Number.isFinite(v) ? clampInt(v, 0, 100) : null));
-    return { votes, timer, rush, wheel, draw, pal, hv };
+    const sec = data.sec == null ? null : clampInt(data.sec, 0, 99999);
+    return { votes: sec == null ? votes : [], timer, rush, wheel, draw, pal, hv, sec };
 }
 
 const sanitizeHistory = (h) => Array.isArray(h) ? h.slice(-400).map(String).filter(m => SAN_RE.test(m)) : null;

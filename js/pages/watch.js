@@ -448,7 +448,7 @@ const WatchPage = {
         if (!list) return;
         const votes = this.state?.votes || [];
         renderPodium(list, $('watch-vote-total'), votes.map(v => ({ move: v.m, count: v.n })), {
-            turn: this.turn(), colors: this.palette()
+            turn: this.turn(), colors: this.palette(), secret: typeof this.state?.sec === 'number' ? this.state.sec : undefined
         });
     },
 

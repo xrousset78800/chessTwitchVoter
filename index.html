@@ -290,6 +290,8 @@
                                         </div>
                                         <p class="draw-menu__title" data-i18n="palette.title">Couleurs du tirage</p>
                                         <div class="palette-picker" id="palette-picker" role="radiogroup"></div>
+                                        <p class="draw-menu__title" data-i18n="anonymity.title">Anonymat du vote</p>
+                                        <div class="anon-picker" data-anon-picker></div>
                                     </div>
                                 </div>
                             </div>
@@ -336,6 +338,10 @@
                                         <div class="toggle" id="toggle-majority"></div>
                                     </div>
                                     <p data-i18n="gameMode.voteOptions.majorityHint" class="form-hint">Si désactivé, tirage au sort avec la roue</p>
+                                    <div class="form-row form-row--stack">
+                                        <span data-i18n="anonymity.title" data-info="anonymity">Anonymat du vote</span>
+                                    </div>
+                                    <div class="anon-picker" data-anon-picker></div>
                                 </div>
                             </div>
 
@@ -657,6 +663,10 @@
                             <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel" data-info="restrictions">Réservé aux</span></span>
                             <button type="button" class="toggle toggle--chip toggle--follow" id="multi-follow-toggle" data-i18n-title="presets.followersHint" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
                             <button type="button" class="toggle toggle--chip toggle--sub" id="multi-sub-toggle" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
+                        </div>
+                        <div class="form-group preset__anon">
+                            <label class="form-label"><i class="fas fa-user-secret"></i> <span data-i18n="anonymity.title" data-info="anonymityMulti">Anonymat du vote</span></label>
+                            <div class="anon-picker" data-anon-picker></div>
                         </div>
                     <button class="btn btn--primary btn--full" id="multi-start">
                         <i class="fas fa-play"></i> <span data-i18n="multi.start">Créer la partie</span>

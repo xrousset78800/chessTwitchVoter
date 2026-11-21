@@ -22,6 +22,11 @@ import BrowseTable from './pages/browseTable.js';
 import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
 import { PALETTES, PALETTE_IDS, getPaletteId, setPaletteId } from './components/votePalettes.js';
+import { initAnonymity, secretVotes, getAnonymity, forceAnonymity, ANON_MODES } from './components/voteAnonymity.js';
+import { VoteTicker } from './components/voteViews.js';
+
+// Anonymat du vote : sélecteurs (réglages, modale ⚙, formulaire Multi)
+initAnonymity();
 
 // ============================================
 // ÉTAT GLOBAL
@@ -1054,6 +1059,18 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             const btn = e.target.closest('[data-palette]');
             if (btn) setPaletteId(btn.dataset.palette);
         });
+        // Anonymat du vote : sélecteurs (réglages + modale ⚙), appliqué tout de suite à la partie en cours
+        document.addEventListener('voteAnonymityChanged', () => {
+            VoteTicker.repaint();
+            try {
+                if (problemsManager?.isActive) {
+                    problemsManager.syncWheelDisplay();
+                } else {
+                    gameEngine.updateVotesUI(voting.getSortedResults());
+                    gameEngine.highlightMostVoted();
+                }
+            } catch {}
+        });
         document.addEventListener('votePaletteChanged', () => {
             renderPalettes();
             const wheel = gameEngine.votingWheel;
@@ -1875,6 +1892,11 @@ const SpectatorFeed = {
         const d = { votes: [], timer: null, rush: null };
         try {
             d.votes = voting.getSortedResults().slice(0, 12).map(r => ({ m: r.move, n: r.count }));
+            // Vote secret : les spectateurs n'ont que le nombre de votes
+            if (secretVotes()) {
+                d.sec = voting.getSortedResults().reduce((n, r) => n + (r.count || 0), 0);
+                d.votes = [];
+            }
         } catch {}
         if (timer.isRunning || timer.isPaused) {
             d.timer = { left: timer.remaining, total: timer.duration, paused: !!timer.isPaused };
@@ -2268,6 +2290,7 @@ const MultiPage = {
         syncVisibility();
         document.getElementById('multi-start').addEventListener('click', () => {
             const options = PresetForm.read('multi');
+            options.anonymity = getAnonymity(); // imposé à l'adversaire
             if (PresetForm.needsLogin(options)) { twitchAuth.login(); return; }
             if (!GameSession.confirmReplace()) return;
             MultiRoom.open(normalizeLogin(twitchAuth.user.login), MultiRoom.newCode(), options, isPublic.checked);
@@ -2525,6 +2548,7 @@ const MultiRoom = {
         const query = new URLSearchParams({ timer: settings.timerDuration, mode: settings.majorityMode ? 'majority' : 'wheel' });
         if (settings.subsOnly) query.set('subs', '1');
         if (settings.followersOnly) query.set('followers', '1');
+        if (settings.anonymity && settings.anonymity !== 'none') query.set('anon', settings.anonymity);
         if (isPublic) query.set('public', '1');
         return `#/multi/${host}/${code}?${query}`;
     },
@@ -2560,7 +2584,8 @@ const MultiRoom = {
                     timerDuration: Math.min(300, Math.max(5, parseInt(params.get('timer')) || 30)),
                     majorityMode:  params.get('mode') === 'majority',
                     followersOnly: params.get('followers') === '1',
-                    subsOnly:      params.get('subs') === '1'
+                    subsOnly:      params.get('subs') === '1',
+                    anonymity:     ANON_MODES.includes(params.get('anon')) ? params.get('anon') : 'none'
                 }
             };
             try { sessionStorage.setItem(this.STORE, JSON.stringify(room)); } catch {}
@@ -2580,6 +2605,7 @@ const MultiRoom = {
     /** Avant SandboxPage.init : le moteur démarre avec les réglages du lien */
     prepare(room) {
         this.room = room;
+        forceAnonymity(room.settings?.anonymity || 'none');
         GameSession.activate({
             route: 'multi',
             gameMode: 'multi',
@@ -2637,6 +2663,7 @@ const MultiRoom = {
         // L'hôte fixe les réglages de la partie
         twitch.settings.subsOnly = settings.subsOnly;
         lobby.verifyJoin = PresetGame.followerCheck(settings.followersOnly);
+        forceAnonymity(settings.anonymity || 'none');
         Object.assign(this.room, { settings, isPublic: !!isPublic });
         const login = normalizeLogin(twitchAuth.user?.login);
         this.opponent = login === a ? b : a;
@@ -2693,6 +2720,7 @@ const MultiRoom = {
         });
         this.room = null;
         this.opponent = null;
+        forceAnonymity(null);
     },
 
     onGameReady() {

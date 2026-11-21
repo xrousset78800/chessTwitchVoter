@@ -11,6 +11,7 @@ import voting from './voting.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { paletteColors } from '../components/votePalettes.js';
+import { secretVotes } from '../components/voteAnonymity.js';
 import { renderPodium, renderHistory, VoteTicker, paintMoveChips, morphPodiumToWheel, clearWinner } from '../components/voteViews.js';
 
 class GameEngine {
@@ -471,16 +472,17 @@ syncWheelFromVoting() {
     this.votingWheel.updateVoteList();
 }
 highlightMostVoted() {
-    const results = voting.getSortedResults();
+    // Vote secret : ni flèche ni coup en surbrillance pendant le tour
+    const results = secretVotes() ? [] : voting.getSortedResults();
     this.showLeadArrow(results);
-    if (results.length === 0) return;
-
-    const topMove = results[0].move;
 
     // Retirer l'ancienne surbrillance
     document.querySelectorAll('.moves-group li').forEach(li => {
         li.classList.remove('most-voted');
     });
+    if (results.length === 0) return;
+
+    const topMove = results[0].move;
 
     // Ajouter la surbrillance au coup le plus voté
     document.querySelectorAll('.moves-group button').forEach(btn => {
@@ -507,7 +509,7 @@ highlightMostVoted() {
     showLeadArrow(results) {
         const ann = this.annotations;
         if (!ann) return;
-        const m = results?.length ? this.resolveMove(results[0].move) : null;
+        const m = results?.length && !secretVotes() ? this.resolveMove(results[0].move) : null;
         ann.setOverlay(m ? { kind: 'lead', from: m.from, to: m.to } : null);
     }
 
@@ -852,9 +854,10 @@ updateVotesUI(results) {
     // Roue de hasard (tous les coups à 1) : le podium garde les vrais votes
     if (document.body.classList.contains('randomWheel')) return;
     const votes = (results || []).map(r => ({ move: r.move, count: r.count || 0 }));
+    const secret = secretVotes();
     renderPodium(votesList, document.getElementById('vote-total'), votes,
-        { turn: this.chess?.turn(), colors: paletteColors() });
-    paintMoveChips(document.getElementById('moves-panel'), votes, paletteColors());
+        { turn: this.chess?.turn(), colors: paletteColors(), secret });
+    paintMoveChips(document.getElementById('moves-panel'), secret ? [] : votes, paletteColors());
 }
 
 /**

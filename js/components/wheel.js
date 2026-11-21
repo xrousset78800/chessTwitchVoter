@@ -4,6 +4,7 @@
  */
 import { paletteColors } from './votePalettes.js';
 import { renderPodium, markPodiumWinner, revealWinner } from './voteViews.js';
+import { secretVotes } from './voteAnonymity.js';
 
 class VotingWheel {
     constructor(containerId) {
@@ -449,7 +450,7 @@ pickWeightedRandom() {
         // Roue de hasard (tous les coups à 1) : le podium garde les vrais votes
         if (document.body.classList.contains('randomWheel')) return;
         renderPodium(listEl, document.getElementById('vote-total'), this.getSortedVotes(), {
-            turn: this.currentTurn(), colors: this.colors
+            turn: this.currentTurn(), colors: this.colors, secret: secretVotes()
         });
     }
 
