@@ -12,7 +12,7 @@ import { renderSpectatorList, spectatorsLabel } from '../components/spectators.j
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { PALETTES, isPalette, paletteColors } from '../components/votePalettes.js';
-import { renderPodium, renderHistory } from '../components/voteViews.js';
+import { renderPodium, renderHistory, paintMoveChips, morphPodiumToWheel, markPodiumWinner, revealWinner, clearWinner } from '../components/voteViews.js';
 
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -50,6 +50,7 @@ const WatchPage = {
         this.drawSig = null;
         this.revealing = false;
         this.hideWheel();
+        this.clearDraw();
         if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) {
             this.showMessage('watch.notFound');
             return;
@@ -136,6 +137,13 @@ const WatchPage = {
         if (!this.board) {
             this.board = Chessboard('watch-board', { position, draggable: false, pieceTheme: PIECES, orientation: this.orientation() });
             this.annotations = window.BoardAnnotations?.attach('watch-board', { draggable: false }) || null;
+            // Le chrono qui apparaît ou la colonne qui change : l'échiquier suit sa place
+            if (typeof ResizeObserver === 'function') {
+                new ResizeObserver(() => {
+                    const w = el.clientWidth;
+                    if (w && w !== this.boardWidth && this.board) { this.boardWidth = w; this.board.resize(); }
+                }).observe(el);
+            }
         } else {
             this.board.orientation(this.orientation());
             this.board.position(position, false);
@@ -205,16 +213,45 @@ const WatchPage = {
             this.wheel.paletteColors = this.palette();
             return this.wheel;
         }
-        area.classList.toggle('wheel-area--band', style === 'band');
+        this.dock(style);
         const wheel = style === 'band' ? new WheelBand('watch-wheel-area') : new VotingWheel('watch-wheel-area');
         // La liste des votes de la page spectateur est gérée ici, pas par la roue
         wheel.updateVoteList = () => {};
-        wheel.highlightWinner = () => {};
+        // Coup tiré en grand dans l'encart du podium, comme chez les joueurs
+        wheel.showResultInside = false;
+        wheel.highlightWinner = () => {
+            markPodiumWinner($('watch-votes'), wheel.winner);
+            revealWinner($('watch-votes-panel'), { move: wheel.winner, color: wheel.winnerColor, pct: wheel.winnerPct, turn: wheel.currentTurn() });
+        };
         wheel.currentTurn = () => (this.state?.fen?.split(' ')[1] === 'b' ? 'b' : 'w');
         wheel.paletteColors = this.palette();
         this.wheel = wheel;
         this.wheelStyle = style;
         return wheel;
+    },
+
+    /** Bande sous l'échiquier ; roue classique à la place du podium */
+    dock(style) {
+        const area = $('watch-wheel-area');
+        const slot = $('watch-votes-panel');
+        if (!area || !slot) return;
+        const docked = style !== 'band';
+        area.classList.toggle('wheel-area--band', !docked);
+        area.classList.toggle('wheel-area--docked', docked);
+        slot.classList.toggle('votes-slot--wheel', docked);
+        if (docked) {
+            if (area.parentElement !== slot) slot.appendChild(area);
+        } else {
+            const after = $('watch-bottom');
+            if (after && area.previousElementSibling !== after) after.after(area);
+        }
+    },
+
+    /** Fin du tirage : le podium revient (coup joué, ou plus de tirage en cours) */
+    clearDraw() {
+        const slot = $('watch-votes-panel');
+        slot?.classList.remove('is-drawing');
+        clearWinner(slot);
     },
 
     setWheelVotes(wheel, votes) {
@@ -233,7 +270,7 @@ const WatchPage = {
         if (!area) return;
         const band = s.wheel === 'band' && !s.result;
         area.classList.toggle('is-reserved', band);
-        if (band) area.classList.add('wheel-area--band');
+        if (s.wheel && !this.wheel?.isSpinning && !this.revealing) this.dock(s.wheel);
     },
 
     renderWheel() {
@@ -242,26 +279,36 @@ const WatchPage = {
         if (!area) return;
         if (s.draw && !s.result) {
             const sig = s.draw.winner + JSON.stringify(s.draw.votes);
-            if (sig === this.drawSig || this.wheel?.isSpinning || this.revealing) return;
-            const wheel = this.ensureWheel(s.wheel || this.wheelStyle || 'band');
-            if (!wheel) return;
-            this.drawSig = sig;
-            this.drawPly = (s.history || []).length;
-            this.setWheelVotes(wheel, s.draw.votes);
-            area.classList.add('is-visible', 'is-spinning');
-            wheel.draw();
-            this.revealing = true;
-            wheel.onSpinEnd = () => {
-                this.revealing = false;
-                this.renderVoteArrow();
-                area.classList.remove('is-spinning');
-                if (!this.state?.wheel || !this.state?.votes?.length) this.hideWheel();
-            };
-            // Arrivé en plein tirage : il se termine en même temps que chez les joueurs
-            wheel.spin(Math.max(400, s.draw.endsIn), s.draw.winner);
-            return;
+            if (sig !== this.drawSig && !this.wheel?.isSpinning && !this.revealing) {
+                const wheel = this.ensureWheel(s.wheel || this.wheelStyle || 'band');
+                if (!wheel) return;
+                this.drawSig = sig;
+                this.drawPly = (s.history || []).length;
+                this.setWheelVotes(wheel, s.draw.votes);
+                area.classList.add('is-visible', 'is-spinning');
+                wheel.draw();
+                // Roue classique : fondu enchaîné du podium vers la roue
+                const slot = $('watch-votes-panel');
+                if (area.classList.contains('wheel-area--docked') && slot && !slot.classList.contains('is-drawing')) {
+                    morphPodiumToWheel(slot, area.querySelector('.wheel-container'));
+                    slot.classList.add('is-drawing');
+                }
+                this.revealing = true;
+                wheel.onSpinEnd = () => {
+                    this.revealing = false;
+                    this.renderVoteArrow();
+                    area.classList.remove('is-spinning');
+                    this.renderWheel();
+                };
+                // Arrivé en plein tirage : il se termine en même temps que chez les joueurs
+                wheel.spin(Math.max(400, s.draw.endsIn), s.draw.winner);
+                return;
+            }
         }
         if (this.wheel?.isSpinning || this.revealing) return;
+        // Coup tiré affiché jusqu'à ce qu'il soit joué
+        if (s.draw && !s.result && (s.history || []).length === this.drawPly) return;
+        this.clearDraw();
         if (s.wheel && s.votes?.length && !s.result) {
             const wheel = this.ensureWheel(s.wheel);
             if (!wheel) return;
@@ -359,7 +406,6 @@ const WatchPage = {
             try { moves = new Chess(fen).moves(); } catch { moves = []; }
         }
         const turn = fen?.split(' ')[1] === 'b' ? 'b' : 'w';
-        const top = clean(this.state?.votes?.[0]?.m);
         const groups = { P: [], N: [], B: [], R: [], Q: [], K: [], O: [] };
         moves.forEach(m => {
             const c = clean(m);
@@ -369,8 +415,20 @@ const WatchPage = {
         });
         list.innerHTML = Object.entries(groups).filter(([, g]) => g.length).map(([piece, g]) => `
             <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : PIECE_ICONS[turn][piece]}</span>${
-                g.map(m => `<li class="${m === top ? 'most-voted' : ''}"><button type="button" tabindex="-1" disabled>${esc(m)}</button></li>`).join('')
+                g.map(m => `<li><button type="button" tabindex="-1" disabled data-move="${esc(m)}">${esc(m)}</button></li>`).join('')
             }</ul>`).join('');
+        // Exemples à taper, pris parmi les coups de la position (comme chez les joueurs)
+        const ex = $('watch-moves-example');
+        if (ex) {
+            const pick = (list, prefs) => prefs.find(m => list.includes(m)) || list[Math.floor(list.length / 2)];
+            const pieces = ['N', 'B', 'Q', 'R', 'K', 'O'].flatMap(p => groups[p]);
+            const a = pick(groups.P, ['e4', 'd4', 'e5', 'd5', 'c4', 'c5']) || clean(moves[0]);
+            const b = pick(pieces, ['Nf3', 'Nf6', 'Nc3', 'Nc6', 'O-O']);
+            const code = m => `<code>${esc(m)}</code>`;
+            ex.innerHTML = a ? `${esc(t('moves.example'))} ${code(a)}${b && b !== a ? ` ${esc(t('moves.or'))} ${code(b)}` : ''}` : '';
+        }
+        // Coups votés colorés comme sur le podium, avec leur nombre de voix
+        paintMoveChips($('watch-moves'), (this.state?.votes || []).map(v => ({ move: v.m, count: v.n })), this.palette());
         // Le panneau garde sa place (pas de saut de l'échiquier quand il n'y a plus de coup)
         $('watch-moves').classList.toggle('is-empty', !moves.length);
     },

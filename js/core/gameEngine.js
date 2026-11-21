@@ -295,7 +295,7 @@ class GameEngine {
         // Moteur pas encore initialisé (partie lancée avant toute visite de Nouveau) : rien à remettre
         if (!this.chess || !this.board) return;
         this.chess.reset();
-        this.board.position('start');
+        this.board.position('start', false); // sans animation : pas de pièces qui volent au-dessus de la page qu'on quitte
         this.moveHistory = [];
         this.currentTurn = 'w';
         this.isRunning = false;

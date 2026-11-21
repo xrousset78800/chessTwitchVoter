@@ -728,57 +728,64 @@
         <!-- ==================== SPECTATEUR ==================== -->
         <div class="page" id="page-watch">
             <div class="sandbox watch">
-                <!-- Une seule barre : retour, spectateur en direct, mode, équipes ou score, spectateurs, retourner -->
-                <div class="watch-bar" id="watch-banner">
-                    <a href="#/browse" class="btn btn--icon watch-bar__back" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-arrow-left"></i></a>
-                    <span class="watch-bar__live" data-i18n-title="watch.bannerHint" title="Tu vois la partie comme les joueurs, sans pouvoir jouer ni voter. Ils voient que tu regardes.">
-                        <span class="watch-bar__dot"></span><span class="watch-bar__live-text" data-i18n="watch.spectating">Spectateur</span>
-                    </span>
-                    <h1 class="watch-bar__mode" id="watch-mode"></h1>
-                    <div class="watch-bar__info">
-                        <div class="watch-bar__teams" id="watch-multi" hidden>
-                            <span class="watch-bar__team watch-bar__team--white" id="watch-team-white">—</span>
-                            <span class="watch-bar__vs">⚔</span>
-                            <span class="watch-bar__team watch-bar__team--black" id="watch-team-black">—</span>
-                        </div>
-                        <div class="watch-bar__rush" id="watch-rush" hidden>
-                            <span class="watch-bar__chip" id="watch-rush-title"></span>
-                            <span class="watch-bar__stat"><span class="watch-bar__label">Score</span> <b id="watch-rush-score">0</b></span>
-                            <span class="watch-bar__hearts" id="watch-rush-hearts"></span>
-                            <span class="watch-bar__stat"><span class="watch-bar__label">Rating</span> <b id="watch-rush-rating">—</b></span>
-                        </div>
-                    </div>
-                    <span class="spectators-badge watch-bar__eyes" id="watch-spectators-badge"><i class="fas fa-eye"></i> <span id="watch-spectators-count">0</span></span>
-                    <button type="button" class="btn btn--sm tool-btn" id="watch-flip" data-i18n-title="watch.flip" title="Retourner l'échiquier"><i class="fas fa-sync-alt"></i></button>
-                </div>
-
                 <div class="sandbox__content watch__layout">
-                    <!-- Coups disponibles : les mêmes que les joueurs, sans pouvoir cliquer -->
-                    <aside class="sandbox__moves-panel is-locked" id="watch-moves">
-                        <div class="moves-panel__content" id="watch-moves-list"></div>
-                    </aside>
+                    <!-- Colonne de gauche : partie regardée, puis les coups à taper (comme chez les joueurs) -->
+                    <div class="sandbox__left">
+                        <div class="watch-head">
+                            <div class="watch-head__row">
+                                <a href="#/browse" class="btn btn--icon watch-bar__back" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-arrow-left"></i></a>
+                                <h1 class="watch-bar__mode" id="watch-mode"></h1>
+                                <span class="watch-bar__live" data-i18n-title="watch.bannerHint" title="Tu vois la partie comme les joueurs, sans pouvoir jouer ni voter. Ils voient que tu regardes.">
+                                    <span class="watch-bar__dot"></span><span class="watch-bar__live-text" data-i18n="watch.spectating">Spectateur</span>
+                                </span>
+                            </div>
+                            <div class="watch__status" id="watch-status"></div>
+                            <div class="watch-bar__teams" id="watch-multi" hidden>
+                                <span class="watch-bar__team watch-bar__team--white" id="watch-team-white">—</span>
+                                <span class="watch-bar__vs">⚔</span>
+                                <span class="watch-bar__team watch-bar__team--black" id="watch-team-black">—</span>
+                            </div>
+                            <div class="watch-bar__rush" id="watch-rush" hidden>
+                                <span class="watch-bar__chip" id="watch-rush-title"></span>
+                                <span class="watch-bar__stat"><span class="watch-bar__label">Score</span> <b id="watch-rush-score">0</b></span>
+                                <span class="watch-bar__hearts" id="watch-rush-hearts"></span>
+                                <span class="watch-bar__stat"><span class="watch-bar__label">Rating</span> <b id="watch-rush-rating">—</b></span>
+                            </div>
+                        </div>
+                        <!-- Coups disponibles : les mêmes que les joueurs, sans pouvoir cliquer -->
+                        <aside class="sandbox__moves-panel" id="watch-moves">
+                            <div class="moves-panel__typeit">
+                                <div class="moves-panel__title" data-i18n="moves.typeTitle">Tape ton coup dans le chat</div>
+                                <div class="moves-panel__ex" id="watch-moves-example"></div>
+                            </div>
+                            <div class="moves-panel__content" id="watch-moves-list"></div>
+                        </aside>
+                    </div>
 
                     <div class="sandbox__main">
-                        <div class="watch__status" id="watch-status"></div>
                         <div class="watch__player watch__player--top" id="watch-top"></div>
                         <div class="board-wrapper">
                             <div class="board-container">
                                 <div id="watch-board" class="watch__board"></div>
-                                <div class="watch__timer" id="watch-timer" hidden>
-                                    <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="watch-timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="watch-timer-arc"></circle></svg>
-                                        <div class="countdown__inner"><span class="countdown__num" id="watch-timer-value">--</span><span class="countdown__label" id="watch-timer-label"></span></div></div>
-                                </div>
+                            </div>
+                            <div class="watch__timer" id="watch-timer" hidden>
+                                <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="watch-timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="watch-timer-arc"></circle></svg>
+                                    <div class="countdown__inner"><span class="countdown__num" id="watch-timer-value">--</span><span class="countdown__label" id="watch-timer-label"></span></div></div>
                             </div>
                         </div>
                         <div class="watch__player watch__player--bottom" id="watch-bottom"></div>
-                        <!-- Roue ou bande de tirage, comme chez les joueurs -->
+                        <!-- Bande de tirage sous l'échiquier ; la roue classique se pose à la place du podium -->
                         <div id="watch-wheel-area" class="watch-wheel"></div>
                     </div>
 
                     <div class="sandbox__sidebar">
-                        <div class="panel" id="watch-votes-panel">
-                            <div class="panel__header"><i class="fas fa-poll"></i> <span data-i18n="watch.votesTitle">Votes en cours</span></div>
-                            <div class="panel__content">
+                        <div class="sandbox__actions game-toolbar">
+                            <span class="spectators-badge" id="watch-spectators-badge"><i class="fas fa-eye"></i> <span id="watch-spectators-count">0</span></span>
+                            <button type="button" class="btn btn--sm tool-btn" id="watch-flip" data-i18n-title="watch.flip" title="Retourner l'échiquier"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                        <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
+                        <div class="votes-slot" id="watch-votes-panel">
+                            <div class="votes-slot__podium">
                                 <div class="vote-list" id="watch-votes"></div>
                                 <div class="vote-total" id="watch-vote-total"></div>
                             </div>

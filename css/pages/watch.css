@@ -2,26 +2,23 @@
 /* Même fenêtre que la partie (classes sandbox__*), en lecture seule */
 
 .watch__layout[hidden],
-.watch--message .watch__layout,
-.watch--message .watch-bar__info,
-.watch--message .watch-bar__eyes,
-.watch--message #watch-flip { display: none !important; }
+.watch--message .watch__layout { display: none !important; }
 
 .watch .sandbox__moves-panel[hidden] { display: none; }
 .watch .sandbox__moves-panel.is-empty .moves-panel__content { visibility: hidden; }
 
-/* Barre du haut : remplace l'entête et les bandeaux spectateur / Multi / Rush */
-.watch-bar {
+/* En-tête de la colonne de gauche : retour, mode, spectateur en direct, état, équipes ou score */
+.watch-head {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 52px;
-    padding: 6px 10px;
-    margin-bottom: 12px;
-    border-radius: 12px;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: var(--radius-lg, 12px);
     border: 1px solid rgba(6, 182, 212, 0.3);
     background: linear-gradient(135deg, rgba(6, 182, 212, 0.10), rgba(139, 92, 246, 0.08));
 }
+
+.watch-head__row { display: flex; align-items: center; gap: 8px; min-width: 0; }
 
 .watch-bar__back { flex-shrink: 0; }
 
@@ -52,24 +49,23 @@
 
 .watch-bar__mode {
     margin: 0;
-    flex-shrink: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 1.05rem;
     font-weight: 700;
     white-space: nowrap;
 }
 
-.watch-bar__info {
-    display: flex;
-    justify-content: center;
-    flex: 1;
-    min-width: 0;
-}
+.watch-bar__mode .game-card__private { font-size: 0.7rem; }
 
 .watch-bar__teams,
 .watch-bar__rush {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    gap: 6px 10px;
     min-width: 0;
     font-weight: 700;
 }
@@ -109,15 +105,6 @@
 .watch-bar__label { color: var(--text-muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
 .watch-bar__hearts { white-space: nowrap; font-size: 0.85rem; }
 
-.watch-bar__eyes { margin-left: auto; flex-shrink: 0; }
-.watch-bar #watch-flip { flex-shrink: 0; }
-
-@media (max-width: 760px) {
-    .watch-bar { flex-wrap: wrap; row-gap: 6px; }
-    .watch-bar__info { order: 10; flex-basis: 100%; }
-    .watch-bar__info:not(:has(> :not([hidden]))) { display: none; }
-}
-
 @media (max-width: 480px) {
     .watch-bar__live-text { display: none; }
     .watch-bar__mode { font-size: 0.95rem; }
@@ -126,7 +113,7 @@
 /* Votes : la liste garde une hauteur minimale, l'historique en dessous bouge moins */
 #watch-votes { min-height: 96px; }
 
-/* Coups disponibles : visibles mais pas cliquables */
+/* Coups disponibles : visibles mais pas cliquables, colorés comme les votes */
 #watch-moves .moves-group button {
     cursor: default;
     opacity: 1;
@@ -141,11 +128,10 @@
 
 .watch .board-container { position: relative; }
 
-/* Minuteur du tour, en surimpression comme chez les joueurs */
+/* Minuteur du tour : à côté de l'échiquier, jamais par-dessus */
 .watch__timer {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 0;
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -223,15 +209,10 @@
 .watch__muted { color: var(--text-muted); font-style: italic; }
 
 .watch__status {
-    height: 1.6em;
-    line-height: 1.6em;
-    margin-bottom: 6px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 1rem;
+    min-height: 1.4em;
+    line-height: 1.4;
+    font-size: 0.85rem;
     font-weight: 600;
-    text-align: center;
     color: var(--accent-cyan);
 }
 
@@ -318,15 +299,14 @@ a.spectators__chip:hover { border-color: rgba(6, 182, 212, 0.6); }
 }
 
 
-/* Grand écran : minuteur à côté de l'échiquier (comme dans la fenêtre des joueurs) */
-#page-watch .board-wrapper { container-type: inline-size; }
+/* Minuteur : à droite de l'échiquier quand la colonne a la place (comme chez les joueurs) */
+#page-watch .board-wrapper { container-type: inline-size; position: relative; }
 
-#page-watch .watch__player,
-#page-watch .watch__status { max-width: 560px; margin-left: auto; margin-right: auto; }
+#page-watch .watch__player { max-width: 560px; margin-left: auto; margin-right: auto; }
 
 @container (min-width: 640px) {
-    #page-watch .board-container { max-width: min(560px, calc(100cqi - 220px)); }
-    #page-watch .watch__timer { top: 0; right: auto; left: calc(100% + 16px); }
+    #page-watch .board-container { max-width: min(560px, calc(100cqi - 220px)); margin-left: auto; margin-right: auto; }
+    #page-watch .watch__timer { left: calc(50% + min(280px, 50cqi - 110px) + 16px); }
 }
 
 /* ==================== Roue / bande de tirage (spectateur) ==================== */
@@ -340,15 +320,6 @@ a.spectators__chip:hover { border-color: rgba(6, 182, 212, 0.6); }
 #watch-wheel-area.is-spinning .wheel-band {
     outline: 2px solid var(--accent-purple);
     box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
-}
-
-/* Roue classique : en surimpression en bas à droite, comme chez les joueurs */
-#watch-wheel-area:not(.wheel-area--band) {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    z-index: 900;
-    margin: 0;
 }
 
 #watch-wheel-area .wheel-container {
@@ -370,29 +341,71 @@ a.spectators__chip:hover { border-color: rgba(6, 182, 212, 0.6); }
     font-size: calc(var(--wheel-center-size) * 0.35);
 }
 
-@media (max-width: 768px) {
-    #watch-wheel-area:not(.wheel-area--band) { right: 10px; bottom: 10px; }
-    #watch-wheel-area .wheel-container { width: 200px; height: 200px; padding: 10px; }
-    #watch-wheel-area .wheel-canvas { width: 180px !important; height: 180px !important; }
-}
-
-/* Une colonne : l'échiquier d'abord, la liste des coups (hauteur variable) en dessous */
-@media (max-width: 1100px) {
-    #page-watch .watch__layout > #watch-moves { order: 2; }
-    #page-watch .watch__layout > .sandbox__main { order: 1; }
-    #page-watch .watch__layout > .sandbox__sidebar { order: 3; }
-}
-
-@media (max-width: 760px) {
-    .watch-bar__mode { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-    .watch-bar__mode .game-card__private { font-size: 0.7rem; }
-}
-
 /* Roue classique : cachée pendant le remplissage, visible dans la dernière seconde puis pendant le tirage */
 #watch-wheel-area { transition: opacity 0.9s ease, transform 0.9s ease; }
-#watch-wheel-area:not(.is-spinning):not(.is-soon) {
+#watch-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon) {
     opacity: 0;
     transform: scale(0.85) translateY(20px);
     pointer-events: none;
     animation: none;
+}
+
+/* ================================================ Mise en page de la partie (comme chez les joueurs) */
+#page-watch { --sidebar-width: clamp(380px, 30vw, 470px); }
+
+@media (max-width: 1100px) {
+    #page-watch { --sidebar-width: clamp(300px, 36vw, 360px); }
+}
+
+@media (max-width: 760px) {
+    #page-watch { --sidebar-width: calc(100vw - 24px); }
+    /* Mobile : la partie regardée d'abord, puis 👁 / retourner juste au-dessus de l'échiquier */
+    #page-watch .sandbox__left { order: -2; }
+    #page-watch .sandbox__sidebar > .sandbox__actions { order: 0; }
+}
+
+/* Roue classique posée à la place du podium : l'encart gère son apparition */
+#watch-wheel-area.wheel-area--docked { margin: 0; }
+#watch-wheel-area.wheel-area--docked .wheel-container { background: rgba(10, 10, 20, 0.95); }
+
+/* Chrono : jamais par-dessus l'échiquier
+   560–639 px de colonne : côte à côte, l'échiquier cède la place
+   < 560 : chrono compact au-dessus de l'échiquier */
+#page-watch .sandbox__main { container: watch-col / inline-size; }
+
+@container watch-col (max-width: 639.98px) {
+    #page-watch .board-wrapper:has(> .watch__timer:not([hidden])) {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    #page-watch .board-wrapper:has(> .watch__timer:not([hidden])) > .board-container {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+    }
+
+    #page-watch .watch__timer { position: static; flex: none; padding: 8px; }
+    #page-watch .watch__timer-ring { width: 64px; height: 64px; }
+}
+
+@container watch-col (max-width: 559.98px) {
+    #page-watch .board-wrapper:has(> .watch__timer:not([hidden])) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    #page-watch .watch__timer {
+        order: -1;
+        flex-direction: row;
+        justify-content: center;
+        align-self: center;
+        padding: 4px 10px;
+    }
+
+    #page-watch .watch__timer-ring { width: 50px; height: 50px; }
+    #page-watch .watch__timer .countdown__label { display: none; }
 }
