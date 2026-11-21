@@ -323,8 +323,10 @@ body.randomWheel #wheel-area,
     }
 }
 
+/* Pas d'animation d'entrée au tirage : la roue est déjà apparue dans la dernière seconde du vote
+   (la rejouer la faisait disparaître puis réapparaître) */
 body.randomWheel #wheel-area {
-    animation: wheelSlideIn 0.4s ease-out;
+    animation: none;
 }
 
 /* Glow pendant le spin */
