@@ -903,3 +903,54 @@ body:not(.wheel-mode) .draw-tools { display: none; }
     .sandbox__left .sandbox__moves-panel { padding: 8px; }
     .moves-panel__typeit { margin-bottom: 6px; }
 }
+
+/* ------------------------------------------------ Chrono : jamais par-dessus l'échiquier
+   ≥ 640px de colonne : à droite de l'échiquier (règle @container plus haut)
+   560–639 : échiquier et chrono côte à côte, l'échiquier cède la place
+   < 560   : chrono compact au-dessus de l'échiquier, l'échiquier garde sa taille */
+#page-sandbox .sandbox__main { container: board-col / inline-size; }
+
+@container board-col (max-width: 639.98px) {
+    body:not(.no-vote-timer) #page-sandbox .board-wrapper {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    body:not(.no-vote-timer) #page-sandbox .board-wrapper > .board-container {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0;
+    }
+
+    body:not(.no-vote-timer) #page-sandbox .board-timer-container {
+        position: static;
+        flex: none;
+        padding: 0;
+        gap: 6px;
+    }
+
+    #page-sandbox .board-timer-container .countdown { width: 76px; height: 76px; }
+    #page-sandbox .board-timer-container .countdown__num { font-size: 1.5rem; }
+    #page-sandbox .board-timer-container .timer-pause-btn { padding: 4px 8px; font-size: 0.75rem; }
+}
+
+@container board-col (max-width: 559.98px) {
+    body:not(.no-vote-timer) #page-sandbox .board-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    body:not(.no-vote-timer) #page-sandbox .board-timer-container {
+        order: -1;
+        flex-direction: row;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    #page-sandbox .board-timer-container .countdown { width: 58px; height: 58px; }
+    #page-sandbox .board-timer-container .countdown__num { font-size: 1.15rem; }
+    #page-sandbox .board-timer-container .countdown__label { display: none; }
+}

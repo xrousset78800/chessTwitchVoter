@@ -175,9 +175,14 @@ class WheelBand extends VotingWheel {
         this.isSpinning = false;
         this.container.classList.remove('is-spinning');
 
-        this.centerEl.style.background = this.colors[this.winnerColorIndex % this.colors.length];
-        this.centerEl.innerHTML = `<span class="winner-piece">${this.getPieceIcon(this.winner)}</span><span class="winner-move">${this.winner}</span>`;
-        this.centerEl.classList.add('is-revealed');
+        this.winnerColor = this.colors[this.winnerColorIndex % this.colors.length];
+        this.winnerPct = this.computeWinnerPct(this.spinVotes || this.getSortedVotes(), this.spinTotalVotes || this.getTotalVotes());
+        // L'hôte affiche le coup tiré en grand dans l'encart du podium ; les spectateurs gardent l'étiquette sur la bande
+        if (this.showResultInside !== false) {
+            this.centerEl.style.background = this.winnerColor;
+            this.centerEl.innerHTML = `<span class="winner-piece">${this.getPieceIcon(this.winner)}</span><span class="winner-move">${this.winner}</span>`;
+            this.centerEl.classList.add('is-revealed');
+        }
         this.highlightWinner();
 
         setTimeout(() => {

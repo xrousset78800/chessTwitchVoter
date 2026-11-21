@@ -3,7 +3,7 @@
  * Roue de vote animée avec design amélioré
  */
 import { paletteColors } from './votePalettes.js';
-import { renderPodium, markPodiumWinner } from './voteViews.js';
+import { renderPodium, markPodiumWinner, revealWinner } from './voteViews.js';
 
 class VotingWheel {
     constructor(containerId) {
@@ -367,12 +367,16 @@ for (const v of sortedDbg) {
     const piece = isNamedPiece ? pieceKey : 'P';
     const pieceIcon = this.pieceIcons[turn][piece];
 
-    this.centerEl.style.setProperty('--winner-color', winnerColor);
-    this.centerEl.innerHTML = `<span class="winner-piece">${pieceIcon}</span><span class="winner-move">${this.winner}</span>`;
-    this.centerEl.classList.add('winner-reveal');
-    // Appliquer la couleur du segment gagnant
-    this.centerEl.style.background = winnerColor;
-    this.centerEl.style.boxShadow = `0 0 30px ${winnerColor}99, 0 0 60px ${winnerColor}44, inset 0 2px 10px rgba(255,255,255,0.3)`;
+    this.winnerColor = winnerColor;
+    this.winnerPct = this.computeWinnerPct(sortedVotes, totalVotes);
+    // L'hôte affiche le coup tiré en grand dans l'encart du podium ; les spectateurs gardent le centre de la roue
+    if (this.showResultInside !== false) {
+        this.centerEl.style.setProperty('--winner-color', winnerColor);
+        this.centerEl.innerHTML = `<span class="winner-piece">${pieceIcon}</span><span class="winner-move">${this.winner}</span>`;
+        this.centerEl.classList.add('winner-reveal');
+        this.centerEl.style.background = winnerColor;
+        this.centerEl.style.boxShadow = `0 0 30px ${winnerColor}99, 0 0 60px ${winnerColor}44, inset 0 2px 10px rgba(255,255,255,0.3)`;
+    }
 
     this.highlightWinner();
 
@@ -454,6 +458,19 @@ pickWeightedRandom() {
      */
     highlightWinner() {
         markPodiumWinner(document.getElementById('vote-list'), this.winner);
+        if (this.showResultInside === false) {
+            revealWinner(document.getElementById('votes-panel'), {
+                move: this.winner, color: this.winnerColor, pct: this.winnerPct, turn: this.currentTurn()
+            });
+        }
+    }
+
+    /** Score du coup tiré ; null quand chaque coup n'a qu'une voix (pur tirage au sort) */
+    computeWinnerPct(votes, total) {
+        if (!votes?.length || !total) return null;
+        if (votes.length > 1 && votes.every(v => v.count === 1)) return null;
+        const w = votes.find(v => v.move === this.winner);
+        return w ? Math.round((w.count / total) * 100) : null;
     }
 }
 

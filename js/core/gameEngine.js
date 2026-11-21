@@ -11,7 +11,7 @@ import voting from './voting.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { paletteColors } from '../components/votePalettes.js';
-import { renderPodium, renderHistory, VoteTicker, paintMoveChips, morphPodiumToWheel } from '../components/voteViews.js';
+import { renderPodium, renderHistory, VoteTicker, paintMoveChips, morphPodiumToWheel, clearWinner } from '../components/voteViews.js';
 
 class GameEngine {
     constructor() {
@@ -659,6 +659,8 @@ setWheelStyle(style) {
         if (ticker && area.previousElementSibling !== ticker) ticker.after(area);
     }
     this.votingWheel = style === 'band' ? new WheelBand('wheel-area') : new VotingWheel('wheel-area');
+    // Le coup tiré s'affiche en grand dans l'encart du podium, pas sur la roue ni sur la bande
+    this.votingWheel.showResultInside = false;
     if (votes) {
         this.votingWheel.votes = votes;
         this.votingWheel.draw();
@@ -687,7 +689,9 @@ hideWheel() {
     if (wheelArea) {
         wheelArea.classList.remove('is-visible', 'is-spinning');
     }
-    document.getElementById('votes-panel')?.classList.remove('is-drawing');
+    const slot = document.getElementById('votes-panel');
+    slot?.classList.remove('is-drawing');
+    clearWinner(slot);
 }
 
         /**

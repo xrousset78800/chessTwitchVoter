@@ -243,3 +243,33 @@ export function morphPodiumToWheel(slot, target) {
         ], { duration: 1000, delay: i * 70, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'both' }).onfinish = () => g.remove();
     });
 }
+
+// ------------------------------------------------------ Coup tiré, en grand dans l'encart du podium
+
+/**
+ * Affiche le coup tiré par la roue ou la bande, à la place du podium (mêmes visuels dans les deux styles)
+ * @param {HTMLElement} slot  #votes-panel
+ * @param {{move: string, color: string, pct: number|null, turn: 'w'|'b'}} w
+ */
+export function revealWinner(slot, { move, color, pct, turn = 'w' }) {
+    if (!slot || !move) return;
+    let el = slot.querySelector('.votes-slot__winner');
+    if (!el) {
+        el = document.createElement('div');
+        el.className = 'votes-slot__winner';
+        el.setAttribute('role', 'status');
+        slot.appendChild(el);
+    }
+    const piece = pieceOf(move);
+    const img = piece ? `<img class="votes-slot__winner-piece" src="${PIECE_IMG.replace('{piece}', turn + piece)}" alt="">` : '';
+    const score = pct == null
+        ? `<span class="votes-slot__winner-pct">🎲 ${esc(t('podium.random', null, 'Tirage au sort'))}</span>`
+        : `<span class="votes-slot__winner-pct">${pct}%</span>`;
+    el.style.setProperty('--win', color || '#10b981');
+    el.innerHTML = `${img}<span class="votes-slot__winner-move">${esc(move)}</span>${score}`;
+    slot.classList.add('has-winner');
+}
+
+export function clearWinner(slot) {
+    slot?.classList.remove('has-winner');
+}
