@@ -701,40 +701,28 @@
         <!-- ==================== SPECTATEUR ==================== -->
         <div class="page" id="page-watch">
             <div class="sandbox watch">
-                <div class="sandbox__header">
-                    <div class="sandbox__title-area">
-                        <a href="#/browse" class="btn btn--icon" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-arrow-left"></i></a>
-                        <h1 class="sandbox__title" id="watch-mode"></h1>
-                    </div>
-                    <div class="sandbox__actions">
-                        <span class="spectators-badge" id="watch-spectators-badge" hidden><i class="fas fa-eye"></i> <span id="watch-spectators-count">0</span></span>
-                        <button type="button" class="btn btn--sm tool-btn" id="watch-flip" data-i18n-title="watch.flip" title="Retourner l'échiquier"><i class="fas fa-sync-alt"></i></button>
-                    </div>
-                </div>
-
-                <!-- Tout le monde sait qui regarde : le spectateur, les joueurs et les autres spectateurs -->
-                <div class="spectator-banner" id="watch-banner">
-                    <span class="spectator-banner__icon"><i class="fas fa-eye"></i></span>
-                    <span class="spectator-banner__text">
-                        <strong data-i18n="watch.bannerTitle">Mode spectateur</strong>
-                        <span data-i18n="watch.bannerHint">Tu vois la partie comme les joueurs, sans pouvoir jouer ni voter. Ils voient que tu regardes.</span>
+                <!-- Une seule barre : retour, spectateur en direct, mode, équipes ou score, spectateurs, retourner -->
+                <div class="watch-bar" id="watch-banner">
+                    <a href="#/browse" class="btn btn--icon watch-bar__back" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-arrow-left"></i></a>
+                    <span class="watch-bar__live" data-i18n-title="watch.bannerHint" title="Tu vois la partie comme les joueurs, sans pouvoir jouer ni voter. Ils voient que tu regardes.">
+                        <span class="watch-bar__dot"></span><span class="watch-bar__live-text" data-i18n="watch.spectating">Spectateur</span>
                     </span>
-                    <span class="badge badge--live spectator-banner__live">● LIVE</span>
-                </div>
-
-                <div class="multi-banner" id="watch-multi" hidden>
-                    <div class="multi-banner__teams">
-                        <span class="multi-banner__team--white" id="watch-team-white">—</span>
-                        <span class="multi-banner__vs">⚔</span>
-                        <span class="multi-banner__team--black" id="watch-team-black">—</span>
+                    <h1 class="watch-bar__mode" id="watch-mode"></h1>
+                    <div class="watch-bar__info">
+                        <div class="watch-bar__teams" id="watch-multi" hidden>
+                            <span class="watch-bar__team watch-bar__team--white" id="watch-team-white">—</span>
+                            <span class="watch-bar__vs">⚔</span>
+                            <span class="watch-bar__team watch-bar__team--black" id="watch-team-black">—</span>
+                        </div>
+                        <div class="watch-bar__rush" id="watch-rush" hidden>
+                            <span class="watch-bar__chip" id="watch-rush-title"></span>
+                            <span class="watch-bar__stat"><span class="watch-bar__label">Score</span> <b id="watch-rush-score">0</b></span>
+                            <span class="watch-bar__hearts" id="watch-rush-hearts"></span>
+                            <span class="watch-bar__stat"><span class="watch-bar__label">Rating</span> <b id="watch-rush-rating">—</b></span>
+                        </div>
                     </div>
-                </div>
-
-                <div class="rush-banner" id="watch-rush" hidden>
-                    <span class="rush-banner__title" id="watch-rush-title">🔥 Puzzle Rush</span>
-                    <span class="rush-banner__stat"><span class="rush-banner__label">Score</span><span class="rush-banner__value" id="watch-rush-score">0</span></span>
-                    <span class="rush-banner__stat rush-banner__hearts" id="watch-rush-hearts"></span>
-                    <span class="rush-banner__stat"><span class="rush-banner__label">Rating</span><span class="rush-banner__value" id="watch-rush-rating">—</span></span>
+                    <span class="spectators-badge watch-bar__eyes" id="watch-spectators-badge"><i class="fas fa-eye"></i> <span id="watch-spectators-count">0</span></span>
+                    <button type="button" class="btn btn--sm tool-btn" id="watch-flip" data-i18n-title="watch.flip" title="Retourner l'échiquier"><i class="fas fa-sync-alt"></i></button>
                 </div>
 
                 <div class="sandbox__content watch__layout">
@@ -761,13 +749,6 @@
                     </div>
 
                     <div class="sandbox__sidebar">
-                        <div class="panel spectators-panel">
-                            <div class="panel__header"><i class="fas fa-eye"></i> <span data-i18n="spectators.title">Spectateurs</span> <span class="spectators-panel__count" id="watch-spectators-panel-count"></span></div>
-                            <div class="panel__content">
-                                <div class="spectators" id="watch-spectators"></div>
-                                <p class="spectators__login" id="watch-login-hint" hidden data-i18n="spectators.loginHint">Connecte-toi à Twitch pour apparaître avec ton pseudo.</p>
-                            </div>
-                        </div>
                         <div class="panel" id="watch-votes-panel">
                             <div class="panel__header"><i class="fas fa-poll"></i> <span data-i18n="watch.votesTitle">Votes en cours</span></div>
                             <div class="panel__content">
@@ -779,6 +760,13 @@
                             <div class="panel__header"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span></div>
                             <div class="panel__content">
                                 <div class="history-list" id="watch-history"></div>
+                            </div>
+                        </div>
+                        <div class="panel spectators-panel">
+                            <div class="panel__header"><i class="fas fa-eye"></i> <span data-i18n="spectators.title">Spectateurs</span> <span class="spectators-panel__count" id="watch-spectators-panel-count"></span></div>
+                            <div class="panel__content">
+                                <div class="spectators" id="watch-spectators"></div>
+                                <p class="spectators__login" id="watch-login-hint" hidden data-i18n="spectators.loginHint">Connecte-toi à Twitch pour apparaître avec ton pseudo.</p>
                             </div>
                         </div>
                     </div>

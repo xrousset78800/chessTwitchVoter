@@ -177,6 +177,11 @@
     "puzzles": {
       "name": "Puzzles",
       "desc": "Chat solves puzzles, 30s per move."
+    },
+    "custom": {
+      "name": "Customize",
+      "desc": "Every option: game mode, vote time, wheel or majority, votes per viewer…",
+      "chip": "all options"
     }
   },
   "rushPage": {
@@ -520,7 +525,8 @@
     "totalOne": "{n} vote",
     "totalMany": "{n} votes",
     "rushToPlay": "Chat is looking for the right move…",
-    "movesCount": "{n} moves"
+    "movesCount": "{n} moves",
+    "spectating": "Spectator"
   },
   "spectators": {
     "title": "Spectators",

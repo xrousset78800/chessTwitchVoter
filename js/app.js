@@ -510,6 +510,8 @@ const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp
 
 /** Configurations suggérées de l'écran Nouveau (textes dans suggested.<id>) */
 const SETUP_PRESETS = [
+    // Personnaliser : garde le mode choisi et affiche toutes les options (le minuteur les fait apparaître)
+    { id: 'custom',    icon: '🎛️', mode: null,       config: { timerEnabled: true }, custom: true },
     { id: 'instant',   icon: '⚡', mode: 'sandbox',  config: { timerEnabled: false } },
     { id: 'democracy', icon: '🗳️', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
     { id: 'wheel',     icon: '🎡', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: false, votesPerViewer: 3 } },
@@ -1492,7 +1494,7 @@ fullReset() {
                 <span class="preset-card__body">
                     <span class="preset-card__name">${escapeHtml(tr(`suggested.${p.id}.name`))}</span>
                     <span class="preset-card__desc">${escapeHtml(tr(`suggested.${p.id}.desc`))}</span>
-                    <span class="preset-card__chips">${this.presetChips(p.mode, { votesPerViewer: 1, ...p.config }).map(c => `<span>${escapeHtml(c)}</span>`).join('')}</span>
+                    <span class="preset-card__chips">${(p.custom ? [tr('suggested.custom.chip')] : this.presetChips(p.mode, { votesPerViewer: 1, ...p.config })).map(c => `<span>${escapeHtml(c)}</span>`).join('')}</span>
                 </span>
             </button>`).join('');
         this.markPreset();
@@ -1500,9 +1502,13 @@ fullReset() {
 
     markPreset() {
         const c = AppState.config;
+        const matches = (p) => p.mode === AppState.gameMode && Object.entries(p.config).every(([k, v]) => c[k] === v);
+        // « Personnaliser » est surligné dès que les réglages ne correspondent à aucune suggestion
+        // (ou tant qu'on l'a choisi, jusqu'au clic sur une autre suggestion)
+        const anyMatch = !this.customPicked && SETUP_PRESETS.some(p => !p.custom && matches(p));
         document.querySelectorAll('#presets-list [data-preset]').forEach(card => {
             const p = SETUP_PRESETS.find(x => x.id === card.dataset.preset);
-            const on = !!p && p.mode === AppState.gameMode && Object.entries(p.config).every(([k, v]) => c[k] === v);
+            const on = !!p && (p.custom ? !anyMatch : !this.customPicked && matches(p));
             card.classList.toggle('is-active', on);
             card.setAttribute('aria-pressed', on);
         });
@@ -1513,11 +1519,18 @@ fullReset() {
         const p = SETUP_PRESETS.find(x => x.id === id);
         if (!p) return;
         // Même chemin qu'un clic sur le mode (chargement des puzzles compris)
-        document.querySelector(`.mode-option[data-mode="${p.mode}"]`)?.click();
+        this.customPicked = !!p.custom;
+        if (p.mode) document.querySelector(`.mode-option[data-mode="${p.mode}"]`)?.click();
         Object.assign(AppState.config, p.config);
         this.syncUIFromState();
         Storage.saveConfig();
         this.markPreset();
+        if (p.custom) {
+            // Sur petit écran, les options sont sous les suggestions : on y descend
+            const col = document.querySelector('#sandbox-setup .sandbox-setup__col:not(.launch-only)');
+            if (col && col.getBoundingClientRect().top > window.innerHeight * 0.6) col.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
         Toast.success(tr('suggested.applied', { name: tr(`suggested.${p.id}.name`) }));
     },
 
@@ -2694,6 +2707,23 @@ async function initApp() {
 
             // ---- Routes à inscription : seuls les inscrits du camp au trait votent ----
             if (lobby.active && !lobby.canVote(voteContext.username, gameEngine.chess.turn())) {
+                return;
+            }
+
+            // ---- Sans minuteur (⚡ instantané) : le premier coup légal du chat est joué ----
+            if (!gameEngine.config.timerEnabled && !voting.isOpen) {
+                if (!['sandbox', 'game'].includes(AppState.currentPage) || gameEngine.chess.game_over()) return;
+                if (gameEngine.session && gameEngine.canHumanPlay()) return; // tour du streamer
+                // Une rafale de messages ne joue pas deux coups d'affilée
+                if (Date.now() < (twitch.instantCooldownUntil || 0)) return;
+                const resolved = matchLegalMove(gameEngine.chess, voteContext.move);
+                if (!resolved) return;
+                twitch.instantCooldownUntil = Date.now() + 1000;
+                window.ViewerStats?.recordTurn('game',
+                    [{ login: voteContext.username, name: voteContext.displayName, move: resolved.san }],
+                    (m) => m === resolved.san);
+                gameEngine.executeMove(resolved.san);
+                gameEngine.updateAvailableMoves();
                 return;
             }
 

@@ -153,6 +153,7 @@ const WatchPage = {
         this.renderHistory();
         this.renderStatus(false);
         this.setTimer(s?.timer || null);
+        this.reserveBand();
         this.renderWheel();
     },
 
@@ -179,6 +180,16 @@ const WatchPage = {
     hideWheel() {
         const area = $('watch-wheel-area');
         area?.classList.remove('is-visible', 'is-spinning');
+    },
+
+    /** Bande de l'hôte : sa place reste réservée pendant la partie, la page ne saute pas à chaque tour */
+    reserveBand() {
+        const s = this.state || {};
+        const area = $('watch-wheel-area');
+        if (!area) return;
+        const band = s.wheel === 'band' && !s.result;
+        area.classList.toggle('is-reserved', band);
+        if (band) area.classList.add('wheel-area--band');
     },
 
     renderWheel() {
@@ -251,8 +262,9 @@ const WatchPage = {
         const flipped = this.orientation() === 'black';
         top.innerHTML = flipped ? whiteHtml : blackHtml;
         bottom.innerHTML = flipped ? blackHtml : whiteHtml;
-        top.hidden = !top.innerHTML;
-        bottom.hidden = !bottom.innerHTML;
+        // Sans adversaire (Mono, Rush…), la ligne du haut n'existe pas ; sinon elle garde sa place
+        top.hidden = s.mode !== 'multi';
+        bottom.hidden = false;
     },
 
     /** Bannières de la fenêtre de jeu : équipes du Multi, score du Puzzle Rush */
@@ -276,7 +288,7 @@ const WatchPage = {
             const r = s.rush;
             rush.hidden = s.mode !== 'rush' || !r;
             if (r) {
-                $('watch-rush-title').textContent = `🔥 Puzzle Rush · ${r.mode === '0' || !r.mode ? '∞' : `${r.mode} s`}`;
+                $('watch-rush-title').textContent = `⏱ ${r.mode === '0' || !r.mode ? '∞' : `${r.mode} s`}`;
                 $('watch-rush-score').textContent = String(r.score);
                 $('watch-rush-rating').textContent = r.rating ? `~${r.rating}` : '—';
                 const lives = Math.max(0, r.maxStrikes - r.strikes);
@@ -308,7 +320,8 @@ const WatchPage = {
             <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : PIECE_ICONS[turn][piece]}</span>${
                 g.map(m => `<li class="${m === top ? 'most-voted' : ''}"><button type="button" tabindex="-1" disabled>${esc(m)}</button></li>`).join('')
             }</ul>`).join('');
-        $('watch-moves').hidden = !moves.length;
+        // Le panneau garde sa place (pas de saut de l'échiquier quand il n'y a plus de coup)
+        $('watch-moves').classList.toggle('is-empty', !moves.length);
     },
 
     renderVotes() {
@@ -359,7 +372,6 @@ const WatchPage = {
         const count = d?.count || 0;
         const badge = $('watch-spectators-badge');
         if (badge) {
-            badge.hidden = !count;
             badge.title = count ? spectatorsLabel(count) : '';
             $('watch-spectators-count').textContent = String(count);
         }

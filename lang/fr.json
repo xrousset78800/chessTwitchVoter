@@ -177,6 +177,11 @@
     "puzzles": {
       "name": "Problèmes",
       "desc": "Le chat résout des puzzles, 30 s par coup."
+    },
+    "custom": {
+      "name": "Personnaliser",
+      "desc": "Toutes les options : mode de jeu, temps de vote, roue ou majorité, votes par viewer…",
+      "chip": "toutes les options"
     }
   },
   "rushPage": {
@@ -520,7 +525,8 @@
     "totalOne": "{n} vote",
     "totalMany": "{n} votes",
     "rushToPlay": "Le chat cherche le bon coup…",
-    "movesCount": "{n} coups"
+    "movesCount": "{n} coups",
+    "spectating": "Spectateur"
   },
   "spectators": {
     "title": "Spectateurs",
