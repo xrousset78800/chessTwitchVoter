@@ -137,7 +137,10 @@
     "votes": "votes"
   },
   "moves": {
-    "available": "Available moves"
+    "available": "Available moves",
+    "typeTitle": "Type your move in chat",
+    "example": "For example:",
+    "or": "or"
   },
   "presets": {
     "rushCard": "Your chat solves puzzle after puzzle",
@@ -549,10 +552,10 @@
     "title": "Draw colors",
     "violet": "Violet",
     "twitch": "Twitch",
-    "neon": "Neon",
+    "night": "Night",
     "fire": "Fire",
     "ocean": "Ocean",
-    "pastel": "Pastel",
+    "muted": "Muted",
     "access": "Color-blind"
   },
   "timerRing": {

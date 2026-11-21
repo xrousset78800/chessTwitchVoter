@@ -137,7 +137,10 @@
     "votes": "votes"
   },
   "moves": {
-    "available": "Coups disponibles"
+    "available": "Coups disponibles",
+    "typeTitle": "Tape ton coup dans le chat",
+    "example": "Exemple :",
+    "or": "ou"
   },
   "presets": {
     "rushCard": "Ton chat enchaîne les puzzles",
@@ -549,10 +552,10 @@
     "title": "Couleurs du tirage",
     "violet": "Violet",
     "twitch": "Twitch",
-    "neon": "Néon",
+    "night": "Nuit",
     "fire": "Feu",
     "ocean": "Océan",
-    "pastel": "Pastel",
+    "muted": "Sobre",
     "access": "Daltonien"
   },
   "timerRing": {

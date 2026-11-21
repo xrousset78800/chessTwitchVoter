@@ -454,6 +454,10 @@
                         <div class="moves-panel__header">
                             <span data-i18n="moves.available">Coups disponibles</span>
                         </div>
+                        <div class="moves-panel__typeit">
+                            <div class="moves-panel__title" data-i18n="moves.typeTitle">Tape ton coup dans le chat</div>
+                            <div class="moves-panel__ex" id="moves-example"></div>
+                        </div>
                         <div class="moves-panel__content">
                             <ul id="availableListP" class="moves-group"><span class="piece-icon">♙</span></ul>
                             <ul id="availableListN" class="moves-group"><span class="piece-icon">♞</span></ul>
@@ -518,12 +522,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="panel" id="votes-panel">
-                            <div class="panel__header"><i class="fas fa-poll"></i> Votes en cours</div>
-                            <div class="panel__content">
-                                <div id="vote-list" class="vote-list">
-                                    <!-- Les votes s'afficheront ici -->
-                                </div>
+                        <!-- Podium des votes ; la roue classique prend sa place au tirage -->
+                        <div class="votes-slot" id="votes-panel">
+                            <div class="votes-slot__podium">
+                                <div id="vote-list" class="vote-list"></div>
                                 <div class="vote-total" id="vote-total"></div>
                             </div>
                         </div>

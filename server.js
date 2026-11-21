@@ -582,7 +582,7 @@ function spectateKey(g) {
 
 // ---------- Détail publié par le navigateur d'un joueur ----------
 const SAN_RE = /^(?:O-O(?:-O)?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?)[+#]?$/;
-const PALETTE_IDS = ['violet', 'twitch', 'neon', 'fire', 'ocean', 'pastel', 'access'];
+const PALETTE_IDS = ['violet', 'twitch', 'night', 'fire', 'ocean', 'muted', 'access'];
 const clampInt = (v, min, max) => Math.min(Math.max(parseInt(v, 10) || 0, min), max);
 
 function sanitizeDetail(data = {}, prev = null) {

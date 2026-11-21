@@ -39,7 +39,7 @@
 /* Main layout - 3 colonnes */
 .sandbox__content {
     display: grid;
-    grid-template-columns: 220px 1fr var(--sidebar-width);
+    grid-template-columns: clamp(220px, 22vw, 340px) minmax(0, 1fr) var(--sidebar-width);
     gap: 24px;
     max-width: 1600px;
     margin: 0 auto;

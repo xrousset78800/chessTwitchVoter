@@ -2,7 +2,7 @@
  * GAME ENGINE MODULE
  * Logique centrale du jeu d'échecs avec votes
  * Compatible avec Chess.js 0.10.x (ancienne API)
- * 
+ *
  * ⚠️ MODIFIÉ: Support natif du mode problèmes via window.problemsManager
  */
 
@@ -11,7 +11,7 @@ import voting from './voting.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { paletteColors } from '../components/votePalettes.js';
-import { renderPodium, renderHistory, VoteTicker } from '../components/voteViews.js';
+import { renderPodium, renderHistory, VoteTicker, paintMoveChips, morphPodiumToWheel } from '../components/voteViews.js';
 
 class GameEngine {
     constructor() {
@@ -20,7 +20,7 @@ class GameEngine {
         this.board = null;           // Instance Chessboard.js
         this.isRunning = false;
         this.currentTurn = 'w';      // 'w' ou 'b'
-        
+
         // Configuration
         this.config = {
             timerEnabled: false,
@@ -30,23 +30,23 @@ class GameEngine {
             majorityMode: true,
             votesPerViewer: 1
         };
-        
+
         // Mode de jeu
         this.mode = 'sandbox';       // sandbox, problems, oneVsAll, oneVsOne, chatVsChat
         this.modeHandler = null;     // Handler spécifique au mode
         this.session = null;         // Partie à joueurs inscrits : { humanColor: 'w' | 'b' | null }
-        
+
         // Historique
         this.moveHistory = [];
-        
+
         // Callbacks
         this.onMove = null;
         this.onGameEnd = null;
         this.onTurnChange = null;
-        
+
         // Nom du votant pour les tests
         this.currentVoterName = 'TestPlayer';
-        
+
         // Sons
         this.sounds = {
             move: new Audio('mp3/move.mp3'),
@@ -61,13 +61,13 @@ class GameEngine {
      */
     init(options = {}) {
         console.log('🎮 Initialisation du GameEngine...');
-        
+
         // Appliquer la config
         Object.assign(this.config, options);
-        
+
         // Créer l'instance Chess.js
         this.chess = new Chess();
-        
+
         // Créer l'échiquier
         const boardConfig = {
             draggable: true,
@@ -77,17 +77,17 @@ class GameEngine {
             onDrop: this.onDrop.bind(this),
             onSnapEnd: this.onSnapEnd.bind(this)
         };
-        
+
         this.board = Chessboard('myBoard', boardConfig);
         window.BoardAnnotations?.attach('myBoard', { draggable: true });
-        
+
         // Initialiser le timer avec les callbacks
         timer.init({
             duration: this.config.timerDuration,
             onTick: (remaining) => this.onTimerTick(remaining),
             onComplete: () => this.onTimerComplete()
         });
-        
+
         // Initialiser le système de vote
         voting.init({
             votesPerViewer: this.config.votesPerViewer,
@@ -103,20 +103,20 @@ class GameEngine {
                 timer.pause();
             }
         });
-        
+
         window.addEventListener('phantomMoveComplete', () => {
             if (this.config.timerEnabled && timer.isRunning && timer.isPaused) {
                 console.log('▶️ Reprise timer - Phantom terminé');
                 timer.resume();
             }
-        });        
+        });
 
         // Créer le panneau des coups disponibles
         this.createMovesPanel();
-        
+
         // Resize handler
         window.addEventListener('resize', () => this.board?.resize());
-        
+
         console.log('✅ GameEngine initialisé');
         return this;
     }
@@ -131,7 +131,7 @@ class GameEngine {
         if (this.chess.game_over()) return false;
         // Pendant le tirage : flèches au clic droit oui, déplacement de pièce non
         if (document.body.classList.contains('randomWheel')) return false;
-        
+
         // ========== MODE PROBLÈMES ==========
         if (window.problemsManager?.isActive) {
             // Vérifier que c'est le tour du joueur (index impair)
@@ -139,17 +139,17 @@ class GameEngine {
                 console.log('🧩 [onDragStart] Pas le tour du joueur');
                 return false;
             }
-            
+
             // Vérifier la couleur de la pièce
             const turn = this.chess.turn();
             if ((turn === 'w' && piece.search(/^b/) !== -1) ||
                 (turn === 'b' && piece.search(/^w/) !== -1)) {
                 return false;
             }
-            
+
             return true;
         }
-        
+
         // ========== MODE NORMAL ==========
         // Ne pas autoriser de bouger les pièces adverses
         const turn = this.chess.turn();
@@ -157,7 +157,7 @@ class GameEngine {
             (turn === 'b' && piece.search(/^w/) !== -1)) {
             return false;
         }
-        
+
         return this.canHumanPlay();
     }
 
@@ -179,25 +179,25 @@ class GameEngine {
         if (window.problemsManager?.isActive) {
             console.log('🧩 [GameEngine.onDrop] Mode problèmes actif');
             console.log('🧩 [GameEngine.onDrop] Coup tenté:', source, '→', target);
-            
+
             // Construire le coup UCI
             const moveUCI = source + target;
-            
+
             // Déléguer la validation au problemsManager
             const result = window.problemsManager.validateAndPlayMove(moveUCI);
-            
+
             console.log('🧩 [GameEngine.onDrop] Résultat:', result);
-            
+
             // Si coup invalide ou incorrect → snapback
             if (!result.valid || !result.correct) {
                 return 'snapback';
             }
-            
+
             // Coup correct - le problemsManager a déjà mis à jour le board
             // Ne rien retourner (pas de snapback)
             return;
         }
-        
+
         // ========== MODE NORMAL ==========
         // Tenter le coup
         const move = this.chess.move({
@@ -205,9 +205,9 @@ class GameEngine {
             to: target,
             promotion: 'q'
         });
-        
+
         if (move === null) return 'snapback';
-        
+
         // En mode avec timer/vote, on devrait passer par le système de vote
         // Pour l'instant, on exécute directement (mode drag & drop)
         this.moveHistory.push(move);
@@ -215,9 +215,9 @@ class GameEngine {
         this.playMoveSound(move);
         this.updateHistoryUI(move);
         this.syncPhantom();
-        
+
         if (this.checkGameEnd()) return;
-        
+
         this.currentTurn = this.chess.turn();
         this.startTurn();
     }
@@ -236,7 +236,7 @@ class GameEngine {
      */
     setConfig(config) {
         Object.assign(this.config, config);
-        
+
         // Mettre à jour les sous-modules
         timer.setDuration(this.config.timerDuration);
         voting.setMode({
@@ -341,13 +341,13 @@ class GameEngine {
             } else if (this.chess.in_draw()) {
                 result = 'Nulle !';
             }
-            
+
             console.log('🏁 Fin de partie:', result);
-            
+
             if (this.onGameEnd) {
                 this.onGameEnd(result);
             }
-            
+
             this.isRunning = false;
             return true;
         }
@@ -427,17 +427,17 @@ onTimerComplete() {
 
 onVoteAdded(vote, results) {
     console.log('🗳️ Vote ajouté:', vote.player, '→', vote.move);
-    
+
     // Log dans la sidebar
     if (window.VoteLog) window.VoteLog.add(vote.player || 'chat', vote.move);
-    
+
     const sortedResults = voting.getSortedResults();
     this.updateVotesUI(sortedResults);
-    
+
     if (this.votingWheel) {
         this.syncWheelFromVoting();
     }
-    
+
     this.highlightMostVoted();
 }
 
@@ -446,26 +446,26 @@ onVoteAdded(vote, results) {
  */
 syncWheelFromVoting() {
     if (!this.votingWheel) return;
-    
+
     // Clear la roue
     this.votingWheel.votes.clear();
-    
+
     // Reconstruire depuis voting.votes (le tableau brut)
     const allVotes = voting.getAllVotes();
-    
+
     allVotes.forEach((vote, index) => {
         if (!this.votingWheel.votes.has(vote.move)) {
             this.votingWheel.votes.set(vote.move, { count: 0, voters: new Map() });
         }
-        
+
         const voteData = this.votingWheel.votes.get(vote.move);
         voteData.count++;
-        
+
         // Tracker le voter (pour l'affichage, pas pour bloquer)
         const voterCount = voteData.voters.get(vote.player) || 0;
         voteData.voters.set(vote.player, voterCount + 1);
     });
-    
+
     // Redessiner
     this.votingWheel.draw();
     this.votingWheel.updateVoteList();
@@ -474,14 +474,14 @@ highlightMostVoted() {
     const results = voting.getSortedResults();
     this.showLeadArrow(results);
     if (results.length === 0) return;
-    
+
     const topMove = results[0].move;
-    
+
     // Retirer l'ancienne surbrillance
     document.querySelectorAll('.moves-group li').forEach(li => {
         li.classList.remove('most-voted');
     });
-    
+
     // Ajouter la surbrillance au coup le plus voté
     document.querySelectorAll('.moves-group button').forEach(btn => {
         if (btn.textContent === topMove || btn.textContent === topMove.replace('#', '').replace('+', '')) {
@@ -552,7 +552,7 @@ highlightMostVoted() {
             this.playRandomMove();
             return;
         }
-        
+
         // ========== CAS 2: MODE MAJORITÉ → EXÉCUTION DIRECTE ==========
         if (this.config.majorityMode) {
             const winner = voting.selectByMajority();
@@ -560,7 +560,7 @@ highlightMostVoted() {
             this.previewWinner(winner, pct, () => this.executeMove(winner));
             return;
         }
-        
+
         // ========== CAS 3: MODE ROUE → ANIMATION ==========
         console.log('🎡 Mode roue - Animation...');
         this.showWheelAnimation(results);
@@ -571,14 +571,14 @@ highlightMostVoted() {
      */
 playRandomMove() {
     const moves = this.chess.moves();
-    
+
     if (moves.length === 0) {
         console.log('❌ Pas de coups disponibles');
         return;
     }
-    
+
     console.log('🎲 Aucun vote - Tirage au sort parmi', moves.length, 'coups');
-    
+
     // Tirer au sort le gagnant
     const randomMove = moves[Math.floor(Math.random() * moves.length)];
 
@@ -588,16 +588,16 @@ playRandomMove() {
         this.previewWinner(randomMove, null, () => this.executeMove(randomMove));
         return;
     }
-    
+
     // Mode roue : créer des "faux votes" pour tous les coups disponibles
     console.log('🎡 Mode roue - Animation avec tous les coups...');
-    
+
     const colorPalette = [
-        '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', 
+        '#8b5cf6', '#3b82f6', '#06b6d4', '#10b981',
         '#f59e0b', '#ef4444', '#ec4899', '#6366f1',
         '#14b8a6', '#f97316', '#84cc16', '#a855f7'
     ];
-    
+
     // Créer un résultat avec tous les coups (1 vote chacun = chances égales)
     const randomResults = moves.map((move, i) => ({
         move: move,
@@ -605,8 +605,8 @@ playRandomMove() {
         color: colorPalette[i % colorPalette.length],
         percentage: Math.round(100 / moves.length)
     }));
-    
-    
+
+
     // Remplir la roue avec tous les coups
     if (this.votingWheel) {
         this.votingWheel.clear();
@@ -616,10 +616,10 @@ playRandomMove() {
         });
         this.votingWheel.draw();
     }
-    
+
     // Activer le visuel
     document.body.classList.add('randomWheel');
-    
+
     // Lancer l'animation
     this.showWheelAnimation(randomResults);
 }
@@ -647,6 +647,17 @@ setWheelStyle(style) {
 
     const votes = this.votingWheel?.votes;
     area.classList.toggle('wheel-area--band', style === 'band');
+    // La bande reste sous l'échiquier ; la roue classique prend la place du podium
+    const slot = document.getElementById('votes-panel');
+    const docked = style === 'classic' && !!slot;
+    area.classList.toggle('wheel-area--docked', docked);
+    slot?.classList.toggle('votes-slot--wheel', docked);
+    if (docked) {
+        if (area.parentElement !== slot) slot.appendChild(area);
+    } else {
+        const ticker = document.getElementById('vote-ticker');
+        if (ticker && area.previousElementSibling !== ticker) ticker.after(area);
+    }
     this.votingWheel = style === 'band' ? new WheelBand('wheel-area') : new VotingWheel('wheel-area');
     if (votes) {
         this.votingWheel.votes = votes;
@@ -660,6 +671,12 @@ showWheel() {
     if (wheelArea) {
         wheelArea.classList.add('is-visible');
     }
+    // Roue classique : fondu enchaîné du podium vers la roue
+    const slot = document.getElementById('votes-panel');
+    if (wheelArea?.classList.contains('wheel-area--docked') && slot && !slot.classList.contains('is-drawing')) {
+        morphPodiumToWheel(slot, wheelArea.querySelector('.wheel-container'));
+        slot.classList.add('is-drawing');
+    }
 }
 
 /**
@@ -670,6 +687,7 @@ hideWheel() {
     if (wheelArea) {
         wheelArea.classList.remove('is-visible', 'is-spinning');
     }
+    document.getElementById('votes-panel')?.classList.remove('is-drawing');
 }
 
         /**
@@ -678,26 +696,28 @@ hideWheel() {
      */
 showWheelAnimation(results) {
     const wheelDuration = (this.config.wheelDuration || 5) * 1000;
-    
+
     this.updateVotesUI(results);
-    
+
     if (this.votingWheel) {
         // Synchroniser la roue
         this.votingWheel.clear();
         results.forEach((result) => {
-            this.votingWheel.votes.set(result.move, { 
-                count: result.count, 
-                voters: new Map([['system', result.count]]) 
+            this.votingWheel.votes.set(result.move, {
+                count: result.count,
+                voters: new Map([['system', result.count]])
             });
         });
         this.votingWheel.draw();
         console.log('🎡 Roue synchronisée avec', results.length, 'coups');
-        
+        // clear() a vidé le podium : on le redessine pour que le fondu parte des vraies marches
+        this.updateVotesUI(results);
+
         this.showWheel();
         document.getElementById('wheel-area')?.classList.add('is-spinning');
         console.log('🎡 Lancement de l\'animation de roue, durée:', wheelDuration, 'ms');
         document.body.classList.add('randomWheel');
-        
+
         const random = document.body.classList.contains('randomWheel') && results.every(r => r.count === 1) && results.length > 1;
         this.votingWheel.onSpinEnd = (winner) => {
             console.log('🎯 Roue terminée, gagnant:', winner);
@@ -708,12 +728,12 @@ showWheelAnimation(results) {
                 this.hideWheel();
             });
         };
-        
+
         // La roue tire elle-même le gagnant, chaque coup pèse son nombre de votes
         this.votingWheel.spin(wheelDuration);
         return;
     }
-    
+
     // Fallback
     setTimeout(() => {
         document.body.classList.remove('randomWheel');
@@ -727,18 +747,18 @@ showWheelAnimation(results) {
         if (!results || results.length === 0) {
             return null;
         }
-        
+
         // Calculer le total des votes
         const totalVotes = results.reduce((sum, r) => sum + (r.count || 1), 0);
         let random = Math.random() * totalVotes;
-        
+
         for (const result of results) {
             random -= (result.count || 1);
             if (random <= 0) {
                 return result.move;
             }
         }
-        
+
         return results[0].move;
     }
 
@@ -751,11 +771,11 @@ showWheelAnimation(results) {
         // Retirer les anciens highlights
         document.querySelectorAll('.highlight-last-move')
             .forEach(el => el.classList.remove('highlight-last-move'));
-        
+
         // Ajouter le highlight sur les cases from et to
         const fromSquare = document.querySelector(`[data-square="${from}"]`);
         const toSquare = document.querySelector(`[data-square="${to}"]`);
-        
+
         if (fromSquare) fromSquare.classList.add('highlight-last-move');
         if (toSquare) toSquare.classList.add('highlight-last-move');
     }
@@ -827,9 +847,10 @@ updateVotesUI(results) {
     if (!votesList) return;
     // Roue de hasard (tous les coups à 1) : le podium garde les vrais votes
     if (document.body.classList.contains('randomWheel')) return;
-    renderPodium(votesList, document.getElementById('vote-total'),
-        (results || []).map(r => ({ move: r.move, count: r.count || 0 })),
+    const votes = (results || []).map(r => ({ move: r.move, count: r.count || 0 }));
+    renderPodium(votesList, document.getElementById('vote-total'), votes,
         { turn: this.chess?.turn(), colors: paletteColors() });
+    paintMoveChips(document.getElementById('moves-panel'), votes, paletteColors());
 }
 
 /**
@@ -843,20 +864,20 @@ getVoteColor(index) {
 updateAvailableMoves() {
     const moves = this.chess.moves();
     const turn = this.chess.turn(); // 'w' ou 'b'
-    
+
     // Icônes par couleur
     const pieceIcons = {
         w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' },
         b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' }
     };
-    
+
     // Grouper les coups par pièce
     const groups = { P: [], N: [], B: [], R: [], Q: [], K: [], O: [] };
-    
+
     moves.forEach(move => {
         const cleanMove = move.replace('#', '').replace('+', '');
         const firstChar = move.charAt(0);
-        
+
         if (move.startsWith('O-') || move.startsWith('0-')) {
             groups.O.push(cleanMove);
         } else if (['K', 'Q', 'R', 'B', 'N'].includes(firstChar)) {
@@ -865,7 +886,7 @@ updateAvailableMoves() {
             groups.P.push(cleanMove);
         }
     });
-    
+
     // En mode multi, griser le panel si ce n'est pas notre tour
     const movesPanel = document.getElementById('moves-panel');
     const isLocked = !this.isMyTurnInMulti();
@@ -878,11 +899,11 @@ updateAvailableMoves() {
     ['P', 'N', 'B', 'R', 'Q', 'K', 'O'].forEach(piece => {
         const list = document.getElementById(`availableList${piece}`);
         if (!list) return;
-        
+
         // Garder l'icône existante
         const icon = list.querySelector('.piece-icon');
         list.innerHTML = '';
-        
+
         // Recréer l'icône avec la bonne couleur
         if (piece !== 'O') {
             const iconSpan = document.createElement('span');
@@ -892,19 +913,33 @@ updateAvailableMoves() {
         } else if (icon) {
             list.appendChild(icon);
         }
-        
+
         // Ajouter les coups
         if (groups[piece]) {
             groups[piece].forEach(move => {
                 const li = document.createElement('li');
                 const btn = document.createElement('button');
                 btn.textContent = move;
+                btn.dataset.move = move;
                 btn.onclick = () => this.onMoveClick(move);  // ← Correction ici
                 li.appendChild(btn);
                 list.appendChild(li);
             });
         }
     });
+
+    // Exemples à taper, pris parmi les coups légaux de la position
+    const ex = document.getElementById('moves-example');
+    if (ex) {
+        // Coups « naturels » d'abord (e4, Nf3…), sinon un coup du milieu de la liste
+        const pick = (list, prefs) => prefs.find(m => list.includes(m)) || list[Math.floor(list.length / 2)];
+        const pieces = ['N', 'B', 'Q', 'R', 'K', 'O'].flatMap(p => groups[p]);
+        const a = pick(groups.P, ['e4', 'd4', 'e5', 'd5', 'c4', 'c5']) || moves[0];
+        const b = pick(pieces, ['Nf3', 'Nf6', 'Nc3', 'Nc6', 'O-O']);
+        const code = m => `<code>${String(m).replace(/[<>&]/g, '')}</code>`;
+        ex.innerHTML = a ? `${window.i18n?.t('moves.example') || ''} ${code(a)}${b && b !== a ? ` ${window.i18n?.t('moves.or') || '/'} ${code(b)}` : ''}` : '';
+    }
+    paintMoveChips(movesPanel, (voting.getSortedResults?.() || []).map(r => ({ move: r.move, count: r.count || 0 })), paletteColors());
 }
 
 /**
@@ -989,7 +1024,7 @@ onMoveClick(move) {
         this.config.timerEnabled = true;
         voting.open();
         timer.start(this.config.timerDuration);
-        
+
         const startBtn = document.getElementById('btn-start-timer');
         const stopBtn = document.getElementById('btn-stop-timer');
         if (startBtn) startBtn.style.display = 'none';
@@ -1000,12 +1035,12 @@ onMoveClick(move) {
         console.log('⏱️ Arrêt manuel du timer');
         timer.stop();
         voting.close();
-        
+
         const startBtn = document.getElementById('btn-start-timer');
         const stopBtn = document.getElementById('btn-stop-timer');
         if (startBtn) startBtn.style.display = 'inline-flex';
         if (stopBtn) stopBtn.style.display = 'none';
-        
+
         if (voting.getTotalVotes() > 0) {
             this.processVoteResult();
         }
@@ -1015,7 +1050,7 @@ onMoveClick(move) {
 
     startGame() {
         console.log('🎮 Démarrage d\'une nouvelle partie...');
-        
+
         this.chess.reset();
         this.board.position('start');
         this.moveHistory = [];
@@ -1026,7 +1061,7 @@ onMoveClick(move) {
 
         this.updateAvailableMoves();
         this.startTurn();
-        
+
         console.log('✅ Partie démarrée');
     }
 }

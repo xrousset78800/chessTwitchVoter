@@ -541,3 +541,158 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
 
 /* Menu ouvert au-dessus du minuteur et de l'echiquier */
 .phantom-menu.is-open { z-index: 300; }
+
+/* ------------------------------------------------ Colonne « Tape ton coup » (viewer Twitch) */
+.sandbox__moves-panel .moves-panel__typeit {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.moves-panel__title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.moves-panel__ex {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.moves-panel__ex code {
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+    background: rgba(145, 70, 255, 0.25);
+    padding: 1px 6px;
+    border-radius: 5px;
+}
+
+/* Coups pas encore votés : discrets */
+#page-sandbox .sandbox__moves-panel .moves-group button {
+    --c: transparent;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.12);
+    transition: border-color 0.3s, color 0.3s, background 0.3s, transform 0.15s;
+}
+
+#page-sandbox .sandbox__moves-panel .moves-group button:hover {
+    color: #fff;
+    background: rgba(145, 70, 255, 0.3);
+    border-color: var(--accent-purple);
+}
+
+/* Coups votés : couleur du podium + nombre de votes */
+#page-sandbox .sandbox__moves-panel .moves-group button.is-voted {
+    color: #fff;
+    border-color: var(--c);
+    background: color-mix(in srgb, var(--c) 18%, transparent);
+}
+
+.sandbox__moves-panel .moves-group button b {
+    font: 700 0.68rem 'Inter', sans-serif;
+    color: #fff;
+    background: var(--c);
+    border-radius: 4px;
+    padding: 0 4px;
+}
+
+/* ------------------------------------------------ Emplacement du podium / de la roue classique */
+#votes-panel.votes-slot {
+    position: relative;
+    padding: 4px 0;
+}
+
+.votes-slot__podium {
+    transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.65, 0, 0.35, 1), filter 0.6s ease;
+}
+
+.votes-slot--wheel { min-height: 280px; }
+
+.votes-slot.is-drawing .votes-slot__podium {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: blur(4px);
+    pointer-events: none;
+}
+
+.votes-slot__ghost {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.35);
+}
+
+/* La roue classique quitte l'overlay flottant et se pose à la place du podium */
+body #votes-panel #wheel-area.wheel-area--docked {
+    --wheel-size: 250px;
+    --wheel-inner-size: 250px;
+    --wheel-center-size: 54px;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: none;
+    transition: opacity 0.5s ease 0.15s;
+}
+
+body #votes-panel.is-drawing #wheel-area.wheel-area--docked {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+body #votes-panel #wheel-area.wheel-area--docked .wheel-container {
+    width: 250px;
+    height: 250px;
+    padding: 0;
+}
+
+body #votes-panel #wheel-area.wheel-area--docked .wheel-canvas {
+    width: 250px !important;
+    height: 250px !important;
+}
+
+body #votes-panel #wheel-area.wheel-area--docked .wheel-pointer::after { display: none; }
+
+@property --wheel-reveal {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 360deg;
+}
+
+/* La roue se dévoile en balayage pendant que les marches du podium s'y fondent */
+body #votes-panel.is-drawing #wheel-area.wheel-area--docked .wheel-container {
+    animation: wheelDockIn 1s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+body #votes-panel.is-drawing #wheel-area.wheel-area--docked .wheel-canvas {
+    -webkit-mask-image: conic-gradient(#000 var(--wheel-reveal), transparent 0);
+    mask-image: conic-gradient(#000 var(--wheel-reveal), transparent 0);
+    animation: wheelReveal 1s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
+}
+
+@keyframes wheelDockIn {
+    from { transform: scale(0.6) rotate(-40deg); }
+    to { transform: none; }
+}
+
+@keyframes wheelReveal {
+    from { --wheel-reveal: 0deg; }
+    to { --wheel-reveal: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body #votes-panel.is-drawing #wheel-area.wheel-area--docked .wheel-container,
+    body #votes-panel.is-drawing #wheel-area.wheel-area--docked .wheel-canvas { animation: none; }
+}

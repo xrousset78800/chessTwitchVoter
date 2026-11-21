@@ -187,3 +187,59 @@ export const VoteTicker = {
         track.closest('.vote-ticker')?.classList.remove('has-votes');
     }
 };
+
+/**
+ * Colonne « Tape ton coup » : les coups déjà votés prennent la couleur du podium
+ * et affichent leur nombre de votes ; les autres restent discrets.
+ * @param {HTMLElement} panel - conteneur des boutons [data-move]
+ * @param {Array<{move:string,count:number}>} votes - triés du plus voté au moins voté
+ */
+export function paintMoveChips(panel, votes, colors) {
+    if (!panel) return;
+    const clean = m => String(m || '').replace(/[+#!?]/g, '');
+    const rank = new Map();
+    (votes || []).filter(v => v.count > 0).forEach((v, i) => {
+        if (!rank.has(clean(v.move))) rank.set(clean(v.move), { i, count: v.count });
+    });
+    panel.querySelectorAll('button[data-move]').forEach(btn => {
+        const r = rank.get(clean(btn.dataset.move));
+        btn.classList.toggle('is-voted', !!r);
+        let badge = btn.querySelector('b');
+        if (r) {
+            btn.style.setProperty('--c', colors[r.i % colors.length]);
+            if (!badge) { badge = document.createElement('b'); btn.appendChild(badge); }
+            badge.textContent = r.count;
+        } else {
+            btn.style.removeProperty('--c');
+            badge?.remove();
+        }
+    });
+}
+
+/**
+ * Fondu enchaîné podium → roue : chaque marche du podium s'envole vers la roue
+ * et s'y fond pendant que la roue se dévoile (le reste est en CSS : .votes-slot.is-drawing)
+ */
+export function morphPodiumToWheel(slot, target) {
+    if (!slot || !target || typeof slot.animate !== 'function') return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const box = slot.getBoundingClientRect();
+    const t = target.getBoundingClientRect();
+    const size = Math.min(t.width, t.height) || 240;
+    const cx = t.left + t.width / 2 - box.left;
+    const cy = t.top + t.height / 2 - box.top;
+    slot.querySelectorAll('.podium__slot:not(.is-empty) .podium__step').forEach((step, i) => {
+        const r = step.getBoundingClientRect();
+        if (!r.width) return;
+        const g = document.createElement('div');
+        g.className = 'votes-slot__ghost';
+        g.style.background = getComputedStyle(step.closest('.podium__slot')).getPropertyValue('--c') || '#8b5cf6';
+        slot.appendChild(g);
+        const end = size * (0.9 - i * 0.12);
+        g.animate([
+            { left: `${r.left - box.left}px`, top: `${r.top - box.top}px`, width: `${r.width}px`, height: `${r.height}px`, borderRadius: '10px 10px 4px 4px', opacity: 1 },
+            { left: `${cx - end / 2}px`, top: `${cy - end / 2}px`, width: `${end}px`, height: `${end}px`, borderRadius: '50%', opacity: 0.55, offset: 0.7 },
+            { left: `${cx - end / 2}px`, top: `${cy - end / 2}px`, width: `${end}px`, height: `${end}px`, borderRadius: '50%', opacity: 0 }
+        ], { duration: 1000, delay: i * 70, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'both' }).onfinish = () => g.remove();
+    });
+}
