@@ -578,5 +578,8 @@
     "on": "Yes",
     "off": "No",
     "none": "None"
+  },
+  "gameTools": {
+    "title": "Display"
   }
 }

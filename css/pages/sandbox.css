@@ -343,27 +343,7 @@
 }
 
 /* Responsive */
-@media (max-width: 1100px) {
-    .sandbox__content {
-        grid-template-columns: 1fr;
-    }
-    
-    .sandbox__sidebar {
-        max-height: none;
-    }
-}
-
 @media (max-width: 768px) {
-    .sandbox__header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .sandbox__actions {
-        width: 100%;
-        justify-content: flex-start;
-    }
-    
     .mode-selector {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -864,3 +844,62 @@ body:not([data-game-mode="sandbox"]) #btn-reset-sync { display: none; }
 
 /* Menu Phantom de la partie : seulement quand Phantom est connecté (badge du header actif) */
 body:not(.phantom-connected) #phantom-menu { display: none; }
+
+/* ------------------------------------------------ Colonne de droite élargie, outils rares dans ⚙ */
+#page-sandbox { --sidebar-width: clamp(380px, 30vw, 470px); }
+
+.game-tools__row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.game-tools .draw-tools .palette-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Le tirage n'existe qu'avec le temps de vote, sans majorité */
+body:not(.has-draw) .draw-tools,
+body.no-vote-timer .draw-tools,
+body:not(.wheel-mode) .draw-tools { display: none; }
+
+/* ================================================ RESPONSIVE DE LA PARTIE
+   > 1100px : 3 colonnes (coups | échiquier | boutons + votes + historique)
+   761–1100 : coups en bandeau au-dessus, échiquier et colonne de droite côte à côte
+   ≤ 760    : une colonne ; boutons en haut, puis coups, échiquier, votes, historique */
+@media (max-width: 1100px) {
+    #page-sandbox { --sidebar-width: clamp(300px, 36vw, 360px); }
+
+    .sandbox__content {
+        grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
+        grid-template-areas: "left left" "main side";
+        gap: 18px;
+    }
+
+    .sandbox__left { grid-area: left; position: static; }
+    .sandbox__main { grid-area: main; }
+    .sandbox__sidebar { grid-area: side; max-height: none; }
+
+    /* Les coups tiennent en bandeau : groupes côte à côte */
+    .sandbox__left .moves-panel__content { flex-direction: row; flex-wrap: wrap; }
+    .sandbox__left .moves-panel__content > * { flex: 1 1 auto; }
+}
+
+@media (max-width: 760px) {
+    .sandbox { padding: calc(var(--nav-height) + 12px) 12px 32px; }
+
+    #page-sandbox { --sidebar-width: calc(100vw - 24px); }
+
+    .sandbox__content {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: none;
+        gap: 14px;
+    }
+
+    .sandbox__left, .sandbox__main { grid-area: auto; }
+
+    /* La colonne de droite se fond dans la page pour réordonner ses blocs */
+    .sandbox__sidebar { display: contents; }
+    .sandbox__sidebar > .sandbox__actions { order: -1; justify-content: flex-end; }
+    .sandbox__left { order: 0; }
+    .sandbox__main { order: 1; }
+    .sandbox__sidebar > * { order: 2; min-width: 0; }
+
+    .votes-slot__podium { max-width: 460px; margin-inline: auto; }
+
+    .sandbox__left .sandbox__moves-panel { padding: 8px; }
+    .moves-panel__typeit { margin-bottom: 6px; }
+}

@@ -607,6 +607,7 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
 
 /* ------------------------------------------------ Emplacement du podium / de la roue classique */
 #votes-panel.votes-slot {
+    --dock-size: min(420px, 82vw, calc(var(--sidebar-width) - 50px));
     position: relative;
     padding: 4px 0;
 }
@@ -615,7 +616,9 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
     transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.65, 0, 0.35, 1), filter 0.6s ease;
 }
 
-.votes-slot--wheel { min-height: calc(min(340px, 80vw) + 20px); }
+/* La place de la roue s'ouvre en douceur au tirage */
+.votes-slot--wheel { transition: min-height 0.7s cubic-bezier(0.65, 0, 0.35, 1); min-height: 0; }
+.votes-slot--wheel.is-drawing { min-height: calc(var(--dock-size) + 20px); }
 
 .votes-slot.is-drawing .votes-slot__podium {
     opacity: 0;
@@ -633,7 +636,7 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
 
 /* La roue classique quitte l'overlay flottant et se pose à la place du podium */
 body #votes-panel #wheel-area.wheel-area--docked {
-    --wheel-size: min(340px, 80vw);
+    --wheel-size: var(--dock-size);
     --wheel-inner-size: var(--wheel-size);
     --wheel-center-size: 70px;
     position: absolute;

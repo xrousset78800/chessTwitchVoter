@@ -50,6 +50,8 @@
                 <div class="nav__logo-icon">♞</div>
                 <span class="nav__logo-text">PHANTOM TWITCHESS</span>
             </a>
+            <!-- Partie en cours : son titre suit le logo (libère la colonne de gauche) -->
+            <span class="nav__page-title" id="nav-page-title"></span>
 
             <div class="nav__links">
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
@@ -272,6 +274,25 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- En cours de partie : outils d'affichage -->
+                            <div class="panel setup-modal-only game-tools">
+                                <div class="panel__header"><i class="fas fa-sliders-h"></i> <span data-i18n="gameTools.title">Affichage</span></div>
+                                <div class="panel__content">
+                                    <div class="game-tools__row">
+                                        <button class="btn btn--sm" id="btn-flip" type="button"><i class="fas fa-sync-alt"></i> <span data-i18n="actions.reverse">Retourner</span></button>
+                                        <button class="btn btn--sm" id="btn-reset" type="button"><i class="fas fa-undo"></i> <span data-i18n="actions.reset">Réinitialiser</span></button>
+                                    </div>
+                                    <div class="draw-tools" id="draw-menu">
+                                        <p class="draw-menu__title" data-i18n="drawMenu.style">Style du tirage</p>
+                                        <div class="draw-menu__styles">
+                                            <button type="button" class="draw-menu__style" data-wheel-style="band"><i class="fas fa-grip-lines"></i> <span data-i18n="drawMenu.band">Bande</span></button>
+                                            <button type="button" class="draw-menu__style" data-wheel-style="classic"><i class="fas fa-dharmachakra"></i> <span data-i18n="drawMenu.classic">Roue</span></button>
+                                        </div>
+                                        <p class="draw-menu__title" data-i18n="palette.title">Couleurs du tirage</p>
+                                        <div class="palette-picker" id="palette-picker" role="radiogroup"></div>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- En cours de partie : réglages en lecture seule -->
                             <div class="panel setup-modal-only settings-summary">
                                 <div class="panel__header"><i class="fas fa-lock"></i> <span data-i18n="settingsSummary.title">Réglages de la partie</span></div>
@@ -402,10 +423,6 @@
                 <div class="sandbox__content">
                     <!-- Colonne de gauche : titre de la page puis coups à taper -->
                     <div class="sandbox__left">
-                        <div class="sandbox__title-area">
-                            <button class="btn btn--icon" id="sandbox-back" data-navigate="/"><i class="fas fa-arrow-left"></i></button>
-                            <h1 class="sandbox__title">🧪 Sandbox</h1>
-                        </div>
                         <!-- Panel coups disponibles (gauche) -->
                         <aside class="sandbox__moves-panel" id="moves-panel">
                             <div class="moves-panel__header">
@@ -454,20 +471,7 @@
                     <div class="sandbox__sidebar">
                         <div class="sandbox__actions game-toolbar">
                             <span class="spectators-badge game-only" id="spectators-badge" hidden><i class="fas fa-eye"></i> <span id="spectators-count">0</span></span>
-                            <div class="phantom-menu draw-menu" id="draw-menu">
-                                <button class="btn btn--sm" id="btn-wheel-style" aria-haspopup="true" aria-expanded="false" data-i18n-title="setup.wheelStyle" title="Style de roue"><i class="fas fa-dharmachakra"></i> <span id="wheel-style-label"></span> <i class="fas fa-caret-down"></i></button>
-                                <div class="phantom-menu__panel draw-menu__panel" role="menu">
-                                    <p class="draw-menu__title" data-i18n="drawMenu.style">Style du tirage</p>
-                                    <div class="draw-menu__styles">
-                                        <button type="button" class="draw-menu__style" data-wheel-style="band"><i class="fas fa-grip-lines"></i> <span data-i18n="drawMenu.band">Bande</span></button>
-                                        <button type="button" class="draw-menu__style" data-wheel-style="classic"><i class="fas fa-dharmachakra"></i> <span data-i18n="drawMenu.classic">Roue</span></button>
-                                    </div>
-                                    <p class="draw-menu__title" data-i18n="palette.title">Couleurs du tirage</p>
-                                    <div class="palette-picker" id="palette-picker" role="radiogroup"></div>
-                                </div>
-                            </div>
-                            <button class="btn btn--sm tool-btn" id="btn-flip" data-i18n-title="actions.reverse" title="Retourner"><i class="fas fa-sync-alt"></i></button>
-                            <button class="btn btn--sm tool-btn" id="btn-reset" data-i18n-title="actions.reset" title="Réinitialiser"><i class="fas fa-undo"></i></button>
+                            <button class="btn btn--sm tool-btn" id="btn-settings" data-i18n-title="setup.settings" title="Réglages"><i class="fas fa-cog"></i></button>
                             <div class="phantom-menu" id="phantom-menu">
                                 <button class="btn btn--sm" id="btn-phantom-menu" aria-haspopup="true" aria-expanded="false">
                                     <span class="phantom-menu__dot"></span> Phantom <i class="fas fa-caret-down"></i>
@@ -492,8 +496,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn btn--sm tool-btn" id="btn-settings" data-i18n-title="setup.settings" title="Réglages"><i class="fas fa-cog"></i></button>
                             <button class="btn btn--sm game-only btn-quit-game" id="btn-quit-game" data-i18n-title="game.quit" title="Terminer la partie"><i class="fas fa-stop"></i> <span data-i18n="game.quit">Terminer</span></button>
+                        </div>
+                        <!-- Podium des votes ; la roue classique prend sa place au tirage -->
+                        <div class="votes-slot" id="votes-panel">
+                            <div class="votes-slot__podium">
+                                <div id="vote-list" class="vote-list"></div>
+                                <div class="vote-total" id="vote-total"></div>
+                            </div>
                         </div>
                         <div class="panel spectators-panel" id="spectators-panel" hidden>
                             <div class="panel__header"><i class="fas fa-eye"></i> <span data-i18n="spectators.title">Spectateurs</span> <span class="spectators-panel__count" id="spectators-panel-count"></span></div>
@@ -521,13 +531,6 @@
                             <div class="panel__content">
                                 <div class="history-list" id="history-list">
                                 </div>
-                            </div>
-                        </div>
-                        <!-- Podium des votes ; la roue classique prend sa place au tirage -->
-                        <div class="votes-slot" id="votes-panel">
-                            <div class="votes-slot__podium">
-                                <div id="vote-list" class="vote-list"></div>
-                                <div class="vote-total" id="vote-total"></div>
                             </div>
                         </div>
                     </div>

@@ -568,7 +568,7 @@ const SandboxPage = {
 
     /** Titre et bouton retour selon la route (/sandbox, /game) */
     applyPageVariant(pageName) {
-        const titleEl = document.querySelector('#page-sandbox .sandbox__title');
+        const titleEl = document.getElementById('nav-page-title');
         const backBtn = document.getElementById('sandbox-back');
         if (pageName === 'game') {
             const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi', sandbox: '🧪 Partie libre' };
@@ -577,7 +577,7 @@ const SandboxPage = {
             // La flèche ramène aux réglages sans arrêter la partie (lien "Partie en cours" pour revenir)
             if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/sandbox';
         } else if (pageName === 'sandbox') {
-            if (titleEl) titleEl.textContent = '🧪 Sandbox';
+            if (titleEl) titleEl.textContent = '';
             if (backBtn) backBtn.dataset.navigate = '/';
         }
     },
@@ -1036,11 +1036,6 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             e.target.value = AppState.config.rushStartRating;
         });
         // Flip
-        const renderWheelStyle = () => {
-            document.getElementById('wheel-style-label').textContent = tr(`wheelStyle.${gameEngine.wheelStyle}`);
-        };
-        renderWheelStyle();
-        window.addEventListener('languageChanged', renderWheelStyle);
 
         // Couleurs du tirage : roue, bande et podium (transmises aux spectateurs)
         const picker = document.getElementById('palette-picker');
@@ -1065,29 +1060,16 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             if (wheel && !wheel.isSpinning) wheel.draw?.();
             try { gameEngine.updateVotesUI(voting.getSortedResults()); } catch {}
         });
-        // Menu « Tirage ▾ » : style (bande / roue) et couleurs
+        // Modale ⚙ : style du tirage (bande / roue) et couleurs
         const drawMenu = document.getElementById('draw-menu');
-        const drawBtn = document.getElementById('btn-wheel-style');
-        const setDrawMenu = (open) => {
-            drawMenu?.classList.toggle('is-open', open);
-            drawBtn?.setAttribute('aria-expanded', String(open));
-        };
         const renderStyles = () => drawMenu?.querySelectorAll('[data-wheel-style]').forEach(b => {
             b.classList.toggle('is-active', b.dataset.wheelStyle === gameEngine.wheelStyle);
         });
         renderStyles();
-        drawBtn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            renderStyles();
-            setDrawMenu(!drawMenu.classList.contains('is-open'));
-        });
         drawMenu?.querySelectorAll('[data-wheel-style]').forEach(b => b.addEventListener('click', () => {
             gameEngine.setWheelStyle(b.dataset.wheelStyle);
-            renderWheelStyle();
             renderStyles();
         }));
-        document.addEventListener('click', (e) => { if (drawMenu && !drawMenu.contains(e.target)) setDrawMenu(false); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDrawMenu(false); });
 
         document.getElementById('btn-flip')?.addEventListener('click', () => {
             gameEngine.flip();

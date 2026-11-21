@@ -578,5 +578,8 @@
     "on": "Oui",
     "off": "Non",
     "none": "Aucune"
+  },
+  "gameTools": {
+    "title": "Affichage"
   }
 }
