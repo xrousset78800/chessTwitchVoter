@@ -776,6 +776,12 @@ io.on('connection', (socket) => {
     });
 });
 
+// Simulation d'activité (chaînes sim_*), pilotée depuis la machine : voir sim.js et sim-cli.js
+require('./sim')({
+    app, io, games, multiRooms, stats, emitSpectate, broadcastGamesList, newPublicId, dataDir: DATA_DIR,
+    rush: { get: () => rushRecords, set: (r) => { rushRecords = r || {}; }, save: saveRushRecords }
+});
+
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);

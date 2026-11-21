@@ -1,0 +1,47 @@
+name: Simulation
+
+# Remplit le site de chaînes fictives (sim_*) pour le voir « en pleine utilisation »,
+# puis les retire. Les vraies données ne sont jamais touchées par purge.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Action"
+        type: choice
+        default: status
+        options:
+          - status
+          - snapshot
+          - seed
+          - live-start
+          - live-stop
+          - purge
+          - restore
+      args:
+        description: "Options (ex : games=10 moveMs=6000)"
+        type: string
+        default: ""
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check options
+        env:
+          ARGS: ${{ inputs.args }}
+        run: |
+          # Uniquement des paires clé=valeur simples (rien d'interprétable par le shell distant)
+          echo "$ARGS" | grep -Eq '^([A-Za-z]+=[A-Za-z0-9_-]+( |$))*$|^[A-Za-z0-9_-]*$'
+      - name: Run on the VM
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            set -e
+            docker exec chesstwitchvoter node sim-cli.js ${{ inputs.action }} ${{ inputs.args }}

@@ -258,5 +258,5 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
         });
     });
 
-    return { recordMultiResult };
+    return { recordMultiResult, stores: { multi, viewers } };
 };
