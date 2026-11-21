@@ -59,6 +59,7 @@ class Timer {
         
         // Afficher le timer
         document.body.classList.add('showTimer');
+        document.body.classList.toggle('wheel-soon', this.remaining <= 1);
         
         // Configurer les variables CSS pour l'animation
         if (this.countdownEl) {
@@ -85,6 +86,9 @@ class Timer {
         // Mettre à jour l'affichage
         this.updateDisplay();
         
+        // Roue : elle n'apparaît que dans la dernière seconde du vote
+        document.body.classList.toggle('wheel-soon', this.remaining <= 1);
+
         // Callback onTick
         if (this.onTick) {
             this.onTick(this.remaining);
@@ -122,7 +126,7 @@ class Timer {
         
         this.isRunning = false;
         this.isPaused = false;
-        document.body.classList.remove('showTimer');
+        document.body.classList.remove('showTimer', 'wheel-soon');
         
         // Retirer la classe urgence et pause
         if (this.countdownEl) {

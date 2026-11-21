@@ -61,6 +61,7 @@
                     <i class="fas fa-chess-board"></i>
                     <span data-i18n="nav.tournament">Tournoi</span>
                 </a>                
+                <span class="nav__cursor" aria-hidden="true"></span>
             </div>
             
             <div class="nav__status">
@@ -641,9 +642,11 @@
 
         <!-- ==================== BROWSE PAGE ==================== -->
         <div class="page" id="page-browse">
-            <div class="browse">
+            <div class="browse browse-layout">
+                <div class="browse-layout__main">
                 <div class="browse__header">
-                    <h1 class="browse__title">👀 <span data-i18n="nav.browse">Parcourir</span></h1>
+                    <h1 class="browse__title">👀 <span data-i18n="nav.browse">Parcourir</span>
+                        <span class="browse-toolbar__count"><span class="browse__live-dot"></span> <span id="browse-count"></span></span></h1>
                     <p class="browse__desc" data-i18n="browsePage.desc">Les parties en cours. Pour jouer, passe par Nouveau ; les classements sont dans Records.</p>
                 </div>
 
@@ -666,7 +669,6 @@
                             <option value="players" data-i18n="browsePage.sortPlayers">Plus d'inscrits</option>
                             <option value="recent" data-i18n="browsePage.sortRecent">Plus récentes</option>
                         </select>
-                        <span class="browse-toolbar__count"><span class="browse__live-dot"></span> <span id="browse-count"></span></span>
                         <button class="btn btn--sm btn--ghost" id="browse-refresh-btn" data-i18n-title="browsePage.refresh" title="Actualiser">
                             <i class="fas fa-sync-alt"></i>
                         </button>
@@ -674,7 +676,6 @@
                     <div class="browse-chips" id="browse-modes"></div>
                 </div>
 
-                <div class="browse-layout">
                     <div class="browse-table-wrap" id="games-list">
                         <div class="empty-state">
                             <div class="empty-state__icon">⚔</div>
@@ -682,21 +683,22 @@
                             <p class="empty-state__desc" data-i18n="browsePage.empty">Lance une partie depuis Nouveau !</p>
                         </div>
                     </div>
-
-                    <aside class="browse-preview panel" id="browse-preview" hidden>
-                        <div class="panel__header"><span id="browse-preview-mode"></span></div>
-                        <div class="panel__content">
-                            <div class="browse-preview__board" id="browse-preview-board-wrap"><div id="browse-preview-board"></div></div>
-                            <div class="browse-preview__players" id="browse-preview-players"></div>
-                            <dl class="browse-preview__facts" id="browse-preview-facts"></dl>
-                            <h3 class="browse-preview__title" data-i18n="watch.votesTitle">Votes en cours</h3>
-                            <div class="browse-preview__votes" id="browse-preview-votes"></div>
-                            <div class="browse-preview__actions" id="browse-preview-actions"></div>
-                        </div>
-                    </aside>
                 </div>
+
+                <aside class="browse-preview panel" id="browse-preview" hidden>
+                    <div class="panel__header"><span id="browse-preview-mode"></span></div>
+                    <div class="panel__content">
+                        <div class="browse-preview__board" id="browse-preview-board-wrap"><div id="browse-preview-board"></div></div>
+                        <div class="browse-preview__players" id="browse-preview-players"></div>
+                        <dl class="browse-preview__facts" id="browse-preview-facts"></dl>
+                        <h3 class="browse-preview__title" data-i18n="watch.votesTitle">Votes en cours</h3>
+                        <div class="browse-preview__votes" id="browse-preview-votes"></div>
+                        <div class="browse-preview__actions" id="browse-preview-actions"></div>
+                    </div>
+                </aside>
             </div>
         </div>
+
 
         <!-- ==================== SPECTATEUR ==================== -->
         <div class="page" id="page-watch">

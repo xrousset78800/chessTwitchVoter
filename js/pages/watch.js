@@ -388,6 +388,7 @@ const WatchPage = {
         this.timerId = null;
         const box = $('watch-timer');
         if (!box) return;
+        $('watch-wheel-area')?.classList.remove('is-soon');
         if (!timer || this.state?.result) {
             box.hidden = true;
             this.timerEndsAt = null;
@@ -403,6 +404,7 @@ const WatchPage = {
             const arc = $('watch-timer-arc');
             if (arc) arc.style.strokeDasharray = `${Math.min(1, left / total) * 283} 283`;
             box.classList.toggle('is-critical', !timer.paused && left <= 5);
+            $('watch-wheel-area')?.classList.toggle('is-soon', !timer.paused && left <= 1);
             if (!timer.paused && left <= 0) { clearInterval(this.timerId); this.timerId = null; }
         };
         draw();

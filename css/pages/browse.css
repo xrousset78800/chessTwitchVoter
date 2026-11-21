@@ -729,3 +729,37 @@
     .browse-preview .panel__content { grid-template-columns: 1fr; }
     .browse-preview__board { grid-row: auto; max-width: 280px; margin: 0 auto; width: 100%; }
 }
+
+/* Aperçu tout en haut de la colonne de droite, compteur à côté du titre */
+#page-browse .browse.browse-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 0 20px;
+    align-items: start;
+}
+#page-browse .browse.browse-layout:has(.browse-preview[hidden]) { grid-template-columns: minmax(0, 1fr); }
+.browse-layout__main { min-width: 0; }
+#page-browse .browse-preview { top: calc(var(--nav-height) + 16px); }
+#page-browse .browse__title { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+#page-browse .browse__title .browse-toolbar__count {
+    margin-left: 0;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    font-family: 'Rajdhani', 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+@media (max-width: 1200px) {
+    #page-browse .browse.browse-layout { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+@media (max-width: 1100px) {
+    #page-browse .browse.browse-layout { grid-template-columns: minmax(0, 1fr); }
+    #page-browse .browse-preview { margin-top: 16px; }
+}
+/* Avec l'aperçu à côté, les boutons de ligne passent en icône */
+@media (max-width: 1500px) {
+    #page-browse .browse.browse-layout:not(:has(.browse-preview[hidden])) .games-table .col-lg-inline { display: none; }
+}

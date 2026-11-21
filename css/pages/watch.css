@@ -388,3 +388,12 @@ a.spectators__chip:hover { border-color: rgba(6, 182, 212, 0.6); }
     .watch-bar__mode { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
     .watch-bar__mode .game-card__private { font-size: 0.7rem; }
 }
+
+/* Roue classique : cachée pendant le remplissage, visible dans la dernière seconde puis pendant le tirage */
+#watch-wheel-area { transition: opacity 0.9s ease, transform 0.9s ease; }
+#watch-wheel-area:not(.is-spinning):not(.is-soon) {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+    pointer-events: none;
+    animation: none;
+}

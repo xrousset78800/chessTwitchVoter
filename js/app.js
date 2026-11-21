@@ -418,6 +418,7 @@ const Router = {
                 linkPath === '/' + activePage || (linkPath === '/' && pageName === 'landing')
             );
         });
+        moveNavCursor();
 
         // Quitter la page spectateur coupe son flux
         if (pageName !== 'watch') WatchPage.stop();
@@ -505,6 +506,27 @@ function clampTurn(v) {
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? Math.min(120, Math.max(10, n)) : 30;
 }
+
+/** Curseur du menu : glisse sous le lien actif (et suit le survol) */
+function moveNavCursor(target) {
+    const cursor = document.querySelector('.nav__cursor');
+    const links = cursor?.parentElement;
+    if (!links) return;
+    const el = target || links.querySelector('.nav__link.is-active:not([hidden])');
+    if (!el || !el.offsetWidth) { cursor.classList.remove('is-on'); return; }
+    cursor.style.width = `${el.offsetWidth}px`;
+    cursor.style.transform = `translateX(${el.offsetLeft}px)`;
+    cursor.classList.toggle('is-hover', !!target && !target.classList.contains('is-active'));
+    cursor.classList.add('is-on');
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const links = document.querySelector('.nav__links');
+    links?.addEventListener('mouseover', (e) => { const l = e.target.closest('.nav__link'); if (l) moveNavCursor(l); });
+    links?.addEventListener('mouseleave', () => moveNavCursor());
+    window.addEventListener('resize', () => moveNavCursor());
+    window.addEventListener('languageChanged', () => setTimeout(() => moveNavCursor(), 0));
+    document.fonts?.ready?.then(() => moveNavCursor());
+});
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

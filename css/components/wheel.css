@@ -396,3 +396,12 @@ body.randomWheel #wheel-area::before,
         font-size: 1rem;
     }
 }
+
+/* La roue reste cachée pendant qu'elle se remplit : elle apparaît dans la dernière seconde du vote,
+   puis reste affichée pendant le tirage */
+body.showTimer.wheel-mode:not(.wheel-soon):not(.randomWheel) #wheel-area:not(.is-spinning) {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8) translateY(20px);
+}
+body #wheel-area { transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
