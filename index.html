@@ -193,8 +193,22 @@
                         </div>
                         <div class="sandbox-setup__grid">
                             <div class="sandbox-setup__col launch-only">
+                                <!-- Configurations suggérées : prêtes à l'emploi, au-dessus des sauvegardées -->
+                                <div class="setup-configs setup-presets">
+                                    <h3 class="setup-configs__title"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="suggested.title">Configurations suggérées</span></h3>
+                                    <div id="presets-list" class="presets-list"></div>
+                                </div>
+                                <!-- Configurations sauvegardées : simple liste sous les modes -->
+                                <div class="setup-configs">
+                                    <h3 class="setup-configs__title"><i class="fas fa-folder"></i> <span data-i18n="game.configuration.title">Configurations</span></h3>
+                                    <div id="configs-list">
+                                        <div class="empty-state"><p data-i18n="game.configuration.no-config">Aucune configuration</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sandbox-setup__col">
                             <!-- Mode selector -->
-                            <div class="panel">
+                            <div class="panel launch-only">
                                 <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
                                 <div class="panel__content">
                                     <div class="mode-selector">
@@ -204,7 +218,7 @@
                                         </div>
                                         <div class="mode-option" data-mode="problems">
                                             <span class="mode-option__icon">🧩</span>
-                                            <span class="mode-option__label">Problèmes</span>
+                                            <span class="mode-option__label" data-i18n="gameMode.problems.label">Problèmes</span>
                                         </div>
                                         <div class="mode-option" data-mode="rush" style="display:none;">
                                             <span class="mode-option__icon">🔥</span>
@@ -257,31 +271,22 @@
 
                                     <!-- Mode: Puzzle Rush options -->
                                     <div class="mode-options" id="options-rush">
-                                        <p class="form-hint rush-rules">
-                                            Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité).
-                                            <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote
-                                            avant la fin du timer compte comme une erreur.
-                                        </p>
+                                        <p class="form-hint rush-rules" data-i18n="gameMode.rush.rules" data-i18n-html>Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité). <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote avant la fin du timer compte comme une erreur.</p>
                                         <div class="form-row">
                                             <label class="form-label" for="rush-start-rating" data-info="rushRating">
-                                                <i class="fas fa-signal"></i>
-                                                Rating de départ
+                                                <i class="fas fa-signal"></i> <span data-i18n="rushPage.rating">Rating de départ</span>
                                             </label>
                                             <input type="number" id="rush-start-rating" class="input input--sm"
                                                    style="width: 90px;" min="400" max="3000" step="50" value="600">
                                         </div>
                                         <div class="form-row">
                                             <label class="form-label" for="rush-pause" data-info="rushPause">
-                                                <i class="fas fa-clock"></i>
-                                                Pause entre puzzles
+                                                <i class="fas fa-clock"></i> <span data-i18n="gameMode.rush.pause">Pause entre puzzles</span>
                                             </label>
                                             <input type="number" id="rush-pause" class="input input--sm"
                                                    style="width: 80px;" min="1" max="60" value="5">
                                         </div>
-                                        <p class="form-hint">
-                                            Le record de la chaîne est enregistré si tu es connecté avec Twitch
-                                            et s'affiche dans <a href="#/records">Records</a>.
-                                        </p>
+                                        <p class="form-hint" data-i18n="gameMode.rush.recordHint" data-i18n-html>Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href="#/records">Records</a>.</p>
                                     </div>
 
                                     <!-- Mode: Problems options -->
@@ -294,8 +299,7 @@
                                         </div>
                                         <div class="form-row">
                                             <label class="form-label" for="problem-pause" data-info="problemPause">
-                                                <i class="fas fa-clock"></i>
-                                                Pause
+                                                <i class="fas fa-clock"></i> <span data-i18n="gameMode.problems.pause">Pause</span>
                                             </label>
                                             <input type="number" id="problem-pause" class="input input--sm" 
                                                    style="width: 80px;" min="1" max="60" value="5">
@@ -303,20 +307,6 @@
                                     </div>
                                 </div>
                             </div>
-                                <!-- Configurations suggérées : prêtes à l'emploi, au-dessus des sauvegardées -->
-                                <div class="setup-configs setup-presets">
-                                    <h3 class="setup-configs__title"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="presets.title">Configurations suggérées</span></h3>
-                                    <div id="presets-list" class="presets-list"></div>
-                                </div>
-                                <!-- Configurations sauvegardées : simple liste sous les modes -->
-                                <div class="setup-configs">
-                                    <h3 class="setup-configs__title"><i class="fas fa-folder"></i> <span data-i18n="game.configuration.title">Configurations</span></h3>
-                                    <div id="configs-list">
-                                        <div class="empty-state"><p data-i18n="game.configuration.no-config">Aucune configuration</p></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="sandbox-setup__col">
                             <!-- Voting options -->
                             <div class="panel config-only">
                                 <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
@@ -603,12 +593,8 @@
         <div class="page" id="page-multi">
             <div class="preset">
                 <h1 class="browse__title">⚔ Multi</h1>
-                <p class="browse__desc" data-i18n="multi.desc">Deux chaînes s'affrontent. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</p>
+                <p class="browse__desc" data-i18n="multi.desc">Deux chaînes s'affrontent, la tienne joue les Blancs. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</p>
                 <div class="battle-setup__card preset__card">
-                    <div class="form-group">
-                        <label class="form-label" data-i18n="multi.channel" data-info="multiChannel">Ta chaîne (Blancs)</label>
-                        <input type="text" class="input" id="multi-channel" readonly data-i18n-placeholder="multi.channelEmpty" placeholder="Connecte-toi avec Twitch">
-                    </div>
                     <div class="multi-visibility" id="multi-visibility" data-visibility="public">
                         <label class="multi-visibility__switch">
                             <input type="checkbox" id="multi-public" checked>

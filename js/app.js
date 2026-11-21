@@ -505,7 +505,7 @@ function clampTurn(v) {
 
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/** Configurations suggérées de l'écran Nouveau (textes dans presets.<id>) */
+/** Configurations suggérées de l'écran Nouveau (textes dans suggested.<id>) */
 const SETUP_PRESETS = [
     { id: 'instant',   icon: '⚡', mode: 'sandbox',  config: { timerEnabled: false } },
     { id: 'democracy', icon: '🗳️', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
@@ -1470,12 +1470,12 @@ fullReset() {
     presetChips(mode, c) {
         const label = document.querySelector(`.mode-option[data-mode="${mode}"] .mode-option__label`)?.textContent.trim() || mode;
         const chips = [label];
-        if (!c.timerEnabled) chips.push(`⚡ ${tr('presets.chipInstant')}`);
+        if (!c.timerEnabled) chips.push(`⚡ ${tr('suggested.chipInstant')}`);
         else {
-            chips.push(tr('presets.chipSeconds', { n: c.timerDuration }));
+            chips.push(tr('suggested.chipSeconds', { n: c.timerDuration }));
             const majority = c.majorityMode || isPuzzleMode(mode);
-            chips.push(tr(majority ? 'presets.chipMajority' : 'presets.chipWheel'));
-            if (!majority && c.votesPerViewer > 1) chips.push(tr('presets.chipVotes', { n: c.votesPerViewer }));
+            chips.push(tr(majority ? 'suggested.chipMajority' : 'suggested.chipWheel'));
+            if (!majority && c.votesPerViewer > 1) chips.push(tr('suggested.chipVotes', { n: c.votesPerViewer }));
         }
         return chips;
     },
@@ -1487,8 +1487,8 @@ fullReset() {
             <button type="button" class="preset-card" data-preset="${p.id}">
                 <span class="preset-card__icon" aria-hidden="true">${p.icon}</span>
                 <span class="preset-card__body">
-                    <span class="preset-card__name">${escapeHtml(tr(`presets.${p.id}.name`))}</span>
-                    <span class="preset-card__desc">${escapeHtml(tr(`presets.${p.id}.desc`))}</span>
+                    <span class="preset-card__name">${escapeHtml(tr(`suggested.${p.id}.name`))}</span>
+                    <span class="preset-card__desc">${escapeHtml(tr(`suggested.${p.id}.desc`))}</span>
                     <span class="preset-card__chips">${this.presetChips(p.mode, { votesPerViewer: 1, ...p.config }).map(c => `<span>${escapeHtml(c)}</span>`).join('')}</span>
                 </span>
             </button>`).join('');
@@ -1515,7 +1515,7 @@ fullReset() {
         this.syncUIFromState();
         Storage.saveConfig();
         this.markPreset();
-        Toast.success(tr('presets.applied', { name: tr(`presets.${p.id}.name`) }));
+        Toast.success(tr('suggested.applied', { name: tr(`suggested.${p.id}.name`) }));
     },
 
     renderConfigs() {
@@ -2058,6 +2058,9 @@ function setupPhantomModal() {
     }, true);
 }
 
+// Le statut Twitch de l'en-tête (pseudo ou « Non connecté ») est écrit par le gestionnaire, pas par data-i18n
+window.addEventListener('languageChanged', () => twitch.updateUI());
+
 function updateConnectionUI() {
     const twitchConnected = window.twitch?.isConnected;
     const phantomConnected = window.phantomChessboard?.isConnected;
@@ -2179,8 +2182,6 @@ const MultiPage = {
     initialized: false,
 
     init() {
-        const channel = document.getElementById('multi-channel');
-        channel.value = twitchAuth.user?.login || '';
         if (this.initialized) return;
         this.initialized = true;
         PresetForm.bindToggles('multi');

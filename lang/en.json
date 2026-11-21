@@ -15,7 +15,10 @@
   },
   "twitch": {
     "connect": "Connect Twitch",
-    "not-connected": "Not connected"
+    "not-connected": "Not connected",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "error": "Error"
   },
   "phantom": {
     "connect": "Connect Phantom",
@@ -51,7 +54,9 @@
       "streamer2": "Chat 2 ⬛"
     },
     "problems": {
-      "themes": "Themes"
+      "themes": "Themes",
+      "label": "Puzzles",
+      "pause": "Pause"
     },
     "voteOptions": {
       "title": "Voting System",
@@ -76,6 +81,11 @@
       "autosync": "Auto-sync",
       "autoO-O-O": "Auto Castling",
       "snapOption": "Snap to center"
+    },
+    "rush": {
+      "rules": "Chat solves harder and harder puzzles (majority vote). <strong>3 mistakes</strong> and the run ends. A wrong move or no vote before the timer runs out counts as a mistake.",
+      "pause": "Pause between puzzles",
+      "recordHint": "The channel record is saved if you are logged in with Twitch and shows up in <a href=\"#/records\">Records</a>."
     }
   },
   "game": {
@@ -130,6 +140,17 @@
     "available": "Available moves"
   },
   "presets": {
+    "rushCard": "Your chat solves puzzle after puzzle",
+    "restrictLabel": "Only for",
+    "monoCard": "One channel, registered viewers play",
+    "multiCard": "Two channels face off",
+    "voteTime": "Voting time (s)",
+    "choice": "Move selection",
+    "wheel": "🎡 Wheel",
+    "majority": "📊 Majority",
+    "followersHint": "Followers only: only followers, subs, mods and VIPs can register. Twitch will ask once for permission to read your followers."
+  },
+  "suggested": {
     "title": "Suggested setups",
     "applied": "“{name}” applied: adjust if needed, then Launch",
     "chipInstant": "instant",
@@ -182,9 +203,7 @@
     "start": "Open registration"
   },
   "multi": {
-    "desc": "Two channels face off. Create the game: as soon as another channel joins, both chats get 2 minutes to sign up.",
-    "channel": "Your channel (White)",
-    "channelEmpty": "Log in with Twitch",
+    "desc": "Two channels face off, yours plays White. Create the game: as soon as another channel joins, their chats have 2 minutes to sign up.",
     "start": "Create the game",
     "loginRequired": "Log in with Twitch to enter this game.",
     "followersScope": "This game is for followers only: log in again to allow reading them.",
@@ -252,7 +271,8 @@
     "input": {
       "label": "Game ID or URL",
       "placeholder": "e.g. 123456789",
-      "hint": "chess.com/game/live/123456789 or ID only"
+      "hint": "chess.com/game/live/123456789 or ID only",
+      "tournamentHint": "Slug from chess.com/events/{slug}/games"
     },
     "polling": {
       "label": "Polling interval",
@@ -277,6 +297,9 @@
       "ended": "Game over",
       "error": "Error",
       "stopped": "Stopped"
+    },
+    "daily": {
+      "label": "Daily game"
     }
   },
   "setup": {
@@ -429,7 +452,6 @@
     "monoColor": "The side you play on the board; registered viewers vote for the other one.",
     "voteTime": "How long chat has to vote on each move.",
     "choice": "Wheel: random draw weighted by votes. Majority: the most voted move is played.",
-    "multiChannel": "Your Twitch channel, playing White. The opponent plays Black.",
     "multiPublic": "Public: listed in Browse, any channel can join. Private: anyone can watch, but only the channel with your link can join."
   },
   "timerOff": {

@@ -63,6 +63,7 @@ class TwitchManager {
     // ========== UI UPDATES ==========
 
     updateUI() {
+        const tw = (k, fb) => { const v = window.i18n?.t?.(`twitch.${k}`); return v && v !== `twitch.${k}` ? v : fb; };
         const user = twitchAuth.user;
 
         document.querySelectorAll('.status-dot--twitch').forEach(dot => {
@@ -79,16 +80,16 @@ class TwitchManager {
                 case 'disconnected':
                     el.textContent = user
                         ? user.displayName
-                        : (el.dataset.textDisconnected || 'Non connecté');
+                        : (el.dataset.textDisconnected || tw('not-connected', 'Non connecté'));
                     break;
                 case 'connecting':
-                    el.textContent = el.dataset.textConnecting || 'Connexion...';
+                    el.textContent = el.dataset.textConnecting || tw('connecting', 'Connexion...');
                     break;
                 case 'connected':
-                    el.textContent = this.channel ? `#${this.channel}` : 'Connecté';
+                    el.textContent = this.channel ? `#${this.channel}` : tw('connected', 'Connecté');
                     break;
                 case 'error':
-                    el.textContent = el.dataset.textError || 'Erreur';
+                    el.textContent = el.dataset.textError || tw('error', 'Erreur');
                     break;
             }
         });

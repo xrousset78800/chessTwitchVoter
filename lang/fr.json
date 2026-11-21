@@ -15,7 +15,10 @@
   },
   "twitch": {
     "connect": "Connecter Twitch",
-    "not-connected": "Non connecté"
+    "not-connected": "Non connecté",
+    "connecting": "Connexion...",
+    "connected": "Connecté",
+    "error": "Erreur"
   },
   "phantom": {
     "connect": "Connecter Phantom",
@@ -51,7 +54,9 @@
       "streamer2": "Chat 2 ⬛"
     },
     "problems": {
-      "themes": "Thèmes"
+      "themes": "Thèmes",
+      "label": "Problèmes",
+      "pause": "Pause"
     },
     "voteOptions": {
       "title": "Système de vote",
@@ -76,6 +81,11 @@
       "autosync": "Auto-sync",
       "autoO-O-O": "Auto Roque",
       "snapOption": "Snap au centre"
+    },
+    "rush": {
+      "rules": "Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité). <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote avant la fin du timer compte comme une erreur.",
+      "pause": "Pause entre puzzles",
+      "recordHint": "Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href=\"#/records\">Records</a>."
     }
   },
   "game": {
@@ -130,6 +140,17 @@
     "available": "Coups disponibles"
   },
   "presets": {
+    "rushCard": "Ton chat enchaîne les puzzles",
+    "restrictLabel": "Réservé aux",
+    "monoCard": "Une chaîne, les inscrits jouent",
+    "multiCard": "Deux chaînes s'affrontent",
+    "voteTime": "Temps de vote (s)",
+    "choice": "Choix du coup",
+    "wheel": "🎡 Roue",
+    "majority": "📊 Majorité",
+    "followersHint": "Followers only : seuls les followers, subs, modos et VIP peuvent s'inscrire. Twitch te demandera une fois l'autorisation de lire tes followers."
+  },
+  "suggested": {
     "title": "Configurations suggérées",
     "applied": "« {name} » appliquée : ajuste si besoin, puis Lancer",
     "chipInstant": "instantané",
@@ -182,9 +203,7 @@
     "start": "Ouvrir les inscriptions"
   },
   "multi": {
-    "desc": "Deux chaînes s'affrontent. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.",
-    "channel": "Ta chaîne (Blancs)",
-    "channelEmpty": "Connecte-toi avec Twitch",
+    "desc": "Deux chaînes s'affrontent, la tienne joue les Blancs. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.",
     "start": "Créer la partie",
     "loginRequired": "Connecte-toi avec Twitch pour entrer dans cette partie.",
     "followersScope": "Cette partie est réservée aux followers : reconnecte-toi pour autoriser leur lecture.",
@@ -252,7 +271,8 @@
     "input": {
       "label": "ID ou URL de la partie",
       "placeholder": "ex: 123456789",
-      "hint": "URL chess.com/game/live/123456789 ou ID seul"
+      "hint": "URL chess.com/game/live/123456789 ou ID seul",
+      "tournamentHint": "Slug depuis chess.com/events/{slug}/games"
     },
     "polling": {
       "label": "Intervalle de polling",
@@ -277,6 +297,9 @@
       "ended": "Terminée",
       "error": "Erreur",
       "stopped": "Arrêté"
+    },
+    "daily": {
+      "label": "Partie daily"
     }
   },
   "setup": {
@@ -429,7 +452,6 @@
     "monoColor": "Le camp que tu joues sur l'échiquier ; les inscrits votent pour l'autre.",
     "voteTime": "Temps laissé au chat pour voter à chaque coup.",
     "choice": "Roue : tirage au sort pondéré par les votes. Majorité : le coup le plus voté est joué.",
-    "multiChannel": "Ta chaîne Twitch, qui joue les Blancs. L'adversaire joue les Noirs.",
     "multiPublic": "Publique : affichée dans Parcourir, n'importe quelle chaîne peut la rejoindre. Privée : on peut la regarder, mais seule la chaîne qui a ton lien peut la rejoindre."
   },
   "timerOff": {
