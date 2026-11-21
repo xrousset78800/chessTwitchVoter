@@ -154,7 +154,19 @@ function nameColor(name) {
 
 export const VoteTicker = {
     el() {
-        return document.getElementById('vote-ticker-track');
+        const track = document.getElementById('vote-ticker-track');
+        // Une seule ligne : la molette (geste vertical) fait défiler les votes à l'horizontale
+        if (track && !track.dataset.wheelBound) {
+            track.dataset.wheelBound = '1';
+            track.addEventListener('wheel', (e) => {
+                if (track.scrollWidth <= track.clientWidth) return;
+                const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+                if (!d) return;
+                e.preventDefault();
+                track.scrollLeft += d;
+            }, { passive: false });
+        }
+        return track;
     },
     add(username, move) {
         const track = this.el();
@@ -162,7 +174,9 @@ export const VoteTicker = {
         const item = document.createElement('span');
         item.className = 'vote-ticker__item';
         item.innerHTML = `<span class="vote-ticker__user" style="color:${nameColor(username)}">${esc(username)}</span> <span class="vote-ticker__move">${esc(move)}</span>`;
+        const keep = track.scrollLeft > 4; // l'utilisateur lit plus loin : on ne le fait pas sauter
         track.prepend(item);
+        if (keep) track.scrollLeft += item.offsetWidth + 16;
         while (track.children.length > MAX_TICKER) track.lastElementChild.remove();
         track.closest('.vote-ticker')?.classList.add('has-votes');
     },
