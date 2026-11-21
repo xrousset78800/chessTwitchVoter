@@ -134,6 +134,7 @@ const WatchPage = {
         const position = s?.fen ? s.fen.split(' ')[0] : 'start';
         if (!this.board) {
             this.board = Chessboard('watch-board', { position, draggable: false, pieceTheme: PIECES, orientation: this.orientation() });
+            this.annotations = window.BoardAnnotations?.attach('watch-board', { draggable: false }) || null;
         } else {
             this.board.orientation(this.orientation());
             this.board.position(position, false);
@@ -155,6 +156,44 @@ const WatchPage = {
         this.setTimer(s?.timer || null);
         this.reserveBand();
         this.renderWheel();
+        this.renderVoteArrow();
+    },
+
+    /**
+     * Flèche du coup en tête pendant le vote ; à la fin du tirage, flèche du gagnant avec « Cf3 · 42 % »
+     * (comme chez les joueurs). Rien pendant que la roue tourne : le suspense reste entier.
+     */
+    renderVoteArrow() {
+        const ann = this.annotations;
+        if (!ann) return;
+        const s = this.state || {};
+        let overlay = null;
+        if (!s.result && s.fen && typeof Chess === 'function') {
+            const find = (str) => {
+                if (!str) return null;
+                try {
+                    const clean = String(str).replace(/[+#!?]/g, '');
+                    return new Chess(s.fen).moves({ verbose: true }).find(m =>
+                        m.san === str || m.san.replace(/[+#]/g, '') === clean || m.from + m.to + (m.promotion || '') === clean) || null;
+                } catch { return null; }
+            };
+            if (s.draw) {
+                // Gagnant montré seulement tant que son coup n'est pas joué
+                if (!this.revealing && !this.wheel?.isSpinning && (s.history || []).length === this.drawPly) {
+                    const m = find(s.draw.winner);
+                    const votes = s.draw.votes || [];
+                    const total = votes.reduce((a, v) => a + (v.n || 0), 0);
+                    const random = votes.length > 1 && votes.every(v => v.n === 1);
+                    const n = votes.find(v => v.m === s.draw.winner)?.n || 0;
+                    if (m) overlay = { kind: 'win', from: m.from, to: m.to,
+                        label: random || !total ? `🎲 ${m.san}` : `${m.san} · ${Math.round(n / total * 100)} %` };
+                }
+            } else if (s.votes?.length) {
+                const m = find(s.votes[0].m);
+                if (m) overlay = { kind: 'lead', from: m.from, to: m.to };
+            }
+        }
+        ann.setOverlay(overlay);
     },
 
     /** Roue ou bande de l'hôte : votes qui arrivent, puis le même tirage que les joueurs */
@@ -202,12 +241,14 @@ const WatchPage = {
             const wheel = this.ensureWheel(s.wheel || this.wheelStyle || 'band');
             if (!wheel) return;
             this.drawSig = sig;
+            this.drawPly = (s.history || []).length;
             this.setWheelVotes(wheel, s.draw.votes);
             area.classList.add('is-visible', 'is-spinning');
             wheel.draw();
             this.revealing = true;
             wheel.onSpinEnd = () => {
                 this.revealing = false;
+                this.renderVoteArrow();
                 area.classList.remove('is-spinning');
                 if (!this.state?.wheel || !this.state?.votes?.length) this.hideWheel();
             };
@@ -228,6 +269,11 @@ const WatchPage = {
     },
 
     highlight(move) {
+        if (this.annotations) {
+            const ok = move && /^[a-h][1-8]$/.test(move.from || '') && /^[a-h][1-8]$/.test(move.to || '');
+            this.annotations.setLastMove(ok ? move.from : null, ok ? move.to : null);
+            return;
+        }
         document.querySelectorAll('#watch-board .watch-last').forEach(sq => sq.classList.remove('watch-last'));
         if (!move) return;
         for (const sq of [move.from, move.to]) {

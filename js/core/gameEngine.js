@@ -207,6 +207,7 @@ class GameEngine {
         // En mode avec timer/vote, on devrait passer par le système de vote
         // Pour l'instant, on exécute directement (mode drag & drop)
         this.moveHistory.push(move);
+        this.highlightLastMove(move.from, move.to);
         this.playMoveSound(move);
         this.updateHistoryUI(move);
         this.syncPhantom();
@@ -352,6 +353,8 @@ class GameEngine {
     // ========== TIMER ==========
 
 startTurn() {
+    clearTimeout(this.previewTimer);
+    this.annotations?.setOverlay(null);
     // Mode problèmes : le timer est géré par problemsManager
     if (window.problemsManager?.isActive) {
         this.updateAvailableMoves();
@@ -464,6 +467,7 @@ syncWheelFromVoting() {
 }
 highlightMostVoted() {
     const results = voting.getSortedResults();
+    this.showLeadArrow(results);
     if (results.length === 0) return;
     
     const topMove = results[0].move;
@@ -480,6 +484,46 @@ highlightMostVoted() {
         }
     });
 }
+    /** Annotations de l'échiquier principal (flèches, dernier coup) */
+    get annotations() {
+        return window.BoardAnnotations?.get('myBoard') || null;
+    }
+
+    /** Coup voté (SAN ou e2e4) -> coup légal détaillé de la position actuelle */
+    resolveMove(str) {
+        if (!str || !this.chess) return null;
+        const clean = String(str).replace(/[+#!?]/g, '');
+        return this.chess.moves({ verbose: true }).find(m =>
+            m.san === str || m.san.replace(/[+#]/g, '') === clean || m.from + m.to + (m.promotion || '') === clean
+        ) || null;
+    }
+
+    /** Pendant le vote : flèche du coup en tête, qui bouge quand la tête change */
+    showLeadArrow(results) {
+        const ann = this.annotations;
+        if (!ann) return;
+        const m = results?.length ? this.resolveMove(results[0].move) : null;
+        ann.setOverlay(m ? { kind: 'lead', from: m.from, to: m.to } : null);
+    }
+
+    /**
+     * Juste avant de jouer le coup gagnant : grosse flèche + « Cf3 · 42 % » pendant ~1,3 s
+     * (sauf si la position change entre-temps : coup réseau, nouvelle partie…)
+     */
+    previewWinner(moveStr, percentage, play) {
+        const ann = this.annotations;
+        const m = this.resolveMove(moveStr);
+        if (!ann || !m) { play(); return; }
+        const label = percentage == null ? `🎲 ${m.san}` : `${m.san} · ${percentage} %`;
+        ann.setOverlay({ kind: 'win', from: m.from, to: m.to, label });
+        const fen = this.chess.fen();
+        clearTimeout(this.previewTimer);
+        this.previewTimer = setTimeout(() => {
+            if (this.chess.fen() !== fen) { ann.setOverlay(null); return; }
+            play();
+        }, 1300);
+    }
+
     processVoteResult() {
         // ========== MODE MULTI : jouer seulement si c'est notre tour ==========
         if (window.multiplayerManager?.gameId && window.playerColor) {
@@ -504,7 +548,9 @@ highlightMostVoted() {
         
         // ========== CAS 2: MODE MAJORITÉ → EXÉCUTION DIRECTE ==========
         if (this.config.majorityMode) {
-            this.executeMove(voting.selectByMajority());
+            const winner = voting.selectByMajority();
+            const pct = results.find(r => r.move === winner)?.percentage ?? null;
+            this.previewWinner(winner, pct, () => this.executeMove(winner));
             return;
         }
         
@@ -532,7 +578,7 @@ playRandomMove() {
     // Mode majorité : coup aléatoire direct (pas d'animation)
     if (this.config.majorityMode) {
         console.log('🎲 Coup aléatoire (direct):', randomMove);
-        this.executeMove(randomMove);
+        this.previewWinner(randomMove, null, () => this.executeMove(randomMove));
         return;
     }
     
@@ -645,11 +691,15 @@ showWheelAnimation(results) {
         console.log('🎡 Lancement de l\'animation de roue, durée:', wheelDuration, 'ms');
         document.body.classList.add('randomWheel');
         
+        const random = document.body.classList.contains('randomWheel') && results.every(r => r.count === 1) && results.length > 1;
         this.votingWheel.onSpinEnd = (winner) => {
             console.log('🎯 Roue terminée, gagnant:', winner);
-            document.body.classList.remove('randomWheel');
-            this.executeMove(winner);
-            this.hideWheel();
+            const pct = random ? null : (results.find(r => r.move === winner)?.percentage ?? null);
+            this.previewWinner(winner, pct, () => {
+                document.body.classList.remove('randomWheel');
+                this.executeMove(winner);
+                this.hideWheel();
+            });
         };
         
         // La roue tire elle-même le gagnant, chaque coup pèse son nombre de votes
@@ -686,6 +736,11 @@ showWheelAnimation(results) {
     }
 
     highlightLastMove(from, to) {
+        const ann = this.annotations;
+        if (ann) {
+            ann.setLastMove(from, to);
+            return;
+        }
         // Retirer les anciens highlights
         document.querySelectorAll('.highlight-last-move')
             .forEach(el => el.classList.remove('highlight-last-move'));

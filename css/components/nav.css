@@ -256,3 +256,6 @@
 .nav__cursor.is-on { opacity: 1; }
 .nav__cursor.is-hover { background: rgba(255, 255, 255, 0.06); box-shadow: none; }
 .nav__cursor.is-hover::after { opacity: 0.35; }
+
+/* Liens de navigation sans href : main et pas de sélection de texte */
+[data-navigate] { cursor: pointer; user-select: none; }

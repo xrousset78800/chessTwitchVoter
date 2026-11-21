@@ -26,6 +26,8 @@
             this.squares = new Map(); // "e4" -> clé de couleur
             this.drawing = null;      // { from, to, color } pendant un clic droit
             this.positionKey = null;
+            this.lastMove = null;     // { from, to } : dernier coup joué, toujours surligné
+            this.overlay = null;      // { kind: 'lead' | 'win', from, to, label } : coup en tête / coup gagnant
 
             if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
             container.classList.add('board--annotatable');
@@ -48,6 +50,7 @@
                 .observe(container, { childList: true, subtree: true });
             new ResizeObserver(() => this.render()).observe(container);
             this.positionKey = this.readPosition();
+            this.settled = this.readMap();
         }
 
         squareAt(e) {
@@ -101,19 +104,85 @@
             else map.set(key, color);
         }
 
+        // Case -> pièce (indépendant de l'orientation de l'échiquier)
+        readMap() {
+            const map = {};
+            this.container.querySelectorAll('[data-square]').forEach(sq => {
+                map[sq.dataset.square] = sq.querySelector('[data-piece]')?.dataset.piece || '';
+            });
+            return map;
+        }
+
         readPosition() {
-            return [...this.container.querySelectorAll('[data-square]')]
-                .map(sq => sq.querySelector('[data-piece]')?.dataset.piece || '')
-                .join(',');
+            const map = this.readMap();
+            return Object.keys(map).sort().map(k => map[k]).join(',');
         }
 
         onBoardMutation() {
+            // Échiquier redessiné (retourné, redimensionné) ou pièces déplacées : on attend la fin des animations
+            clearTimeout(this.settleTimer);
+            this.settleTimer = setTimeout(() => this.settle(), 60);
             const key = this.readPosition();
             if (key === this.positionKey) return;
             this.positionKey = key;
-            // Pendant une animation chessboard.js les pièces passent par des états intermédiaires : on attend la fin
             clearTimeout(this.mutationTimer);
             this.mutationTimer = setTimeout(() => this.clear(), 50);
+        }
+
+        /**
+         * Déduit le dernier coup de la différence entre deux positions stables.
+         * Marche quel que soit le chemin du coup : glisser, vote, réseau, problème, Rush.
+         */
+        settle() {
+            const now = this.readMap();
+            const before = this.settled || {};
+            const changed = Object.keys(now).filter(sq => (before[sq] || '') !== now[sq]);
+            if (changed.length) {
+                const emptied = changed.filter(sq => !now[sq]);
+                const filled = changed.filter(sq => now[sq]);
+                // Début d'animation (la case de départ s'est vidée, l'arrivée pas encore remplie) : on attend
+                if (!filled.length && emptied.length <= 2) { this.applyLastMove(); return; }
+                this.settled = now;
+                if (filled.length <= 2 && emptied.length >= 1 && emptied.length <= 2 && changed.length <= 4) {
+                    // Roque : la case du roi ; prise en passant : la case du pion qui a bougé
+                    const to = filled.find(sq => /K$/.test(now[sq])) || filled[0];
+                    const from = emptied.find(sq => before[sq] === now[to]) || emptied[0];
+                    this.lastMove = { from, to };
+                } else {
+                    this.lastMove = null; // nouvelle position (partie, problème…)
+                }
+                this.overlay = null;
+                this.overlaySig = '';
+                this.render();
+            }
+            this.applyLastMove();
+        }
+
+        /** Coup joué connu par l'appelant (prioritaire sur la déduction) */
+        setLastMove(from, to) {
+            this.lastMove = from && to ? { from, to } : null;
+            this.applyLastMove();
+        }
+
+        applyLastMove() {
+            const lm = this.lastMove;
+            this.container.querySelectorAll('[data-square]').forEach(el => {
+                const sq = el.dataset.square;
+                const on = !!lm && (sq === lm.from || sq === lm.to);
+                if (el.classList.contains('is-last-move') !== on) el.classList.toggle('is-last-move', on);
+                const dest = on && sq === lm.to;
+                if (el.classList.contains('is-last-move--to') !== dest) el.classList.toggle('is-last-move--to', dest);
+            });
+        }
+
+        /** Flèche du coup en tête du vote ('lead') ou du coup gagnant avec son étiquette ('win') */
+        setOverlay(overlay) {
+            const o = overlay && overlay.from && overlay.to ? overlay : null;
+            const sig = o ? `${o.kind}${o.from}${o.to}${o.label || ''}` : '';
+            if (sig === (this.overlaySig || '')) return;
+            this.overlaySig = sig;
+            this.overlay = o;
+            this.render();
         }
 
         clear() {
@@ -156,12 +225,59 @@
                 arrows.push([this.drawing.from + this.drawing.to, this.drawing.color]);
             }
             arrows.forEach(([key, color]) => this.drawArrow(key.slice(0, 2), key.slice(2), COLORS[color]));
+            this.drawOverlay();
         }
 
-        drawArrow(from, to, color) {
+        drawOverlay() {
+            const o = this.overlay;
+            if (!o) return;
+            const win = o.kind === 'win';
+            const group = this.drawArrow(o.from, o.to, win ? 'rgb(34, 197, 94)' : 'rgb(168, 85, 247)', {
+                opacity: win ? 0.95 : 0.6, scale: win ? 1.4 : 0.85
+            });
+            if (!group) return;
+            group.classList.add('board-annotations__vote', win ? 'is-win' : 'is-lead');
+            if (!win || !o.label) return;
+            // Étiquette « Cf3 · 42 % » au-dessus de la case d'arrivée
+            const b = this.geometry(o.to);
+            const w = this.container.clientWidth;
+            const fs = Math.max(12, b.size * 0.28);
+            const label = document.createElementNS(SVG_NS, 'g');
+            label.classList.add('board-annotations__label');
+            const rect = document.createElementNS(SVG_NS, 'rect');
+            const text = document.createElementNS(SVG_NS, 'text');
+            text.textContent = o.label;
+            text.setAttribute('font-size', fs);
+            text.setAttribute('font-weight', 800);
+            text.setAttribute('font-family', 'Inter, system-ui, sans-serif');
+            text.setAttribute('fill', '#fff');
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
+            label.append(rect, text);
+            this.svg.appendChild(label);
+            let tw = 0;
+            try { tw = text.getComputedTextLength(); } catch {}
+            if (!tw) tw = o.label.length * fs * 0.6;
+            const pw = tw + fs * 1.1, ph = fs * 1.7;
+            const cx = Math.min(Math.max(b.x, pw / 2 + 2), w - pw / 2 - 2);
+            let cy = b.top - ph / 2 - 4;
+            if (cy - ph / 2 < 0) cy = b.top + b.size + ph / 2 + 4;
+            text.setAttribute('x', cx);
+            text.setAttribute('y', cy);
+            rect.setAttribute('x', cx - pw / 2);
+            rect.setAttribute('y', cy - ph / 2);
+            rect.setAttribute('width', pw);
+            rect.setAttribute('height', ph);
+            rect.setAttribute('rx', ph / 2);
+            rect.setAttribute('fill', 'rgb(22, 163, 74)');
+            rect.setAttribute('stroke', 'rgba(255, 255, 255, 0.85)');
+            rect.setAttribute('stroke-width', 2);
+        }
+
+        drawArrow(from, to, color, opts = {}) {
             const a = this.geometry(from);
             const b = this.geometry(to);
-            if (!a || !b) return;
+            if (!a || !b || !a.size) return null; // échiquier masqué
             const size = a.size;
             const points = [{ x: a.x, y: a.y }];
 
@@ -173,9 +289,10 @@
             }
             points.push({ x: b.x, y: b.y });
 
-            const width = size * 0.2;
-            const headLength = size * 0.42;
-            const headWidth = size * 0.5;
+            const k = opts.scale || 1;
+            const width = size * 0.2 * k;
+            const headLength = size * 0.42 * Math.min(k, 1.1);
+            const headWidth = size * 0.5 * k;
 
             // Le trait part un peu après le centre et s'arrête à la base de la pointe
             const start = points[0], next = points[1];
@@ -190,7 +307,7 @@
             points[points.length - 1] = base;
 
             const group = document.createElementNS(SVG_NS, 'g');
-            group.setAttribute('opacity', 0.8);
+            group.setAttribute('opacity', opts.opacity ?? 0.8);
             const line = document.createElementNS(SVG_NS, 'polyline');
             line.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
             line.setAttribute('fill', 'none');
@@ -203,6 +320,7 @@
             head.setAttribute('fill', color);
             group.append(line, head);
             this.svg.appendChild(group);
+            return group;
         }
     }
 
@@ -217,6 +335,9 @@
         },
         clear(id) {
             instances.get(id)?.clear();
+        },
+        get(id) {
+            return instances.get(id) || null;
         }
     };
 })();
