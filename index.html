@@ -282,6 +282,12 @@
                                         <button class="btn btn--sm" id="btn-flip" type="button"><i class="fas fa-sync-alt"></i> <span data-i18n="actions.reverse">Retourner</span></button>
                                         <button class="btn btn--sm" id="btn-reset" type="button"><i class="fas fa-undo"></i> <span data-i18n="actions.reset">Réinitialiser</span></button>
                                     </div>
+                                    <div class="chroma-row">
+                                        <span class="chroma-row__label"><i class="fas fa-fill-drip"></i> <span data-i18n="gameTools.chroma" data-info="chroma">Fond vert</span></span>
+                                        <button type="button" class="chroma-row__reset" data-chroma-reset data-i18n-title="gameTools.chromaReset" title="Vert par défaut"><i class="fas fa-undo"></i></button>
+                                        <input type="color" class="chroma-row__color" id="chroma-color" data-chroma-color value="#00b140" data-i18n-title="gameTools.chromaColor" title="Couleur du fond">
+                                        <div class="toggle" id="toggle-chroma" data-chroma-toggle></div>
+                                    </div>
                                     <div class="draw-tools" id="draw-menu">
                                         <p class="draw-menu__title" data-i18n="drawMenu.style">Style du tirage</p>
                                         <div class="draw-menu__styles">
@@ -289,7 +295,10 @@
                                             <button type="button" class="draw-menu__style" data-wheel-style="classic"><i class="fas fa-dharmachakra"></i> <span data-i18n="drawMenu.classic">Roue</span></button>
                                         </div>
                                         <p class="draw-menu__title" data-i18n="palette.title">Couleurs du tirage</p>
-                                        <div class="palette-picker" id="palette-picker" role="radiogroup"></div>
+                                        <div class="palette-select" id="palette-picker">
+                                            <span class="palette-option__swatches" id="palette-swatches"></span>
+                                            <select class="input input--sm" id="palette-select" data-i18n-title="palette.title" title="Couleurs du tirage"></select>
+                                        </div>
                                         <p class="draw-menu__title" data-i18n="anonymity.title">Anonymat du vote</p>
                                         <div class="anon-picker" data-anon-picker></div>
                                     </div>
@@ -306,42 +315,43 @@
                             <!-- Voting options -->
                             <div class="panel config-only">
                                 <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
-                                <div class="panel__content">
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.activateTimer" data-info="timer">Activer le timer</span>
-                                        <div class="toggle" id="toggle-voting"></div>
-                                    </div>
-                                    <p class="timer-off-warning" role="note">
-                                        <i class="fas fa-bolt"></i>
-                                        <span data-i18n="timerOff.warning">Timer désactivé : le premier vote reçu est joué immédiatement.</span>
-                                    </p>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.turnDuration" data-info="turnDuration">Durée du tour</span>
-                                        <div class="flex items-center gap-sm">
-                                            <input type="number" class="input input--sm input--inline" id="timer-duration" value="30" min="10" max="120" style="width:60px">
-                                            <span>s</span>
+                                <div class="panel__content vote-options">
+                                    <div class="vote-options__grid">
+                                        <div class="form-row">
+                                            <span data-i18n="gameMode.voteOptions.activateTimer" data-info="timer">Activer le timer</span>
+                                            <div class="toggle" id="toggle-voting"></div>
+                                        </div>
+                                        <div class="form-row">
+                                            <span data-i18n="gameMode.voteOptions.voteMajority" data-info="majority">Mode majorité</span>
+                                            <div class="toggle" id="toggle-majority"></div>
+                                        </div>
+                                        <p class="timer-off-warning" role="note">
+                                            <i class="fas fa-bolt"></i>
+                                            <span data-i18n="timerOff.warning">Timer désactivé : le premier vote reçu est joué immédiatement.</span>
+                                        </p>
+                                        <div class="form-row">
+                                            <span data-i18n="gameMode.voteOptions.turnDuration" data-info="turnDuration">Durée du tour</span>
+                                            <div class="flex items-center gap-sm">
+                                                <input type="number" class="input input--sm input--inline" id="timer-duration" value="30" min="10" max="120" style="width:60px">
+                                                <span>s</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <span data-i18n="gameMode.voteOptions.votesPerViewer" data-info="votesPerViewer">Votes par viewer</span>
+                                            <input type="number" class="input input--sm input--inline" id="votes-per-viewer" value="1" min="1" max="10" style="width:60px">
+                                        </div>
+                                        <div class="form-row">
+                                            <span data-i18n="gameMode.voteOptions.wheelAnimation" data-info="wheelDuration">Animation roue</span>
+                                            <div class="flex items-center gap-sm">
+                                                <input type="number" class="input input--sm input--inline" id="wheel-duration" value="5" min="1" max="15" style="width:60px">
+                                                <span>s</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.wheelAnimation" data-info="wheelDuration">Animation roue</span>
-                                        <div class="flex items-center gap-sm">
-                                            <input type="number" class="input input--sm input--inline" id="wheel-duration" value="5" min="1" max="15" style="width:60px">
-                                            <span>s</span>
-                                        </div>
+                                    <div class="vote-options__anon">
+                                        <span class="vote-options__label" data-i18n="anonymity.title" data-info="anonymity">Anonymat du vote</span>
+                                        <div class="anon-picker" data-anon-picker></div>
                                     </div>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.votesPerViewer" data-info="votesPerViewer">Votes par viewer</span>
-                                        <input type="number" class="input input--sm input--inline" id="votes-per-viewer" value="1" min="1" max="10" style="width:60px">
-                                    </div>
-                                    <div class="form-row">
-                                        <span data-i18n="gameMode.voteOptions.voteMajority" data-info="majority">Mode majorité</span>
-                                        <div class="toggle" id="toggle-majority"></div>
-                                    </div>
-                                    <p data-i18n="gameMode.voteOptions.majorityHint" class="form-hint">Si désactivé, tirage au sort avec la roue</p>
-                                    <div class="form-row form-row--stack">
-                                        <span data-i18n="anonymity.title" data-info="anonymity">Anonymat du vote</span>
-                                    </div>
-                                    <div class="anon-picker" data-anon-picker></div>
                                 </div>
                             </div>
 

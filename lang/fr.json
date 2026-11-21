@@ -541,6 +541,7 @@
     "anonMany": "{n} anonymes",
     "anonymity": "Visible : pseudos et votes en direct. Pseudos cachés : on voit les coups votés, pas qui les vote. Vote secret : rien pendant le tour (ni podium, ni flèche, ni pseudos), le résultat se découvre au tirage ou quand le coup est joué. Les votes restent écrits dans le chat Twitch : masque-le sur ton stream pour un vrai vote à l'aveugle.",
     "anonymityMulti": "Tu choisis pour les deux chaînes : ton adversaire suit obligatoirement ce réglage. Visible : pseudos et votes en direct. Pseudos cachés : les coups votés sans les pseudos. Vote secret : rien pendant le tour, le résultat se découvre au tirage ou quand le coup est joué.",
+    "chroma": "Remplace le fond de la page par une couleur unie, à découper dans OBS avec un filtre « Clé de chrominance ». Choisis une couleur absente de l'échiquier et des pièces (vert par défaut).",
     "loginHint": "Connecte-toi à Twitch pour apparaître avec ton pseudo."
   },
   "podium": {
@@ -596,6 +597,9 @@
     "none": "Aucune"
   },
   "gameTools": {
-    "title": "Affichage"
+    "title": "Affichage",
+    "chroma": "Fond vert",
+    "chromaColor": "Couleur du fond",
+    "chromaReset": "Revenir au vert par défaut"
   }
 }

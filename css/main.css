@@ -9,16 +9,16 @@
     --bg-card: #12121a;
     --bg-card-hover: #1a1a25;
     --bg-input: #0d0d14;
-    
+
     /* Borders */
     --border-subtle: #2a2a3a;
     --border-glow: #6366f1;
-    
+
     /* Text */
     --text-primary: #f0f0f5;
     --text-secondary: #8888a0;
     --text-muted: #55556a;
-    
+
     /* Accents */
     --accent-purple: #8b5cf6;
     --accent-blue: #3b82f6;
@@ -27,38 +27,38 @@
     --accent-orange: #f59e0b;
     --accent-red: #ef4444;
     --accent-pink: #ec4899;
-    
+
     /* Brand Colors */
     --twitch-purple: #9146ff;
     --phantom-blue: #00d4ff;
-    
+
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%);
     --gradient-card: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
-    
+
     /* Shadows */
     --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.3);
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    
+
     /* Radius */
     --radius-xs: 4px;
     --radius-sm: 6px;
     --radius-md: 12px;
     --radius-lg: 20px;
     --radius-full: 9999px;
-    
+
     /* Transitions */
     --transition-fast: 0.15s ease;
     --transition-medium: 0.3s ease;
     --transition-slow: 0.5s ease;
-    
+
     /* Spacing */
     --nav-height: 70px;
     --sidebar-width: 380px;
 
     --wheel-size: 400px;
-    --wheel-inner-size: calc(var(--wheel-size) * 0.65); 
+    --wheel-inner-size: calc(var(--wheel-size) * 0.65);
     --wheel-center-size: calc(var(--wheel-size) * 0.20);
 
 
@@ -158,7 +158,7 @@ img, video {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: 
+    background-image:
         linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
     background-size: 50px 50px;
@@ -614,7 +614,7 @@ body[data-turn="b"] .sandbox__title::after {
         font-size: 0.85rem;
         padding: 5px 6px;
     }
-    
+
     .history-row__number {
         min-width: 24px;
         margin-right: 8px;
@@ -716,11 +716,11 @@ body[data-turn="b"] .sandbox__title::after {
         padding: 10px;
         margin: 10px 0;
     }
-    
+
     .voting-eligibility__label {
         font-size: 0.7rem;
     }
-    
+
     .voting-eligibility__value {
         font-size: 0.9rem;
     }
@@ -882,12 +882,12 @@ body.showTimer .board-timer-container {
         right: 5px;
         padding: 8px;
     }
-    
+
     .board-timer-container .countdown {
         width: 80px;
         height: 80px;
     }
-    
+
     .board-timer-container #timer-value {
         font-size: 1rem;
     }
@@ -1261,3 +1261,8 @@ body:not(.phantom-connected) .nav__link--phantom:not(.is-active) { display: none
 .toggle--sub.is-active    { background: rgba(245, 158, 11, 0.16); border-color: #f59e0b; color: #fbbf24; }
 .toggle--follow.is-active .fa-heart { color: #9146ff; }
 .toggle--sub.is-active .fa-star { color: #f59e0b; }
+
+/* Fond vert : couleur unie derrière le jeu, à découper dans OBS (clé de chrominance) */
+body.game-mode.chroma { background: var(--chroma, #00b140) !important; }
+body.game-mode.chroma .bg-grid,
+body.game-mode.chroma .bg-glow { display: none !important; }

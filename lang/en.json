@@ -541,6 +541,7 @@
     "anonMany": "{n} anonymous",
     "anonymity": "Visible: usernames and votes shown live. Hidden names: you see the voted moves, not who voted them. Secret vote: nothing during the turn (no podium, no arrow, no names), the result shows up at the draw or when the move is played. Votes are still written in the Twitch chat: hide it on your stream for a truly blind vote.",
     "anonymityMulti": "You choose for both channels: your opponent must follow this setting. Visible: usernames and votes live. Hidden names: the voted moves without usernames. Secret vote: nothing during the turn, the result shows up at the draw or when the move is played.",
+    "chroma": "Replaces the page background with a solid colour you can key out in OBS with a \"Chroma Key\" filter. Pick a colour that isn't on the board or pieces (green by default).",
     "loginHint": "Log in with Twitch to appear with your username."
   },
   "podium": {
@@ -596,6 +597,9 @@
     "none": "None"
   },
   "gameTools": {
-    "title": "Display"
+    "title": "Display",
+    "chroma": "Green screen",
+    "chromaColor": "Background colour",
+    "chromaReset": "Back to default green"
   }
 }

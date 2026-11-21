@@ -73,7 +73,7 @@ export function renderAnonPickers() {
     document.querySelectorAll('[data-anon-picker]').forEach(el => {
         el.classList.toggle('is-locked', !!forced);
         el.innerHTML = `<div class="anon-picker__options" role="radiogroup">${ANON_MODES.map(m => `
-            <button type="button" class="anon-picker__option${m === current ? ' is-active' : ''}" role="radio" aria-checked="${m === current}" data-anon="${m}"${lock}>
+            <button type="button" class="anon-picker__option${m === current ? ' is-active' : ''}" role="radio" aria-checked="${m === current}" data-anon="${m}" title="${t(`anonymity.hint${m2k(m)}`, FALLBACK[`hint${m2k(m)}`])}"${lock}>
                 <i class="fas ${ICONS[m]}"></i> <span>${t(`anonymity.${m}`, FALLBACK[m])}</span>
             </button>`).join('')}</div>
             <p class="form-hint anon-picker__hint">${forced ? '<i class="fas fa-lock"></i> ' + t('anonymity.forced', 'Fixé par le créateur de la partie Multi.') + ' ' : ''}${t(`anonymity.hint${m2k(current)}`, FALLBACK[`hint${m2k(current)}`])}</p>`;

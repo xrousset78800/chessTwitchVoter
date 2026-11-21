@@ -23,10 +23,12 @@ import { renderSpectatorList, spectatorsLabel } from './components/spectators.js
 import './components/infoTip.js';
 import { PALETTES, PALETTE_IDS, getPaletteId, setPaletteId } from './components/votePalettes.js';
 import { initAnonymity, secretVotes, getAnonymity, forceAnonymity, ANON_MODES } from './components/voteAnonymity.js';
+import { initGreenScreen } from './components/greenScreen.js';
 import { VoteTicker } from './components/voteViews.js';
 
 // Anonymat du vote : sélecteurs (réglages, modale ⚙, formulaire Multi)
 initAnonymity();
+initGreenScreen();
 
 // ============================================
 // ÉTAT GLOBAL
@@ -1043,22 +1045,17 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         // Flip
 
         // Couleurs du tirage : roue, bande et podium (transmises aux spectateurs)
-        const picker = document.getElementById('palette-picker');
+        const paletteSelect = document.getElementById('palette-select');
+        const paletteSwatches = document.getElementById('palette-swatches');
         const renderPalettes = () => {
-            if (!picker) return;
+            if (!paletteSelect) return;
             const current = getPaletteId();
-            picker.innerHTML = PALETTE_IDS.map(id => `
-                <button type="button" class="palette-option${id === current ? ' is-active' : ''}" role="radio" aria-checked="${id === current}" data-palette="${id}">
-                    <span class="palette-option__swatches">${PALETTES[id].slice(0, 6).map(c => `<span style="background:${c}"></span>`).join('')}</span>
-                    <span>${tr(`palette.${id}`)}</span>
-                </button>`).join('');
+            paletteSelect.innerHTML = PALETTE_IDS.map(id => `<option value="${id}"${id === current ? ' selected' : ''}>${tr(`palette.${id}`)}</option>`).join('');
+            if (paletteSwatches) paletteSwatches.innerHTML = PALETTES[current].slice(0, 6).map(c => `<span style="background:${c}"></span>`).join('');
         };
         renderPalettes();
         window.addEventListener('languageChanged', renderPalettes);
-        picker?.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-palette]');
-            if (btn) setPaletteId(btn.dataset.palette);
-        });
+        paletteSelect?.addEventListener('change', () => setPaletteId(paletteSelect.value));
         // Anonymat du vote : sélecteurs (réglages + modale ⚙), appliqué tout de suite à la partie en cours
         document.addEventListener('voteAnonymityChanged', () => {
             VoteTicker.repaint();
