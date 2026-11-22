@@ -424,9 +424,7 @@ const Router = {
             const linkPath = link.dataset.navigate;
             // Mono, Multi et Puzzle Rush sont des onglets de Nouveau (/sandbox)
             const activePage = NEW_TABS.includes(pageName) ? 'sandbox' : pageName;
-            link.classList.toggle('is-active',
-                linkPath === '/' + activePage || (linkPath === '/' && pageName === 'landing')
-            );
+            link.classList.toggle('is-active', Router.routes[linkPath] === activePage);
         });
         moveNavCursor();
 
