@@ -7,7 +7,8 @@
  * prochains réglages. Les mêmes votes viendront ensuite du chat de la chaîne 24/24.
  */
 import twitchAuth from '../core/twitchAuth.js';
-import { renderPodium, renderHistory, markPodiumWinner } from '../components/voteViews.js';
+import VotingWheel from '../components/wheel.js';
+import { renderPodium, renderHistory, markPodiumWinner, morphPodiumToWheel, revealWinner, clearWinner } from '../components/voteViews.js';
 
 const t = (key, params, fallback) => {
     const s = window.i18n?.t(key, params);
@@ -105,7 +106,8 @@ const H24Page = {
         const g = s?.game;
         if (!s || s.phase !== 'play' || !g || g.result || !g.turnEndsAt || !this.me.team) return false;
         if (s.mode === 'problems') return g.puzzle?.status === 'playing' && g.turn === g.puzzle.side;
-        return g.turn === this.me.team;
+        // Camp sans joueur : l'autre équipe joue aussi ses coups
+        return g.turn === this.me.team || !(s.teams?.[g.turn] || []).length;
     },
 
     orientation() {
@@ -158,9 +160,14 @@ const H24Page = {
             const find = (san) => {
                 try { const c = new Chess(g.fen); return c.move(san); } catch { return null; }
             };
-            const lead = g.draw?.winner || g.votes?.[0]?.move;
-            const m = lead && find(lead);
-            if (m) overlay = { kind: g.draw ? 'win' : 'lead', from: m.from, to: m.to };
+            if (g.draw) {
+                // Rien pendant que la roue tourne : le suspense reste entier
+                const m = !this.revealing && find(g.draw.winner);
+                if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: g.draw.random ? `🎲 ${m.san}` : m.san };
+            } else {
+                const m = g.votes?.[0] && find(g.votes[0].move);
+                if (m) overlay = { kind: 'lead', from: m.from, to: m.to };
+            }
         }
         this.annotations?.setOverlay?.(overlay);
         this.highlightLast(g?.lastMove);
@@ -359,6 +366,7 @@ const H24Page = {
             let msg = '';
             if (!this.me.login) msg = t('h24.watchOnly', null, 'Tu regardes. Connecte-toi pour jouer.');
             else if (!this.me.team) msg = t('h24.joinToVote', null, 'Rejoins une équipe pour voter.');
+            else if (this.myTurn() && g.turn !== this.me.team && s.mode === 'teams') msg = t('h24.bothSides', { side: t(g.turn === 'w' ? 'h24.sideW' : 'h24.sideB') }, 'Ton équipe joue aussi ce camp.') + (this.me.vote ? ' ' + t('h24.yourVote', { move: this.me.vote }) : '');
             else if (this.myTurn()) msg = this.me.vote ? t('h24.yourVote', { move: this.me.vote }, `Ton vote : ${this.me.vote}`) : t('h24.yourTurn', null, 'À toi : déplace une pièce ou tape un coup.');
             else msg = t('h24.waitTurn', null, 'L\'autre équipe réfléchit…');
             hint.textContent = msg;
@@ -367,8 +375,8 @@ const H24Page = {
         $('h24-move-form')?.toggleAttribute('hidden', !this.myTurn());
         // Nouveau tour : le podium repart de zéro (pas de coup fantôme du tour précédent)
         if (!g.votes?.length) $('h24-votes')?.querySelector('.podium')?.remove();
-        renderPodium($('h24-votes'), $('h24-votes-total'), g.votes || [], { turn: g.turn });
-        if (g.draw?.winner) markPodiumWinner($('h24-votes'), g.draw.winner);
+        if (!g.draw) renderPodium($('h24-votes'), $('h24-votes-total'), g.votes || [], { turn: g.turn });
+        this.renderDraw(g);
         const first = (g.startFen || '').split(' ')[1] === 'b' ? 'b' : 'w';
         renderHistory($('h24-history'), (g.history || []).map(san => ({ san })), first);
         const score = $('h24-score');
@@ -381,6 +389,57 @@ const H24Page = {
             const secret = false;
             feed.innerHTML = secret ? '' : (g.recent || []).slice().reverse().map(r => `<li><span>${esc(r.u)}</span> ${esc(r.m)}</li>`).join('');
         }
+    },
+
+    /** Tirage au sort : la roue prend la place du podium, puis le coup tiré s'affiche en grand */
+    renderDraw(g) {
+        const slot = $('h24-votes-panel');
+        if (!slot) return;
+        if (!g.draw || g.result) {
+            if (this.drawSig) {
+                this.drawSig = null;
+                this.revealing = false;
+                slot.classList.remove('is-drawing');
+                clearWinner(slot);
+            }
+            return;
+        }
+        const sig = `${g.history.length}:${g.draw.winner}`;
+        if (sig === this.drawSig) return;
+        this.drawSig = sig;
+        const votes = g.draw.votes || [];
+        const total = votes.reduce((a, v) => a + v.n, 0);
+        const left = (g.draw.endsAt || 0) - (Date.now() + (this.skew || 0));
+        // Personne n'a voté, un seul coup proposé ou arrivé trop tard : le coup tiré directement
+        if (g.draw.random || votes.length < 2 || left < 1500) {
+            const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
+            markPodiumWinner($('h24-votes'), g.draw.winner);
+            revealWinner(slot, { move: g.draw.winner, color: '#8b5cf6', pct: g.draw.random || !total ? null : Math.round(n * 100 / total), turn: g.turn });
+            return;
+        }
+        const wheel = this.ensureWheel();
+        wheel.votes = new Map(votes.map(v => [v.m, { count: v.n, voters: new Map() }]));
+        wheel.draw();
+        morphPodiumToWheel(slot, $('h24-wheel-area')?.querySelector('.wheel-container'));
+        slot.classList.add('is-drawing');
+        this.revealing = true;
+        wheel.onSpinEnd = () => { this.revealing = false; this.renderBoard(); };
+        // La roue s'arrête un peu avant que le coup soit joué
+        wheel.spin(Math.max(600, left - 1300), g.draw.winner);
+    },
+
+    ensureWheel() {
+        if (this.wheel) return this.wheel;
+        const wheel = new VotingWheel('h24-wheel-area');
+        wheel.updateVoteList = () => {};
+        wheel.showResultInside = false;
+        wheel.currentTurn = () => (this.state?.game?.turn === 'b' ? 'b' : 'w');
+        wheel.highlightWinner = () => {
+            markPodiumWinner($('h24-votes'), wheel.winner);
+            revealWinner($('h24-votes-panel'), { move: wheel.winner, color: wheel.winnerColor, pct: wheel.winnerPct, turn: wheel.currentTurn() });
+        };
+        this.wheel = wheel;
+        return wheel;
     },
 
     puzzleLabel(g) {

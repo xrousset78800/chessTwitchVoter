@@ -659,6 +659,9 @@
     "timeout": "Time's up",
     "findWhite": "Find White's move",
     "findBlack": "Find Black's move",
-    "movePlaceholder": "E.g. e4, Nf3, e2e4"
+    "movePlaceholder": "E.g. e4, Nf3, e2e4",
+    "bothSides": "Nobody plays {side}: your team plays their moves too.",
+    "sideW": "White",
+    "sideB": "Black"
   }
 }

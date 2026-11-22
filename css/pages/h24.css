@@ -221,3 +221,19 @@
     .h24-board-wrap { width: 100%; }
     .h24-teams { flex-direction: row; }
 }
+
+/* ---- Tirage au sort : la roue se pose à la place du podium ---- */
+#page-h24 { --sidebar-width: 340px; }
+#h24-wheel-area .wheel-container {
+    width: var(--wheel-size);
+    height: var(--wheel-size);
+    background: rgba(10, 10, 20, 0.95);
+    border-radius: 50%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 3px var(--accent-purple, #8b5cf6), 0 0 60px rgba(139, 92, 246, 0.3);
+}
+#h24-wheel-area .wheel-center {
+    width: var(--wheel-center-size);
+    height: var(--wheel-center-size);
+    font-size: calc(var(--wheel-center-size) * 0.35);
+}
+#page-h24 .h24-votes { --dock-size: min(280px, calc(100vh - 520px)); flex: none; }

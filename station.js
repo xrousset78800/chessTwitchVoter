@@ -15,10 +15,10 @@ const { Chess } = require('chess.js');
 
 const ROOM = 'h24';
 const LOGIN_RE = /^[a-z0-9_]{2,25}$/;
-const EMPTY_TURN_MS = 3000;       // équipe sans joueur : coup au hasard rapide
 const ALL_VOTED_MS = 1500;        // toute l'équipe a voté : fin du tour anticipée
 const MAX_PLIES = 160;            // au-delà : nulle, la station repart
-const DRAW_REVEAL_MS = 3500;      // tirage au sort : temps laissé à l'animation
+const DRAW_REVEAL_MS = 5000;      // tirage au sort : temps laissé à la roue
+const RANDOM_REVEAL_MS = 1800;    // personne n'a voté : coup au hasard montré avant d'être joué
 const REPLY_MS = 900;             // problèmes : réponse de l'adversaire
 const PUZZLE_PAUSE_MS = 3000;     // problèmes : solution montrée avant le suivant
 
@@ -99,6 +99,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const sockets = new Map();   // socket.id → login (null : spectateur anonyme)
 
     const allPlayers = () => [...s.teams.w, ...s.teams.b];
+    /** Une équipe joue son camp, et aussi l'autre tant qu'il n'a aucun joueur */
+    const canPlay = (team, side) => !!team && (team === side || !s.teams[side].length);
     const teamOf = (login) => s.teams.w.includes(login) ? 'w' : s.teams.b.includes(login) ? 'b' : null;
     const viewers = () => sockets.size;
 
@@ -239,9 +241,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.votes = new Map();
         g.recent = [];
         g.draw = null;
-        // Équipe vide : coup au hasard sans attendre tout le tour
-        const empty = s.mode === 'teams' && !s.teams[g.chess.turn()].length;
-        g.turnEndsAt = Date.now() + (empty ? EMPTY_TURN_MS : (DUR.turn || s.options.turn * 1000));
+        // Même durée pour les deux camps (une équipe vide est jouée par l'autre)
+        g.turnEndsAt = Date.now() + (DUR.turn || s.options.turn * 1000);
         s.endsAt = g.turnEndsAt;
         emit();
         emitMeAll();
@@ -260,12 +261,16 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             g.random = true;
             if (s.mode === 'problems') return failPuzzle('timeout');
             move = pick(g.chess.moves());
+            g.draw = { winner: move, votes: [], random: true, endsAt: Date.now() + RANDOM_REVEAL_MS };
+            s.endsAt = g.draw.endsAt;
+            emit();
+            return later(RANDOM_REVEAL_MS, () => playMove(move));
         } else if (s.options.decision === 'draw' && s.mode === 'teams' && entries.length > 1) {
             const total = entries.reduce((a, [, n]) => a + n, 0);
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
-            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })) };
-            s.endsAt = Date.now() + DRAW_REVEAL_MS;
+            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + DRAW_REVEAL_MS };
+            s.endsAt = g.draw.endsAt;
             emit();
             return later(DRAW_REVEAL_MS, () => playMove(move));
         } else {
@@ -452,7 +457,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (s.phase !== 'play' || !g?.turnEndsAt || g.result) return false;
         const side = g.chess.turn();
         const team = teamOf(login);
-        if (s.mode === 'problems' ? !team : team !== side) return false;
+        if (s.mode === 'problems' ? !team : !canPlay(team, side)) return false;
         const wanted = clean(text).toLowerCase();
         const m = g.chess.moves({ verbose: true }).find(x =>
             clean(x.san).toLowerCase() === wanted || x.from + x.to + (x.promotion || '') === wanted);
@@ -464,7 +469,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const vc = g.voteCount[s.mode === 'problems' ? 'w' : side];
         vc.set(login, (vc.get(login) || 0) + 1);
         // Toute l'équipe a voté : le tour se termine juste après
-        const voters = s.mode === 'problems' ? allPlayers() : s.teams[side];
+        const voters = s.mode === 'problems' || !s.teams[side].length ? allPlayers() : s.teams[side];
         if (voters.every(l => g.votes.has(l))) {
             g.turnEndsAt = Math.min(g.turnEndsAt, Date.now() + ALL_VOTED_MS);
             s.endsAt = g.turnEndsAt;
