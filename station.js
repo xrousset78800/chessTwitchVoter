@@ -116,7 +116,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         game: null,
         recap: null,
         lastResult: null,
-        cycle: 1
+        cycle: 1,
+        optOut: new Set()      // ont cliqué « Quitter » : pas réinscrits d'office jusqu'aux prochaines inscriptions
     };
     const sockets = new Map();   // socket.id → login (null : spectateur anonyme)
 
@@ -175,12 +176,14 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 fen: g.chess.fen(),
                 turn: g.chess.turn(),
                 history: g.history,
+                hv: g.hv || [],
                 startFen: g.startFen,
                 lastMove: g.lastMove,
                 turnEndsAt: g.turnEndsAt,
                 // Vote secret : rien de visible avant la fin du tour, seulement le nombre de votes
                 votes: hidden ? [] : tally(g.votes).map(({ k, n }) => ({ move: k, count: n })),
                 secret: hidden ? [...g.votes.values()].reduce((a, v) => a + v.length, 0) : false,
+                masked: hidden ? tally(g.votes).map(({ n }) => n) : null,
                 voters: g.votes.size,
                 recent: g.recent.slice(-8),
                 draw: g.draw,
@@ -253,7 +256,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const b = s.ballotQueue.shift();
         if (!b) {
             s.teams = { w: [], b: [] };
+            s.optOut.clear();
             setPhase('signup', DUR.signup);
+            autoJoin();
             emitMeAll();
             return;
         }
@@ -283,7 +288,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
 
     function newGameState(chess) {
-        return { chess, startFen: chess.fen(), history: [], lastMove: null, votes: new Map(), recent: [],
+        return { chess, startFen: chess.fen(), history: [], hv: [], lastMove: null, votes: new Map(), recent: [],
             turnEndsAt: null, draw: null, random: false, result: null, startedAt: Date.now(),
             voteCount: { w: new Map(), b: new Map() } };
     }
@@ -352,6 +357,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (s.mode === 'rush') return checkPuzzleMove(san);
         const m = tryMove(g.chess, san);
         if (!m) return startTurn();
+        // Pour l'historique : part des votes du coup joué, ou « r » (hasard, personne n'a voté)
+        let total = 0, mine = 0;
+        for (const list of g.votes.values()) for (const x of list) { total++; if (x === m.san) mine++; }
+        g.hv.push(g.random || !total ? 'r' : Math.round(mine * 100 / total));
         g.history.push(m.san);
         g.lastMove = { from: m.from, to: m.to };
         g.draw = null;
@@ -518,6 +527,42 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emitMeAll(login);
         return side;
     }
+    /** Chaque viewer connecté (Twitch) sur la page est inscrit d'office, sauf s'il a quitté ce cycle-ci */
+    function autoJoin(login) {
+        if (s.phase !== 'signup' && s.phase !== 'play') return;
+        // (les bots de test aussi)
+        const logins = login ? [login] : [...new Set([...sockets.values(), ...bots.list])];
+        for (const l of logins) if (l && !s.optOut.has(l) && !teamOf(l)) join(l);
+    }
+    /** Régie (tests) : saute directement à une étape du cycle */
+    function force(phase) {
+        clearTimeout(pending);
+        pending = null;
+        if (s.game) { s.game.turnEndsAt = null; s.game.draw = null; }
+        switch (phase) {
+            case 'play':
+                if (!allPlayers().length) s.optOut.clear();
+                s.phase = 'play';
+                autoJoin();
+                return startGame();
+            case 'recap':
+                if (s.phase === 'play' && s.game && !s.game.result) return endGame();
+                s.ballot = null;
+                s.recap = s.recap || { mode: s.mode, result: s.lastResult || { kind: 'draw', reason: 'draw' }, plies: s.game?.history.length || 0,
+                    durationMs: 0, players: { w: s.teams.w.length, b: s.teams.b.length }, top: { w: [], b: [] } };
+                setPhase('recap', DUR.recap);
+                return emitMeAll();
+            case 'voteMode': return startModeVote();
+            case 'voteOptions':
+                s.ballot = null;
+                s.ballotQueue = BALLOTS[s.mode].map(x => ({ ...x }));
+                return nextBallot();
+            case 'signup':
+                s.ballot = null;
+                s.ballotQueue = [];
+                return nextBallot();
+        }
+    }
     function leave(login) {
         for (const side of ['w', 'b']) s.teams[side] = s.teams[side].filter(l => l !== login);
         s.game?.votes.delete(login);
@@ -582,7 +627,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         bots.list = BOT_NAMES.slice(0, n);
         bots.turn = n ? Math.max(5, Math.min(60, Number(turn) || 0)) || 0 : 0;
         // Parties courtes pour voir passer récap, mode et options
-        bots.plies = n ? Math.max(4, Math.min(MAX_PLIES, Number(plies) || 0)) || 0 : 0;
+        // Sans « plies » : pas de limite (avant, Math.max(4, 0) imposait 4 demi-coups par partie)
+        bots.plies = n && Number(plies) > 0 ? Math.max(4, Math.min(MAX_PLIES, Number(plies))) : 0;
         bots.plans.clear();
         // Ajoutés en pleine partie : ils rejoignent tout de suite
         if (s.phase === 'play') for (const l of bots.list) if (!teamOf(l)) join(l);
@@ -688,6 +734,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             const login = await identify(data.token);
             if (login && sockets.has(socket.id)) {
                 sockets.set(socket.id, login);
+                autoJoin(login);
                 emitMe(socket.id);
             }
         });
@@ -698,8 +745,12 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             emit();
         });
         const me = () => sockets.get(socket.id);
-        socket.on('h24:signup', () => { const l = me(); if (l) join(l); });
-        socket.on('h24:quit', () => { const l = me(); if (l) leave(l); });
+        socket.on('h24:signup', () => { const l = me(); if (l) { s.optOut.delete(l); join(l); } });
+        socket.on('h24:quit', () => { const l = me(); if (l) { s.optOut.add(l); leave(l); } });
+        socket.on('h24:force', (data = {}) => {
+            const l = me();
+            if (l && REGIE.has(l) && ['play', 'recap', 'voteMode', 'voteOptions', 'signup'].includes(data.phase)) force(data.phase);
+        });
         socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 10)); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
         // Régie : état du Phantom, pause manuelle, chaîne de la vue réelle

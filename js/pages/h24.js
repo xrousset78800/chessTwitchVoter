@@ -111,6 +111,8 @@ const H24Page = {
             const choice = e.target.closest('[data-h24-choice]');
             if (choice) { this.socket?.emit('h24:ballot', { choice: choice.dataset.h24Choice }); return; }
             if (e.target.closest('[data-h24-signup]')) { this.socket?.emit('h24:signup'); return; }
+            const fp = e.target.closest('[data-h24-force]');
+            if (fp) { this.socket?.emit('h24:force', { phase: fp.dataset.h24Force }); return; }
             if (e.target.closest('[data-h24-quit]')) { this.socket?.emit('h24:quit'); return; }
             if (e.target.closest('[data-h24-login]')) { twitchAuth.login?.(); return; }
             const st = e.target.closest('[data-h24-style]');
@@ -403,7 +405,9 @@ const H24Page = {
         const el = $('h24-steps');
         if (!el) return;
         const cur = STEPS.indexOf(s?.phase);
-        el.innerHTML = STEPS.map((p, i) => `<li class="h24-step${i === cur ? ' is-current' : ''}${cur > i ? ' is-done' : ''}">
+        // Régie : chaque étape se force au clic (tests)
+        const force = (p) => this.me.regie ? ` data-h24-force="${p}" title="${esc(t('h24.forceStep', null, 'Régie : passer à cette étape'))}"` : '';
+        el.innerHTML = STEPS.map((p, i) => `<li class="h24-step${i === cur ? ' is-current' : ''}${cur > i ? ' is-done' : ''}"${force(p)}>
             <span class="h24-step__dot">${i + 1}</span><span>${esc(t(`h24.phase.${p}`, null, p))}</span></li>`).join('');
         const title = $('h24-mode');
         if (title) title.textContent = s?.mode ? t(`h24.mode.${s.mode}`, null, s.mode) : '24/24';
@@ -658,10 +662,10 @@ const H24Page = {
         $('h24-move-form')?.toggleAttribute('hidden', !this.myTurn());
         // Nouveau tour : le podium repart de zéro (pas de coup fantôme du tour précédent)
         if (!g.votes?.length) $('h24-votes')?.querySelector('.podium')?.remove();
-        if (!g.draw) renderPodium($('h24-votes'), $('h24-votes-total'), g.votes || [], { turn: g.turn, colors: COLORS, secret: g.secret });
+        if (!g.draw) renderPodium($('h24-votes'), $('h24-votes-total'), g.votes || [], { turn: g.turn, colors: COLORS, secret: g.secret, masked: g.masked });
         this.renderDraw(g);
         const first = (g.startFen || '').split(' ')[1] === 'b' ? 'b' : 'w';
-        renderHistory($('h24-history'), (g.history || []).map(san => ({ san })), first);
+        renderHistory($('h24-history'), (g.history || []).map((san, i) => ({ san, v: s.mode === 'teams' ? g.hv?.[i] ?? null : null })), first);
         const score = $('h24-score');
         if (score) {
             score.hidden = s.mode !== 'rush';

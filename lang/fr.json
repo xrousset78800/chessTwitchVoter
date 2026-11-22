@@ -613,6 +613,7 @@
     "level": { "easy": "Facile", "medium": "Moyen", "hard": "Difficile" },
     "ballot": { "mode": "Prochain mode de jeu ?", "turn": "Durée d'un tour ?", "decision": "Comment choisir le coup ?", "votes": "Combien de votes par joueur et par tour ?", "anonymity": "Votes visibles pendant le tour ?" },
     "anonymity": { "none": "Visibles", "secret": "Secrets jusqu'à la fin du tour" },
+    "forceStep": "Régie : passer à cette étape",
     "votesOne": "1 vote",
     "votesN": "{n} votes",
     "yourVotes": "Tes votes : {moves} ({n}/{max})",

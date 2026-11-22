@@ -613,6 +613,7 @@
     "level": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
     "ballot": { "mode": "Next game mode?", "turn": "Turn length?", "decision": "How is the move chosen?", "votes": "How many votes per player per turn?", "anonymity": "Votes visible during the turn?" },
     "anonymity": { "none": "Visible", "secret": "Secret until the turn ends" },
+    "forceStep": "Control room: jump to this step",
     "votesOne": "1 vote",
     "votesN": "{n} votes",
     "yourVotes": "Your votes: {moves} ({n}/{max})",

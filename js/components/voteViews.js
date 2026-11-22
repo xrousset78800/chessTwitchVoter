@@ -59,9 +59,12 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
     // Vote secret : podium vide, seul le nombre de votes s'affiche (opts.secret = true, ou ce nombre côté spectateur)
     const secret = opts.secret != null && opts.secret !== false;
     const all = (votes || []).filter(v => v && v.count > 0);
-    const list = secret ? [] : all;
+    // Vote secret avec les totaux : le podium vit en direct (hauteurs), mais les coups restent cachés
+    const masked = secret && Array.isArray(opts.masked) ? opts.masked.filter(n => n > 0).map(n => ({ move: '?', count: n })) : null;
+    const list = masked || (secret ? [] : all);
     const total = secret && typeof opts.secret === 'number' ? opts.secret : all.reduce((n, v) => n + v.count, 0);
     listEl.classList.toggle('is-secret', secret);
+    podium.classList.toggle('is-masked', !!masked);
     const top = list[0]?.count || 1;
 
     podium.classList.toggle('is-empty', !list.length);
@@ -88,8 +91,8 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
         }
         slot.querySelector('.podium__piece').hidden = !piece;
         slot.querySelector('.podium__move').textContent = v.move;
-        slot.querySelector('.podium__pct').textContent = `${pct}%`;
-        slot.querySelector('.podium__count').textContent = t(v.count > 1 ? 'podium.votesMany' : 'podium.votesOne', { n: v.count }, `${v.count} vote${v.count > 1 ? 's' : ''}`);
+        slot.querySelector('.podium__pct').textContent = masked ? '' : `${pct}%`;
+        slot.querySelector('.podium__count').textContent = masked ? '' : t(v.count > 1 ? 'podium.votesMany' : 'podium.votesOne', { n: v.count }, `${v.count} vote${v.count > 1 ? 's' : ''}`);
         // Hauteur de la marche : le 1er au maximum, les autres en proportion
         slot.querySelector('.podium__step').style.height = `${Math.round(40 + 64 * (v.count / top))}px`;
     });

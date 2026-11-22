@@ -230,3 +230,28 @@
 /* ------------------------------------------- Puzzle rush : vies */
 .h24-score__lives { display: inline-flex; gap: 3px; color: #ef4444; }
 .h24-score__lives .is-lost { color: rgba(255, 255, 255, 0.18); }
+
+/* ------------------------------------------- Régie : étapes forcées au clic */
+.h24-step[data-h24-force] { cursor: pointer; }
+.h24-step[data-h24-force]:hover { background: rgba(145, 70, 255, 0.25); color: var(--text-primary); opacity: 1; }
+
+/* ------------------------------------------- Vote secret : podium vivant, coups masqués */
+.podium.is-masked .podium__move { font-size: 1.3rem; opacity: 0.75; }
+
+/* ------------------------------------------- Puzzle rush : pas d'historique (chaque puzzle repart de zéro) */
+#page-h24[data-mode="rush"] .h24-history { display: none; }
+
+/* ------------------------------------------- Colonne de gauche plus serrée : la liste des coups défile si besoin */
+#page-h24 .sandbox__left { gap: 8px; }
+#page-h24 .watch-head { gap: 4px; padding: 8px 10px; }
+#page-h24 .watch-head .watch-bar__mode { font-size: 0.98rem; }
+#page-h24 .h24-options { font-size: 0.76rem; }
+#page-h24 .h24-turn { font-size: 0.82rem; }
+#page-h24 #h24-moves { padding: 8px; }
+#page-h24 #h24-moves .moves-panel__content { gap: 4px; }
+@media (min-width: 1101px) {
+    #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 56px); }
+    #page-h24 #h24-moves { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #page-h24 #h24-moves .moves-panel__content { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+}
+.podium.is-masked .podium__piece img { visibility: hidden; }
