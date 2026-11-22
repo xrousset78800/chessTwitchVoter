@@ -128,6 +128,8 @@ const H24Page = {
     ensureBoard() {
         const el = $('h24-board');
         if (!el || this.board || typeof Chessboard !== 'function') return;
+        // Coordonnées en gros autour du plateau, comme sur les autres échiquiers
+        window.BoardCoords?.attach('h24-board');
         this.board = Chessboard('h24-board', {
             position: 'start',
             draggable: true,
