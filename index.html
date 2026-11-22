@@ -782,10 +782,6 @@
                             <div class="board-container" id="h24-board-wrap">
                                 <div id="h24-board" class="watch__board"></div>
                             </div>
-                            <div class="watch__timer" id="h24-timer" hidden>
-                                <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="h24-timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="h24-timer-arc"></circle></svg>
-                                    <div class="countdown__inner"><span class="countdown__num" id="h24-timer-value">--</span><span class="countdown__label" id="h24-timer-label"></span></div></div>
-                            </div>
                         </div>
                         <!-- Bande de tirage sous l'échiquier ; la roue classique se pose à la place du podium -->
                         <div id="h24-wheel-area" class="watch-wheel"></div>
@@ -802,6 +798,9 @@
                         <!-- Récap, votes du mode et des options, inscription -->
                         <div class="h24-card" id="h24-card" hidden></div>
                         <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
+                        <div class="vote-timer" id="h24-timer" hidden>
+                            <div class="vote-timer__row"><div class="vote-timer__bar"><div class="vote-timer__fill"></div></div><span class="vote-timer__num" id="h24-timer-value">--</span><span class="vote-timer__label" id="h24-timer-label"></span></div>
+                        </div>
                         <div class="votes-slot" id="h24-votes-panel">
                             <div class="votes-slot__podium">
                                 <div class="vote-list" id="h24-votes"></div>
@@ -867,10 +866,6 @@
                             <div class="board-container">
                                 <div id="watch-board" class="watch__board"></div>
                             </div>
-                            <div class="watch__timer" id="watch-timer" hidden>
-                                <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="watch-timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="watch-timer-arc"></circle></svg>
-                                    <div class="countdown__inner"><span class="countdown__num" id="watch-timer-value">--</span><span class="countdown__label" id="watch-timer-label"></span></div></div>
-                            </div>
                         </div>
                         <div class="watch__player watch__player--bottom" id="watch-bottom"></div>
                         <!-- Bande de tirage sous l'échiquier ; la roue classique se pose à la place du podium -->
@@ -883,6 +878,9 @@
                             <button type="button" class="btn btn--sm tool-btn" id="watch-flip" data-i18n-title="watch.flip" title="Retourner l'échiquier"><i class="fas fa-sync-alt"></i></button>
                         </div>
                         <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
+                        <div class="vote-timer" id="watch-timer" hidden>
+                            <div class="vote-timer__row"><div class="vote-timer__bar"><div class="vote-timer__fill"></div></div><span class="vote-timer__num" id="watch-timer-value">--</span><span class="vote-timer__label" id="watch-timer-label"></span></div>
+                        </div>
                         <div class="votes-slot" id="watch-votes-panel">
                             <div class="votes-slot__podium">
                                 <div class="vote-list" id="watch-votes"></div>

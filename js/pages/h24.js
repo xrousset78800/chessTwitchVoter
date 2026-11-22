@@ -9,6 +9,7 @@
 import twitchAuth from '../core/twitchAuth.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
+import { fillVoteTimer } from '../components/voteTimer.js';
 import { renderPodium, renderHistory, paintMoveChips, markPodiumWinner, morphPodiumToWheel, revealWinner, clearWinner } from '../components/voteViews.js';
 import { paletteColors } from '../components/votePalettes.js';
 
@@ -214,7 +215,7 @@ const H24Page = {
         return Math.max(0, Math.ceil((at - (Date.now() + (this.skew || 0))) / 1000));
     },
 
-    /** Anneau à côté de l'échiquier : temps du tour en partie, temps de la phase sinon */
+    /** Barre du bloc de vote : temps du tour en partie, temps de la phase sinon */
     renderClock() {
         const s = this.state;
         const box = $('h24-timer');
@@ -234,7 +235,9 @@ const H24Page = {
         const critical = inPlay && left != null && left <= 5;
         $('h24-timer-label').textContent = s.paused ? t('timerRing.paused', null, 'pause')
             : critical ? t('timerRing.hurry', null, 'votez !') : t('timerRing.seconds', null, 'secondes');
-        $('h24-timer-arc').style.strokeDasharray = `${Math.min(1, (left || 0) / this.clockTotal) * 283} 283`;
+        const exact = s.paused || !at ? left : Math.max(0, (at - (Date.now() + (this.skew || 0))) / 1000);
+        if (this.clockKey !== this.fillKey) { this.fillKey = this.clockKey; fillVoteTimer(box, 0, 0); }
+        fillVoteTimer(box, 1 - (exact || 0) / this.clockTotal, s.paused ? 0 : 0.25);
         box.classList.toggle('is-critical', critical);
         $('h24-wheel-area')?.classList.toggle('is-soon', inPlay && left != null && left <= 1);
     },

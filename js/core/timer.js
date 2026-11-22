@@ -1,3 +1,5 @@
+import { fillVoteTimer } from '../components/voteTimer.js';
+
 /**
  * TIMER MODULE
  * Gestion du countdown pour les tours de jeu
@@ -27,7 +29,7 @@ class Timer {
      */
     init(options = {}) {
         this.duration = options.duration || 25;
-        this.countdownEl = document.querySelector('.countdown');
+        this.countdownEl = document.getElementById('countdown');
         this.timerValueEl = document.getElementById('timer-value');
 
         if (options.onTick) this.onTick = options.onTick;
@@ -182,7 +184,7 @@ class Timer {
      */
     updateDisplay() {
         const seconds = this.remaining;
-        window.setRingTimer?.(seconds, this.isPaused);
+        window.setRingTimer?.(seconds, this.isPaused, this.duration);
 
         // Affichage textuel (MM:SS)
         if (this.timerValueEl) {
@@ -256,23 +258,16 @@ window.timer = timer;
         }
 
         // Vérifier si le timer n'existe pas déjà
-        if (document.querySelector('.board-timer-container')) {
+        if (document.querySelector('.vote-timer--board')) {
             console.log('✅ Timer container déjà présent');
             return;
         }
 
-        // Créer le conteneur du timer
+        // Barre du minuteur, en tête du bloc de vote (à défaut sous l'échiquier)
         const timerContainer = document.createElement('div');
-        timerContainer.className = 'board-timer-container';
+        timerContainer.className = 'vote-timer vote-timer--board';
         timerContainer.innerHTML = `
-            <div class="countdown" id="countdown">
-                <svg viewBox="0 0 100 100">
-                    <defs><linearGradient id="timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
-                    <circle cx="50" cy="50" r="45"></circle>
-                    <circle cx="50" cy="50" r="45"></circle>
-                </svg>
-                <div class="countdown__inner"><span class="countdown__num" id="countdown-num"></span><span class="countdown__label" id="countdown-label"></span></div>
-            </div>
+            <div class="vote-timer__row" id="countdown"><div class="vote-timer__bar"><div class="vote-timer__fill"></div></div><span class="vote-timer__num" id="countdown-num"></span><span class="vote-timer__label" id="countdown-label"></span></div>
             <div id="timer-value">--:--</div>
             <button class="timer-pause-btn" id="timer-pause-btn" style="display: none;">
                 <i class="fas fa-pause"></i>
@@ -284,13 +279,9 @@ window.timer = timer;
             </div>
         `;
 
-        // S'assurer que le parent est en position relative
-        boardWrapper.style.position = 'relative';
-
-        // Insérer le timer dans le board-wrapper
-        boardWrapper.appendChild(timerContainer);
-
-        console.log('✅ Timer repositionné en haut à droite de l\'échiquier');
+        const votes = document.getElementById('votes-panel');
+        if (votes) votes.before(timerContainer);
+        else boardWrapper.after(timerContainer);
 
         // Initialiser le bouton pause/reprise
         initPauseButton();
@@ -346,8 +337,8 @@ window.timer = timer;
         }
     }
 
-    /** Secondes seules au centre de l'anneau ; « votez ! » sous 5 s */
-    window.setRingTimer = function(seconds, paused) {
+    /** Secondes à côté de la barre ; « votez ! » sous 5 s. La barre vise la seconde suivante */
+    window.setRingTimer = function(seconds, paused, total) {
         const num = document.getElementById('countdown-num');
         const label = document.getElementById('countdown-label');
         if (!num || !label) return;
@@ -356,6 +347,8 @@ window.timer = timer;
         const tr = (k, f) => { const v = window.i18n?.t(k); return v && v !== k ? v : f; };
         label.textContent = paused ? tr('timerRing.paused', 'pause')
             : s <= 5 ? tr('timerRing.hurry', 'votez !') : tr('timerRing.seconds', 'secondes');
+        const q = Math.max(1, Number(total) || 0);
+        if (total) fillVoteTimer(num.closest('.vote-timer'), 1 - (paused ? s : Math.max(0, s - 1)) / q, paused ? 0 : 1);
     };
 
     // Exposer une fonction pour mettre à jour l'affichage du timer

@@ -10,6 +10,7 @@
 import twitchAuth from '../core/twitchAuth.js';
 import { renderSpectatorList, spectatorsLabel } from '../components/spectators.js';
 import VotingWheel from '../components/wheel.js';
+import { fillVoteTimer } from '../components/voteTimer.js';
 import WheelBand from '../components/wheelBand.js';
 import { PALETTES, isPalette, paletteColors } from '../components/votePalettes.js';
 import { renderPodium, renderHistory, paintMoveChips, morphPodiumToWheel, markPodiumWinner, revealWinner, clearWinner } from '../components/voteViews.js';
@@ -496,13 +497,13 @@ const WatchPage = {
         const total = Math.max(1, timer.total || 1);
         this.timerEndsAt = timer.paused ? null : Date.now() + timer.endsIn;
         const draw = () => {
-            const left = timer.paused ? (timer.left ?? 0) : Math.max(0, Math.ceil((this.timerEndsAt - Date.now()) / 1000));
-            // Secondes seules dans l'anneau ; « votez ! » sous 5 s
+            const exact = timer.paused ? (timer.left ?? 0) : Math.max(0, (this.timerEndsAt - Date.now()) / 1000);
+            const left = Math.ceil(exact);
+            // Secondes à côté de la barre ; « votez ! » sous 5 s
             $('watch-timer-value').textContent = left >= 60 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : String(left);
             const label = $('watch-timer-label');
             if (label) label.textContent = timer.paused ? t('timerRing.paused') : left <= 5 ? t('timerRing.hurry') : t('timerRing.seconds');
-            const arc = $('watch-timer-arc');
-            if (arc) arc.style.strokeDasharray = `${Math.min(1, left / total) * 283} 283`;
+            fillVoteTimer(box, 1 - exact / total, timer.paused ? 0 : 0.25);
             box.classList.toggle('is-critical', !timer.paused && left <= 5);
             $('watch-wheel-area')?.classList.toggle('is-soon', !timer.paused && left <= 1);
             if (!timer.paused && left <= 0) { clearInterval(this.timerId); this.timerId = null; }

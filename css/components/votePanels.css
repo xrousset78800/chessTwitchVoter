@@ -872,3 +872,71 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
 .chroma-row__reset:hover { opacity: 1; }
 .chroma-row__reset[hidden] { display: none; }
 .vote-options__grid > .form-row > span { white-space: nowrap; }
+
+/* ------------------------------------------- Minuteur en barre (bloc de vote) */
+.vote-timer { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.vote-timer[hidden] { display: none; }
+
+.vote-timer__row { display: flex; align-items: center; gap: 10px; }
+
+.vote-timer__bar {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.vote-timer__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--p, 0) * 100%);
+    border-radius: inherit;
+    background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+    transition-property: width;
+    transition-timing-function: linear;
+}
+
+.vote-timer__num {
+    min-width: 2.2ch;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1;
+    text-align: right;
+    color: #fff;
+}
+
+.vote-timer__label {
+    min-width: 56px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Moins de 5 s : ambre et « votez ! » ; en pause : orange */
+:is(.vote-timer.is-critical, .timer-critical) .vote-timer__fill { background: #f59e0b; }
+:is(.vote-timer.is-critical, .timer-critical) :is(.vote-timer__num, .vote-timer__label) { color: #fbbf24; }
+:is(.vote-timer.is-critical, .timer-critical) .vote-timer__label { font-weight: 800; text-transform: uppercase; }
+:is(.vote-timer.is-paused, .timer-paused) .vote-timer__fill { background: #ff9800; }
+:is(.vote-timer.is-paused, .timer-paused) .vote-timer__num { color: #ff9800; }
+
+/* Partie du streamer : la barre garde sa place hors du vote (pas de saut du bloc) */
+body:not(.showTimer) .vote-timer--board .vote-timer__row { visibility: hidden; }
+.vote-timer--board #timer-value:not(:has(*)) { display: none; }
+.vote-timer--board #timer-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; text-align: center; }
+.vote-timer--board .timer-pause-btn {
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 0.75rem;
+    cursor: pointer;
+}

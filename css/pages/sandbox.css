@@ -701,24 +701,19 @@ body.phantom-connected .phantom-menu__dot {
 }
 
 /* Sans timer : le cadre du minuteur annonce que le premier vote est joué tout de suite */
-.board-timer-container .timer-instant { display: none; }
+.vote-timer--board .timer-instant { display: none; }
 
-body.no-vote-timer .board-timer-container > :not(.timer-instant) { display: none !important; }
+body.no-vote-timer .vote-timer--board > :not(.timer-instant) { display: none !important; }
 
-/* Sous l'échiquier, dans le flux : ne cache aucune case */
-body.no-vote-timer #page-sandbox .board-timer-container,
-body.no-vote-timer .board-timer-container {
-    position: static;
-    width: fit-content;
-    max-width: 100%;
-    margin: 10px auto 0;
+/* À la place de la barre, dans le bloc de vote */
+body.no-vote-timer .vote-timer--board {
     padding: 6px 14px;
-    border-color: rgba(245, 158, 11, 0.55);
-    opacity: 1;
+    border: 1px solid rgba(245, 158, 11, 0.55);
+    border-radius: 10px;
     pointer-events: none;
 }
 
-body.no-vote-timer .board-timer-container .timer-instant {
+body.no-vote-timer .vote-timer--board .timer-instant {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
