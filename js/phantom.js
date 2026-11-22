@@ -1,6 +1,6 @@
 /**
  * 🎯 PHANTOM CHESS - VERSION AVEC FILE D'ATTENTE ET BLOCAGE UI
- * 
+ *
  * Nouvelles fonctionnalités :
  * - File d'attente des coups (moveQueue)
  * - Blocage de l'UI pendant l'exécution des mouvements
@@ -19,7 +19,7 @@ class PhantomChessboard {
         this.UUID_JUMP_TO_CENTER = '5e316147-4550-4cf3-8e2b-edc098312a43';
         this.UUID_VERSION = '392d9e66-937a-11ee-b9d1-0242ac120002';
         this.UUID_FACTORY_RESET = 'b583ff00-b77a-42f5-a53f-a9bf4c291d80';
-        
+
         // OpCodes
         this.OP_CODES = {
             GAME_START: 0,
@@ -38,14 +38,14 @@ class PhantomChessboard {
             SNAPTOCENTERCOM: 13,
             RESET_DETECTION: 14
         };
-        
+
         this.OP_CODE_NAMES = {
             0: 'GAME_START', 1: 'GAME_END', 2: 'MOVEMENT', 3: 'MOVEMENT_VERIFY',
             4: 'VOICE_COMMAND', 5: 'TAKE_BACK', 6: 'BOARD_STATE', 7: 'CALIBRATION',
             8: 'ERROR_MSG', 9: 'CHECK_SOUND', 10: 'SIDE', 11: 'GAME_ASSISTANCE',
             12: 'BLE_MOVE_DONE', 13: 'SNAPTOCENTERCOM', 14: 'RESET_DETECTION'
         };
-        
+
         // État
         this.device = null;
         this.server = null;
@@ -55,7 +55,7 @@ class PhantomChessboard {
         this.enabled = false;
         this.lastFenSent = null;
         this.gameInitialized = false;
-        
+
         // 🆕 File d'attente et état de mouvement
         this.moveQueue = [];
         this.isMoving = false;
@@ -63,17 +63,17 @@ class PhantomChessboard {
         this.moveTimeout = null;
         this.MOVE_TIMEOUT_MS = 30000; // 30 secondes max par mouvement
         this.savedTimerState = null; // Pour la pause du timer de vote
-        
+
         // 🆕 Webcam
         this.webcamStream = null;
         this.webcamOpacity = 0.5;
-        
+
         console.log('🎯 PhantomChessboard initialisé (avec file d\'attente)');
     }
-    
+
     // ========== GESTION DE L'OVERLAY UI ==========
-    
-    
+
+
     /**
      * 🆕 Met en pause le timer de vote (compatible avec chessVoterApp.js)
      */
@@ -94,7 +94,7 @@ class PhantomChessboard {
             this.log('⏸️ Pas de timer actif à mettre en pause', 'info');
         }
     }
-    
+
     /**
      * 🆕 Reprend le timer de vote (seulement s'il était actif avant)
      */
@@ -105,7 +105,7 @@ class PhantomChessboard {
             if (typeof voterTimer !== 'undefined') {
                 voterTimer = this.savedTimerState.voterTimer;
             }
-            
+
             // Relancer l'interval
             if (typeof bip === 'function') {
                 intervalId = setInterval(function() {
@@ -116,7 +116,7 @@ class PhantomChessboard {
         }
         this.savedTimerState = null;
     }
-    
+
     /**
      * 🆕 Synchronise la position actuelle au Phantom (appelé à la connexion)
      */
@@ -138,23 +138,23 @@ class PhantomChessboard {
             this.log('⚠️ Pas de partie en cours', 'info');
             return;
         }
-        
+
         const currentFen = chess.fen();
         const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
-        
+
         // Vérifier si on est à la position initiale
         if (currentFen.startsWith(initialFen)) {
             this.log('📋 Position initiale, synchronisation légère', 'info');
         } else {
             this.log('📋 Partie en cours détectée, synchronisation...', 'info');
         }
-        
+
         // Lancer la synchronisation (le timer sera mis en pause automatiquement par showBlockingOverlay)
         this.syncPosition(currentFen);
     }
-    
+
     // ========== GESTION DE LA FILE D'ATTENTE ==========
-    
+
     /**
      * Ajoute un FEN à la file d'attente et lance le traitement
      */
@@ -167,23 +167,23 @@ class PhantomChessboard {
         // 🆕 Détecter si c'est un reset vers la position initiale
         const initialFenStart = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
         const fenPosition = fen.split(' ')[0];
-        
+
         if (fenPosition === initialFenStart && this.lastFenSent !== null) {
             this.log('🔄 Détection reset partie - réinitialisation', 'info');
             this.lastFenSent = null; // Permettre le nouveau GAME_START
             this.moveQueue = []; // Vider la file en cours
         }
-        
+
         // Éviter les doublons consécutifs
         const lastInQueue = this.moveQueue[this.moveQueue.length - 1];
         if (lastInQueue === fen || (this.moveQueue.length === 0 && this.lastFenSent === fen)) {
             console.log('⏭️ FEN identique, ignoré');
             return;
         }
-        
+
         this.moveQueue.push(fen);
         this.log(`📥 FEN ajouté à la file (${this.moveQueue.length} en attente)`, 'info');
-        
+
         // Lancer le traitement si pas déjà en cours
         if (!this.isMoving) {
             this.processQueue();
@@ -192,7 +192,7 @@ class PhantomChessboard {
             this.showBlockingOverlay?.('Déplacement en cours...', this.moveQueue.length);
         }
     }
-    
+
     /**
      * Traite la file d'attente coup par coup
      */
@@ -200,16 +200,16 @@ class PhantomChessboard {
         if (this.isMoving || this.moveQueue.length === 0) {
             return;
         }
-        
+
         this.isMoving = true;
         const fen = this.moveQueue.shift();
         const remaining = this.moveQueue.length;
-        
+
         // Émettre l'événement pour mettre le timer en pause (seulement au premier coup)
         window.dispatchEvent(new CustomEvent('phantomMoveStart'));
-        
+
         this.log(`🎯 Traitement du coup (${remaining} restants)`, 'info');
-        
+
         try {
             // Exécuter le mouvement et attendre BLE_MOVE_DONE
             await this.syncPositionAndWait(fen);
@@ -217,10 +217,10 @@ class PhantomChessboard {
         } catch (error) {
             this.log(`❌ Erreur mouvement: ${error.message}`, 'error');
         }
-        
+
         // Petit délai entre les mouvements pour laisser le board se stabiliser
         await new Promise(resolve => setTimeout(resolve, 300));
-        
+
         // Recalibration lancée pendant ce coup : elle reprend la main
         if (this.recalibrating) {
             this.isMoving = false;
@@ -234,12 +234,12 @@ class PhantomChessboard {
             window.dispatchEvent(new CustomEvent('phantomMoveComplete'));
             return;
         }
-        
+
         // Traiter le prochain coup (sans réémettre phantomMoveStart)
         this.isMoving = false;
         this.processQueue();
     }
-    
+
     /**
      * Synchronise la position ET attend le BLE_MOVE_DONE
      */
@@ -247,7 +247,7 @@ class PhantomChessboard {
         return new Promise(async (resolve, reject) => {
             // Créer une promesse qui sera résolue par handleGameNotification
             this.moveDoneResolver = resolve;
-            
+
             // Timeout de sécurité
             // Mise en place complète (nouvelle partie, après réparation) : bien plus long qu'un coup
             const timeoutMs = this.lastFenSent === null ? 120000 : this.MOVE_TIMEOUT_MS;
@@ -256,30 +256,30 @@ class PhantomChessboard {
                 this.moveDoneResolver = null;
                 resolve(); // On continue quand même
             }, timeoutMs);
-            
+
             try {
                 // Convertir FEN en matrice 10x10
                 const matrix = this.fenToMatrix(fen);
-                
+
                 // Debug: afficher la matrice
                 console.log('📋 Matrice générée:\n' + this.formatMatrix(matrix));
-                
+
                 // Déterminer la couleur qui joue (inversée pour le Phantom)
                 const fenParts = fen.split(' ');
                 const colorToPlay = (fenParts.length > 1 && fenParts[1] === 'b') ? 'W' : 'B';
-                
+
                 // Envoyer via GAME_START avec la matrice
                 await this.sendCommand(this.OP_CODES.GAME_START, matrix + ',' + colorToPlay);
-                
+
                 // Attendre un peu puis envoyer SIDE
                 await new Promise(r => setTimeout(r, 300));
                 await this.sendCommand(this.OP_CODES.SIDE, '2');
-                
+
                 this.lastFenSent = fen;
-                
+
                 // Note: La promesse sera résolue par handleGameNotification quand BLE_MOVE_DONE arrive
                 // ou par le timeout si ça prend trop longtemps
-                
+
             } catch (error) {
                 clearTimeout(this.moveTimeout);
                 this.moveDoneResolver = null;
@@ -287,13 +287,13 @@ class PhantomChessboard {
             }
         });
     }
-    
+
     // ========== CONVERSION FEN → MATRICE 10x10 ==========
-    
+
     fenToMatrix(fen) {
         const position = fen.split(' ')[0];
         const rows = position.split('/');
-        
+
         const board = [];
         for (const row of rows) {
             let boardRow = '';
@@ -306,7 +306,7 @@ class PhantomChessboard {
             }
             board.push(boardRow.padEnd(8, '.'));
         }
-        
+
         // Rotation 90° horaire pour le Phantom
         // Chaque colonne du FEN devient une ligne de la matrice
         // L'ordre dans chaque ligne va du rang 8 au rang 1
@@ -318,17 +318,17 @@ class PhantomChessboard {
             }
             rotated.push(newRow);
         }
-        
+
         // Construire la matrice 10x10
         let matrix = '..........'; // Première ligne (cimetière)
         for (const row of rotated) {
             matrix += '.' + row + '.';
         }
         matrix += '..........'; // Dernière ligne (cimetière)
-        
+
         return matrix;
     }
-    
+
     formatMatrix(matrix) {
         let result = '  0 1 2 3 4 5 6 7 8 9\n';
         for (let i = 0; i < 10; i++) {
@@ -336,20 +336,20 @@ class PhantomChessboard {
         }
         return result;
     }
-    
+
     // ========== CONNEXION BLUETOOTH ==========
-    
+
     async connect() {
         try {
             this.log('🔍 Recherche Phantom...', 'info');
-            
+
             this.device = await navigator.bluetooth.requestDevice({
                 filters: [{ namePrefix: 'Phantom' }],
                 optionalServices: [this.SERVICE_UUID]
             });
-            
+
             this.log(`📱 Appareil: ${this.device.name}`, 'info');
-            
+
             this.device.addEventListener('gattserverdisconnected', () => {
                 this.log('🔌 Déconnecté', 'warn');
                 this.isConnected = false;
@@ -357,7 +357,7 @@ class PhantomChessboard {
                 this.isMoving = false;
                 this.updateUI(false);
             });
-            
+
             return await this.connectGatt();
         } catch (error) {
             this.log(`❌ Erreur: ${error.message}`, 'error');
@@ -373,13 +373,13 @@ class PhantomChessboard {
         try {
             this.server = await this.device.gatt.connect();
             this.service = await this.server.getPrimaryService(this.SERVICE_UUID);
-            
+
             // Caractéristique de jeu
             this.characteristics.game = await this.service.getCharacteristic(this.UUID_GAME);
             await this.characteristics.game.startNotifications();
             this._onGame ??= (e) => this.handleGameNotification(e);
             this.characteristics.game.addEventListener('characteristicvaluechanged', this._onGame);
-            
+
             // Caractéristiques optionnelles
             try {
                 this.characteristics.speed = await this.service.getCharacteristic(this.UUID_MECHANISM_SPEED);
@@ -388,23 +388,23 @@ class PhantomChessboard {
                 const currentSpeed = parseInt(new TextDecoder().decode(speedValue));
                 this.currentSpeed = currentSpeed;
                 this.log(`⚡ Vitesse actuelle: ${currentSpeed}/5`, 'info');
-                
+
                 refreshPhantomSpeedControls();
-            } catch (e) { 
+            } catch (e) {
                 this.log('⚠️ Vitesse non disponible', 'warn');
             }
-            
+
             try {
                 this.characteristics.sound = await this.service.getCharacteristic(this.UUID_SOUND_SETTINGS);
             } catch (e) { }
-            
+
             try {
                 this.characteristics.battery = await this.service.getCharacteristic(this.UUID_BATTERY);
                 const batteryValue = await this.characteristics.battery.readValue();
                 const batteryStr = new TextDecoder().decode(batteryValue);
                 this.log(`🔋 Batterie: ${batteryStr}%`, 'info');
             } catch (e) { }
-            
+
             // Diagnostic : version, réglage « jump to center » et état de l'échiquier
             const readText = async (uuid, key) => {
                 const c = await this.service.getCharacteristic(uuid);
@@ -432,13 +432,13 @@ class PhantomChessboard {
             this.enabled = true;
             this.log('✅ Connecté!', 'success');
             this.updateUI(true);
-            
+
             // 🆕 Sauvegarder l'état en localStorage
             this.saveState();
-            
+
             // 🆕 Webcam et position en cours (la réparation repose elle-même la position)
             if (!afterRepair) {
-                this.startWebcam();
+                if (phantomWebcamWanted()) this.startWebcam(); // option du menu Phantom, désactivée par défaut
                 this.syncCurrentPosition();
             }
 
@@ -448,7 +448,7 @@ class PhantomChessboard {
             return false;
         }
     }
-    
+
     async disconnect() {
         if (this.device && this.device.gatt.connected) {
             this.device.gatt.disconnect();
@@ -456,29 +456,29 @@ class PhantomChessboard {
         this.isConnected = false;
         this.moveQueue = [];
         this.isMoving = false;
-        
+
         // 🆕 Effacer l'état sauvegardé
         this.clearState();
-        
+
         // 🆕 Arrêter la webcam
         this.stopWebcam();
-        
+
         this.updateUI(false);
     }
-    
+
     // ========== NOTIFICATIONS ==========
-    
+
     handleGameNotification(event) {
         const value = event.target.value;
         const decoder = new TextDecoder('utf-8');
         const bytes = new Uint8Array(value.buffer);
-        
+
         try {
             const strValue = decoder.decode(value);
             const opCode = bytes[0];
             const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
             const dataStr = strValue.substring(1);
-            
+
             // Erreur de l'échiquier : texte complet (une fois par message, puis un compteur)
             if (opCode === this.OP_CODES.ERROR_MSG) {
                 if (dataStr === this.lastError) {
@@ -509,7 +509,7 @@ class PhantomChessboard {
             } else {
                 this.log(`📥 [${opName}]`, 'received');
             }
-            
+
             if (this.calibrationResolver && (opCode === this.OP_CODES.CALIBRATION || opCode === this.OP_CODES.BLE_MOVE_DONE)) {
                 const done = this.calibrationResolver;
                 this.calibrationResolver = null;
@@ -519,43 +519,43 @@ class PhantomChessboard {
             // 🆕 BLE_MOVE_DONE - Résoudre la promesse en attente
             if (opCode === this.OP_CODES.BLE_MOVE_DONE) {
                 this.log(`🎯 MOVE_DONE reçu!`, 'success');
-                
+
                 if (this.moveTimeout) {
                     clearTimeout(this.moveTimeout);
                     this.moveTimeout = null;
                 }
-                
+
                 if (this.moveDoneResolver) {
                     const resolver = this.moveDoneResolver;
                     this.moveDoneResolver = null;
                     resolver();
                 }
             }
-            
+
             // MOVEMENT_VERIFY - répondre automatiquement
             if (opCode === this.OP_CODES.MOVEMENT_VERIFY) {
                 this.log(`✅ Auto-validation du mouvement`, 'info');
                 this.sendCommand(this.OP_CODES.MOVEMENT_VERIFY, '1');
             }
-            
+
         } catch (error) {
             console.error('Erreur notification:', error);
         }
     }
-    
+
     // ========== ENVOI DE COMMANDES ==========
-    
+
     async sendCommand(opCode, data = '') {
         if (!this.characteristics.game) {
             this.log('⚠️ Non connecté', 'warn');
             return false;
         }
-        
+
         try {
             const message = String.fromCharCode(opCode) + data;
             const encoded = new TextEncoder().encode(message);
             await this.characteristics.game.writeValue(encoded);
-            
+
             const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
             if (data.length < 50) {
                 this.log(`📤 [${opName}] "${data}"`, 'sent');
@@ -568,15 +568,15 @@ class PhantomChessboard {
             return false;
         }
     }
-    
+
     // ========== COMMANDES DE JEU ==========
-    
+
     async sendGameStart() {
         const initialFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
         const matrix = this.fenToMatrix(initialFen);
         return await this.sendCommand(this.OP_CODES.GAME_START, matrix + ',W');
     }
-    
+
     async sendGameEnd() {
         this.gameInitialized = false;
         this.moveQueue = [];
@@ -584,7 +584,7 @@ class PhantomChessboard {
         this.lastFenSent = null; // 🆕 Réinitialiser pour permettre un nouveau GAME_START propre
         return await this.sendCommand(this.OP_CODES.GAME_END);
     }
-    
+
     async calibrate() {
         return await this.sendCommand(this.OP_CODES.CALIBRATION);
     }
@@ -792,9 +792,9 @@ class PhantomChessboard {
         }
         return true;
     }
-    
+
     // ========== MÉTHODE PRINCIPALE DE SYNC ==========
-    
+
     /**
      * 🎯 Méthode appelée par l'extérieur pour synchroniser une position
      * Ajoute à la file d'attente au lieu d'exécuter directement
@@ -804,19 +804,19 @@ class PhantomChessboard {
             console.log('⚠️ Phantom non actif');
             return false;
         }
-        
+
         this.queuePosition(fen);
         return true;
     }
-    
+
     // ========== PARAMÈTRES ==========
-    
+
     async setSpeed(speed) {
         if (!this.characteristics.speed) {
             this.log('⚠️ Vitesse indisponible', 'warn');
             return false;
         }
-        
+
         try {
             const value = Math.max(1, Math.min(5, speed));
             const encoded = new TextEncoder().encode(value.toString());
@@ -830,13 +830,13 @@ class PhantomChessboard {
             return false;
         }
     }
-    
+
     async setVolume(volume) {
         if (!this.characteristics.sound) {
             this.log('⚠️ Volume indisponible', 'warn');
             return false;
         }
-        
+
         try {
             const value = Math.max(0, Math.min(100, volume));
             const soundSettings = `${value},1`;
@@ -849,13 +849,13 @@ class PhantomChessboard {
             return false;
         }
     }
-    
+
     // ========== UTILITAIRES ==========
-    
+
     log(message, type = 'info') {
         const prefix = '🎯 [Phantom]';
         const fullMessage = `${prefix} ${message}`;
-        
+
         switch (type) {
             case 'error':
                 console.error(fullMessage);
@@ -875,7 +875,7 @@ class PhantomChessboard {
             default:
                 console.log(fullMessage);
         }
-        
+
         // Mettre à jour le log UI si présent
         const logElement = document.getElementById('phantom-log');
         if (logElement) {
@@ -886,9 +886,9 @@ class PhantomChessboard {
             logElement.scrollTop = logElement.scrollHeight;
         }
     }
-    
+
     // ========== PERSISTANCE ==========
-    
+
     /**
      * 🆕 Sauvegarde l'état en localStorage
      */
@@ -905,7 +905,7 @@ class PhantomChessboard {
             console.warn('Impossible de sauvegarder l\'état Phantom:', e);
         }
     }
-    
+
     /**
      * 🆕 Efface l'état sauvegardé
      */
@@ -917,7 +917,7 @@ class PhantomChessboard {
             console.warn('Impossible d\'effacer l\'état Phantom:', e);
         }
     }
-    
+
     /**
      * 🆕 Vérifie si une reconnexion est suggérée
      */
@@ -925,32 +925,32 @@ class PhantomChessboard {
         try {
             const stateStr = localStorage.getItem('phantomState');
             if (!stateStr) return null;
-            
+
             const state = JSON.parse(stateStr);
-            
+
             // Vérifier que l'état n'est pas trop vieux (24h max)
             const maxAge = 24 * 60 * 60 * 1000;
             if (Date.now() - state.timestamp > maxAge) {
                 this.clearState();
                 return null;
             }
-            
+
             return state;
         } catch (e) {
             return null;
         }
     }
-    
+
     /**
      * 🆕 Affiche le prompt de reconnexion si nécessaire
      */
     showReconnectPrompt() {
         const previousState = this.checkPreviousConnection();
         if (!previousState) return;
-        
+
         // Vérifier si le prompt existe déjà
         if (document.getElementById('phantom-reconnect-prompt')) return;
-        
+
         const prompt = document.createElement('div');
         prompt.id = 'phantom-reconnect-prompt';
         prompt.innerHTML = `
@@ -961,7 +961,7 @@ class PhantomChessboard {
             </div>
         `;
         document.body.appendChild(prompt);
-        
+
         // Styles
         if (!document.getElementById('phantom-reconnect-styles')) {
             const style = document.createElement('style');
@@ -974,12 +974,12 @@ class PhantomChessboard {
                     z-index: 10000;
                     animation: slideIn 0.3s ease;
                 }
-                
+
                 @keyframes slideIn {
                     from { transform: translateX(100%); opacity: 0; }
                     to { transform: translateX(0); opacity: 1; }
                 }
-                
+
                 .phantom-reconnect-content {
                     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
                     padding: 15px 20px;
@@ -992,7 +992,7 @@ class PhantomChessboard {
                     color: white;
                     font-size: 14px;
                 }
-                
+
                 .phantom-reconnect-content button {
                     padding: 8px 16px;
                     border: none;
@@ -1001,35 +1001,35 @@ class PhantomChessboard {
                     font-weight: 500;
                     transition: all 0.2s;
                 }
-                
+
                 #phantom-reconnect-yes {
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
                 }
-                
+
                 #phantom-reconnect-yes:hover {
                     transform: scale(1.05);
                 }
-                
+
                 #phantom-reconnect-no {
                     background: rgba(255, 255, 255, 0.1);
                     color: white;
                 }
-                
+
                 #phantom-reconnect-no:hover {
                     background: rgba(255, 255, 255, 0.2);
                 }
             `;
             document.head.appendChild(style);
         }
-        
+
         // Event listeners
         document.getElementById('phantom-reconnect-yes')?.addEventListener('click', async () => {
            prompt.remove();
-           
+
            // 1. D'abord connecter au Phantom
            const success = await this.connect();
-           
+
            // 2. SEULEMENT si la connexion réussit, afficher le panneau
            if (success) {
                const phantomCheckbox = document.getElementById('phantomChess');
@@ -1039,12 +1039,12 @@ class PhantomChessboard {
                }
            }
         });
-        
+
         document.getElementById('phantom-reconnect-no')?.addEventListener('click', () => {
             prompt.remove();
             this.clearState();
         });
-        
+
         // Auto-dismiss après 10 secondes
         setTimeout(() => {
             if (document.getElementById('phantom-reconnect-prompt')) {
@@ -1052,9 +1052,9 @@ class PhantomChessboard {
             }
         }, 10000);
     }
-    
+
     // ========== WEBCAM ==========
-    
+
     /**
      * 🆕 Démarre la webcam et l'affiche en overlay sur l'échiquier
      */
@@ -1065,9 +1065,9 @@ class PhantomChessboard {
                 this.log('📷 Webcam déjà active', 'info');
                 return true;
             }
-            
+
             this.log('📷 Démarrage webcam...', 'info');
-            
+
             // Demander l'accès à la webcam
             this.webcamStream = await navigator.mediaDevices.getUserMedia({
                 video: {
@@ -1077,27 +1077,28 @@ class PhantomChessboard {
                 },
                 audio: false
             });
-            
+
             // Créer l'overlay vidéo
             this.createWebcamOverlay();
-            
+
             // Connecter le stream à la vidéo
             const video = document.getElementById('phantom-webcam-video');
             if (video) {
                 video.srcObject = this.webcamStream;
                 video.play();
             }
-            
+
             this.log('📷 Webcam active', 'success');
+            refreshPhantomWebcamControls();
             return true;
-            
+
         } catch (error) {
             this.log(`📷 Erreur webcam: ${error.message}`, 'error');
             console.error('Erreur webcam:', error);
             return false;
         }
     }
-    
+
     /**
      * 🆕 Arrête la webcam
      */
@@ -1107,14 +1108,15 @@ class PhantomChessboard {
             this.webcamStream = null;
             this.log('📷 Webcam arrêtée', 'info');
         }
-        
+
         // Supprimer l'overlay
         const overlay = document.getElementById('phantom-webcam-overlay');
         if (overlay) {
             overlay.remove();
         }
+        refreshPhantomWebcamControls();
     }
-    
+
     /**
      * 🆕 Crée l'overlay vidéo sur l'échiquier
      */
@@ -1122,24 +1124,24 @@ class PhantomChessboard {
         // Supprimer si existe déjà
         const existing = document.getElementById('phantom-webcam-overlay');
         if (existing) existing.remove();
-        
+
         // Trouver l'échiquier
-        const boardContainer = document.getElementById('myBoard') || 
-                               document.getElementById('board') || 
+        const boardContainer = document.getElementById('myBoard') ||
+                               document.getElementById('board') ||
                                document.querySelector('.board-container') ||
                                document.querySelector('[class*="board"]');
-        
+
         if (!boardContainer) {
             this.log('⚠️ Échiquier non trouvé pour overlay webcam', 'warn');
             return;
         }
-        
+
         // S'assurer que le conteneur est positionné
         const computedStyle = window.getComputedStyle(boardContainer);
         if (computedStyle.position === 'static') {
             boardContainer.style.position = 'relative';
         }
-        
+
         // Créer l'overlay
         const overlay = document.createElement('div');
         overlay.id = 'phantom-webcam-overlay';
@@ -1151,9 +1153,9 @@ class PhantomChessboard {
                 <button id="phantom-webcam-opacity-up" title="Plus transparent">➕</button>
             </div>
         `;
-        
+
         boardContainer.appendChild(overlay);
-        
+
         // Ajouter les styles
         if (!document.getElementById('phantom-webcam-styles')) {
             const style = document.createElement('style');
@@ -1168,7 +1170,7 @@ class PhantomChessboard {
                     pointer-events: none;
                     z-index: 50;
                 }
-                
+
                 #phantom-webcam-overlay video {
                     width: 100%;
                     height: 100%;
@@ -1176,11 +1178,11 @@ class PhantomChessboard {
                     opacity: 0.5;
                     transition: opacity 0.3s ease;
                 }
-                
+
                 #phantom-webcam-overlay.hidden video {
                     opacity: 0;
                 }
-                
+
                 .phantom-webcam-controls {
                     position: absolute;
                     bottom: 10px;
@@ -1189,7 +1191,7 @@ class PhantomChessboard {
                     gap: 5px;
                     pointer-events: auto;
                 }
-                
+
                 .phantom-webcam-controls button {
                     width: 32px;
                     height: 32px;
@@ -1201,37 +1203,37 @@ class PhantomChessboard {
                     font-size: 14px;
                     transition: background 0.2s;
                 }
-                
+
                 .phantom-webcam-controls button:hover {
                     background: rgba(102, 126, 234, 0.8);
                 }
             `;
             document.head.appendChild(style);
         }
-        
+
         // Ajouter les event listeners
         this.setupWebcamControls();
     }
-    
+
     /**
      * 🆕 Configure les contrôles de la webcam
      */
     setupWebcamControls() {
         const overlay = document.getElementById('phantom-webcam-overlay');
         const video = document.getElementById('phantom-webcam-video');
-        
+
         if (!overlay || !video) return;
-        
+
         // Opacité initiale
         this.webcamOpacity = 0.5;
         this.webcamVisible = true;
-        
+
         // Toggle visibilité
         document.getElementById('phantom-webcam-toggle')?.addEventListener('click', () => {
             this.webcamVisible = !this.webcamVisible;
             video.style.opacity = this.webcamVisible ? this.webcamOpacity : 0;
         });
-        
+
         // Diminuer opacité
         document.getElementById('phantom-webcam-opacity-down')?.addEventListener('click', () => {
             this.webcamOpacity = Math.max(0.1, this.webcamOpacity - 0.1);
@@ -1239,7 +1241,7 @@ class PhantomChessboard {
                 video.style.opacity = this.webcamOpacity;
             }
         });
-        
+
         // Augmenter opacité
         document.getElementById('phantom-webcam-opacity-up')?.addEventListener('click', () => {
             this.webcamOpacity = Math.min(1, this.webcamOpacity + 0.1);
@@ -1248,13 +1250,13 @@ class PhantomChessboard {
             }
         });
     }
-    
+
     // ========== UI ==========
-    
+
     updateUI(connected) {
         // Utiliser le paramètre ou l'état interne
         const isConn = (connected !== undefined) ? connected : this.isConnected;
-        
+
         const statusEl = document.getElementById('phantom-status');
         if (statusEl) {
             if (isConn) {
@@ -1265,14 +1267,14 @@ class PhantomChessboard {
                 statusEl.style.background = 'rgba(244, 67, 54, 0.3)';
             }
         }
-        
+
         // Activer/désactiver les boutons (compatible jQuery et vanilla)
         const buttonIds = [
-            'phantom-connect', 'phantom-disconnect', 'phantom-calibrate', 
+            'phantom-connect', 'phantom-disconnect', 'phantom-calibrate',
             'phantom-test', 'phantom-speed', 'phantom-volume', 'phantom-undo',
             'phantom-game-start', 'phantom-game-end'
         ];
-        
+
         buttonIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1284,21 +1286,21 @@ class PhantomChessboard {
             }
         });
     }
-    
+
     setEnabled(enabled) {
         this.enabled = enabled;
         this.log(enabled ? '🟢 Activé' : '🔴 Désactivé', 'info');
-        
+
         if (!enabled) {
             this.moveQueue = [];
             this.isMoving = false;
         }
     }
-    
+
     isEnabled() {
         return this.enabled && this.isConnected;
     }
-    
+
     /**
      * 🆕 Retourne si un mouvement est en cours (pour bloquer l'UI externe)
      */
@@ -1318,25 +1320,25 @@ window.syncPhantomPosition = function() {
         console.log('⚠️ [syncPhantomPosition] phantomChessboard non disponible');
         return;
     }
-    
+
     if (!window.phantomChessboard.isConnected) {
         console.log('⚠️ [syncPhantomPosition] Phantom non connecté');
         return;
     }
-    
+
     if (!window.phantomChessboard.enabled) {
         console.log('⚠️ [syncPhantomPosition] Phantom désactivé');
         return;
     }
-    
+
     if (typeof chess === 'undefined') {
         console.log('⚠️ [syncPhantomPosition] chess.js non disponible');
         return;
     }
-    
+
     const currentFen = chess.fen();
     console.log('🔄 [syncPhantomPosition] Sync vers Phantom:', currentFen);
-    
+
     window.phantomChessboard.syncPosition(currentFen);
 };
 
@@ -1344,9 +1346,9 @@ window.syncPhantomPosition = function() {
  * 🆕 Fonction pour vérifier si le Phantom est occupé (pour bloquer les votes etc.)
  */
 window.isPhantomBusy = function() {
-    return window.phantomChessboard && 
-           window.phantomChessboard.isConnected && 
-           window.phantomChessboard.enabled && 
+    return window.phantomChessboard &&
+           window.phantomChessboard.isConnected &&
+           window.phantomChessboard.enabled &&
            window.phantomChessboard.isBusy();
 };
 
@@ -1376,4 +1378,38 @@ document.addEventListener('click', async (e) => {
     const phantom = window.phantomChessboard;
     if (!phantom?.isConnected) return;
     await phantom.setSpeed(Number(btn.dataset.speed));
+});
+
+// Webcam en surimpression sur l'échiquier : option du menu Phantom, désactivée par défaut
+const WEBCAM_KEY = 'phantomWebcam';
+function phantomWebcamWanted() {
+    try { return localStorage.getItem(WEBCAM_KEY) === '1'; } catch { return false; }
+}
+function refreshPhantomWebcamControls() {
+    const on = !!window.phantomChessboard?.webcamStream;
+    const label = (k, d) => { const s = window.i18n?.t(k); return s && s !== k ? s : d; };
+    document.querySelectorAll('[data-ph-webcam]').forEach(b => {
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', String(on));
+        const span = b.querySelector('span');
+        if (span) {
+            const key = on ? 'setup.webcamOn' : 'setup.webcamOff';
+            span.dataset.i18n = key;
+            span.textContent = label(key, on ? 'On' : 'Off');
+        }
+    });
+}
+document.addEventListener('click', async (e) => {
+    if (!e.target.closest('[data-ph-webcam]')) return;
+    const phantom = window.phantomChessboard;
+    if (!phantom) return;
+    if (phantom.webcamStream) {
+        try { localStorage.setItem(WEBCAM_KEY, '0'); } catch {}
+        phantom.stopWebcam();
+    } else {
+        try { localStorage.setItem(WEBCAM_KEY, '1'); } catch {}
+        const ok = await phantom.startWebcam();
+        if (!ok) { try { localStorage.setItem(WEBCAM_KEY, '0'); } catch {} }
+    }
+    refreshPhantomWebcamControls();
 });
