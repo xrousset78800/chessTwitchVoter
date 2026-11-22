@@ -664,6 +664,29 @@
     "sideW": "Blancs",
     "sideB": "Noirs",
     "teamsTitle": "Équipes",
-    "clickToVote": "Clique un coup ou déplace une pièce"
+    "clickToVote": "Clique un coup ou déplace une pièce",
+    "ballotHow": { "votes": "choisi par le vote", "tie": "égalité : tiré au sort", "default": "personne n'a voté : valeur par défaut" },
+    "liveTitle": "Vue réelle",
+    "liveShow": "Afficher",
+    "liveHide": "Replier",
+    "pausePhantom": "Phantom…",
+    "regie": {
+      "title": "Régie",
+      "off": "Phantom hors direct",
+      "ok": "Phantom en direct",
+      "busy": "Le Phantom déplace les pièces…",
+      "error": "Phantom déconnecté : la station attend",
+      "connect": "Connecter le Phantom",
+      "liveOn": "Suit la partie",
+      "liveOff": "Suivre la partie",
+      "syncHint": "Renvoyer la position au Phantom",
+      "pause": "Pause",
+      "resume": "Reprendre",
+      "channelPh": "Chaîne Twitch de la vue réelle",
+      "channelSet": "Afficher cette chaîne",
+      "channelHide": "Retirer la vue réelle",
+      "channelOn": "Vue réelle : twitch.tv/{c}",
+      "channelOff": "Pas de vue réelle pour les viewers"
+    }
   }
 }

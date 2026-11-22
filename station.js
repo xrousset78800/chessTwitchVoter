@@ -17,7 +17,8 @@ const ROOM = 'h24';
 const LOGIN_RE = /^[a-z0-9_]{2,25}$/;
 const ALL_VOTED_MS = 3000;        // toute l'équipe a voté : fin du tour anticipée
 const MAX_PLIES = 160;            // au-delà : nulle, la station repart
-const DRAW_REVEAL_MS = 5000;      // tirage au sort : temps laissé à la roue
+const DRAW_REVEAL_MS = 9000;      // tirage au sort : temps laissé à la roue (pas réglable sur le 24/24 : une roue bien longue)
+const BALLOT_REVEAL_MS = 4000;    // résultat d'un vote (mode, option) montré avant la suite
 const RANDOM_REVEAL_MS = 1800;    // personne n'a voté : coup au hasard montré avant d'être joué
 const REPLY_MS = 900;             // problèmes : réponse de l'adversaire
 const PUZZLE_PAUSE_MS = 3000;     // problèmes : solution montrée avant le suivant
@@ -100,6 +101,18 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     };
     const sockets = new Map();   // socket.id → login (null : spectateur anonyme)
 
+    // Régie : le PC du streamer, avec le vrai échiquier (Phantom) et la chaîne Twitch de la vue réelle.
+    // Logins autorisés : H24_REGIE (séparés par des virgules) ; en local, « testeur » aussi.
+    const REGIE = new Set(String(process.env.H24_REGIE || '').toLowerCase().split(',').map(x => x.trim()).filter(Boolean));
+    if (process.env.STATION_DEV === '1') REGIE.add('testeur');
+    const regieFile = dataDir ? path.join(dataDir, 'h24-regie.json') : null;
+    const regie = { socket: null, phantom: 'off', paused: false, channel: '' };
+    try { if (regieFile) regie.channel = String(JSON.parse(fs.readFileSync(regieFile, 'utf8')).channel || ''); } catch {}
+    /** Pourquoi la station attend : personne ne regarde, la régie a mis en pause, le Phantom bouge ou décroche */
+    const holdReason = () => viewers() === 0 ? 'idle'
+        : regie.paused ? 'regie'
+        : (regie.phantom === 'busy' || regie.phantom === 'error') ? 'phantom' : null;
+
     const allPlayers = () => [...s.teams.w, ...s.teams.b];
     /** Une équipe joue son camp, et aussi l'autre tant qu'il n'a aucun joueur */
     const canPlay = (team, side) => !!team && (team === side || !s.teams[side].length);
@@ -129,11 +142,13 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             phase: s.phase,
             endsAt: s.endsAt,
             paused: s.paused,
+            pauseReason: s.pauseReason || null,
+            regie: { live: !!regie.socket, phantom: regie.phantom, paused: regie.paused, channel: regie.channel },
             mode: s.mode,
             options: s.options,
             teams: s.teams,
             viewers: viewers(),
-            ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, tally: tally(s.ballot.votes), total: s.ballot.votes.size },
+            ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how },
             next: s.ballotQueue.map(b => b.id),
             recap: s.recap,
             game: g && {
@@ -161,6 +176,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!sock) return;
         sock.emit('h24:me', {
             login,
+            regie: !!login && REGIE.has(login),
             team: login ? teamOf(login) : null,
             vote: login && s.game ? s.game.votes.get(login) || null : null,
             ballot: login && s.ballot ? s.ballot.votes.get(login) ?? null : null
@@ -191,15 +207,23 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         for (const v of b.votes.values()) counts[v] = (counts[v] || 0) + 1;
         const best = Math.max(0, ...Object.values(counts));
         // Personne n'a voté : valeur par défaut (la première) ; égalité : tirage parmi les ex æquo
-        const winner = best === 0 ? b.choices[0] : pick(b.choices.filter(c => counts[c] === best));
-        if (b.id === 'mode') {
-            s.mode = winner;
-            s.ballotQueue = BALLOTS[winner].map(x => ({ ...x }));
-        } else {
-            s.options[b.id] = winner;
-        }
-        s.ballot = null;
-        nextBallot();
+        const tied = b.choices.filter(c => counts[c] === best);
+        const winner = best === 0 ? b.choices[0] : pick(tied);
+        // Résultat affiché quelques secondes, comme pour un coup, avant le vote suivant
+        b.winner = winner;
+        b.how = best === 0 ? 'default' : tied.length > 1 ? 'tie' : 'votes';
+        s.endsAt = null;
+        emit();
+        later(BALLOT_REVEAL_MS, () => {
+            if (b.id === 'mode') {
+                s.mode = winner;
+                s.ballotQueue = BALLOTS[winner].map(x => ({ ...x }));
+            } else {
+                s.options[b.id] = winner;
+            }
+            s.ballot = null;
+            nextBallot();
+        });
     }
 
     function nextBallot() {
@@ -421,8 +445,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
 
     function tick() {
         const now = Date.now();
-        // Personne ne regarde : tout s'arrête (le Phantom aussi) jusqu'au prochain viewer
-        const idle = viewers() === 0;
+        // Personne ne regarde, ou la régie attend (pause, Phantom en mouvement ou décroché) : tout s'arrête
+        const reason = holdReason();
+        if (reason !== (s.pauseReason || null)) { s.pauseReason = reason; emit(); }
+        const idle = !!reason;
         if (idle !== s.paused) {
             s.paused = idle;
             if (idle) s.pausedAt = now;
@@ -494,7 +520,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
     function voteBallot(login, choice) {
         const b = s.ballot;
-        if (!b || !LOGIN_RE.test(login || '')) return false;
+        if (!b || b.winner !== undefined || !LOGIN_RE.test(login || '')) return false;
         const c = b.choices.find(x => String(x) === String(choice));
         if (c === undefined) return false;
         b.votes.set(login, c);
@@ -595,6 +621,18 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         try { return (await verifyTwitchToken(token)).login; } catch { return null; }
     }
 
+    /** Un onglet de la régie s'en va : s'il tenait le Phantom, la station ne l'attend plus ;
+     *  plus aucun onglet de régie : la pause manuelle saute aussi (la vue réelle reste) */
+    function dropRegie(id) {
+        if (regie.socket === id) {
+            regie.socket = null;
+            regie.phantom = 'off';
+        }
+        const left = [...sockets].some(([sid, l]) => sid !== id && l && REGIE.has(l));
+        if (!left) regie.paused = false;
+        emit();
+    }
+
     io.on('connection', (socket) => {
         socket.on('h24:join', async (data = {}) => {
             socket.join(ROOM);
@@ -611,6 +649,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         socket.on('h24:leave', () => {
             socket.leave(ROOM);
             sockets.delete(socket.id);
+            dropRegie(socket.id);
             emit();
         });
         const me = () => sockets.get(socket.id);
@@ -618,7 +657,27 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         socket.on('h24:quit', () => { const l = me(); if (l) leave(l); });
         socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 10)); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
+        // Régie : état du Phantom, pause manuelle, chaîne de la vue réelle
+        socket.on('h24:regie', (data = {}) => {
+            const l = me();
+            if (!l || !REGIE.has(l)) return;
+            // Le Phantom appartient à l'onglet qui le suit : un autre onglet « hors direct » ne l'écrase pas
+            if (['ok', 'busy', 'error'].includes(data.phantom)) { regie.socket = socket.id; regie.phantom = data.phantom; }
+            else if (data.phantom === 'off' && regie.socket === socket.id) { regie.socket = null; regie.phantom = 'off'; }
+            if (typeof data.paused === 'boolean') regie.paused = data.paused;
+            if (typeof data.channel === 'string') {
+                const c = data.channel.trim().toLowerCase().replace(/^.*twitch\.tv\//, '').replace(/[/?#].*$/, '');
+                if (c === '' || LOGIN_RE.test(c)) {
+                    if (c !== regie.channel && regieFile) {
+                        try { fs.writeFileSync(regieFile, JSON.stringify({ channel: c })); } catch {}
+                    }
+                    regie.channel = c;
+                }
+            }
+            emit();
+        });
         socket.on('disconnect', () => {
+            dropRegie(socket.id);
             if (sockets.delete(socket.id)) emit();
         });
     });

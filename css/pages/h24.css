@@ -157,3 +157,72 @@
     #page-h24 .h24-history .panel__content { flex: 1; min-height: 0; overflow-y: auto; }
     #page-h24 .h24-card { flex: none; }
 }
+
+/* ------------------------------------------- Régie (PC du streamer) */
+.h24-regie {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px dashed rgba(139, 92, 246, 0.6);
+    border-radius: 10px;
+    background: rgba(139, 92, 246, 0.08);
+    flex: none;
+}
+.h24-regie[hidden] { display: none; }
+.h24-regie__head { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.h24-regie__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.h24-regie__status { font-size: 0.8rem; font-weight: 600; }
+.h24-regie__dot { width: 10px; height: 10px; border-radius: 50%; background: #6b7280; flex: none; }
+.h24-regie__dot--ok { background: #22c55e; }
+.h24-regie__dot--busy { background: #f59e0b; animation: h24-blink 0.8s infinite alternate; }
+.h24-regie__dot--error { background: #ef4444; animation: h24-blink 0.5s infinite alternate; }
+@keyframes h24-blink { to { opacity: 0.35; } }
+.h24-regie__channel input {
+    flex: 1 1 120px;
+    min-width: 0;
+    padding: 5px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.25);
+    color: #fff;
+    font-size: 0.8rem;
+}
+.h24-regie__hint { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); }
+
+/* ------------------------------------------- Vue réelle (petit bloc à part) */
+.h24-live {
+    flex: none;
+    margin-top: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+.h24-live[hidden] { display: none; }
+.h24-live__head { display: flex; align-items: center; gap: 8px; padding: 5px 8px; font-size: 0.75rem; }
+.h24-live__title { font-weight: 700; white-space: nowrap; }
+.h24-live__title i { color: #ef4444; }
+.h24-live__link { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255, 255, 255, 0.55); text-decoration: none; }
+.h24-live__link:hover { color: #fff; }
+.h24-live__toggle { border: 0; background: none; color: rgba(255, 255, 255, 0.7); cursor: pointer; padding: 2px 4px; }
+.h24-live__frame { aspect-ratio: 16 / 9; background: #000; }
+.h24-live.is-folded .h24-live__frame { display: none; }
+.h24-live__frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+/* ------------------------------------------- Résultat d'un vote (mode, option) */
+.h24-ballot-result {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 10px; padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    font-size: 1.15rem; font-weight: 800;
+    animation: h24-pop 0.35s ease-out;
+}
+.h24-ballot-result i { color: #22c55e; }
+.h24-ballot-result small { flex-basis: 100%; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); }
+.h24-choices.is-decided .h24-choice.is-winner { border-color: #22c55e; box-shadow: 0 0 0 1px #22c55e inset; }
+.h24-choices.is-decided .h24-choice.is-winner::before { background: rgba(34, 197, 94, 0.25); }
+.h24-choices.is-decided .h24-choice.is-loser { opacity: 0.45; }
+@keyframes h24-pop { from { transform: scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }

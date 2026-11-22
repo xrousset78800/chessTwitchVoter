@@ -664,6 +664,29 @@
     "sideW": "White",
     "sideB": "Black",
     "teamsTitle": "Teams",
-    "clickToVote": "Click a move or drag a piece"
+    "clickToVote": "Click a move or drag a piece",
+    "ballotHow": { "votes": "chosen by vote", "tie": "tie: drawn at random", "default": "nobody voted: default value" },
+    "liveTitle": "Real board",
+    "liveShow": "Show",
+    "liveHide": "Fold",
+    "pausePhantom": "Phantom…",
+    "regie": {
+      "title": "Control room",
+      "off": "Phantom not live",
+      "ok": "Phantom live",
+      "busy": "Phantom is moving pieces…",
+      "error": "Phantom disconnected: the station waits",
+      "connect": "Connect the Phantom",
+      "liveOn": "Following the game",
+      "liveOff": "Follow the game",
+      "syncHint": "Send the position to the Phantom again",
+      "pause": "Pause",
+      "resume": "Resume",
+      "channelPh": "Twitch channel of the real board",
+      "channelSet": "Show this channel",
+      "channelHide": "Remove the real board view",
+      "channelOn": "Real board: twitch.tv/{c}",
+      "channelOff": "No real board view for viewers"
+    }
   }
 }

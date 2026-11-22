@@ -35,8 +35,19 @@ function choiceLabel(ballot, c) {
 }
 const CHOICE_ICON = { teams: 'fa-chess', problems: 'fa-puzzle-piece', majority: 'fa-check-double', draw: 'fa-dice', easy: 'fa-seedling', medium: 'fa-chess-knight', hard: 'fa-fire' };
 
+/** Le Phantom vu de la régie : 'off' (pas en direct), 'ok', 'busy' (pièces en mouvement), 'error' (décroché) */
+function phantomStatus(live) {
+    const p = window.phantomChessboard;
+    if (!live) return 'off';
+    if (!p?.isConnected) return 'error';
+    return p.isMoving || p.moveQueue?.length ? 'busy' : 'ok';
+}
+const loadRegie = () => { try { return JSON.parse(localStorage.getItem('h24Regie')) || {}; } catch { return {}; } };
+
 const H24Page = {
     socket: null,
+    regie: { live: false, channel: loadRegie().channel || '' },
+    liveFolded: (() => { try { return localStorage.getItem('h24LiveFolded') === '1'; } catch { return false; } })(),
     board: null,
     state: null,
     me: { login: null, team: null, vote: null, ballot: null },
@@ -78,8 +89,13 @@ const H24Page = {
             this.state = st;
             this.render();
         });
-        socket.on('h24:me', (me) => { this.me = me || {}; this.render(); });
-        this.clock = setInterval(() => this.renderClock(), 250);
+        socket.on('h24:me', (me) => {
+            this.me = me || {};
+            // La régie se présente (de nouveau après une reconnexion ou un redémarrage du serveur)
+            if (this.me.regie && this.regieSent !== socket.id) { this.regieSent = socket.id; this.regiePhantom = null; this.sendRegie(true); }
+            this.render();
+        });
+        this.clock = setInterval(() => { this.renderClock(); this.regieTick(); }, 250);
         if (!this._authBound) {
             this._authBound = true;
             window.addEventListener('twitchAuthChange', () => { if (this.socket?.connected) this.socket.emit('h24:join', { token: this.token() }); });
@@ -97,6 +113,9 @@ const H24Page = {
             if (e.target.closest('[data-h24-login]')) { twitchAuth.login?.(); return; }
             const st = e.target.closest('[data-h24-style]');
             if (st) { this.setStyle(st.dataset.h24Style); return; }
+            const rg = e.target.closest('[data-h24-regie]');
+            if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
+            if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
             const mv = e.target.closest('[data-h24-move]');
             if (mv && !mv.disabled) this.socket?.emit('h24:vote', { move: mv.dataset.h24Move });
         });
@@ -208,6 +227,141 @@ const H24Page = {
         this.renderStyle();
         this.renderBoard();
         this.renderClock();
+        this.renderRegie();
+        this.renderLive();
+        this.mirror();
+    },
+
+    // ------------------------------------------------------------------ régie : Phantom et vue réelle
+    saveRegie() {
+        try { localStorage.setItem('h24Regie', JSON.stringify({ channel: this.regie.channel })); } catch {}
+    },
+
+    /** Envoie l'état de la régie au serveur (tout, ou seulement le Phantom s'il a changé) */
+    sendRegie(all = false) {
+        if (!this.me.regie || !this.socket) return;
+        const phantom = phantomStatus(this.regie.live);
+        if (!all && phantom === this.regiePhantom) return;
+        this.regiePhantom = phantom;
+        this.socket.emit('h24:regie', { phantom });
+    },
+
+    regieTick() {
+        if (!this.me.regie) return;
+        const before = this.regiePhantom;
+        this.sendRegie();
+        if (before !== this.regiePhantom) this.renderRegie();
+    },
+
+    /** Le vrai échiquier suit la partie : chaque nouvelle position part au Phantom (file d'attente) */
+    mirror() {
+        const p = window.phantomChessboard;
+        const fen = this.state?.game?.fen;
+        if (!this.me.regie || !this.regie.live || !p?.isConnected || !fen) return;
+        if (fen === this.mirroredFen) return;
+        this.mirroredFen = fen;
+        p.enabled = true;
+        p.syncPosition(fen);
+    },
+
+    async regieAction(action) {
+        const p = window.phantomChessboard;
+        if (action === 'connect') {
+            if (!p) return;
+            await p.connect();
+            this.mirroredFen = null;
+        } else if (action === 'live') {
+            this.regie.live = !this.regie.live;
+            this.mirroredFen = null;
+            this.saveRegie();
+        } else if (action === 'sync') {
+            this.mirroredFen = null;
+            if (p) p.lastFenSent = null;
+        } else if (action === 'pause') {
+            this.socket?.emit('h24:regie', { paused: !this.state?.regie?.paused });
+        } else if (action === 'channel') {
+            const input = $('h24-regie-channel');
+            this.regie.channel = (input?.value || '').trim();
+            this.saveRegie();
+            this.socket?.emit('h24:regie', { channel: this.regie.channel });
+        } else if (action === 'hide') {
+            this.socket?.emit('h24:regie', { channel: '' });
+        } else if (action === 'show') {
+            this.socket?.emit('h24:regie', { channel: this.regie.channel || '' });
+        }
+        this.sendRegie();
+        this.mirror();
+        this.renderRegie(true);
+    },
+
+    renderRegie(force = false) {
+        const el = $('h24-regie');
+        if (!el) return;
+        el.hidden = !this.me.regie;
+        if (!this.me.regie) return;
+        const p = window.phantomChessboard;
+        const status = phantomStatus(this.regie.live);
+        const server = this.state?.regie || {};
+        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason].join('|');
+        if (!force && key === this.regieKey) return;
+        this.regieKey = key;
+        const typing = document.activeElement?.id === 'h24-regie-channel';
+        const label = {
+            off: t('h24.regie.off', null, 'Phantom hors direct'),
+            ok: t('h24.regie.ok', null, 'Phantom en direct'),
+            busy: t('h24.regie.busy', null, 'Le Phantom déplace les pièces…'),
+            error: t('h24.regie.error', null, 'Phantom déconnecté : la station attend')
+        }[status];
+        const shown = server.channel || '';
+        el.innerHTML = `
+            <div class="h24-regie__head"><i class="fas fa-sliders-h"></i> ${esc(t('h24.regie.title', null, 'Régie'))}</div>
+            <div class="h24-regie__row">
+                <span class="h24-regie__dot h24-regie__dot--${status}"></span><span class="h24-regie__status">${esc(label)}</span>
+            </div>
+            <div class="h24-regie__row">
+                ${p?.isConnected ? '' : `<button type="button" class="btn btn--sm" data-h24-regie="connect"><i class="fab fa-bluetooth-b"></i> ${esc(t('h24.regie.connect', null, 'Connecter le Phantom'))}</button>`}
+                <button type="button" class="btn btn--sm${this.regie.live ? ' btn--primary' : ''}" data-h24-regie="live"><i class="fas fa-${this.regie.live ? 'link' : 'unlink'}"></i> ${esc(this.regie.live ? t('h24.regie.liveOn', null, 'Suit la partie') : t('h24.regie.liveOff', null, 'Suivre la partie'))}</button>
+                ${this.regie.live && p?.isConnected ? `<button type="button" class="btn btn--sm" data-h24-regie="sync" title="${esc(t('h24.regie.syncHint', null, 'Renvoyer la position au Phantom'))}"><i class="fas fa-sync-alt"></i></button>` : ''}
+                <button type="button" class="btn btn--sm${server.paused ? ' btn--primary' : ''}" data-h24-regie="pause"><i class="fas fa-${server.paused ? 'play' : 'pause'}"></i> ${esc(server.paused ? t('h24.regie.resume', null, 'Reprendre') : t('h24.regie.pause', null, 'Pause'))}</button>
+            </div>
+            <form class="h24-regie__row h24-regie__channel" data-h24-regie-form>
+                <input type="text" id="h24-regie-channel" maxlength="60" autocomplete="off" placeholder="${esc(t('h24.regie.channelPh', null, 'Chaîne Twitch de la vue réelle'))}" value="${esc(this.regie.channel || '')}">
+                <button type="submit" class="btn btn--sm" title="${esc(t('h24.regie.channelSet', null, 'Afficher cette chaîne'))}"><i class="fas fa-video"></i></button>
+                ${shown ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-regie="hide" title="${esc(t('h24.regie.channelHide', null, 'Retirer la vue réelle'))}"><i class="fas fa-eye-slash"></i></button>` : ''}
+            </form>
+            <div class="h24-regie__hint">${shown ? esc(t('h24.regie.channelOn', { c: shown }, `Vue réelle : twitch.tv/${shown}`)) : esc(t('h24.regie.channelOff', null, 'Pas de vue réelle pour les viewers'))}</div>`;
+        if (typing) { const i = $('h24-regie-channel'); i?.focus(); i?.setSelectionRange(i.value.length, i.value.length); }
+        el.querySelector('[data-h24-regie-form]')?.addEventListener('submit', (e) => { e.preventDefault(); this.regieAction('channel'); });
+    },
+
+    foldLive(folded) {
+        this.liveFolded = folded;
+        try { localStorage.setItem('h24LiveFolded', folded ? '1' : '0'); } catch {}
+        this.renderLive();
+    },
+
+    /** Petit bloc à part : le lecteur Twitch de la chaîne qui filme le vrai échiquier */
+    renderLive() {
+        const box = $('h24-live');
+        if (!box) return;
+        const channel = this.state?.regie?.channel || '';
+        box.hidden = !channel;
+        box.classList.toggle('is-folded', this.liveFolded);
+        const frame = $('h24-live-frame');
+        const src = channel && !this.liveFolded
+            ? `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(location.hostname)}&muted=true&autoplay=true`
+            : '';
+        if (frame.dataset.src !== src) {
+            frame.dataset.src = src;
+            frame.innerHTML = src ? `<iframe src="${esc(src)}" allowfullscreen allow="autoplay; fullscreen" title="${esc(t('h24.liveTitle', null, 'Vue réelle'))}"></iframe>` : '';
+        }
+        const link = $('h24-live-link');
+        if (link) { link.textContent = channel ? `twitch.tv/${channel}` : ''; link.href = channel ? `https://twitch.tv/${encodeURIComponent(channel)}` : '#'; }
+        const tg = $('h24-live-toggle');
+        if (tg) {
+            tg.innerHTML = `<i class="fas fa-chevron-${this.liveFolded ? 'down' : 'up'}"></i>`;
+            tg.title = this.liveFolded ? t('h24.liveShow', null, 'Afficher') : t('h24.liveHide', null, 'Replier');
+        }
     },
 
     remaining(at) {
@@ -233,7 +387,7 @@ const H24Page = {
         $('h24-timer-value').textContent = left == null ? '--'
             : left >= 60 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : String(left);
         const critical = inPlay && left != null && left <= 5;
-        $('h24-timer-label').textContent = s.paused ? t('timerRing.paused', null, 'pause')
+        $('h24-timer-label').textContent = s.paused ? (s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'))
             : critical ? t('timerRing.hurry', null, 'votez !') : t('timerRing.seconds', null, 'secondes');
         const exact = s.paused || !at ? left : Math.max(0, (at - (Date.now() + (this.skew || 0))) / 1000);
         if (this.clockKey !== this.fillKey) { this.fillKey = this.clockKey; fillVoteTimer(box, 0, 0); }
@@ -412,16 +566,25 @@ const H24Page = {
             const b = s.ballot;
             const counts = Object.fromEntries((b.tally || []).map(x => [x.k, x.n]));
             const mine = this.me.ballot;
-            const canVote = !!this.me.login;
+            const decided = b.winner !== undefined && b.winner !== null;
+            const canVote = !!this.me.login && !decided;
             const buttons = b.choices.map(c => {
                 const n = counts[String(c)] || 0;
                 const pct = b.total ? Math.round(n * 100 / b.total) : 0;
                 const icon = CHOICE_ICON[c] ? `<i class="fas ${CHOICE_ICON[c]}"></i>` : '';
-                return `<button type="button" class="h24-choice${String(mine) === String(c) ? ' is-mine' : ''}" data-h24-choice="${esc(c)}" ${canVote ? '' : 'disabled'} style="--pct:${pct}%">
+                const won = decided ? (String(b.winner) === String(c) ? ' is-winner' : ' is-loser') : '';
+                return `<button type="button" class="h24-choice${String(mine) === String(c) ? ' is-mine' : ''}${won}" data-h24-choice="${esc(c)}" ${canVote ? '' : 'disabled'} style="--pct:${pct}%">
                     <span class="h24-choice__label">${icon}${esc(choiceLabel(b.id, c))}</span>
                     <span class="h24-choice__pct">${pct}%<small>${n}</small></span></button>`;
             }).join('');
             const next = (s.next || []).length ? `<p class="h24-card__next">${esc(t('h24.nextBallots', { n: s.next.length }, `Encore ${s.next.length} vote(s)`))}</p>` : '';
+            if (decided) {
+                const how = t(`h24.ballotHow.${b.how}`, null, '');
+                return `${clock}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
+                    <div class="h24-ballot-result"><i class="fas fa-check-circle"></i> ${esc(choiceLabel(b.id, b.winner))}${how ? `<small>${esc(how)}</small>` : ''}</div>
+                    <div class="h24-choices is-decided">${buttons}</div>
+                    <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}</p>${next}`;
+            }
             return `${clock}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
                 <div class="h24-choices">${buttons}</div>
                 <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}${canVote ? '' : ' · ' + esc(t('h24.loginToVote', null, 'connecte-toi pour voter'))}</p>${next}`;
@@ -567,3 +730,7 @@ const H24Page = {
 };
 
 export default H24Page;
+
+// À la connexion du Phantom depuis le menu, c'est la partie 24/24 qu'il faut poser sur l'échiquier
+window.phantomPositionProviders = window.phantomPositionProviders || {};
+window.phantomPositionProviders['24h'] = () => (H24Page.me.regie && H24Page.regie.live && H24Page.state?.game?.fen) || null;

@@ -775,6 +775,15 @@
                             </div>
                             <div class="moves-panel__content" id="h24-moves-list"></div>
                         </aside>
+                        <!-- Vue réelle : la chaîne Twitch qui filme le vrai échiquier (choisie par la régie) -->
+                        <div class="h24-live" id="h24-live" hidden>
+                            <div class="h24-live__head">
+                                <span class="h24-live__title"><i class="fas fa-video"></i> <span data-i18n="h24.liveTitle">Vue réelle</span></span>
+                                <a class="h24-live__link" id="h24-live-link" target="_blank" rel="noopener"></a>
+                                <button type="button" class="h24-live__toggle" id="h24-live-toggle" data-h24-live-toggle><i class="fas fa-chevron-up"></i></button>
+                            </div>
+                            <div class="h24-live__frame" id="h24-live-frame"></div>
+                        </div>
                     </div>
 
                     <div class="sandbox__main">
@@ -795,6 +804,8 @@
                                 <button type="button" class="btn btn--sm" data-h24-style="wheel"><i class="fas fa-dharmachakra"></i> <span data-i18n="wheelStyle.classic">Tirage : roue</span></button>
                             </div>
                         </div>
+                        <!-- Régie (PC du streamer) : Phantom, pause, chaîne de la vue réelle -->
+                        <div class="h24-regie" id="h24-regie" hidden></div>
                         <!-- Récap, votes du mode et des options, inscription -->
                         <div class="h24-card" id="h24-card" hidden></div>
                         <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
