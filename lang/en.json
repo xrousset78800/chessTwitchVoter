@@ -686,6 +686,9 @@
     "clickToVote": "Click a move or drag a piece",
     "ballotHow": { "votes": "chosen by vote", "tie": "tie: drawn at random", "default": "nobody voted: default value" },
     "liveTitle": "Real board",
+    "camLive": "live",
+    "camWaiting": "Connecting to the camera…",
+    "camUnsupported": "Your browser can't play this video: please update it (recent Chrome, Edge, Firefox or Safari)",
     "liveShow": "Show",
     "liveHide": "Fold",
     "pausePhantom": "Phantom…",
@@ -705,7 +708,21 @@
       "channelSet": "Show this channel",
       "channelHide": "Remove the real board view",
       "channelOn": "Real board: twitch.tv/{c}",
-      "channelOff": "No real board view for viewers"
+      "channelOff": "No real board view for viewers",
+      "camStart": "Stream my camera",
+      "camStop": "Stop the camera",
+      "camDefault": "Default camera",
+      "camDevice": "Camera",
+      "camQuality": "Quality",
+      "camLow": "Low",
+      "camMid": "Medium",
+      "camHigh": "High",
+      "camOn": "Camera live: {w}×{h} · {fps} fps · {codec}",
+      "camOff": "Camera: the real board view goes through the site, no Twitch needed",
+      "camTaken": "Another tab took over the stream",
+      "camDenied": "Camera access denied by the browser",
+      "camMissing": "Camera not found",
+      "camNoSupport": "Camera: use Chrome or Edge to stream"
     }
   }
 }

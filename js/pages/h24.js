@@ -12,6 +12,7 @@ import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
 import { renderPodium, renderHistory, paintMoveChips, markPodiumWinner, morphPodiumToWheel, revealWinner, clearWinner } from '../components/voteViews.js';
 import { paletteColors } from '../components/votePalettes.js';
+import { CamSender, CamPlayer, CAM_QUALITIES, listCameras, camSupported } from '../components/liveCam.js';
 
 const t = (key, params, fallback) => {
     const s = window.i18n?.t(key, params);
@@ -45,10 +46,16 @@ function phantomStatus(live) {
     return p.isMoving || p.moveQueue?.length ? 'busy' : 'ok';
 }
 const loadRegie = () => { try { return JSON.parse(localStorage.getItem('h24Regie')) || {}; } catch { return {}; } };
+const loadCam = () => { try { return JSON.parse(localStorage.getItem('h24Cam')) || {}; } catch { return {}; } };
 
 const H24Page = {
     socket: null,
     regie: { live: false, channel: loadRegie().channel || '' },
+    // Caméra de la régie (émission) et lecteur de la vue réelle (réception)
+    cam: { deviceId: loadCam().deviceId || '', quality: CAM_QUALITIES[loadCam().quality] ? loadCam().quality : 'mid', error: '', devices: null },
+    camSender: null,
+    camPlayer: null,
+    camWatching: false,
     liveFolded: (() => { try { return localStorage.getItem('h24LiveFolded') === '1'; } catch { return false; } })(),
     board: null,
     state: null,
@@ -68,6 +75,9 @@ const H24Page = {
 
     stop() {
         if (!this.socket) return;
+        this.camSender?.stop(true);
+        this.camPlayer?.close();
+        this.camWatching = false;
         this.socket.emit('h24:leave');
         this.socket.disconnect();
         this.socket = null;
@@ -85,7 +95,16 @@ const H24Page = {
         const socket = io({ transports: ['websocket', 'polling'] });
         this.socket = socket;
         const join = () => socket.emit('h24:join', { token: this.token() });
-        socket.on('connect', join);
+        socket.on('connect', () => { this.camWatching = false; join(); this.renderLive(); });
+        // Vue réelle par la caméra de la régie
+        socket.on('h24:cam:cfg', (cfg) => this.camPlayer?.configure(cfg));
+        socket.on('h24:cam:chunk', (meta, data) => this.camPlayer?.push(meta, data));
+        socket.on('h24:cam:off', () => this.camPlayer?.close());
+        socket.on('h24:cam:taken', () => {
+            this.camSender?.stop(true);
+            this.cam.error = t('h24.regie.camTaken', null, 'Diffusion reprise par un autre onglet');
+            this.renderRegie(true);
+        });
         socket.on('h24:state', (st) => {
             this.skew = st.now - Date.now();
             this.state = st;
@@ -94,10 +113,13 @@ const H24Page = {
         socket.on('h24:me', (me) => {
             this.me = me || {};
             // La régie se présente (de nouveau après une reconnexion ou un redémarrage du serveur)
-            if (this.me.regie && this.regieSent !== socket.id) { this.regieSent = socket.id; this.regiePhantom = null; this.sendRegie(true); }
+            if (this.me.regie && this.regieSent !== socket.id) {
+                this.regieSent = socket.id; this.regiePhantom = null; this.sendRegie(true);
+                if (this.camSender?.active) { this.camSender.setSocket(socket); this.camSender.announce(); }   // reconnexion : la caméra reprend
+            }
             this.render();
         });
-        this.clock = setInterval(() => { this.renderClock(); this.regieTick(); }, 250);
+        this.clock = setInterval(() => { this.renderClock(); this.regieTick(); this.camTick(); }, 250);
         if (!this._authBound) {
             this._authBound = true;
             window.addEventListener('twitchAuthChange', () => { if (this.socket?.connected) this.socket.emit('h24:join', { token: this.token() }); });
@@ -288,6 +310,8 @@ const H24Page = {
             this.regie.channel = (input?.value || '').trim();
             this.saveRegie();
             this.socket?.emit('h24:regie', { channel: this.regie.channel });
+        } else if (action === 'cam') {
+            await this.toggleCam();
         } else if (action === 'hide') {
             this.socket?.emit('h24:regie', { channel: '' });
         } else if (action === 'show') {
@@ -306,7 +330,9 @@ const H24Page = {
         const p = window.phantomChessboard;
         const status = phantomStatus(this.regie.live);
         const server = this.state?.regie || {};
-        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason].join('|');
+        if (this.cam.devices === null) { this.cam.devices = []; listCameras().then(d => { this.cam.devices = d; this.renderRegie(true); }); }
+        const camLive = !!this.camSender?.active;
+        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length].join('|');
         if (!force && key === this.regieKey) return;
         this.regieKey = key;
         const typing = document.activeElement?.id === 'h24-regie-channel';
@@ -333,9 +359,74 @@ const H24Page = {
                 <button type="submit" class="btn btn--sm" title="${esc(t('h24.regie.channelSet', null, 'Afficher cette chaîne'))}"><i class="fas fa-video"></i></button>
                 ${shown ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-regie="hide" title="${esc(t('h24.regie.channelHide', null, 'Retirer la vue réelle'))}"><i class="fas fa-eye-slash"></i></button>` : ''}
             </form>
-            <div class="h24-regie__hint">${shown ? esc(t('h24.regie.channelOn', { c: shown }, `Vue réelle : twitch.tv/${shown}`)) : esc(t('h24.regie.channelOff', null, 'Pas de vue réelle pour les viewers'))}</div>`;
+            <div class="h24-regie__hint">${shown ? esc(t('h24.regie.channelOn', { c: shown }, `Vue réelle : twitch.tv/${shown}`)) : esc(t('h24.regie.channelOff', null, 'Pas de vue réelle pour les viewers'))}</div>
+            ${this.camPanelHtml(camLive)}`;
+        el.querySelectorAll('[data-h24-cam-pref]').forEach(sel => sel.addEventListener('change', () => this.setCamPref(sel.dataset.h24CamPref, sel.value)));
         if (typing) { const i = $('h24-regie-channel'); i?.focus(); i?.setSelectionRange(i.value.length, i.value.length); }
         el.querySelector('[data-h24-regie-form]')?.addEventListener('submit', (e) => { e.preventDefault(); this.regieAction('channel'); });
+    },
+
+    camPanelHtml(camLive) {
+        if (!camSupported.send()) return `<div class="h24-regie__hint">${esc(t('h24.regie.camNoSupport', null, 'Caméra : utilise Chrome ou Edge pour diffuser'))}</div>`;
+        const q = { low: t('h24.regie.camLow', null, 'Basse'), mid: t('h24.regie.camMid', null, 'Moyenne'), high: t('h24.regie.camHigh', null, 'Haute') };
+        const devs = [{ id: '', label: t('h24.regie.camDefault', null, 'Caméra par défaut') }, ...this.cam.devices];
+        const info = this.camSender?.info;
+        const hint = this.cam.error ? `<span class="h24-regie__err">${esc(this.cam.error)}</span>`
+            : camLive && info ? esc(t('h24.regie.camOn', { w: info.width, h: info.height, fps: info.fps, codec: info.codec }, `Caméra en direct : ${info.width}×${info.height} · ${info.fps} i/s · ${info.codec}`))
+            : esc(t('h24.regie.camOff', null, 'Caméra : la vue réelle passe par le site, sans Twitch'));
+        return `
+            <div class="h24-regie__row h24-regie__cam">
+                <select data-h24-cam-pref="deviceId" title="${esc(t('h24.regie.camDevice', null, 'Caméra'))}">
+                    ${devs.map(d => `<option value="${esc(d.id)}"${d.id === this.cam.deviceId ? ' selected' : ''}>${esc(d.label)}</option>`).join('')}
+                </select>
+                <select data-h24-cam-pref="quality" title="${esc(t('h24.regie.camQuality', null, 'Qualité'))}">
+                    ${Object.keys(CAM_QUALITIES).map(k => `<option value="${k}"${k === this.cam.quality ? ' selected' : ''}>${esc(q[k])} (${CAM_QUALITIES[k].height}p)</option>`).join('')}
+                </select>
+                <button type="button" class="btn btn--sm${camLive ? ' btn--primary' : ''}" data-h24-regie="cam"><i class="fas fa-${camLive ? 'stop' : 'camera'}"></i> ${esc(camLive ? t('h24.regie.camStop', null, 'Arrêter la caméra') : t('h24.regie.camStart', null, 'Diffuser ma caméra'))}</button>
+            </div>
+            <div class="h24-regie__hint">${hint}</div>`;
+    },
+
+    setCamPref(name, value) {
+        if (name === 'quality' && !CAM_QUALITIES[value]) return;
+        this.cam[name] = value;
+        try { localStorage.setItem('h24Cam', JSON.stringify({ deviceId: this.cam.deviceId, quality: this.cam.quality })); } catch {}
+        if (this.camSender?.active) this.startCam();   // en direct : on relance avec le nouveau réglage
+    },
+
+    async toggleCam() {
+        if (this.camSender?.active) { this.camSender.stop(); this.cam.error = ''; return; }
+        await this.startCam();
+    },
+
+    async startCam() {
+        if (!this.me.regie || !this.socket) return;
+        if (!this.camSender) {
+            this.camSender = new CamSender(this.socket, (st) => {
+                if (st.error) this.cam.error = st.error;
+                this.renderRegie(true);
+            });
+        }
+        this.camSender.setSocket(this.socket);
+        this.cam.error = '';
+        try {
+            await this.camSender.start({ deviceId: this.cam.deviceId, quality: this.cam.quality });
+            this.cam.devices = await listCameras();   // les noms des caméras sont visibles une fois l'accès accordé
+        } catch (e) {
+            this.cam.error = e?.name === 'NotAllowedError' ? t('h24.regie.camDenied', null, 'Accès à la caméra refusé par le navigateur')
+                : e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError' ? t('h24.regie.camMissing', null, 'Caméra introuvable')
+                : String(e?.message || e);
+        }
+        this.renderRegie(true);
+    },
+
+    /** Lecteur de la vue réelle : message tant que la caméra ne donne pas d'image */
+    camTick() {
+        const msg = $('h24-live-msg');
+        if (!msg || !this.camPlayer) return;
+        const text = this.camPlayerState === 'unsupported' ? t('h24.camUnsupported', null, 'Ton navigateur ne peut pas lire cette vidéo : mets-le à jour (Chrome, Edge, Firefox ou Safari récents)')
+            : this.camPlayer.stalled(5000) ? t('h24.camWaiting', null, 'Connexion à la caméra…') : '';
+        if (msg.textContent !== text) { msg.textContent = text; msg.hidden = !text; }
     },
 
     foldLive(folded) {
@@ -349,18 +440,40 @@ const H24Page = {
         const box = $('h24-live');
         if (!box) return;
         const channel = this.state?.regie?.channel || '';
-        box.hidden = !channel;
+        const camOn = !!this.state?.regie?.cam;   // la caméra de la régie passe avant la chaîne Twitch
+        box.hidden = !channel && !camOn;
         box.classList.toggle('is-folded', this.liveFolded);
         const frame = $('h24-live-frame');
-        const src = channel && !this.liveFolded
-            ? `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(location.hostname)}&muted=true&autoplay=true`
+        const src = this.liveFolded ? ''
+            : camOn ? 'cam'
+            : channel ? `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(location.hostname)}&muted=true&autoplay=true`
             : '';
         if (frame.dataset.src !== src) {
             frame.dataset.src = src;
-            frame.innerHTML = src ? `<iframe src="${esc(src)}" allowfullscreen allow="autoplay; fullscreen" title="${esc(t('h24.liveTitle', null, 'Vue réelle'))}"></iframe>` : '';
+            this.camPlayer?.close();
+            this.camPlayer = null;
+            // Nouveau lecteur : on se désabonne puis on redemande le flux (réglages + images depuis la dernière clé)
+            if (this.camWatching) this.socket?.emit('h24:cam:watch', { on: false });
+            this.camWatching = false;
+            if (src === 'cam') {
+                frame.innerHTML = `<canvas class="h24-live__cam"></canvas><div class="h24-live__msg" id="h24-live-msg" hidden></div>`;
+                this.camPlayerState = 'waiting';
+                this.camPlayer = new CamPlayer(frame.querySelector('canvas'), (st) => { this.camPlayerState = st; this.camTick(); });
+            } else {
+                frame.innerHTML = src ? `<iframe src="${esc(src)}" allowfullscreen allow="autoplay; fullscreen" title="${esc(t('h24.liveTitle', null, 'Vue réelle'))}"></iframe>` : '';
+            }
+        }
+        // Le flux de la caméra n'arrive que si on le regarde (bloc déplié)
+        const watch = src === 'cam';
+        if (watch !== this.camWatching && this.socket?.connected) {
+            this.camWatching = watch;
+            this.socket.emit('h24:cam:watch', { on: watch });
         }
         const link = $('h24-live-link');
-        if (link) { link.textContent = channel ? `twitch.tv/${channel}` : ''; link.href = channel ? `https://twitch.tv/${encodeURIComponent(channel)}` : '#'; }
+        if (link) {
+            if (camOn) { link.textContent = t('h24.camLive', null, 'en direct'); link.removeAttribute('href'); }
+            else { link.textContent = channel ? `twitch.tv/${channel}` : ''; link.href = channel ? `https://twitch.tv/${encodeURIComponent(channel)}` : '#'; }
+        }
         const tg = $('h24-live-toggle');
         if (tg) {
             tg.innerHTML = `<i class="fas fa-chevron-${this.liveFolded ? 'down' : 'up'}"></i>`;

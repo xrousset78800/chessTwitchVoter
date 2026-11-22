@@ -15,6 +15,15 @@ const path = require('path');
 const { Chess } = require('chess.js');
 
 const ROOM = 'h24';
+const CAM_ROOM = 'h24-cam';
+// Caméra de la régie relayée par le serveur : garde-fous (le serveur ne décode jamais la vidéo)
+const CAM = {
+    maxChunk: 400 * 1024,          // un morceau (image clé 720p ≈ 30-80 Ko)
+    rate: 600 * 1024,              // débit moyen accepté (octets/s ≈ 4,8 Mb/s)
+    burst: 1.5 * 1024 * 1024,      // réserve pour les à-coups
+    maxGop: 3 * 1024 * 1024,       // images gardées depuis la dernière clé (pour les nouveaux venus)
+    codec: /^(avc1\.[0-9A-Fa-f]{6}|vp8)$/
+};
 const LOGIN_RE = /^[a-z0-9_]{2,25}$/;
 const ALL_VOTED_MS = 3000;        // toute l'équipe a voté : fin du tour anticipée
 const MAX_PLIES = 160;            // au-delà : nulle, la station repart
@@ -128,6 +137,17 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const regieFile = dataDir ? path.join(dataDir, 'h24-regie.json') : null;
     const regie = { socket: null, phantom: 'off', paused: false, channel: '' };
     try { if (regieFile) regie.channel = String(JSON.parse(fs.readFileSync(regieFile, 'utf8')).channel || ''); } catch {}
+    // Caméra de la régie : un seul émetteur à la fois, rien n'est enregistré
+    const cam = { socket: null, cfg: null, gop: [], gopBytes: 0, seq: 0, tokens: CAM.burst, at: 0 };
+    function stopCam(id) {
+        if (!cam.socket || (id && cam.socket !== id)) return;
+        cam.socket = null;
+        cam.cfg = null;
+        cam.gop = [];
+        cam.gopBytes = 0;
+        io.to(CAM_ROOM).emit('h24:cam:off');
+        emit();
+    }
     /** Pourquoi la station attend : personne ne regarde, la régie a mis en pause, le Phantom bouge ou décroche */
     const holdReason = () => viewers() === 0 ? 'idle'
         : regie.paused ? 'regie'
@@ -164,7 +184,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             endsAt: s.endsAt,
             paused: s.paused,
             pauseReason: s.pauseReason || null,
-            regie: { live: !!regie.socket, phantom: regie.phantom, paused: regie.paused, channel: regie.channel },
+            regie: { live: !!regie.socket, phantom: regie.phantom, paused: regie.paused, channel: regie.channel, cam: !!cam.socket },
             mode: s.mode,
             options: s.options,
             teams: s.teams,
@@ -715,6 +735,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     /** Un onglet de la régie s'en va : s'il tenait le Phantom, la station ne l'attend plus ;
      *  plus aucun onglet de régie : la pause manuelle saute aussi (la vue réelle reste) */
     function dropRegie(id) {
+        stopCam(id);
         if (regie.socket === id) {
             regie.socket = null;
             regie.phantom = 'off';
@@ -740,6 +761,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
         socket.on('h24:leave', () => {
             socket.leave(ROOM);
+            socket.leave(CAM_ROOM);
             sockets.delete(socket.id);
             dropRegie(socket.id);
             emit();
@@ -771,6 +793,56 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 }
             }
             emit();
+        });
+        // ---- caméra de la régie
+        socket.on('h24:cam:start', (data = {}) => {
+            const l = me();
+            if (!l || !REGIE.has(l)) return;
+            const w = Number(data.w), h = Number(data.h);
+            if (!CAM.codec.test(String(data.codec)) || !Number.isInteger(w) || !Number.isInteger(h) || w < 16 || h < 16 || w > 1920 || h > 1080) return;
+            if (cam.socket && cam.socket !== socket.id) io.to(cam.socket).emit('h24:cam:taken');   // un autre onglet reprend la main
+            cam.socket = socket.id;
+            cam.cfg = { codec: String(data.codec), w, h };
+            cam.gop = [];
+            cam.gopBytes = 0;
+            cam.tokens = CAM.burst;
+            cam.at = Date.now();
+            io.to(CAM_ROOM).emit('h24:cam:cfg', cam.cfg);
+            emit();
+        });
+        socket.on('h24:cam:chunk', (meta, data, ack) => {
+            const reply = typeof ack === 'function' ? ack : () => {};
+            if (cam.socket !== socket.id || !Buffer.isBuffer(data) || !data.length || data.length > CAM.maxChunk || !meta || typeof meta !== 'object') return reply(false);
+            const t = Number(meta.t);
+            if (!Number.isFinite(t)) return reply(false);
+            // Seau de jetons : au-delà du débit autorisé, le morceau est refusé (l'émetteur repart d'une image clé)
+            const now = Date.now();
+            cam.tokens = Math.min(CAM.burst, cam.tokens + (now - cam.at) * CAM.rate / 1000);
+            cam.at = now;
+            if (cam.tokens < data.length) return reply(false);
+            cam.tokens -= data.length;
+            const k = meta.k ? 1 : 0;
+            const c = { k, t, s: ++cam.seq };
+            if (k) { cam.gop = []; cam.gopBytes = 0; }
+            if (cam.gop.length || k) {
+                cam.gop.push([c, data]);
+                cam.gopBytes += data.length;
+                if (cam.gopBytes > CAM.maxGop) { cam.gop = []; cam.gopBytes = 0; }
+            }
+            io.to(CAM_ROOM).volatile.emit('h24:cam:chunk', c, data);   // viewer saturé : morceau sauté, il attend la clé suivante
+            reply(true);
+        });
+        socket.on('h24:cam:stop', () => stopCam(socket.id));
+        // Un viewer affiche (ou replie) la vue réelle : il reçoit le flux seulement s'il le regarde
+        socket.on('h24:cam:watch', (data = {}) => {
+            if (!sockets.has(socket.id)) return;
+            if (!data.on) { socket.leave(CAM_ROOM); return; }
+            if (socket.rooms.has(CAM_ROOM)) return;
+            socket.join(CAM_ROOM);
+            if (cam.cfg) {
+                socket.emit('h24:cam:cfg', cam.cfg);
+                for (const [c, d] of cam.gop) socket.emit('h24:cam:chunk', c, d);
+            }
         });
         socket.on('disconnect', () => {
             dropRegie(socket.id);

@@ -255,3 +255,14 @@
     #page-h24 #h24-moves .moves-panel__content { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 }
 .podium.is-masked .podium__piece img { visibility: hidden; }
+
+/* ------------------------------------------- Vue réelle par la caméra de la régie */
+.h24-live__frame { position: relative; }
+.h24-live__cam { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.h24-live__msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center; font-size: 0.8rem; color: rgba(255, 255, 255, 0.75); background: rgba(0, 0, 0, 0.55); }
+.h24-live__msg[hidden] { display: none; }
+.h24-regie__cam select {
+    flex: 1 1 120px; min-width: 0; max-width: 100%; padding: 5px 6px; border-radius: 6px; font-size: 0.78rem;
+    background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.h24-regie__err { color: #f87171; }

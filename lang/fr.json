@@ -686,6 +686,9 @@
     "clickToVote": "Clique un coup ou déplace une pièce",
     "ballotHow": { "votes": "choisi par le vote", "tie": "égalité : tiré au sort", "default": "personne n'a voté : valeur par défaut" },
     "liveTitle": "Vue réelle",
+    "camLive": "en direct",
+    "camWaiting": "Connexion à la caméra…",
+    "camUnsupported": "Ton navigateur ne peut pas lire cette vidéo : mets-le à jour (Chrome, Edge, Firefox ou Safari récents)",
     "liveShow": "Afficher",
     "liveHide": "Replier",
     "pausePhantom": "Phantom…",
@@ -705,7 +708,21 @@
       "channelSet": "Afficher cette chaîne",
       "channelHide": "Retirer la vue réelle",
       "channelOn": "Vue réelle : twitch.tv/{c}",
-      "channelOff": "Pas de vue réelle pour les viewers"
+      "channelOff": "Pas de vue réelle pour les viewers",
+      "camStart": "Diffuser ma caméra",
+      "camStop": "Arrêter la caméra",
+      "camDefault": "Caméra par défaut",
+      "camDevice": "Caméra",
+      "camQuality": "Qualité",
+      "camLow": "Basse",
+      "camMid": "Moyenne",
+      "camHigh": "Haute",
+      "camOn": "Caméra en direct : {w}×{h} · {fps} i/s · {codec}",
+      "camOff": "Caméra : la vue réelle passe par le site, sans Twitch",
+      "camTaken": "Diffusion reprise par un autre onglet",
+      "camDenied": "Accès à la caméra refusé par le navigateur",
+      "camMissing": "Caméra introuvable",
+      "camNoSupport": "Caméra : utilise Chrome ou Edge pour diffuser"
     }
   }
 }
