@@ -226,3 +226,7 @@
 .h24-choices.is-decided .h24-choice.is-winner::before { background: rgba(34, 197, 94, 0.25); }
 .h24-choices.is-decided .h24-choice.is-loser { opacity: 0.45; }
 @keyframes h24-pop { from { transform: scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ------------------------------------------- Puzzle rush : vies */
+.h24-score__lives { display: inline-flex; gap: 3px; color: #ef4444; }
+.h24-score__lives .is-lost { color: rgba(255, 255, 255, 0.18); }

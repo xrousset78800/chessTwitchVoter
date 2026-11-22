@@ -3,7 +3,8 @@
  *
  * Cycle : partie → récap → vote du mode → votes des options → inscription → partie…
  * - Deux équipes (« teams ») : les inscrits sont répartis entre Blancs et Noirs, chaque équipe vote ses coups.
- * - Problèmes (« problems ») : tous les inscrits forment une équipe et résolvent une série de puzzles.
+ * - Puzzle rush (« rush ») : tous les inscrits forment une équipe ; puzzles de plus en plus durs, 3 erreurs et c'est fini
+ *   (même modèle que js/core/rushManager.js : départ 600, +60 par puzzle résolu).
  *
  * Tous les votes (coups, mode, options, inscription) passent par les mêmes fonctions, quelle que soit
  * leur source : la page web aujourd'hui, le chat Twitch de la chaîne 24/24 demain.
@@ -20,8 +21,9 @@ const MAX_PLIES = 160;            // au-delà : nulle, la station repart
 const DRAW_REVEAL_MS = 9000;      // tirage au sort : temps laissé à la roue (pas réglable sur le 24/24 : une roue bien longue)
 const BALLOT_REVEAL_MS = 4000;    // résultat d'un vote (mode, option) montré avant la suite
 const RANDOM_REVEAL_MS = 1800;    // personne n'a voté : coup au hasard montré avant d'être joué
-const REPLY_MS = 900;             // problèmes : réponse de l'adversaire
-const PUZZLE_PAUSE_MS = 3000;     // problèmes : solution montrée avant le suivant
+const REPLY_MS = 900;             // rush : réponse de l'adversaire
+const PUZZLE_PAUSE_MS = 3000;     // rush : solution montrée avant le suivant
+const SECRET_REVEAL_MS = 2500;    // vote secret : les votes dévoilés avant que le coup soit joué
 
 const DUR = {
     recap: 15000,
@@ -30,22 +32,25 @@ const DUR = {
     signup: 30000
 };
 
-const MODES = ['teams', 'problems'];
+const MODES = ['teams', 'rush'];
 // Options votées après le mode, une à une ; la première valeur est celle par défaut
 const BALLOTS = {
     teams: [
         { id: 'turn', choices: [30, 20, 45] },
-        { id: 'decision', choices: ['majority', 'draw'] }
+        { id: 'decision', choices: ['majority', 'draw'] },
+        { id: 'votes', choices: [1, 2, 3, 4, 5] },
+        { id: 'anonymity', choices: ['none', 'secret'] }
     ],
-    problems: [
-        { id: 'level', choices: ['medium', 'easy', 'hard'] },
-        { id: 'turn', choices: [30, 20, 45] }
+    rush: [
+        { id: 'turn', choices: [30, 20, 45] },
+        { id: 'votes', choices: [1, 2, 3, 4, 5] },
+        { id: 'anonymity', choices: ['none', 'secret'] }
     ]
 };
 const BOT_NAMES = ['bot_fou', 'bot_tour', 'bot_pion', 'bot_dame', 'bot_roque', 'bot_gambit', 'bot_zugzwang',
     'bot_cavalier', 'bot_echec', 'bot_fianchetto', 'bot_sicilienne', 'bot_pat', 'bot_mat', 'bot_prise', 'bot_clouage', 'bot_fourchette'];
-const LEVELS = { easy: [600, 1300], medium: [1300, 1800], hard: [1800, 2600] };
-const PUZZLES_PER_SERIES = 8;
+// Puzzle rush : mêmes réglages que rushManager (partie du streamer)
+const RUSH = { startRating: 600, ratingStep: 60, ratingSpread: 120, maxStrikes: 3 };
 
 const rand = (n) => Math.floor(Math.random() * n);
 const pick = (arr) => arr[rand(arr.length)];
@@ -56,30 +61,44 @@ const tryMove = (chess, m) => { try { return chess.move(m); } catch { return nul
 module.exports = function station({ io, verifyTwitchToken, dataDir, log = console.log, durations = {} }) {
     Object.assign(DUR, durations);
 
-    // ------------------------------------------------------------------ problèmes (CSV Lichess)
+    // ------------------------------------------------------------------ puzzles (CSV Lichess)
     let puzzleLines = null;
     function puzzleSource() {
         if (puzzleLines) return puzzleLines;
         try {
             const raw = fs.readFileSync(path.join(__dirname, 'js', 'problemsV2.csv'), 'utf8');
-            puzzleLines = raw.split('\n').slice(1).filter(l => l.trim());
+            puzzleLines = raw.split('\n').slice(1).filter(l => l.trim()).map(line => {
+                const c = line.split(',', 4);
+                return { id: c[0], rating: parseInt(c[3], 10) || 0, line };
+            });
         } catch (e) {
-            log('🧩 24/24 : problèmes introuvables', e.message);
+            log('🧩 24/24 : puzzles introuvables', e.message);
             puzzleLines = [];
         }
         return puzzleLines;
     }
-    function randomPuzzle(level) {
-        const lines = puzzleSource();
-        const [min, max] = LEVELS[level] || LEVELS.medium;
-        for (let i = 0; i < 400 && lines.length; i++) {
-            const c = pick(lines).split(',');
-            const rating = parseInt(c[3], 10);
-            if (!(rating >= min && rating < max)) continue;
+    /** Comme rushManager._pickNearRating : autour du rating visé, tolérance doublée tant qu'il y a moins
+     *  de 5 candidats ; au-delà du CSV, un des 50 plus durs restants. Jamais deux fois le même. */
+    function rushPuzzle(target, used) {
+        const all = puzzleSource();
+        for (let tries = 0; tries < 20; tries++) {
+            let chosen = null;
+            let spread = RUSH.ratingSpread;
+            for (let i = 0; i < 6 && !chosen; i++, spread *= 2) {
+                const cands = all.filter(p => Math.abs(p.rating - target) <= spread && !used.has(p.id));
+                if (cands.length >= 5) chosen = pick(cands);
+            }
+            if (!chosen) {
+                const rest = all.filter(p => !used.has(p.id)).sort((a, b) => b.rating - a.rating).slice(0, 50);
+                if (!rest.length) return null;
+                chosen = pick(rest);
+            }
+            used.add(chosen.id);
+            const c = chosen.line.split(',');
             const moves = String(c[2] || '').trim().split(/\s+/);
             if (moves.length < 2) continue;
             try { new Chess(c[1]); } catch { continue; }
-            return { id: c[0], fen: c[1], moves, rating, themes: String(c[7] || '').split(' ').slice(0, 3) };
+            return { id: c[0], fen: c[1], moves, rating: chosen.rating, themes: String(c[7] || '').split(' ').slice(0, 3) };
         }
         return null;
     }
@@ -90,7 +109,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         endsAt: Date.now() + DUR.signup,
         paused: false,
         mode: 'teams',
-        options: { turn: 30, decision: 'majority', level: 'medium' },
+        options: { turn: 30, decision: 'majority', votes: 1, anonymity: 'none' },
         teams: { w: [], b: [] },
         ballot: null,          // { id, choices, votes: Map(login → choix) }
         ballotQueue: [],
@@ -131,9 +150,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
     function publicState() {
         const g = s.game;
+        const hidden = !!g && s.options.anonymity === 'secret' && !!g.turnEndsAt;
         const tally = (map) => {
             const counts = {};
-            for (const v of map.values()) counts[v] = (counts[v] || 0) + 1;
+            for (const v of map.values()) for (const x of [].concat(v)) counts[x] = (counts[x] || 0) + 1;
             return Object.entries(counts).map(([k, n]) => ({ k, n })).sort((a, b) => b.n - a.n);
         };
         return {
@@ -158,15 +178,17 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 startFen: g.startFen,
                 lastMove: g.lastMove,
                 turnEndsAt: g.turnEndsAt,
-                votes: tally(g.votes).map(({ k, n }) => ({ move: k, count: n })),
+                // Vote secret : rien de visible avant la fin du tour, seulement le nombre de votes
+                votes: hidden ? [] : tally(g.votes).map(({ k, n }) => ({ move: k, count: n })),
+                secret: hidden ? [...g.votes.values()].reduce((a, v) => a + v.length, 0) : false,
                 voters: g.votes.size,
                 recent: g.recent.slice(-8),
                 draw: g.draw,
                 random: g.random,
                 result: g.result,
-                // problèmes
-                puzzle: g.puzzle && { index: g.puzzleIndex, total: PUZZLES_PER_SERIES, rating: g.puzzle.rating, themes: g.puzzle.themes, side: g.side, status: g.puzzleStatus },
-                score: g.score
+                // rush
+                puzzle: g.puzzle && { index: g.puzzleIndex, rating: g.puzzle.rating, themes: g.puzzle.themes, side: g.side, status: g.puzzleStatus },
+                score: g.score && { ...g.score, maxStrikes: RUSH.maxStrikes }
             }
         };
     }
@@ -178,7 +200,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             login,
             regie: !!login && REGIE.has(login),
             team: login ? teamOf(login) : null,
-            vote: login && s.game ? s.game.votes.get(login) || null : null,
+            votes: login && s.game ? s.game.votes.get(login) || [] : [],
+            maxVotes: s.options.votes || 1,
             ballot: login && s.ballot ? s.ballot.votes.get(login) ?? null : null
         });
     }
@@ -244,9 +267,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         s.cycle++;
         s.ballot = null;
         s.recap = null;
-        if (s.mode === 'problems') {
+        if (s.mode === 'rush') {
             s.game = newGameState(new Chess());
-            s.game.score = { solved: 0, failed: 0 };
+            s.game.score = { solved: 0, strikes: 0, maxRating: 0 };
+            s.game.used = new Set();
             s.game.puzzleIndex = 0;
             s.phase = 'play';
             nextPuzzle();
@@ -281,13 +305,13 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const g = s.game;
         g.turnEndsAt = null;
         const counts = {};
-        for (const m of g.votes.values()) counts[m] = (counts[m] || 0) + 1;
+        for (const list of g.votes.values()) for (const m of list) counts[m] = (counts[m] || 0) + 1;
         const entries = Object.entries(counts);
         let move;
         g.random = false;
         if (!entries.length) {
             g.random = true;
-            if (s.mode === 'problems') return failPuzzle('timeout');
+            if (s.mode === 'rush') return failPuzzle('timeout');
             move = pick(g.chess.moves());
             g.draw = { winner: move, votes: [], random: true, endsAt: Date.now() + RANDOM_REVEAL_MS };
             s.endsAt = g.draw.endsAt;
@@ -313,13 +337,19 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 return later(DRAW_REVEAL_MS, () => playMove(move));
             }
         }
+        // Vote secret : les votes se dévoilent un instant avant que le coup soit joué
+        if (s.options.anonymity === 'secret') {
+            s.endsAt = null;
+            emit();
+            return later(SECRET_REVEAL_MS, () => playMove(move));
+        }
         playMove(move);
     }
 
     function playMove(san) {
         const g = s.game;
         if (!g || g.result) return;
-        if (s.mode === 'problems') return checkPuzzleMove(san);
+        if (s.mode === 'rush') return checkPuzzleMove(san);
         const m = tryMove(g.chess, san);
         if (!m) return startTurn();
         g.history.push(m.san);
@@ -329,11 +359,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         startTurn();
     }
 
-    // ------------------------------------------------------------------ problèmes
+    // ------------------------------------------------------------------ puzzle rush
     function nextPuzzle() {
         const g = s.game;
-        if (g.puzzleIndex >= PUZZLES_PER_SERIES) return endGame();
-        const p = randomPuzzle(s.options.level);
+        if (g.score.strikes >= RUSH.maxStrikes) return endGame();
+        const p = rushPuzzle(RUSH.startRating + g.score.solved * RUSH.ratingStep, g.used);
         if (!p) return endGame();
         g.puzzleIndex++;
         g.puzzle = p;
@@ -342,6 +372,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.startFen = p.fen;
         g.history = [];
         g.lastMove = null;
+        g.votes = new Map();
+        g.wrong = null;
         g.puzzleStatus = 'playing';
         // Premier coup : celui de l'adversaire, puis l'équipe cherche la suite
         later(REPLY_MS, () => {
@@ -387,6 +419,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function solvePuzzle() {
         const g = s.game;
         g.score.solved++;
+        g.score.maxRating = Math.max(g.score.maxRating, g.puzzle.rating || 0);
         g.puzzleStatus = 'solved';
         g.turnEndsAt = null;
         s.endsAt = Date.now() + PUZZLE_PAUSE_MS;
@@ -395,7 +428,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
     function failPuzzle(reason, san = null) {
         const g = s.game;
-        g.score.failed++;
+        // Mauvais coup ou aucun vote dans le temps : une erreur (3 et le rush s'arrête)
+        g.score.strikes++;
         g.puzzleStatus = reason === 'timeout' ? 'timeout' : 'failed';
         g.wrong = san;
         g.turnEndsAt = null;
@@ -412,8 +446,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const g = s.game;
         const c = g.chess;
         let result;
-        if (s.mode === 'problems') {
-            result = { kind: 'problems', solved: g.score.solved, total: g.score.solved + g.score.failed };
+        if (s.mode === 'rush') {
+            result = { kind: 'rush', solved: g.score.solved, maxRating: g.score.maxRating };
         } else if (c.isCheckmate()) {
             result = { kind: 'mate', winner: c.turn() === 'w' ? 'b' : 'w' };
         } else {
@@ -473,10 +507,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     setInterval(tick, 250).unref?.();
 
     // ------------------------------------------------------------------ entrées (web aujourd'hui, chat Twitch demain)
-    /** Inscription : l'équipe la moins nombreuse (problèmes : une seule équipe) ; possible en pleine partie */
+    /** Inscription : l'équipe la moins nombreuse (rush : une seule équipe) ; possible en pleine partie */
     function join(login) {
         if (!LOGIN_RE.test(login || '') || teamOf(login)) return false;
-        const side = s.mode === 'problems' ? 'w'
+        const side = s.mode === 'rush' ? 'w'
             : s.teams.w.length === s.teams.b.length ? pick(['w', 'b'])
             : s.teams.w.length < s.teams.b.length ? 'w' : 'b';
         s.teams[side].push(login);
@@ -490,27 +524,35 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emit();
         emitMeAll(login);
     }
-    /** Vote d'un coup (SAN, UCI ou « e4 »), seulement pour l'équipe dont c'est le tour */
+    /** Vote d'un coup (SAN, UCI ou « e4 »), seulement pour l'équipe dont c'est le tour.
+     *  Un vote par tour : il se change. Plusieurs (option « votes ») : chacun compte, le même coup peut être repris. */
     function voteMove(login, text) {
         const g = s.game;
         if (s.phase !== 'play' || !g?.turnEndsAt || g.result) return false;
         const side = g.chess.turn();
         const team = teamOf(login);
-        if (s.mode === 'problems' ? !team : !canPlay(team, side)) return false;
+        if (s.mode === 'rush' ? !team : !canPlay(team, side)) return false;
         const wanted = clean(text).toLowerCase();
         const m = g.chess.moves({ verbose: true }).find(x =>
             clean(x.san).toLowerCase() === wanted || x.from + x.to + (x.promotion || '') === wanted);
         if (!m) return false;
-        if (g.votes.get(login) === m.san) return true;
-        g.votes.set(login, m.san);
+        const max = Math.max(1, Number(s.options.votes) || 1);
+        const mine = g.votes.get(login) || [];
+        if (max === 1) {
+            if (mine[0] === m.san) return true;
+            g.votes.set(login, [m.san]);
+        } else {
+            if (mine.length >= max) return false;
+            g.votes.set(login, [...mine, m.san]);
+        }
         g.recent.push({ u: login, m: m.san });
         if (g.recent.length > 30) g.recent.shift();
-        const vc = g.voteCount[s.mode === 'problems' ? 'w' : side];
+        const vc = g.voteCount[s.mode === 'rush' ? 'w' : side];
         vc.set(login, (vc.get(login) || 0) + 1);
-        // Toute l'équipe a voté : le tour se termine juste après
-        const voters = s.mode === 'problems' || !s.teams[side].length ? allPlayers() : s.teams[side];
+        // Toute l'équipe a utilisé ses votes : le tour se termine juste après
+        const voters = s.mode === 'rush' || !s.teams[side].length ? allPlayers() : s.teams[side];
         // (pas quand on est seul : on garde le temps de changer d'avis)
-        if (voters.length > 1 && voters.every(l => g.votes.has(l))) {
+        if (voters.length > 1 && voters.every(l => (g.votes.get(l)?.length || 0) >= max)) {
             g.turnEndsAt = Math.min(g.turnEndsAt, Date.now() + ALL_VOTED_MS);
             s.endsAt = g.turnEndsAt;
         }
@@ -562,7 +604,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const g = s.game;
         const legal = g.chess.moves();
         const moves = [];
-        if (s.mode === 'problems') {
+        if (s.mode === 'rush') {
             const uci = g.puzzle.moves[g.step] || '';
             const sol = g.chess.moves({ verbose: true }).find(m => m.from + m.to + (m.promotion || '') === uci);
             if (sol) moves.push(sol.san);
@@ -578,17 +620,20 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (key.startsWith('signup')) return join(login);
         if (key.startsWith('ballot')) {
             const b = s.ballot;
-            const prefer = { mode: ['teams', 'teams', 'problems'], decision: ['draw'], turn: bots.turn ? [bots.turn] : b.choices };
+            const prefer = { mode: ['teams', 'teams', 'rush'], decision: ['draw'], turn: bots.turn ? [bots.turn] : b.choices };
             return voteBallot(login, pick(prefer[b.id] || b.choices));
         }
         const g = s.game;
         const side = g.chess.turn();
         if (s.mode === 'teams' && !canPlay(teamOf(login), side)) return;
         const c = botCandidates(key);
-        // Problèmes : la bonne réponse une fois sur deux ; partie : coups pondérés 3/2/1
-        const r = Math.random();
-        const m = s.mode === 'problems' ? (r < 0.5 ? c[0] : pick(c)) : c[r < 0.5 ? 0 : r < 0.83 ? 1 : 2] || c[0];
-        voteMove(login, m);
+        // Rush : la bonne réponse le plus souvent ; partie : coups pondérés 3/2/1. Plusieurs votes : 1 à N
+        const n = 1 + rand(Math.max(1, Number(s.options.votes) || 1));
+        for (let i = 0; i < n; i++) {
+            const r = Math.random();
+            const m = s.mode === 'rush' ? (r < 0.7 ? c[0] : pick(c)) : c[r < 0.5 ? 0 : r < 0.83 ? 1 : 2] || c[0];
+            voteMove(login, m);
+        }
     }
     function botTick(now) {
         if (!bots.list.length) return;
