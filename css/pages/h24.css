@@ -204,6 +204,7 @@
     font-size: 0.8rem;
 }
 .h24-regie__hint { font-size: 0.72rem; color: rgba(255, 255, 255, 0.55); }
+.h24-regie__hint--warn { color: #fca5a5; font-weight: 700; }
 
 /* ------------------------------------------- Vue réelle (petit bloc à part) */
 .h24-live {

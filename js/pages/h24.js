@@ -58,7 +58,7 @@ const loadCam = () => { try { return JSON.parse(localStorage.getItem('h24Cam')) 
 
 const H24Page = {
     socket: null,
-    regie: { live: false, channel: loadRegie().channel || '' },
+    regie: { live: false, channel: loadRegie().channel || '', hidden: !!loadRegie().hidden },
     // Caméra de la régie (émission) et lecteur de la vue réelle (réception)
     cam: { deviceId: loadCam().deviceId || '', quality: CAM_QUALITIES[loadCam().quality] ? loadCam().quality : 'mid', error: '', devices: null },
     camSender: null,
@@ -124,6 +124,8 @@ const H24Page = {
             // La régie se présente (de nouveau après une reconnexion ou un redémarrage du serveur)
             if (this.me.regie && this.regieSent !== socket.id) {
                 this.regieSent = socket.id; this.regiePhantom = null; this.sendRegie(true);
+                // Chaîne gardée dans ce navigateur mais inconnue du serveur (jamais validée, ou perdue) : envoyée d'office
+                if (this.regie.channel && !this.regie.hidden && !this.state?.regie?.channel) socket.emit('h24:regie', { channel: this.regie.channel });
                 if (this.camSender?.active) { this.camSender.setSocket(socket); this.camSender.announce(); }   // reconnexion : la caméra reprend
             }
             this.render();
@@ -271,7 +273,7 @@ const H24Page = {
 
     // ------------------------------------------------------------------ régie : Phantom et vue réelle
     saveRegie() {
-        try { localStorage.setItem('h24Regie', JSON.stringify({ channel: this.regie.channel })); } catch {}
+        try { localStorage.setItem('h24Regie', JSON.stringify({ channel: this.regie.channel, hidden: this.regie.hidden })); } catch {}
     },
 
     /** Envoie l'état de la régie au serveur (tout, ou seulement le Phantom s'il a changé) */
@@ -325,13 +327,18 @@ const H24Page = {
         } else if (action === 'channel') {
             const input = $('h24-regie-channel');
             this.regie.channel = (input?.value || '').trim();
+            this.regie.hidden = false;
             this.saveRegie();
             this.socket?.emit('h24:regie', { channel: this.regie.channel });
         } else if (action === 'cam') {
             await this.toggleCam();
         } else if (action === 'hide') {
+            this.regie.hidden = true;
+            this.saveRegie();
             this.socket?.emit('h24:regie', { channel: '' });
         } else if (action === 'show') {
+            this.regie.hidden = false;
+            this.saveRegie();
             this.socket?.emit('h24:regie', { channel: this.regie.channel || '' });
         }
         this.sendRegie();
@@ -378,16 +385,19 @@ const H24Page = {
             </div>
             <form class="h24-regie__row h24-regie__channel" data-h24-regie-form>
                 <input type="text" id="h24-regie-channel" maxlength="60" autocomplete="off" placeholder="${esc(t('h24.regie.channelPh', null, 'Chaîne Twitch de la vue réelle'))}" value="${esc(this.regie.channel || '')}">
-                <button type="submit" class="btn btn--sm" title="${esc(t('h24.regie.channelSet', null, 'Afficher cette chaîne'))}"><i class="fas fa-video"></i></button>
+                <button type="submit" class="btn btn--sm${(this.regie.channel || '').toLowerCase() !== shown ? ' btn--primary' : ''}" title="${esc(t('h24.regie.channelSet', null, 'Afficher cette chaîne'))}"><i class="fas fa-check"></i></button>
                 ${shown ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-regie="hide" title="${esc(t('h24.regie.channelHide', null, 'Retirer la vue réelle'))}"><i class="fas fa-eye-slash"></i></button>` : ''}
             </form>
             <div class="h24-regie__hint">${shown ? esc(t('h24.regie.channelOn', { c: shown }, `Vue réelle : twitch.tv/${shown}`)) : esc(t('h24.regie.channelOff', null, 'Pas de vue réelle pour les viewers'))}</div>
-            ${shown ? `<div class="h24-regie__hint"><span class="h24-regie__dot h24-regie__dot--${server.chat ? 'ok' : 'error'}"></span> ${esc(t(server.chat ? 'h24.regie.chatOn' : 'h24.regie.chatOff', { c: shown }, ''))}</div>` : ''}
+            ${shown ? `<div class="h24-regie__hint"><span class="h24-regie__dot h24-regie__dot--${server.chat ? 'ok' : 'error'}"></span> ${esc(t(server.chat ? 'h24.regie.chatOn' : 'h24.regie.chatOff', { c: shown }, ''))}</div>`
+                : `<div class="h24-regie__hint h24-regie__hint--warn"><span class="h24-regie__dot h24-regie__dot--error"></span> ${esc(t('h24.regie.chatNone', null, 'Chat Twitch non lu : indique ta chaîne et valide'))}</div>`}
             ${this.camPanelHtml(camLive)}
             </div>`;
         el.querySelectorAll('[data-h24-cam-pref]').forEach(sel => sel.addEventListener('change', () => this.setCamPref(sel.dataset.h24CamPref, sel.value)));
         if (typing) { const i = $('h24-regie-channel'); i?.focus(); i?.setSelectionRange(i.value.length, i.value.length); }
         el.querySelector('[data-h24-regie-form]')?.addEventListener('submit', (e) => { e.preventDefault(); this.regieAction('channel'); });
+        // Quitter le champ suffit à valider la chaîne
+        $('h24-regie-channel')?.addEventListener('change', () => this.regieAction('channel'));
     },
 
     camPanelHtml(camLive) {

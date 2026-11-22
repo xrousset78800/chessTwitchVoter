@@ -724,6 +724,7 @@
       "channelOff": "No real board view for viewers",
       "chatOn": "#{c} chat read: join, moves and votes (1, 2, 3) count",
       "chatOff": "#{c} chat: connecting…",
+      "chatNone": "Twitch chat not read: enter your channel and confirm",
       "camStart": "Stream my camera",
       "camStop": "Stop the camera",
       "camDefault": "Default camera",

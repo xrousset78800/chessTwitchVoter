@@ -724,6 +724,7 @@
       "channelOff": "Pas de vue réelle pour les viewers",
       "chatOn": "Chat de #{c} lu : join, coups et votes (1, 2, 3) comptent",
       "chatOff": "Chat de #{c} : connexion…",
+      "chatNone": "Chat Twitch non lu : indique ta chaîne et valide",
       "camStart": "Diffuser ma caméra",
       "camStop": "Arrêter la caméra",
       "camDefault": "Caméra par défaut",
