@@ -28,7 +28,6 @@
     <link rel="stylesheet" href="css/components/twitch-connect.css">
     <link rel="stylesheet" href="css/components/multiplayer.css">
     <link rel="stylesheet" href="css/components/infoTip.css">
-    <link rel="stylesheet" href="css/pages/landing.css">
     <link rel="stylesheet" href="css/pages/sandbox.css">
     <link rel="stylesheet" href="css/pages/browse.css">
     <link rel="stylesheet" href="css/pages/records.css">
@@ -47,7 +46,7 @@
     <div id="app">
         <!-- ==================== NAVIGATION ==================== -->
         <nav class="nav">
-            <a class="nav__logo" data-navigate="/">
+            <a class="nav__logo" data-navigate="/24h">
                 <div class="nav__logo-icon">♞</div>
                 <span class="nav__logo-text">PHANTOM TWITCHESS</span>
             </a>
@@ -86,57 +85,6 @@
                 </div>
             </div>
         </nav>
-
-        <!-- ==================== LANDING PAGE ==================== -->
-        <div class="page is-active" id="page-landing">
-            <div class="landing">
-                <div class="landing__hero">
-                    <h1 class="landing__title">PHANTOM<br>TWITCHESS</h1>
-                    <p class="landing__subtitle" data-i18n="app.tagline">Connecte ton échiquier Phantom et ton compte Twitch pour des parties interactives avec ta communauté</p>
-                </div>
-
-                <div class="landing__connections">
-                    <button class="connect-btn connect-btn--twitch" data-action="connect-twitch">
-                        <span class="connect-btn__icon"><i class="fab fa-twitch"></i></span>
-                        <span data-i18n="twitch.connect">Connecter Twitch</span>
-                        <span data-i18n="twitch.not-connected" class="connect-btn__status" data-twitch-status>Non connecté</span>
-                    </button>
-                    <button class="connect-btn connect-btn--phantom" data-action="connect-phantom">
-                        <span class="connect-btn__icon">♟</span>
-                        <span data-i18n="phantom.connect">Connecter Phantom</span>
-                        <span class="connect-btn__status" data-i18n="phantom.not-connected" data-phantom-status>Non connecté</span>
-                    </button>
-                </div>
-
-                <div class="landing__actions">
-                    <a class="action-card" data-navigate="/rush">
-                        <div class="action-card__icon">🔥</div>
-                        <span class="action-card__title">Puzzle Rush</span>
-                        <span data-i18n="presets.rushCard" class="action-card__desc">Ton chat enchaîne les puzzles</span>
-                    </a>
-                    <a class="action-card" data-navigate="/mono">
-                        <div class="action-card__icon">👥</div>
-                        <span class="action-card__title">Mono</span>
-                        <span data-i18n="presets.monoCard" class="action-card__desc">Une chaîne, les inscrits jouent</span>
-                    </a>
-                    <a class="action-card" data-navigate="/multi">
-                        <div class="action-card__icon">⚔</div>
-                        <span class="action-card__title">Multi</span>
-                        <span data-i18n="presets.multiCard" class="action-card__desc">Deux chaînes s'affrontent</span>
-                    </a>
-                    <a class="action-card" data-navigate="/sandbox">
-                        <div class="action-card__icon">🧪</div>
-                        <span class="action-card__title">Sandbox</span>
-                        <span data-i18n="sandbox.description" class="action-card__desc">Mode libre avec toutes les options</span>
-                    </a>
-                    <a class="action-card" data-navigate="/browse">
-                        <div class="action-card__icon">👀</div>
-                        <span data-i18n="twitchbattle.name" class="action-card__title">Parcourir</span>
-                        <span data-i18n="twitchbattle.description" class="action-card__desc">Parties en cours des autres chaînes</span>
-                    </a>
-                </div>
-            </div>
-        </div>
 
         <!-- ==================== SANDBOX PAGE ==================== -->
         <div class="page" id="page-sandbox">

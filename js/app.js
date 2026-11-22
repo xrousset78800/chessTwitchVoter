@@ -36,7 +36,7 @@ initGreenScreen();
 // ÉTAT GLOBAL
 // ============================================
 const AppState = {
-    currentPage: 'landing',
+    currentPage: 'h24',
 
     // Mode de jeu
     // Mode de jeu (sandbox = partie libre, problems, rush, mono, multi…), reflété sur <body data-game-mode>
@@ -324,7 +324,6 @@ const NEW_TABS = ['sandbox', 'mono', 'multi', 'rush'];
 
 const Router = {
     routes: {
-        '/': 'landing',
         '/sandbox': 'sandbox',
         '/game': 'game',
         '/browse': 'browse',
@@ -376,7 +375,12 @@ const Router = {
             return;
         }
 
-        let pageName = this.routes[path] || 'landing';
+        // Accueil (et adresse inconnue) : la station 24/24
+        if (!this.routes[path]) {
+            history.replaceState(null, '', '#/24h');
+            return this.showPage('h24');
+        }
+        let pageName = this.routes[path];
         // #/game sans partie (F5, lien partagé) : écran de lancement
         if (pageName === 'game' && !GameSession.running) {
             history.replaceState(null, '', '#/sandbox');
@@ -589,7 +593,7 @@ const SandboxPage = {
             if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/sandbox';
         } else if (pageName === 'sandbox') {
             if (titleEl) titleEl.textContent = '';
-            if (backBtn) backBtn.dataset.navigate = '/';
+            if (backBtn) backBtn.dataset.navigate = '/24h';
         }
     },
 
