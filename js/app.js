@@ -18,6 +18,7 @@ import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import RecordsPage from './pages/records.js';
 import WatchPage from './pages/watch.js';
+import H24Page from './pages/h24.js';
 import BrowseTable from './pages/browseTable.js';
 import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
@@ -328,6 +329,7 @@ const Router = {
         '/browse': 'browse',
         '/records': 'records',
         '/watch': 'watch',
+        '/24h': 'h24',
         '/live': 'live',
         '/tournament': 'tournament',
         '/rush': 'rush',
@@ -430,6 +432,7 @@ const Router = {
 
         // Quitter la page spectateur coupe son flux
         if (pageName !== 'watch') WatchPage.stop();
+        if (pageName !== 'h24') H24Page.stop();
 
         // Init spécifique à la page
         if (pageName === 'sandbox' || pageName === 'game') {
@@ -440,6 +443,8 @@ const Router = {
             RecordsPage.init();
         } else if (pageName === 'watch') {
             WatchPage.init();
+        } else if (pageName === 'h24') {
+            H24Page.init();
         } else if (pageName === 'live') {
             LivePage.init();
         } else if (pageName === 'tournament') {

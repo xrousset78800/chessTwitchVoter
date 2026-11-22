@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="css/pages/browse.css">
     <link rel="stylesheet" href="css/pages/records.css">
     <link rel="stylesheet" href="css/pages/watch.css">
+    <link rel="stylesheet" href="css/pages/h24.css">
     <link rel="stylesheet" href="css/pages/presets.css">
     <link rel="stylesheet" href="css/pages/live.css">
     <link rel="stylesheet" href="css/components/votePanels.css">
@@ -56,6 +57,7 @@
             <div class="nav__links">
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
                 <a class="nav__link" data-navigate="/sandbox" data-i18n="nav.new">Nouveau</a>
+                <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
                 <a class="nav__link" data-navigate="/records"><i class="fas fa-trophy"></i> <span data-i18n="nav.records">Records</span></a>
                 <a class="nav__link nav__link--phantom" data-navigate="/live"><span class="nav__game-dot nav__follow-dot"></span><span data-i18n="nav.live">Live Chess</span></a>
@@ -745,6 +747,54 @@
             </div>
         </div>
 
+
+        <!-- ==================== 24/24 ==================== -->
+        <div class="page" id="page-h24">
+            <div class="h24">
+                <aside class="h24__left">
+                    <div class="h24-head">
+                        <span class="h24-head__live"><span class="nav__game-dot"></span> 24/24</span>
+                        <h1 class="h24-head__mode" id="h24-mode">24/24</h1>
+                        <p class="h24-head__options" id="h24-options"></p>
+                        <p class="h24-head__viewers"><i class="fas fa-eye"></i> <span id="h24-viewers"></span></p>
+                    </div>
+                    <ol class="h24-steps" id="h24-steps"></ol>
+                    <div class="h24-account" id="h24-account"></div>
+                    <div class="h24-teams" id="h24-teams"></div>
+                </aside>
+                <main class="h24__center">
+                    <div class="h24-board-wrap" id="h24-board-wrap">
+                        <div class="h24-board" id="h24-board"></div>
+                    </div>
+                </main>
+                <aside class="h24__right" id="h24-stage">
+                    <div class="h24-play" id="h24-play" hidden>
+                        <div class="h24-play__top">
+                            <div class="h24-turn" id="h24-turn"></div>
+                            <div class="h24-turn-clock" id="h24-turn-clock" hidden></div>
+                        </div>
+                        <div class="h24-score" id="h24-score" hidden></div>
+                        <p class="h24-hint" id="h24-hint"></p>
+                        <form class="h24-move-form" id="h24-move-form" hidden autocomplete="off">
+                            <input type="text" id="h24-move-input" maxlength="10" data-i18n-placeholder="h24.movePlaceholder" placeholder="Ex. e4, Cf3, e2e4">
+                            <button type="submit" class="btn btn--primary btn--sm"><i class="fas fa-paper-plane"></i></button>
+                        </form>
+                        <div class="votes-slot h24-votes">
+                            <div class="votes-slot__podium">
+                                <div class="vote-list" id="h24-votes"></div>
+                                <div class="vote-total" id="h24-votes-total"></div>
+                            </div>
+                        </div>
+                        <ul class="h24-recent" id="h24-recent"></ul>
+                        <div class="panel h24-history">
+                            <div class="panel__header"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span></div>
+                            <div class="panel__content"><div class="history-list" id="h24-history"></div></div>
+                        </div>
+                    </div>
+                    <div class="h24-card" id="h24-card"></div>
+                </aside>
+            </div>
+        </div>
 
         <!-- ==================== SPECTATEUR ==================== -->
         <div class="page" id="page-watch">
