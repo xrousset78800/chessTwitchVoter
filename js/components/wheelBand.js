@@ -114,6 +114,7 @@ class WheelBand extends VotingWheel {
         if (this.isSpinning || this.votes.size === 0) return null;
 
         this.isSpinning = true;
+        const token = this.spinToken = (this.spinToken || 0) + 1;
         this.container.classList.add('is-spinning');
         // Sur un petit écran la bande peut être sous la ligne de flottaison
         this.container.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -155,6 +156,7 @@ class WheelBand extends VotingWheel {
 
         const startTime = Date.now();
         const animate = () => {
+            if (token !== this.spinToken) return;   // tirage annulé (abort)
             const progress = duration > 0 ? Math.min((Date.now() - startTime) / duration, 1) : 1;
             const eased = 1 - Math.pow(1 - progress, 3);
             this.position = startPosition + totalDelta * eased;
@@ -168,6 +170,15 @@ class WheelBand extends VotingWheel {
 
         requestAnimationFrame(animate);
         return new Promise(resolve => { this._spinResolve = resolve; });
+    }
+
+    /** Annule le tirage en cours : la fin d'animation (gelée quand l'onglet est caché) n'affichera plus le coup tiré */
+    abort() {
+        this.spinToken = (this.spinToken || 0) + 1;
+        this.isSpinning = false;
+        this._spinResolve = null;
+        this.container?.classList.remove('is-spinning');
+        this.centerEl?.classList.remove('is-revealed');
     }
 
     finishSpin() {
@@ -187,7 +198,9 @@ class WheelBand extends VotingWheel {
         }
         this.highlightWinner();
 
+        const token = this.spinToken;
         setTimeout(() => {
+            if (token !== this.spinToken) return;
             this.centerEl.classList.remove('is-revealed');
 
             if (this.onSpinEnd) {

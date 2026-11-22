@@ -698,6 +698,8 @@ const H24Page = {
         if (!this.drawSig) return;
         this.drawSig = null;
         this.revealing = false;
+        // Onglet caché : la roue gelée finirait son tour plus tard et réafficherait le coup par-dessus le vote
+        if (this.wheel?.isSpinning) this.wheel.abort?.();
         const slot = $('h24-votes-panel');
         slot?.classList.remove('is-drawing');
         $('h24-wheel-area')?.classList.remove('is-visible', 'is-spinning');
@@ -869,6 +871,7 @@ const H24Page = {
         wheel.paletteColors = COLORS;
         wheel.currentTurn = () => (this.state?.game?.turn === 'b' ? 'b' : 'w');
         wheel.highlightWinner = () => {
+            if (!this.drawSig) return;   // tirage déjà terminé côté serveur
             markPodiumWinner($('h24-votes'), wheel.winner);
             revealWinner($('h24-votes-panel'), { move: wheel.winner, color: wheel.winnerColor, pct: wheel.winnerPct, turn: wheel.currentTurn() });
         };

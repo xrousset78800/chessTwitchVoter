@@ -249,6 +249,7 @@ spin(duration = 5000, forcedWinner = null) {
     if (this.isSpinning || this.votes.size === 0) return null;
 
     this.isSpinning = true;
+    const token = this.spinToken = (this.spinToken || 0) + 1;
     this.container.querySelector('.wheel-container').classList.add('is-spinning');
 
     // Snapshot figé
@@ -300,6 +301,7 @@ spin(duration = 5000, forcedWinner = null) {
     const startTime = Date.now();
 
     const animate = () => {
+        if (token !== this.spinToken) return;   // tirage annulé (abort)
         const elapsed = Date.now() - startTime;
         const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1;
         const eased = 1 - Math.pow(1 - progress, 3);
@@ -314,6 +316,17 @@ spin(duration = 5000, forcedWinner = null) {
 
     requestAnimationFrame(animate);
     return new Promise(resolve => { this._spinResolve = resolve; });
+}
+
+    /**
+     * Annule le tirage en cours : la fin d'animation (gelée quand l'onglet est caché) n'affichera plus le coup tiré
+     */
+abort() {
+    this.spinToken = (this.spinToken || 0) + 1;
+    this.isSpinning = false;
+    this._spinResolve = null;
+    this.container.querySelector('.wheel-container')?.classList.remove('is-spinning');
+    this.centerEl?.classList.remove('winner-reveal');
 }
 
     /**
@@ -384,7 +397,9 @@ for (const v of sortedDbg) {
 
     console.log('🏁 Winner:', this.winner, '| Couleur segment:', winnerColor);
 
+    const token = this.spinToken;
     setTimeout(() => {
+        if (token !== this.spinToken) return;
         this.centerEl.classList.remove('winner-reveal');
         this.centerEl.style.background = '';
         this.centerEl.style.boxShadow = '';
