@@ -105,6 +105,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const canPlay = (team, side) => !!team && (team === side || !s.teams[side].length);
     const teamOf = (login) => s.teams.w.includes(login) ? 'w' : s.teams.b.includes(login) ? 'b' : null;
     const viewers = () => sockets.size;
+    const maxPlies = () => DUR.maxPlies || bots.plies || MAX_PLIES;
 
     // ------------------------------------------------------------------ diffusion
     let emitTimer = null;
@@ -278,7 +279,15 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             return later(DRAW_REVEAL_MS, () => playMove(move));
         } else {
             const best = Math.max(...entries.map(([, n]) => n));
-            move = pick(entries.filter(([, n]) => n === best).map(([m]) => m));
+            const tied = entries.filter(([, n]) => n === best);
+            move = pick(tied.map(([m]) => m));
+            // Ex æquo : tirage au sort visible entre eux, à chances égales
+            if (tied.length > 1) {
+                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + DRAW_REVEAL_MS };
+                s.endsAt = g.draw.endsAt;
+                emit();
+                return later(DRAW_REVEAL_MS, () => playMove(move));
+            }
         }
         playMove(move);
     }
@@ -292,7 +301,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.history.push(m.san);
         g.lastMove = { from: m.from, to: m.to };
         g.draw = null;
-        if (g.chess.isGameOver() || g.history.length >= (DUR.maxPlies || MAX_PLIES)) return endGame();
+        if (g.chess.isGameOver() || g.history.length >= maxPlies()) return endGame();
         startTurn();
     }
 
@@ -385,7 +394,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             result = { kind: 'mate', winner: c.turn() === 'w' ? 'b' : 'w' };
         } else {
             const reason = c.isStalemate() ? 'stalemate' : c.isThreefoldRepetition() ? 'repetition'
-                : c.isInsufficientMaterial() ? 'material' : g.history.length >= (DUR.maxPlies || MAX_PLIES) ? 'length' : 'draw';
+                : c.isInsufficientMaterial() ? 'material' : g.history.length >= maxPlies() ? 'length' : 'draw';
             result = { kind: 'draw', reason };
         }
         g.result = result;
@@ -498,17 +507,19 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // Faux joueurs pour suivre un cycle complet : ils s'inscrivent, votent le mode et les options,
     // et votent les coups à des moments aléatoires, répartis sur 2-3 coups (tirage au sort lisible).
     // Ils ne comptent pas comme spectateurs : sans vrai viewer, la station reste en pause.
-    const bots = { list: [], turn: 0, plans: new Map(), cands: null };
-    function setBots(count = 0, { turn = 0 } = {}) {
+    const bots = { list: [], turn: 0, plies: 0, plans: new Map(), cands: null };
+    function setBots(count = 0, { turn = 0, plies = 0 } = {}) {
         const n = Math.max(0, Math.min(BOT_NAMES.length, Number(count) || 0));
         for (const l of bots.list.slice(n)) leave(l);
         bots.list = BOT_NAMES.slice(0, n);
         bots.turn = n ? Math.max(5, Math.min(60, Number(turn) || 0)) || 0 : 0;
+        // Parties courtes pour voir passer récap, mode et options
+        bots.plies = n ? Math.max(4, Math.min(MAX_PLIES, Number(plies) || 0)) || 0 : 0;
         bots.plans.clear();
         // Ajoutés en pleine partie : ils rejoignent tout de suite
         if (s.phase === 'play') for (const l of bots.list) if (!teamOf(l)) join(l);
         emit();
-        return { bots: bots.list, turn: bots.turn || null };
+        return { bots: bots.list, turn: bots.turn || null, plies: bots.plies || null };
     }
     /** Ce que le bot ferait maintenant (clé stable tant que la situation ne change pas) */
     function botSituation() {

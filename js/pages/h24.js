@@ -419,7 +419,7 @@ const H24Page = {
             revealWinner(slot, { move: g.draw.winner, color: '#8b5cf6', pct: g.draw.random || !total ? null : Math.round(n * 100 / total), turn: g.turn });
             return;
         }
-        const band = this.state?.options?.decision === 'band';
+        const band = !g.draw.tie && this.state?.options?.decision === 'band';
         const wheel = band ? this.ensureBand() : this.ensureWheel();
         wheel.votes = new Map(votes.map(v => [v.m, { count: v.n, voters: new Map() }]));
         if (band) {
