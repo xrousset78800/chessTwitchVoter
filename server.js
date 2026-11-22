@@ -945,7 +945,7 @@ io.on('connection', (socket) => {
 });
 
 // Station 24/24 : partie permanente des viewers (votes du web, puis du chat Twitch)
-require('./station')({
+const station = require('./station')({
     io, verifyTwitchToken, dataDir: DATA_DIR,
     // Tests locaux : phases raccourcies
     durations: process.env.STATION_FAST ? { recap: 5000, voteMode: 6000, voteOption: 5000, signup: 8000, turn: 6000, maxPlies: 8 } : {}
@@ -953,7 +953,7 @@ require('./station')({
 
 // Simulation d'activité (chaînes sim_*), pilotée depuis la machine : voir sim.js et sim-cli.js
 require('./sim')({
-    app, io, games, multiRooms, stats, emitSpectate, broadcastGamesList, newPublicId, dataDir: DATA_DIR,
+    app, io, games, multiRooms, stats, emitSpectate, broadcastGamesList, newPublicId, dataDir: DATA_DIR, station,
     rush: { get: () => rushRecords, set: (r) => { rushRecords = r || {}; }, save: saveRushRecords }
 });
 

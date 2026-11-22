@@ -8,6 +8,7 @@
  */
 import twitchAuth from '../core/twitchAuth.js';
 import VotingWheel from '../components/wheel.js';
+import WheelBand from '../components/wheelBand.js';
 import { renderPodium, renderHistory, markPodiumWinner, morphPodiumToWheel, revealWinner, clearWinner } from '../components/voteViews.js';
 
 const t = (key, params, fallback) => {
@@ -27,7 +28,7 @@ function choiceLabel(ballot, c) {
     if (ballot === 'level') return t(`h24.level.${c}`, null, c);
     return String(c);
 }
-const CHOICE_ICON = { teams: 'fa-chess', problems: 'fa-puzzle-piece', majority: 'fa-check-double', draw: 'fa-dice', easy: 'fa-seedling', medium: 'fa-chess-knight', hard: 'fa-fire' };
+const CHOICE_ICON = { teams: 'fa-chess', problems: 'fa-puzzle-piece', majority: 'fa-check-double', draw: 'fa-dice', band: 'fa-grip-lines', easy: 'fa-seedling', medium: 'fa-chess-knight', hard: 'fa-fire' };
 
 const H24Page = {
     socket: null,
@@ -400,6 +401,7 @@ const H24Page = {
                 this.drawSig = null;
                 this.revealing = false;
                 slot.classList.remove('is-drawing');
+                $('h24-band-area')?.classList.remove('is-visible', 'is-spinning');
                 clearWinner(slot);
             }
             return;
@@ -417,15 +419,37 @@ const H24Page = {
             revealWinner(slot, { move: g.draw.winner, color: '#8b5cf6', pct: g.draw.random || !total ? null : Math.round(n * 100 / total), turn: g.turn });
             return;
         }
-        const wheel = this.ensureWheel();
+        const band = this.state?.options?.decision === 'band';
+        const wheel = band ? this.ensureBand() : this.ensureWheel();
         wheel.votes = new Map(votes.map(v => [v.m, { count: v.n, voters: new Map() }]));
+        if (band) {
+            // La bande apparaît sous le podium, qui reste visible
+            $('h24-band-area').classList.add('is-visible');
+        } else {
+            morphPodiumToWheel(slot, $('h24-wheel-area')?.querySelector('.wheel-container'));
+            slot.classList.add('is-drawing');
+        }
         wheel.draw();
-        morphPodiumToWheel(slot, $('h24-wheel-area')?.querySelector('.wheel-container'));
-        slot.classList.add('is-drawing');
         this.revealing = true;
         wheel.onSpinEnd = () => { this.revealing = false; this.renderBoard(); };
         // La roue s'arrête un peu avant que le coup soit joué
         wheel.spin(Math.max(600, left - 1300), g.draw.winner);
+    },
+
+    ensureBand() {
+        if (this.band) return this.band;
+        const band = new WheelBand('h24-band-area');
+        band.updateVoteList = () => {};
+        band.showResultInside = false;
+        band.currentTurn = () => (this.state?.game?.turn === 'b' ? 'b' : 'w');
+        band.highlightWinner = () => {
+            markPodiumWinner($('h24-votes'), band.winner);
+            revealWinner($('h24-votes-panel'), { move: band.winner, color: band.winnerColor, pct: band.winnerPct, turn: band.currentTurn() });
+        };
+        // La page tient sans scroll : pas de défilement vers la bande
+        band.container.scrollIntoView = () => {};
+        this.band = band;
+        return band;
     },
 
     ensureWheel() {

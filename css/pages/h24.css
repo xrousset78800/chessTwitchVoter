@@ -237,3 +237,13 @@
     font-size: calc(var(--wheel-center-size) * 0.35);
 }
 #page-h24 .h24-votes { --dock-size: min(280px, calc(100vh - 520px)); flex: none; }
+
+/* ---- Tirage à la bande : sous le podium, seulement pendant le tirage ---- */
+#h24-band-area { display: none; flex: none; }
+#h24-band-area.is-visible { display: block; }
+#h24-band-area .wheel-band { height: 56px; }
+#h24-band-area.is-spinning .wheel-band {
+    outline: 2px solid var(--accent-purple);
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
+}
+#page-h24 .h24-score[hidden] { display: none; }

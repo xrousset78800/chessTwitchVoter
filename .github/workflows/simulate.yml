@@ -17,6 +17,7 @@ on:
           - live-stop
           - purge
           - restore
+          - h24-bots
       args:
         description: "Options (ex : games=10 moveMs=6000)"
         type: string

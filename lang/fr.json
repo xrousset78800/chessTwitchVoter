@@ -609,7 +609,7 @@
   "h24": {
     "phase": { "play": "Partie", "recap": "Récap", "voteMode": "Mode", "voteOptions": "Options", "signup": "Inscription" },
     "mode": { "teams": "Deux équipes", "problems": "Problèmes" },
-    "decision": { "majority": "Majorité", "draw": "Tirage au sort" },
+    "decision": { "majority": "Majorité", "draw": "Tirage à la roue", "band": "Tirage à la bande" },
     "level": { "easy": "Facile", "medium": "Moyen", "hard": "Difficile" },
     "ballot": { "mode": "Prochain mode de jeu ?", "turn": "Durée d'un tour ?", "decision": "Comment choisir le coup ?", "level": "Niveau des problèmes ?" },
     "drawReason": { "stalemate": "pat", "repetition": "répétition", "material": "matériel insuffisant", "length": "partie trop longue", "draw": "nulle" },

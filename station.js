@@ -15,7 +15,7 @@ const { Chess } = require('chess.js');
 
 const ROOM = 'h24';
 const LOGIN_RE = /^[a-z0-9_]{2,25}$/;
-const ALL_VOTED_MS = 1500;        // toute l'équipe a voté : fin du tour anticipée
+const ALL_VOTED_MS = 3000;        // toute l'équipe a voté : fin du tour anticipée
 const MAX_PLIES = 160;            // au-delà : nulle, la station repart
 const DRAW_REVEAL_MS = 5000;      // tirage au sort : temps laissé à la roue
 const RANDOM_REVEAL_MS = 1800;    // personne n'a voté : coup au hasard montré avant d'être joué
@@ -34,13 +34,15 @@ const MODES = ['teams', 'problems'];
 const BALLOTS = {
     teams: [
         { id: 'turn', choices: [30, 20, 45] },
-        { id: 'decision', choices: ['majority', 'draw'] }
+        { id: 'decision', choices: ['majority', 'draw', 'band'] }
     ],
     problems: [
         { id: 'level', choices: ['medium', 'easy', 'hard'] },
         { id: 'turn', choices: [30, 20, 45] }
     ]
 };
+const BOT_NAMES = ['bot_fou', 'bot_tour', 'bot_pion', 'bot_dame', 'bot_roque', 'bot_gambit', 'bot_zugzwang',
+    'bot_cavalier', 'bot_echec', 'bot_fianchetto', 'bot_sicilienne', 'bot_pat', 'bot_mat', 'bot_prise', 'bot_clouage', 'bot_fourchette'];
 const LEVELS = { easy: [600, 1300], medium: [1300, 1800], hard: [1800, 2600] };
 const PUZZLES_PER_SERIES = 8;
 
@@ -207,7 +209,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             emitMeAll();
             return;
         }
-        s.ballot = { id: b.id, choices: b.choices, votes: new Map() };
+        const choices = b.id === 'turn' && bots.turn ? [bots.turn, ...b.choices.filter(c => c !== bots.turn)] : b.choices;
+        s.ballot = { id: b.id, choices, votes: new Map() };
         setPhase('voteOptions', DUR.voteOption);
         emitMeAll();
     }
@@ -265,7 +268,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             s.endsAt = g.draw.endsAt;
             emit();
             return later(RANDOM_REVEAL_MS, () => playMove(move));
-        } else if (s.options.decision === 'draw' && s.mode === 'teams' && entries.length > 1) {
+        } else if (s.options.decision !== 'majority' && s.mode === 'teams' && entries.length > 1) {
             const total = entries.reduce((a, [, n]) => a + n, 0);
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
@@ -422,6 +425,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             }
             emit();
         }
+        if (!s.paused) botTick(now);
         if (s.paused || pending || !s.endsAt || now < s.endsAt) return;
         switch (s.phase) {
             case 'recap': return startModeVote();
@@ -470,7 +474,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         vc.set(login, (vc.get(login) || 0) + 1);
         // Toute l'équipe a voté : le tour se termine juste après
         const voters = s.mode === 'problems' || !s.teams[side].length ? allPlayers() : s.teams[side];
-        if (voters.every(l => g.votes.has(l))) {
+        // (pas quand on est seul : on garde le temps de changer d'avis)
+        if (voters.length > 1 && voters.every(l => g.votes.has(l))) {
             g.turnEndsAt = Math.min(g.turnEndsAt, Date.now() + ALL_VOTED_MS);
             s.endsAt = g.turnEndsAt;
         }
@@ -487,6 +492,85 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emit();
         emitMeAll(login);
         return true;
+    }
+
+    // ------------------------------------------------------------------ bots de test
+    // Faux joueurs pour suivre un cycle complet : ils s'inscrivent, votent le mode et les options,
+    // et votent les coups à des moments aléatoires, répartis sur 2-3 coups (tirage au sort lisible).
+    // Ils ne comptent pas comme spectateurs : sans vrai viewer, la station reste en pause.
+    const bots = { list: [], turn: 0, plans: new Map(), cands: null };
+    function setBots(count = 0, { turn = 0 } = {}) {
+        const n = Math.max(0, Math.min(BOT_NAMES.length, Number(count) || 0));
+        for (const l of bots.list.slice(n)) leave(l);
+        bots.list = BOT_NAMES.slice(0, n);
+        bots.turn = n ? Math.max(5, Math.min(60, Number(turn) || 0)) || 0 : 0;
+        bots.plans.clear();
+        // Ajoutés en pleine partie : ils rejoignent tout de suite
+        if (s.phase === 'play') for (const l of bots.list) if (!teamOf(l)) join(l);
+        emit();
+        return { bots: bots.list, turn: bots.turn || null };
+    }
+    /** Ce que le bot ferait maintenant (clé stable tant que la situation ne change pas) */
+    function botSituation() {
+        const g = s.game;
+        if (s.phase === 'signup') return { key: `signup:${s.cycle}`, until: s.endsAt };
+        if ((s.phase === 'voteMode' || s.phase === 'voteOptions') && s.ballot) return { key: `ballot:${s.cycle}:${s.ballot.id}`, until: s.endsAt };
+        if (s.phase === 'play' && g?.turnEndsAt && !g.draw && !g.result) {
+            return { key: `move:${s.cycle}:${g.puzzleIndex || 0}:${g.history.length}`, until: g.turnEndsAt };
+        }
+        return null;
+    }
+    function botCandidates(key) {
+        if (bots.cands?.key === key) return bots.cands.moves;
+        const g = s.game;
+        const legal = g.chess.moves();
+        const moves = [];
+        if (s.mode === 'problems') {
+            const uci = g.puzzle.moves[g.step] || '';
+            const sol = g.chess.moves({ verbose: true }).find(m => m.from + m.to + (m.promotion || '') === uci);
+            if (sol) moves.push(sol.san);
+        }
+        while (moves.length < 3 && moves.length < legal.length) {
+            const m = pick(legal);
+            if (!moves.includes(m)) moves.push(m);
+        }
+        bots.cands = { key, moves };
+        return moves;
+    }
+    function botAct(login, key) {
+        if (key.startsWith('signup')) return join(login);
+        if (key.startsWith('ballot')) {
+            const b = s.ballot;
+            const prefer = { mode: ['teams', 'teams', 'problems'], decision: ['draw', 'band'], turn: bots.turn ? [bots.turn] : b.choices };
+            return voteBallot(login, pick(prefer[b.id] || b.choices));
+        }
+        const g = s.game;
+        const side = g.chess.turn();
+        if (s.mode === 'teams' && !canPlay(teamOf(login), side)) return;
+        const c = botCandidates(key);
+        // Problèmes : la bonne réponse une fois sur deux ; partie : coups pondérés 3/2/1
+        const r = Math.random();
+        const m = s.mode === 'problems' ? (r < 0.5 ? c[0] : pick(c)) : c[r < 0.5 ? 0 : r < 0.83 ? 1 : 2] || c[0];
+        voteMove(login, m);
+    }
+    function botTick(now) {
+        if (!bots.list.length) return;
+        const sit = botSituation();
+        if (!sit) return;
+        for (const login of bots.list) {
+            let plan = bots.plans.get(login);
+            if (!plan || plan.key !== sit.key) {
+                const left = Math.max(0, (sit.until || now) - now);
+                // 1 bot sur 6 s'abstient d'un coup, pour que le tour ne se termine pas toujours en avance
+                const skip = sit.key.startsWith('move') && Math.random() < 0.17;
+                plan = { key: sit.key, at: now + left * (0.12 + Math.random() * 0.6), done: skip };
+                bots.plans.set(login, plan);
+            }
+            if (!plan.done && now >= plan.at) {
+                plan.done = true;
+                botAct(login, sit.key);
+            }
+        }
     }
 
     // ------------------------------------------------------------------ sockets
@@ -529,5 +613,5 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     });
 
     log('📺 Station 24/24 prête');
-    return { state: s, join, leave, voteMove, voteBallot, publicState };
+    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots };
 };
