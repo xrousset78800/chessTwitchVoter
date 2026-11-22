@@ -278,6 +278,11 @@
     "add": "Add",
     "addPlaceholder": "twitch_name",
     "invalid": "Invalid Twitch name",
+    "chatOk": "#{channel} chat connected: your viewers can type join, then vote",
+    "chatConnecting": "Connecting to #{channel} chat…",
+    "chatOff": "#{channel} chat not connected: your viewers can't sign up or vote",
+    "chatRetry": "Connect the chat",
+    "chatFailed": "Couldn't connect to the Twitch chat",
     "lateJoinHint": "Chat can type join at any time, even during the game."
   },
   "live": {

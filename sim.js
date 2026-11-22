@@ -472,3 +472,4 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
 };
 
 module.exports.KEY_FILE = KEY_FILE;
+module.exports.chooseMove = chooseMove;

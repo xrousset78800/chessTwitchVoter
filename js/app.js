@@ -27,6 +27,7 @@ import { initAnonymity, secretVotes, getAnonymity, forceAnonymity, ANON_MODES } 
 import { initGreenScreen } from './components/greenScreen.js';
 import { VoteTicker } from './components/voteViews.js';
 import { showSensorAlert, sensorsOk } from './components/phantomSensorAlert.js';
+import './components/testTools.js';
 
 // Anonymat du vote : sélecteurs (réglages, modale ⚙, formulaire Multi)
 initAnonymity();
@@ -2385,6 +2386,7 @@ const PresetGame = {
             onChange: () => {
                 this.renderCount();
                 this.renderRoster();
+                this.renderChatStatus();
             },
             onLateJoin: (player) => Toast.info(tr('lobby.lateJoin', {
                 name: player.name,
@@ -2456,6 +2458,30 @@ const PresetGame = {
     },
 
     // ========== ROSTER ==========
+
+    /** Le chat du streamer doit être lu pour que ses viewers s'inscrivent et votent */
+    renderChatStatus() {
+        const el = document.getElementById('roster-chat');
+        if (!el) return;
+        const login = normalizeLogin(twitchAuth.user?.login);
+        if (!lobby.active || !login) { el.hidden = true; return; }
+        const state = twitch.connectionState;
+        const ok = twitch.isConnected && twitch.channel === login;
+        el.hidden = false;
+        el.className = 'roster__chat' + (ok ? ' is-ok' : state === 'connecting' ? ' is-pending' : ' is-off');
+        el.textContent = '';
+        const text = document.createElement('span');
+        text.textContent = tr(ok ? 'roster.chatOk' : state === 'connecting' ? 'roster.chatConnecting' : 'roster.chatOff', { channel: login });
+        el.appendChild(text);
+        if (!ok && state !== 'connecting') {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn--sm';
+            btn.textContent = tr('roster.chatRetry');
+            btn.addEventListener('click', () => twitch.connect(login).catch(() => Toast.error(tr('roster.chatFailed'))));
+            el.appendChild(btn);
+        }
+    },
 
     renderRoster() {
         const groups = lobby.format === 'teams' && !lobby.open
@@ -2535,7 +2561,9 @@ const PresetGame = {
         window.addEventListener('languageChanged', () => {
             this.setBanner(this.banner);
             if (lobby.active) this.renderRoster();
+            this.renderChatStatus();
         });
+        window.addEventListener('twitchStateChange', () => this.renderChatStatus());
     }
 };
 
@@ -2661,6 +2689,9 @@ const MultiRoom = {
             color: login === a ? 'w' : 'b'
         });
         this.opponent = login === a ? null : a;
+        if (!(twitch.isConnected && twitch.channel === login)) {
+            twitch.connect(login).catch(() => Toast.error(tr('roster.chatFailed')));
+        }
         window.multiplayerManager.enterRoom({ host: a, code, login, token: twitchAuth.token, settings, isPublic });
     },
 

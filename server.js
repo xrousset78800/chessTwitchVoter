@@ -296,6 +296,8 @@ const tokenCache = new Map(); // token -> { login, userId, until }
 const TOKEN_CACHE_MS = 5 * 60 * 1000;
 
 async function verifyTwitchToken(token) {
+    // Tests locaux uniquement (STATION_DEV=1, jamais en production) : « dev:<login> »
+    if (process.env.STATION_DEV === '1' && /^dev:[a-z0-9_]{2,25}$/.test(token)) return { login: token.slice(4), userId: 'dev' };
     const cached = tokenCache.get(token);
     if (cached && cached.until > Date.now()) return cached;
 
@@ -444,7 +446,71 @@ function emitMultiRoom(room) {
         remainingMs: room.endsAt ? room.endsAt - Date.now() : null,
         settings:    room.settings
     };
-    Object.values(room.sockets).forEach(id => io.to(id).emit('multi:lobby', state));
+    Object.entries(room.sockets).forEach(([login, id]) => io.to(id).emit('multi:lobby', {
+        ...state,
+        // Régie seulement : adversaire fictif pour tester un salon sans second streamer
+        canBot: login === room.a && !room.b && !!station?.isRegie(login)
+    }));
+}
+
+// ---------- Adversaire fictif (tests de la régie) ----------
+// Une chaîne sim_* prend les Noirs ; le serveur joue ses coups après un délai de « vote ».
+// Ses parties sont retirées des stats par la purge de sim.js (préfixe sim_).
+const BOT_LOBBY_MS = Math.min(MULTI_LOBBY_MS, 30 * 1000);
+const isBotSocket = (id) => typeof id === 'string' && id.startsWith('bot:');
+
+function scheduleBotMove(game) {
+    if (!game.bot || game.status !== 'playing' || !game.lastFen) return;
+    let chess;
+    try { chess = new Chess(game.lastFen); } catch { return; }
+    if (chess.turn() !== 'b' || chess.isGameOver()) return;
+    const turnMs = (game.settings?.timerDuration || 30) * 1000;
+    const delay  = Math.min(25000, Math.max(2500, turnMs * (0.3 + Math.random() * 0.45)));
+    const fen    = game.lastFen;
+    clearTimeout(game.botTimer);
+    game.botTimer = setTimeout(() => {
+        if (games[game.gameId] !== game || game.status !== 'playing' || game.lastFen !== fen) return;
+        const c = new Chess(fen);
+        const move = c.move(require('./sim').chooseMove(c));
+        if (!move) return;
+        applyMultiMove(game, { player: 'black', move: move.san, fen: c.fen() });
+    }, delay);
+}
+
+/** Coup d'une partie multi : historique, résultat, spectateurs, puis diffusion aux deux pages */
+function applyMultiMove(game, data) {
+    if (game) {
+        if (typeof data.fen === 'string' && FEN_RE.test(data.fen)) {
+            // Case de départ et d'arrivée, pour les spectateurs
+            let lastMove = null;
+            try {
+                const m = new Chess(game.lastFen || undefined).move(String(data.move || ''));
+                if (m) {
+                    lastMove = { from: m.from, to: m.to };
+                    (game.history ||= []).push(m.san);
+                    if (game.history.length > 400) game.history.shift();
+                }
+            } catch { /* coup illisible : pas de surlignage */ }
+            game.lastFen  = data.fen;
+            game.lastMove = lastMove;
+            game.detail   = null;   // au tour de l'autre chaîne de voter
+        }
+        game.moveCount = (game.moveCount || 0) + 1;
+        // Mat, pat ou nulle : le résultat de la bataille est enregistré
+        const result = stats.recordMultiResult(game);
+        if (result) {
+            game.result = result.result;
+            io.to(game.gameId).emit('multi:result', result);
+        }
+        emitSpectate(game);
+    }
+    io.to(data.gameId ?? game?.gameId).emit('movePlayed', {
+        player: data.player,
+        move:   data.move,
+        fen:    data.fen || null
+    });
+    console.log(`♟ [${data.gameId ?? game?.gameId}] ${data.player}: ${data.move}`);
+    if (game?.bot && !game.result) scheduleBotMove(game);
 }
 
 function launchMultiRoom(room) {
@@ -456,7 +522,8 @@ function launchMultiRoom(room) {
         hostSocket:  room.sockets[room.a],
         settings:    room.settings,
         guest:       room.b,
-        guestSocket: room.sockets[room.b],
+        guestSocket: room.bot ? null : room.sockets[room.b],
+        bot:         !!room.bot,
         status:      'playing',
         moveCount:   0,
         startedAt:   Date.now(),
@@ -485,7 +552,7 @@ function leaveMultiRoom(socket) {
     clearTimeout(room.timeout);
     room.timeout = null;
     room.endsAt  = null;
-    if (Object.keys(room.sockets).length === 0) {
+    if (Object.values(room.sockets).every(isBotSocket)) {
         delete multiRooms[room.gameId];
         io.to('spec:' + room.publicId).emit('spectate:ended', { reason: 'closed' });
     } else {
@@ -847,6 +914,33 @@ io.on('connection', (socket) => {
         if (watchers.has(room.publicId)) socket.emit('spectators', { id: room.publicId, ...spectatorsOf(room.publicId) });
     });
 
+    // Régie : un adversaire fictif rejoint le salon de l'hôte (tests sans second streamer)
+    socket.on('multi:testBot', async (data = {}) => {
+        let login;
+        try { ({ login } = await verifyTwitchToken(String(data.token || ''))); } catch { return; }
+        const room = multiRooms[socket.data.multiRoom];
+        if (!room || room.a !== login || room.b || room.sockets[login] !== socket.id || !station?.isRegie(login)) return;
+        room.b   = 'sim_adversaire';
+        room.bot = true;
+        room.sockets[room.b] = 'bot:' + room.gameId;
+        clearTimeout(room.timeout);
+        room.endsAt  = Date.now() + BOT_LOBBY_MS;
+        room.timeout = setTimeout(() => launchMultiRoom(room), BOT_LOBBY_MS);
+        console.log(`🧪 Adversaire fictif dans le salon ${room.gameId}`);
+        emitMultiRoom(room);
+        emitSpectate(room);
+        broadcastGamesList();
+    });
+
+    // Outils de test réservés à la régie (faux viewers, adversaire fictif)
+    socket.on('tester:check', async (data = {}, ack) => {
+        if (typeof ack !== 'function') return;
+        try {
+            const { login } = await verifyTwitchToken(String(data.token || ''));
+            ack(!!station?.isRegie(login));
+        } catch { ack(false); }
+    });
+
     socket.on('chat:message', (data) => {
         // Stocker dans l'historique
         if (!chatHistory[data.gameId]) {
@@ -879,37 +973,9 @@ io.on('connection', (socket) => {
         const game = games[data.gameId];
         // L'identifiant d'une partie multi est public : seuls ses deux streamers jouent
         if (game && socket.id !== game.hostSocket && socket.id !== game.guestSocket) return;
-        if (game) {
-            if (typeof data.fen === 'string' && FEN_RE.test(data.fen)) {
-                // Case de départ et d'arrivée, pour les spectateurs
-                let lastMove = null;
-                try {
-                    const m = new Chess(game.lastFen || undefined).move(String(data.move || ''));
-                    if (m) {
-                        lastMove = { from: m.from, to: m.to };
-                        (game.history ||= []).push(m.san);
-                        if (game.history.length > 400) game.history.shift();
-                    }
-                } catch { /* coup illisible : pas de surlignage */ }
-                game.lastFen  = data.fen;
-                game.lastMove = lastMove;
-                game.detail   = null;   // au tour de l'autre chaîne de voter
-            }
-            game.moveCount = (game.moveCount || 0) + 1;
-            // Mat, pat ou nulle : le résultat de la bataille est enregistré
-            const result = stats.recordMultiResult(game);
-            if (result) {
-                game.result = result.result;
-                io.to(game.gameId).emit('multi:result', result);
-            }
-            emitSpectate(game);
-        }
-        io.to(data.gameId).emit('movePlayed', {
-            player: data.player,
-            move:   data.move,
-            fen:    data.fen || null
-        });
-        console.log(`♟ [${data.gameId}] ${data.player}: ${data.move}`);
+        // Contre l'adversaire fictif, l'hôte ne joue que les Blancs
+        if (game?.bot && data.player !== 'white') return;
+        applyMultiMove(game, data);
     });
 
     socket.on('requestSync', (data) => {

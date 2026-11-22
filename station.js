@@ -851,5 +851,5 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     });
 
     log('📺 Station 24/24 prête');
-    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots };
+    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots, isRegie: (login) => !!login && REGIE.has(login) };
 };

@@ -25,7 +25,8 @@ export function recordTurn(kind, votes, isPicked) {
     const voters = new Map();
     for (const v of votes) {
         const login = String(v.login || '').toLowerCase();
-        if (!LOGIN_RE.test(login)) continue;
+        // sim_* : faux viewers des outils de test, jamais comptés
+        if (!LOGIN_RE.test(login) || login.startsWith('sim_')) continue;
         const e = voters.get(login) || { login, name: v.name || login, picked: false };
         if (!e.picked && isPicked(v.move)) e.picked = true;
         voters.set(login, e);

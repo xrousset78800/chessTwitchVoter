@@ -278,6 +278,11 @@
     "add": "Ajouter",
     "addPlaceholder": "pseudo_twitch",
     "invalid": "Pseudo Twitch invalide",
+    "chatOk": "Chat de #{channel} connecté : tes viewers peuvent taper join puis voter",
+    "chatConnecting": "Connexion au chat de #{channel}…",
+    "chatOff": "Chat de #{channel} non connecté : tes viewers ne peuvent ni s'inscrire ni voter",
+    "chatRetry": "Connecter le chat",
+    "chatFailed": "Impossible de se connecter au chat Twitch",
     "lateJoinHint": "Le chat peut taper join à tout moment, même pendant la partie."
   },
   "live": {

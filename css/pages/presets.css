@@ -300,3 +300,43 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 
 .multi-visibility[data-visibility="public"] .multi-visibility__desc--public,
 .multi-visibility[data-visibility="private"] .multi-visibility__desc--private { display: flex; }
+
+/* État du chat Twitch du streamer, dans la liste des inscrits */
+.roster__chat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+.roster__chat.is-ok      { background: rgba(16, 185, 129, 0.12); color: #34d399; }
+.roster__chat.is-pending { background: rgba(148, 163, 184, 0.12); color: var(--text-secondary, #94a3b8); }
+.roster__chat.is-off     { background: rgba(239, 68, 68, 0.14); color: #f87171; font-weight: 600; }
+
+/* Outils de test de la régie (faux viewers, adversaire fictif) */
+.test-tools {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 260px;
+    padding: 10px 12px;
+    border: 1px dashed rgba(250, 204, 21, 0.6);
+    border-radius: 10px;
+    background: rgba(15, 15, 25, 0.92);
+    color: #e5e7eb;
+    font-size: 0.8rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+.test-tools[hidden] { display: none; }
+.test-tools__title { font-weight: 700; color: #facc15; }
+.test-tools__row { display: flex; gap: 6px; align-items: center; }
+.test-tools__row select { background: #1f2030; color: inherit; border: 1px solid #3a3b50; border-radius: 6px; padding: 3px 4px; }
+.test-tools__info { color: #9ca3af; }
