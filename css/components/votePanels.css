@@ -126,6 +126,8 @@
     justify-content: center;
     gap: 6px;
     min-height: 1.6em;
+    max-height: 7.5em;
+    overflow-y: auto;
 }
 
 .podium__chip {
@@ -144,6 +146,17 @@
 .podium__chip b {
     font-family: 'JetBrains Mono', monospace;
     color: #fff;
+}
+
+.podium__chip i {
+    font-style: normal;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.podium__chip small {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .podium__chip--more { border-color: rgba(255, 255, 255, 0.15); }

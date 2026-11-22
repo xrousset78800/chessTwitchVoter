@@ -28,6 +28,7 @@ import { initGreenScreen } from './components/greenScreen.js';
 import { VoteTicker } from './components/voteViews.js';
 import { showSensorAlert, sensorsOk } from './components/phantomSensorAlert.js';
 import './components/testTools.js';
+import { snapSpin, spinId, DEFAULT_SPIN } from './core/spinSpeed.js';
 
 // Anonymat du vote : sélecteurs (réglages, modale ⚙, formulaire Multi)
 initAnonymity();
@@ -56,7 +57,7 @@ const AppState = {
         // Timer/Vote
         timerEnabled: false,
         timerDuration: 30,       // 10 à 120 s : en dessous, le délai du stream ne laisse pas le temps de voter
-        wheelDuration: 5,
+        wheelDuration: DEFAULT_SPIN,
         pauseAfterEnd: 5,
         votesPerViewer: 1,       // votes par viewer et par coup (les stats n'en comptent qu'un)
         majorityMode: false,
@@ -772,7 +773,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
     gameEngine.showWheel();
     document.body.classList.add('randomWheel');
 
-    const wheelDuration = (AppState.config.wheelDuration || 5) * 1000;
+    const wheelDuration = snapSpin(AppState.config.wheelDuration) * 1000;
     gameEngine.votingWheel.onSpinEnd = (winner) => {
         document.body.classList.remove('randomWheel');
         gameEngine.hideWheel();
@@ -1195,7 +1196,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         window.addEventListener('languageChanged', () => this.renderPresets());
 
         document.getElementById('wheel-duration')?.addEventListener('change', (e) => {
-            AppState.config.wheelDuration = parseInt(e.target.value) || 5;
+            AppState.config.wheelDuration = snapSpin(e.target.value);
         });
 
         // ========== INPUTS JOUEURS ==========
@@ -1311,7 +1312,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         const rows = [
             ['fa-stopwatch', tr('settingsSummary.timer'), c.timerEnabled ? `${c.timerDuration} s` : tr('timerOff.badge')],
             ['fa-scale-balanced', tr('gameMode.voteOptions.voteMajority'), c.majorityMode ? yes : no],
-            ...(c.timerEnabled && !c.majorityMode ? [['fa-dharmachakra', tr('gameMode.voteOptions.wheelAnimation'), `${c.wheelDuration} s`]] : []),
+            ...(c.timerEnabled && !c.majorityMode ? [['fa-dharmachakra', tr('gameMode.voteOptions.wheelAnimation'), tr(`presets.spinSpeed.${spinId(c.wheelDuration)}`)]] : []),
             ['fa-user-check', tr('gameMode.voteOptions.votesPerViewer'), String(c.votesPerViewer || 1)],
             ['fa-lock', tr('gameMode.twitchOptions.restrictions'), restrictions]
         ];
@@ -1468,7 +1469,7 @@ fullReset() {
         if (timerDuration) timerDuration.value = AppState.config.timerDuration;
 
         const wheelDuration = document.getElementById('wheel-duration');
-        if (wheelDuration) wheelDuration.value = AppState.config.wheelDuration;
+        if (wheelDuration) wheelDuration.value = String(snapSpin(AppState.config.wheelDuration));
 
         const rushRating = document.getElementById('rush-start-rating');
         if (rushRating) rushRating.value = AppState.config.rushStartRating || 600;
@@ -2199,6 +2200,7 @@ const PresetForm = {
             votesPerViewer: 1,
             timerDuration: Math.min(300, Math.max(5, parseInt(value('timer')) || 30)),
             majorityMode:  value('mode') === 'majority',
+            wheelDuration: snapSpin(value('spin')),
             followersOnly: isOn('follow'),
             subsOnly:      isOn('sub')
         };
@@ -2578,7 +2580,7 @@ const MultiRoom = {
     },
 
     buildHash(host, code, settings, isPublic) {
-        const query = new URLSearchParams({ timer: settings.timerDuration, mode: settings.majorityMode ? 'majority' : 'wheel' });
+        const query = new URLSearchParams({ timer: settings.timerDuration, mode: settings.majorityMode ? 'majority' : 'wheel', spin: snapSpin(settings.wheelDuration) });
         if (settings.subsOnly) query.set('subs', '1');
         if (settings.followersOnly) query.set('followers', '1');
         if (settings.anonymity && settings.anonymity !== 'none') query.set('anon', settings.anonymity);
@@ -2616,6 +2618,7 @@ const MultiRoom = {
                 settings: {
                     timerDuration: Math.min(300, Math.max(5, parseInt(params.get('timer')) || 30)),
                     majorityMode:  params.get('mode') === 'majority',
+                    wheelDuration: snapSpin(params.get('spin')),
                     followersOnly: params.get('followers') === '1',
                     subsOnly:      params.get('subs') === '1',
                     anonymity:     ANON_MODES.includes(params.get('anon')) ? params.get('anon') : 'none'

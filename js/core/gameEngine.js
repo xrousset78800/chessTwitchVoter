@@ -26,7 +26,7 @@ class GameEngine {
         this.config = {
             timerEnabled: false,
             timerDuration: 25,
-            wheelDuration: 5,
+            wheelDuration: 6,
             pauseAfterEnd: 15,
             majorityMode: true,
             votesPerViewer: 1
@@ -714,7 +714,8 @@ hideWheel() {
      * @param {Array} results - [{move, count, color, percentage}, ...]
      */
 showWheelAnimation(results) {
-    const wheelDuration = (this.config.wheelDuration || 5) * 1000;
+    // 0 : pas d'animation, le coup tiré s'affiche aussitôt
+    const wheelDuration = (Number.isFinite(Number(this.config.wheelDuration)) ? Number(this.config.wheelDuration) : 6) * 1000;
 
     this.updateVotesUI(results);
 

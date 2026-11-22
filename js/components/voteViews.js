@@ -104,8 +104,8 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
     } else if (!list.length) {
         restEl.innerHTML = `<span class="podium__hint">${esc(t('podium.none', null, 'Aucun vote pour l\'instant'))}</span>`;
     } else {
-        const shown = rest.slice(0, 6);
-        restEl.innerHTML = shown.map((v, i) => `<span class="podium__chip" style="--c:${colors[(i + 3) % colors.length]}"><b>${esc(v.move)}</b> ${v.count}</span>`).join('')
+        const shown = rest.slice(0, 30);
+        restEl.innerHTML = shown.map((v, i) => `<span class="podium__chip" style="--c:${colors[(i + 3) % colors.length]}"><i>${i + 4}</i><b>${esc(v.move)}</b> ${v.count}${masked || !total ? '' : `<small>${Math.round(v.count / total * 100)}%</small>`}</span>`).join('')
             + (rest.length > shown.length ? `<span class="podium__chip podium__chip--more">+${rest.length - shown.length}</span>` : '');
     }
     if (totalEl) {

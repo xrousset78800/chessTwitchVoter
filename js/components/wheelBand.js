@@ -146,14 +146,16 @@ class WheelBand extends VotingWheel {
         // S'arrête n'importe où dans la case gagnante, sans frôler ses bords
         const target = cellStart + cellWidth * (0.15 + Math.random() * 0.7);
         const startPosition = this.position ?? width / 2;
-        const turns = Math.ceil(MIN_TRAVEL / period) + Math.floor(Math.random() * 2);
+        // Distance proportionnelle à la durée (≈ 400 px/s en moyenne) : démarrage plus doux ; 0 = direct
+        const travel = duration > 0 ? Math.max(period, MIN_TRAVEL * Math.min(1.6, duration / 7500)) : 0;
+        const turns = duration > 0 ? Math.ceil(travel / period) + Math.floor(Math.random() * 2) : 0;
         let delta = target - (startPosition % period);
         if (delta < 0) delta += period;
         const totalDelta = turns * period + delta;
 
         const startTime = Date.now();
         const animate = () => {
-            const progress = Math.min((Date.now() - startTime) / duration, 1);
+            const progress = duration > 0 ? Math.min((Date.now() - startTime) / duration, 1) : 1;
             const eased = 1 - Math.pow(1 - progress, 3);
             this.position = startPosition + totalDelta * eased;
             this.draw();

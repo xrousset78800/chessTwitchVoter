@@ -292,10 +292,12 @@
                                         </div>
                                         <div class="form-row">
                                             <span data-i18n="gameMode.voteOptions.wheelAnimation" data-info="wheelDuration">Animation roue</span>
-                                            <div class="flex items-center gap-sm">
-                                                <input type="number" class="input input--sm input--inline" id="wheel-duration" value="5" min="1" max="15" style="width:60px">
-                                                <span>s</span>
-                                            </div>
+                                            <select class="input input--sm input--inline" id="wheel-duration">
+                                                <option value="0" data-i18n="presets.spinSpeed.none">Aucune animation</option>
+                                                <option value="3" data-i18n="presets.spinSpeed.fast">Rapide</option>
+                                                <option value="6" data-i18n="presets.spinSpeed.normal" selected>Normale</option>
+                                                <option value="10" data-i18n="presets.spinSpeed.slow">Lente</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="vote-options__anon">
@@ -577,6 +579,15 @@
                                     <option value="majority" data-i18n="presets.majority">📊 Majorité</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-dharmachakra"></i> <span data-i18n="presets.spin" data-info="wheelDuration">Animation du tirage</span></label>
+                                <select class="input input--sm" id="mono-spin">
+                                    <option value="0" data-i18n="presets.spinSpeed.none">Aucune animation</option>
+                                    <option value="3" data-i18n="presets.spinSpeed.fast">Rapide</option>
+                                    <option value="6" data-i18n="presets.spinSpeed.normal" selected>Normale</option>
+                                    <option value="10" data-i18n="presets.spinSpeed.slow">Lente</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="restrict-row">
                             <span class="restrict-row__label"><i class="fab fa-twitch"></i> <span data-i18n="presets.restrictLabel" data-info="restrictions">Réservé aux</span></span>
@@ -618,6 +629,15 @@
                                 <select class="input input--sm" id="multi-mode">
                                     <option value="wheel" data-i18n="presets.wheel">🎡 Roue</option>
                                     <option value="majority" data-i18n="presets.majority">📊 Majorité</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-dharmachakra"></i> <span data-i18n="presets.spin" data-info="wheelDuration">Animation du tirage</span></label>
+                                <select class="input input--sm" id="multi-spin">
+                                    <option value="0" data-i18n="presets.spinSpeed.none">Aucune animation</option>
+                                    <option value="3" data-i18n="presets.spinSpeed.fast">Rapide</option>
+                                    <option value="6" data-i18n="presets.spinSpeed.normal" selected>Normale</option>
+                                    <option value="10" data-i18n="presets.spinSpeed.slow">Lente</option>
                                 </select>
                             </div>
                         </div>

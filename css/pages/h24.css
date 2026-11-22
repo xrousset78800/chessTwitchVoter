@@ -129,6 +129,13 @@
 .h24-choice:disabled { cursor: default; }
 .h24-choice.is-mine { border-color: var(--twitch-purple); box-shadow: 0 0 0 1px var(--twitch-purple) inset; }
 .h24-choice__label { display: inline-flex; align-items: center; gap: 10px; }
+.h24-choice__num {
+    display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 6px; flex: none;
+    font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.9rem;
+    background: var(--twitch-purple); color: #fff;
+}
+.h24-chat-hint { margin: 10px 0 0; font-size: 0.95rem; font-weight: 600; color: #c4b5fd; text-align: center; }
+.h24-chat-hint i { margin-right: 4px; }
 .h24-choice__pct { font-variant-numeric: tabular-nums; font-size: 1.15rem; }
 .h24-choice__pct small { margin-left: 6px; color: var(--text-secondary); font-weight: 500; font-size: 0.8rem; }
 
@@ -170,7 +177,15 @@
     flex: none;
 }
 .h24-regie[hidden] { display: none; }
-.h24-regie__head { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.h24-regie__head {
+    display: flex; align-items: center; gap: 6px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+    font: inherit; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7);
+}
+.h24-regie__head:hover { color: #fff; }
+.h24-regie__chev { margin-left: auto; }
+.h24-regie__body { display: flex; flex-direction: column; gap: 6px; }
+.h24-regie__body[hidden] { display: none; }
+.h24-regie__hint .h24-regie__dot { display: inline-block; width: 8px; height: 8px; vertical-align: middle; }
 .h24-regie__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .h24-regie__status { font-size: 0.8rem; font-weight: 600; }
 .h24-regie__dot { width: 10px; height: 10px; border-radius: 50%; background: #6b7280; flex: none; }
@@ -258,7 +273,8 @@
 
 /* ------------------------------------------- Vue réelle par la caméra de la régie */
 .h24-live__frame { position: relative; }
-.h24-live__cam { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.h24-live__cam { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; transition: transform 0.4s ease; }
+.h24-live__cam.is-flipped { transform: rotate(180deg); }
 .h24-live__msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center; font-size: 0.8rem; color: rgba(255, 255, 255, 0.75); background: rgba(0, 0, 0, 0.55); }
 .h24-live__msg[hidden] { display: none; }
 .h24-regie__cam select {

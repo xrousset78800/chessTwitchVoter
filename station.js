@@ -27,7 +27,8 @@ const CAM = {
 const LOGIN_RE = /^[a-z0-9_]{2,25}$/;
 const ALL_VOTED_MS = 3000;        // toute l'équipe a voté : fin du tour anticipée
 const MAX_PLIES = 160;            // au-delà : nulle, la station repart
-const DRAW_REVEAL_MS = 9000;      // tirage au sort : temps laissé à la roue (pas réglable sur le 24/24 : une roue bien longue)
+// Tirage au sort : temps laissé à la roue, selon la vitesse votée (animation + coup tiré montré ~1,5 s)
+const SPIN_REVEAL_MS = { fast: 4500, normal: 7500, slow: 11500 };
 const BALLOT_REVEAL_MS = 4000;    // résultat d'un vote (mode, option) montré avant la suite
 const RANDOM_REVEAL_MS = 1800;    // personne n'a voté : coup au hasard montré avant d'être joué
 const REPLY_MS = 900;             // rush : réponse de l'adversaire
@@ -47,11 +48,13 @@ const BALLOTS = {
     teams: [
         { id: 'turn', choices: [30, 20, 45] },
         { id: 'decision', choices: ['majority', 'draw'] },
+        { id: 'spin', choices: ['normal', 'fast', 'slow'] },
         { id: 'votes', choices: [1, 2, 3, 4, 5] },
         { id: 'anonymity', choices: ['none', 'secret'] }
     ],
     rush: [
         { id: 'turn', choices: [30, 20, 45] },
+        { id: 'spin', choices: ['normal', 'fast', 'slow'] },
         { id: 'votes', choices: [1, 2, 3, 4, 5] },
         { id: 'anonymity', choices: ['none', 'secret'] }
     ]
@@ -118,7 +121,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         endsAt: Date.now() + DUR.signup,
         paused: false,
         mode: 'teams',
-        options: { turn: 30, decision: 'majority', votes: 1, anonymity: 'none' },
+        options: { turn: 30, decision: 'majority', spin: 'normal', votes: 1, anonymity: 'none' },
         teams: { w: [], b: [] },
         ballot: null,          // { id, choices, votes: Map(login → choix) }
         ballotQueue: [],
@@ -137,6 +140,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const regieFile = dataDir ? path.join(dataDir, 'h24-regie.json') : null;
     const regie = { socket: null, phantom: 'off', paused: false, channel: '' };
     try { if (regieFile) regie.channel = String(JSON.parse(fs.readFileSync(regieFile, 'utf8')).channel || ''); } catch {}
+    const drawMs = () => SPIN_REVEAL_MS[s.options.spin] || SPIN_REVEAL_MS.normal;
+    // Chat Twitch de la chaîne de la régie, lu en anonyme : join, coups et votes (1, 2, 3…) comme sur la page
+    const chat = { client: null, channel: '', connected: false, seen: new Map() };   // seen : login → dernier join / coup
+    const CHAT_KEEP_MS = 20 * 60 * 1000;   // réinscrit d'office au cycle suivant s'il a joué récemment
     // Caméra de la régie : un seul émetteur à la fois, rien n'est enregistré
     const cam = { socket: null, cfg: null, gop: [], gopBytes: 0, seq: 0, tokens: CAM.burst, at: 0 };
     function stopCam(id) {
@@ -184,7 +191,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             endsAt: s.endsAt,
             paused: s.paused,
             pauseReason: s.pauseReason || null,
-            regie: { live: !!regie.socket, phantom: regie.phantom, paused: regie.paused, channel: regie.channel, cam: !!cam.socket },
+            regie: { live: !!regie.socket, phantom: regie.phantom, paused: regie.paused, channel: regie.channel, cam: !!cam.socket,
+                chat: chat.connected && chat.channel === regie.channel ? chat.channel : null },
             mode: s.mode,
             options: s.options,
             teams: s.teams,
@@ -346,20 +354,20 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             const total = entries.reduce((a, [, n]) => a + n, 0);
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
-            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + DRAW_REVEAL_MS };
+            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs() };
             s.endsAt = g.draw.endsAt;
             emit();
-            return later(DRAW_REVEAL_MS, () => playMove(move));
+            return later(drawMs(), () => playMove(move));
         } else {
             const best = Math.max(...entries.map(([, n]) => n));
             const tied = entries.filter(([, n]) => n === best);
             move = pick(tied.map(([m]) => m));
             // Ex æquo : tirage au sort visible entre eux, à chances égales
             if (tied.length > 1) {
-                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + DRAW_REVEAL_MS };
+                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs() };
                 s.endsAt = g.draw.endsAt;
                 emit();
-                return later(DRAW_REVEAL_MS, () => playMove(move));
+                return later(drawMs(), () => playMove(move));
             }
         }
         // Vote secret : les votes se dévoilent un instant avant que le coup soit joué
@@ -551,7 +559,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function autoJoin(login) {
         if (s.phase !== 'signup' && s.phase !== 'play') return;
         // (les bots de test aussi)
-        const logins = login ? [login] : [...new Set([...sockets.values(), ...bots.list])];
+        const now = Date.now();
+        const chatters = [...chat.seen].filter(([, at]) => now - at < CHAT_KEEP_MS).map(([l]) => l);
+        const logins = login ? [login] : [...new Set([...sockets.values(), ...bots.list, ...chatters])];
         for (const l of logins) if (l && !s.optOut.has(l) && !teamOf(l)) join(l);
     }
     /** Régie (tests) : saute directement à une étape du cycle */
@@ -775,6 +785,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
         socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 10)); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
+        // Tests locaux : un message du chat Twitch simulé
+        if (process.env.STATION_DEV === '1') socket.on('h24:devChat', (data = {}) => chatMessage(String(data.login || '').toLowerCase(), String(data.text || '').slice(0, 200)));
         // Régie : état du Phantom, pause manuelle, chaîne de la vue réelle
         socket.on('h24:regie', (data = {}) => {
             const l = me();
@@ -790,6 +802,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                         try { fs.writeFileSync(regieFile, JSON.stringify({ channel: c })); } catch {}
                     }
                     regie.channel = c;
+                    chatConnect();
                 }
             }
             emit();
@@ -850,6 +863,60 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
     });
 
+    // ------------------------------------------------------------------ chat Twitch
+    function chatConnect() {
+        const want = process.env.H24_CHAT === '0' ? '' : regie.channel;
+        if (want === chat.channel && (chat.client || !want)) return;
+        const old = chat.client;
+        chat.client = null;
+        chat.connected = false;
+        chat.channel = want;
+        if (old) old.disconnect().catch(() => {});
+        emit();
+        if (!want) return;
+        let tmi;
+        try { tmi = require('tmi.js'); } catch { log('💬 24/24 : tmi.js absent, chat non lu'); return; }
+        const client = new tmi.Client({ connection: { reconnect: true, secure: true }, channels: [want] });
+        chat.client = client;
+        client.on('join', (ch, user, self) => { if (self && chat.client === client) { chat.connected = true; emit(); } });
+        client.on('disconnected', () => { if (chat.client === client) { chat.connected = false; emit(); } });
+        client.on('message', (ch, tags, msg, self) => {
+            if (!self && chat.client === client) chatMessage(String(tags.username || '').toLowerCase(), msg);
+        });
+        client.connect().catch(e => log('💬 24/24 : chat injoignable', e?.message || e));
+        log(`💬 24/24 : lecture du chat de #${want}`);
+    }
+    /** Un message du chat : join / quitter, numéro d'un choix pendant un vote, coup pendant la partie */
+    function chatMessage(login, text) {
+        if (!LOGIN_RE.test(login)) return;
+        const word = (String(text || '').trim().split(/\s+/)[0] || '').replace(/^!/, '').toLowerCase();
+        if (!word) return;
+        if (['join', 'rejoindre', 'jouer', 'play'].includes(word)) {
+            s.optOut.delete(login);
+            chat.seen.set(login, Date.now());
+            join(login);
+            return;
+        }
+        if (['quit', 'quitter', 'leave'].includes(word)) {
+            s.optOut.add(login);
+            chat.seen.delete(login);
+            leave(login);
+            return;
+        }
+        if (s.ballot && /^\d{1,2}$/.test(word)) {
+            const c = s.ballot.choices[Number(word) - 1];
+            if (c !== undefined) voteBallot(login, c);
+            return;
+        }
+        if (s.phase === 'play' && word.length <= 8 && teamOf(login) && voteMove(login, word)) chat.seen.set(login, Date.now());
+    }
+    // Joueurs du chat inactifs depuis 20 min : oubliés
+    setInterval(() => {
+        const now = Date.now();
+        for (const [l, at] of chat.seen) if (now - at > CHAT_KEEP_MS) chat.seen.delete(l);
+    }, 60 * 1000).unref?.();
+    chatConnect();
+
     log('📺 Station 24/24 prête');
-    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots, isRegie: (login) => !!login && REGIE.has(login) };
+    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots, chatMessage, isRegie: (login) => !!login && REGIE.has(login) };
 };

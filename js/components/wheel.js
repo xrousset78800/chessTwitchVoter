@@ -288,7 +288,8 @@ spin(duration = 5000, forcedWinner = null) {
     this.winnerColorIndex = winnerColorIndex;
 
     // Calcul de la rotation finale
-    const spins = 5 + Math.floor(Math.random() * 3);
+    // ~1 tour toutes les 1,6 s : la roue démarre moins vite (avant : 5 à 7 tours en 5 s)
+    const spins = duration > 0 ? Math.max(2, Math.round(duration / 1600)) + Math.floor(Math.random() * 2) : 0;
     const normalizedCurrent = ((this.currentRotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const targetRotationNormalized = ((-winnerMidAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
     let delta = targetRotationNormalized - normalizedCurrent;
@@ -300,7 +301,7 @@ spin(duration = 5000, forcedWinner = null) {
 
     const animate = () => {
         const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+        const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1;
         const eased = 1 - Math.pow(1 - progress, 3);
         this.currentRotation = startRotation + totalDelta * eased;
         this.draw();

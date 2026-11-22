@@ -428,6 +428,8 @@ function sanitizeMultiSettings(s = {}) {
     return {
         timerDuration: Math.min(300, Math.max(5, parseInt(s.timerDuration) || 30)),
         majorityMode:  !!s.majorityMode,
+        // Animation du tirage (s) : aucune, rapide, normale, lente
+        wheelDuration: [0, 3, 6, 10].includes(Number(s.wheelDuration)) ? Number(s.wheelDuration) : 6,
         followersOnly: !!s.followersOnly,
         subsOnly:      !!s.subsOnly,
         // Anonymat du vote choisi par le créateur, suivi par les deux chaînes
