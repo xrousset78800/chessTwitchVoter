@@ -750,51 +750,77 @@
 
         <!-- ==================== 24/24 ==================== -->
         <div class="page" id="page-h24">
-            <div class="h24">
-                <aside class="h24__left">
-                    <div class="h24-head">
-                        <span class="h24-head__live"><span class="nav__game-dot"></span> 24/24</span>
-                        <h1 class="h24-head__mode" id="h24-mode">24/24</h1>
-                        <p class="h24-head__options" id="h24-options"></p>
-                        <p class="h24-head__viewers"><i class="fas fa-eye"></i> <span id="h24-viewers"></span></p>
-                    </div>
-                    <ol class="h24-steps" id="h24-steps"></ol>
-                    <div class="h24-account" id="h24-account"></div>
-                    <div class="h24-teams" id="h24-teams"></div>
-                </aside>
-                <main class="h24__center">
-                    <div class="h24-board-wrap" id="h24-board-wrap">
-                        <div class="h24-board" id="h24-board"></div>
-                    </div>
-                </main>
-                <aside class="h24__right" id="h24-stage">
-                    <div class="h24-play" id="h24-play" hidden>
-                        <div class="h24-play__top">
-                            <div class="h24-turn" id="h24-turn"></div>
-                            <div class="h24-turn-clock" id="h24-turn-clock" hidden></div>
+            <div class="sandbox watch h24">
+                <!-- Déroulé du cycle, en une ligne sous l'en-tête -->
+                <ol class="h24-steps" id="h24-steps"></ol>
+                <div class="sandbox__content watch__layout">
+                    <!-- Colonne de gauche : la station, puis les coups disponibles (comme chez les joueurs) -->
+                    <div class="sandbox__left">
+                        <div class="watch-head">
+                            <div class="watch-head__row">
+                                <span class="watch-bar__live"><span class="watch-bar__dot"></span><span class="watch-bar__live-text">24/24</span></span>
+                                <h1 class="watch-bar__mode" id="h24-mode">24/24</h1>
+                            </div>
+                            <div class="h24-options" id="h24-options"></div>
+                            <div class="watch__status h24-turn" id="h24-turn"></div>
+                            <div class="h24-score" id="h24-score" hidden></div>
                         </div>
-                        <div class="h24-score" id="h24-score" hidden></div>
-                        <p class="h24-hint" id="h24-hint"></p>
-                        <form class="h24-move-form" id="h24-move-form" hidden autocomplete="off">
-                            <input type="text" id="h24-move-input" maxlength="10" data-i18n-placeholder="h24.movePlaceholder" placeholder="Ex. e4, Cf3, e2e4">
-                            <button type="submit" class="btn btn--primary btn--sm"><i class="fas fa-paper-plane"></i></button>
-                        </form>
-                        <div class="votes-slot votes-slot--wheel h24-votes" id="h24-votes-panel">
+                        <aside class="sandbox__moves-panel" id="h24-moves">
+                            <div class="moves-panel__typeit">
+                                <div class="moves-panel__title" id="h24-hint"></div>
+                                <form class="h24-move-form" id="h24-move-form" hidden autocomplete="off">
+                                    <input type="text" id="h24-move-input" maxlength="10" data-i18n-placeholder="h24.movePlaceholder" placeholder="Ex. e4, Cf3, e2e4">
+                                    <button type="submit" class="btn btn--primary btn--sm"><i class="fas fa-paper-plane"></i></button>
+                                </form>
+                            </div>
+                            <div class="moves-panel__content" id="h24-moves-list"></div>
+                        </aside>
+                    </div>
+
+                    <div class="sandbox__main">
+                        <div class="board-wrapper">
+                            <div class="board-container" id="h24-board-wrap">
+                                <div id="h24-board" class="watch__board"></div>
+                            </div>
+                            <div class="watch__timer" id="h24-timer" hidden>
+                                <div class="watch__timer-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="h24-timer-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><circle cx="50" cy="50" r="45"></circle><circle cx="50" cy="50" r="45" id="h24-timer-arc"></circle></svg>
+                                    <div class="countdown__inner"><span class="countdown__num" id="h24-timer-value">--</span><span class="countdown__label" id="h24-timer-label"></span></div></div>
+                            </div>
+                        </div>
+                        <!-- Bande de tirage sous l'échiquier ; la roue classique se pose à la place du podium -->
+                        <div id="h24-wheel-area" class="watch-wheel"></div>
+                    </div>
+
+                    <div class="sandbox__sidebar">
+                        <div class="sandbox__actions game-toolbar">
+                            <span class="spectators-badge"><i class="fas fa-eye"></i> <span id="h24-viewers">0</span></span>
+                            <div class="h24-style" role="group">
+                                <button type="button" class="btn btn--sm" data-h24-style="band"><i class="fas fa-grip-lines"></i> <span data-i18n="wheelStyle.band">Tirage : bande</span></button>
+                                <button type="button" class="btn btn--sm" data-h24-style="wheel"><i class="fas fa-dharmachakra"></i> <span data-i18n="wheelStyle.classic">Tirage : roue</span></button>
+                            </div>
+                        </div>
+                        <!-- Récap, votes du mode et des options, inscription -->
+                        <div class="h24-card" id="h24-card" hidden></div>
+                        <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
+                        <div class="votes-slot" id="h24-votes-panel">
                             <div class="votes-slot__podium">
                                 <div class="vote-list" id="h24-votes"></div>
                                 <div class="vote-total" id="h24-votes-total"></div>
                             </div>
-                            <div id="h24-wheel-area" class="wheel-area--docked"></div>
                         </div>
-                        <div id="h24-band-area" class="h24-band"></div>
-                        <ul class="h24-recent" id="h24-recent"></ul>
+                        <div class="panel h24-teams-panel">
+                            <div class="panel__header"><i class="fas fa-users"></i> <span data-i18n="h24.teamsTitle">Équipes</span></div>
+                            <div class="panel__content">
+                                <div class="h24-account" id="h24-account"></div>
+                                <div class="h24-teams" id="h24-teams"></div>
+                            </div>
+                        </div>
                         <div class="panel h24-history">
                             <div class="panel__header"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span></div>
                             <div class="panel__content"><div class="history-list" id="h24-history"></div></div>
                         </div>
                     </div>
-                    <div class="h24-card" id="h24-card"></div>
-                </aside>
+                </div>
             </div>
         </div>
 

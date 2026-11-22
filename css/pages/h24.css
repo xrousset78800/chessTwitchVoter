@@ -1,179 +1,111 @@
 /* ==================== 24/24 ====================
-   Trois colonnes qui tiennent dans la hauteur de l'écran sur bureau :
-   déroulé + équipes | échiquier | partie ou vote en cours */
+   Même écran que les parties (coups disponibles | échiquier + chrono + bande | podium + historique),
+   avec le déroulé du cycle en une ligne au-dessus, et les votes du mode / des options
+   à la place du podium entre deux parties. */
 
-.h24 {
-    --h24-gap: 16px;
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr) 340px;
-    gap: var(--h24-gap);
-    height: 100vh;
-    padding: calc(var(--nav-height) + 14px) 20px 16px;
-    box-sizing: border-box;
-    max-width: 1600px;
-    margin: 0 auto;
-}
+#page-h24 .sandbox { padding-top: calc(var(--nav-height) + 8px); padding-bottom: 12px; }
 
-.h24__left, .h24__right {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-height: 0;
-}
-.h24__center {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    min-width: 0;
-    min-height: 0;
-}
-
-/* ---- En-tête ---- */
-.h24-head {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 12px 14px;
-}
-.h24-head__live {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em;
-    color: var(--accent-green);
-}
-.h24-head__mode { font-size: 1.3rem; margin: 4px 0 2px; }
-.h24-head__options, .h24-head__viewers { margin: 0; color: var(--text-secondary); font-size: 0.82rem; }
-.h24-head__viewers { margin-top: 4px; }
-
-/* ---- Déroulé du cycle ---- */
+/* ---- Déroulé du cycle : une ligne discrète sous l'en-tête ---- */
 .h24-steps {
-    list-style: none; margin: 0; padding: 0;
-    display: flex; flex-direction: column; gap: 4px;
+    list-style: none;
+    margin: 0 auto 10px;
+    padding: 0;
+    max-width: 1600px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
 }
 .h24-step {
-    display: flex; align-items: center; gap: 10px;
-    padding: 5px 10px; border-radius: 8px;
-    color: var(--text-secondary); font-size: 0.85rem;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 10px 2px 3px; border-radius: 999px;
+    color: var(--text-secondary); font-size: 0.78rem; line-height: 1;
+}
+.h24-step + .h24-step::before {
+    content: ''; width: 14px; height: 1px; background: var(--border-subtle);
+    margin: 0 4px 0 -8px;
 }
 .h24-step__dot {
-    width: 20px; height: 20px; border-radius: 50%;
+    width: 18px; height: 18px; border-radius: 50%;
     display: inline-grid; place-items: center;
-    font-size: 0.7rem; font-weight: 700;
+    font-size: 0.65rem; font-weight: 700;
     border: 1px solid var(--border-subtle);
 }
 .h24-step.is-done { opacity: 0.55; }
-.h24-step.is-current { background: rgba(145, 70, 255, 0.15); color: inherit; font-weight: 700; }
+.h24-step.is-current { background: rgba(145, 70, 255, 0.15); color: var(--text-primary); font-weight: 700; }
 .h24-step.is-current .h24-step__dot { background: var(--twitch-purple); border-color: var(--twitch-purple); color: #fff; }
 
-/* ---- Compte ---- */
-.h24-account {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 10px 12px;
-    display: flex; flex-direction: column; gap: 8px;
-}
-.h24-account p { margin: 0; font-size: 0.85rem; }
-.h24-account__hint { color: var(--text-secondary); }
-.h24-account__me--w strong { color: #f5f5f5; }
-.h24-account__me--b strong { color: #c4b5fd; }
-.h24-account__btn { width: 100%; justify-content: center; }
-
-.btn--twitch {
-    background: var(--twitch-purple); color: #fff; border: none;
-}
-.btn--twitch:hover { filter: brightness(1.1); }
-
-/* ---- Équipes ---- */
-.h24-teams { display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
-.h24-team {
-    flex: 1; min-height: 0;
-    display: flex; flex-direction: column;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    padding: 8px 12px;
-}
-.h24-team.is-turn { border-color: var(--twitch-purple); box-shadow: 0 0 0 1px var(--twitch-purple) inset; }
-.h24-team__head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.85rem; }
-.h24-team__swatch { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #888; flex: none; }
-.h24-team--w .h24-team__swatch, .h24-recap__top--w .h24-team__swatch { background: #f5f5f5; }
-.h24-team--b .h24-team__swatch, .h24-recap__top--b .h24-team__swatch { background: #1a1a1a; }
-.h24-team__count { margin-left: auto; color: var(--text-secondary); font-weight: 600; }
-.h24-team__list {
-    list-style: none; margin: 6px 0 0; padding: 0;
-    display: flex; flex-wrap: wrap; gap: 4px;
-    overflow-y: auto; min-height: 0;
-    font-size: 0.78rem;
-}
-.h24-team__list li { padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); }
-.h24-team__list li.is-me { background: var(--twitch-purple); color: #fff; font-weight: 700; }
-.h24-team__list .h24-team__empty { background: none; color: var(--text-secondary); padding: 0; }
-
-/* ---- Échiquier : le plus grand carré qui tient ---- */
-.h24-board-wrap {
-    width: min(100%, calc(100vh - var(--nav-height) - 30px));
-    border-radius: 6px;
-    transition: box-shadow 0.2s;
-}
-.h24-board-wrap.is-my-turn { box-shadow: 0 0 0 3px var(--twitch-purple), 0 0 24px rgba(145, 70, 255, 0.45); }
-.h24-board .h24-last { box-shadow: inset 0 0 0 100px rgba(255, 214, 10, 0.35); }
-
-/* ---- Colonne de droite : partie ---- */
-.h24-play { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; }
-.h24-play[hidden], .h24-card[hidden] { display: none; }
-.h24-play__top { display: flex; align-items: center; gap: 10px; }
-.h24-turn {
-    flex: 1; font-weight: 800; font-size: 1rem;
-    padding: 8px 12px; border-radius: 10px;
-    background: var(--bg-card); border: 1px solid var(--border-subtle);
-}
-.h24-turn--w { border-left: 4px solid #f5f5f5; }
-.h24-turn--b { border-left: 4px solid #555; }
-.h24-turn-clock {
-    min-width: 52px; text-align: center;
-    font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums;
-    padding: 2px 8px; border-radius: 10px;
-    background: var(--bg-card); border: 1px solid var(--border-subtle);
-}
-.h24-turn-clock.is-urgent { color: #ef4444; border-color: #ef4444; }
+/* ---- En-tête de gauche ---- */
+.h24-options { color: var(--text-secondary); font-size: 0.82rem; }
+.h24-options:empty, .h24-turn:empty { display: none; }
 .h24-score { display: flex; gap: 14px; font-weight: 700; }
+.h24-score[hidden] { display: none; }
 .h24-score__ok { color: var(--accent-green); }
 .h24-score__ko { color: #ef4444; }
-.h24-hint { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }
-.h24-hint.is-active { color: inherit; font-weight: 600; }
-.h24-move-form { display: flex; gap: 6px; }
+
+/* ---- Coups disponibles : cliquables quand c'est à toi ---- */
+/* Entre deux parties : pas de coups, le panneau s'efface */
+#page-h24:not([data-phase="play"]) #h24-moves { display: none; }
+#h24-moves .moves-panel__title.is-active { color: var(--text-primary); }
+#h24-moves .moves-group button { opacity: 1; cursor: default; }
+#h24-moves .moves-group button:not(:disabled) { cursor: pointer; }
+#h24-moves .moves-group button.is-mine { outline: 2px solid var(--twitch-purple); outline-offset: 1px; }
+.h24-move-form { display: flex; gap: 6px; margin-top: 8px; }
 .h24-move-form[hidden] { display: none; }
 .h24-move-form input {
     flex: 1; min-width: 0; height: 32px; padding: 0 10px;
     border-radius: 8px; border: 1px solid var(--border-subtle);
     background: var(--bg-card); color: inherit; font: inherit;
 }
-.h24-recent {
-    list-style: none; margin: 0; padding: 0;
-    display: flex; flex-wrap: wrap; gap: 4px;
-    max-height: 52px; overflow: hidden;
-    font-size: 0.75rem; color: var(--text-secondary);
-}
-.h24-recent li { padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); }
-.h24-recent li span { color: inherit; font-weight: 700; }
-.h24-history { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.h24-history .panel__content { flex: 1; min-height: 0; overflow-y: auto; }
 
-/* ---- Colonne de droite : récap, votes, inscription ---- */
+/* ---- Échiquier ---- */
+#h24-board-wrap { border-radius: 6px; transition: box-shadow 0.2s; }
+#h24-board-wrap.is-my-turn { box-shadow: 0 0 0 3px var(--twitch-purple), 0 0 24px rgba(145, 70, 255, 0.45); }
+#h24-board .h24-last { box-shadow: inset 0 0 0 100px rgba(255, 214, 10, 0.35); }
+
+/* ---- Barre d'outils : style du tirage ---- */
+.h24-style { display: inline-flex; gap: 4px; margin-left: auto; }
+.h24-style .btn.is-active { border-color: var(--twitch-purple); background: rgba(145, 70, 255, 0.18); color: var(--text-primary); }
+
+/* ---- Équipes et compte ---- */
+.h24-account { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.h24-account p { margin: 0; font-size: 0.85rem; flex: 1; min-width: 0; }
+.h24-account__hint { color: var(--text-secondary); }
+.h24-account__me--w strong { color: #f5f5f5; }
+.h24-account__me--b strong { color: #c4b5fd; }
+.btn--twitch { background: var(--twitch-purple); color: #fff; border: none; }
+.btn--twitch:hover { filter: brightness(1.1); }
+
+.h24-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.h24-teams:has(> :only-child) { grid-template-columns: 1fr; }
+.h24-team { min-width: 0; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border-subtle); }
+.h24-team.is-turn { border-color: var(--twitch-purple); box-shadow: 0 0 0 1px var(--twitch-purple) inset; }
+.h24-team__head { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.8rem; }
+.h24-team__swatch { width: 11px; height: 11px; border-radius: 50%; border: 2px solid #888; flex: none; }
+.h24-team--w .h24-team__swatch, .h24-recap__top--w .h24-team__swatch { background: #f5f5f5; }
+.h24-team--b .h24-team__swatch, .h24-recap__top--b .h24-team__swatch { background: #1a1a1a; }
+.h24-team__count { margin-left: auto; color: var(--text-secondary); font-weight: 600; }
+.h24-team__list {
+    list-style: none; margin: 6px 0 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 3px;
+    max-height: 76px; overflow-y: auto;
+    font-size: 0.72rem;
+}
+.h24-team__list li { padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); }
+.h24-team__list li.is-me { background: var(--twitch-purple); color: #fff; font-weight: 700; }
+.h24-team__list .h24-team__empty { background: none; color: var(--text-secondary); padding: 0; }
+
+/* ---- Entre deux parties : récap, votes, inscription à la place du podium ---- */
 .h24-card {
-    position: relative;
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
-    padding: 18px;
+    padding: 16px;
     display: flex; flex-direction: column; gap: 12px;
 }
-.h24-card__clock {
-    position: absolute; top: 14px; right: 16px;
-    font-weight: 800; font-size: 1.2rem; font-variant-numeric: tabular-nums;
-    color: var(--twitch-purple);
-}
-.h24-card__title { margin: 0; padding-right: 60px; font-size: 1.15rem; }
+.h24-card[hidden], #h24-votes-panel[hidden] { display: none; }
+.h24-card__title { margin: 0; font-size: 1.15rem; }
 .h24-card__sub, .h24-card__total, .h24-card__next { margin: 0; color: var(--text-secondary); font-size: 0.85rem; }
 .h24-card__cta { justify-content: center; padding: 12px; font-size: 1rem; }
 .h24-card__ok { margin: 0; color: var(--accent-green); font-weight: 700; }
@@ -182,7 +114,7 @@
 .h24-choice {
     position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 12px 14px;
+    padding: 9px 14px;
     border: 1px solid var(--border-subtle); border-radius: 10px;
     background: rgba(255, 255, 255, 0.03); color: inherit; font: inherit; font-weight: 700;
     cursor: pointer; text-align: left;
@@ -197,53 +129,31 @@
 .h24-choice:disabled { cursor: default; }
 .h24-choice.is-mine { border-color: var(--twitch-purple); box-shadow: 0 0 0 1px var(--twitch-purple) inset; }
 .h24-choice__label { display: inline-flex; align-items: center; gap: 10px; }
-.h24-choice__pct { font-variant-numeric: tabular-nums; }
-.h24-choice__pct small { margin-left: 6px; color: var(--text-secondary); font-weight: 500; }
+.h24-choice__pct { font-variant-numeric: tabular-nums; font-size: 1.15rem; }
+.h24-choice__pct small { margin-left: 6px; color: var(--text-secondary); font-weight: 500; font-size: 0.8rem; }
 
 .h24-recap__headline { margin: 0; font-size: 1.3rem; font-weight: 800; }
 .h24-recap__stats { display: flex; gap: 16px; color: var(--text-secondary); font-size: 0.85rem; }
-.h24-recap__stats strong { color: inherit; font-size: 1.1rem; }
+.h24-recap__stats strong { color: var(--text-primary); font-size: 1.1rem; }
 .h24-recap__label { margin: 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
 .h24-recap__tops { display: flex; gap: 16px; }
 .h24-recap__top { display: flex; gap: 8px; align-items: flex-start; }
 .h24-recap__top ol { margin: 0; padding-left: 18px; font-size: 0.85rem; }
 .h24-recap__top small { color: var(--text-secondary); }
 
-/* ---- Écrans plus étroits : on empile, le scroll redevient normal ---- */
-@media (max-width: 1100px) {
-    .h24 { grid-template-columns: 220px minmax(0, 1fr); height: auto; min-height: 100vh; }
-    .h24__right { grid-column: 1 / -1; }
-}
-@media (max-width: 720px) {
-    .h24 { grid-template-columns: 1fr; padding: calc(var(--nav-height) + 10px) 12px 24px; }
-    .h24__center { order: -1; }
-    .h24__left { order: 1; }
-    .h24-board-wrap { width: 100%; }
-    .h24-teams { flex-direction: row; }
+@media (max-width: 760px) {
+    .h24-steps { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
+    .h24-step { flex: none; }
 }
 
-/* ---- Tirage au sort : la roue se pose à la place du podium ---- */
-#page-h24 { --sidebar-width: 340px; }
-#h24-wheel-area .wheel-container {
-    width: var(--wheel-size);
-    height: var(--wheel-size);
-    background: rgba(10, 10, 20, 0.95);
-    border-radius: 50%;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 3px var(--accent-purple, #8b5cf6), 0 0 60px rgba(139, 92, 246, 0.3);
+/* ---- Colonne de droite compacte : tient dans l'écran, l'historique défile ---- */
+#page-h24 .sandbox__sidebar { gap: 12px; }
+#page-h24 .sandbox__sidebar > :is(.sandbox__actions, .votes-slot, .h24-teams-panel) { flex: none; }
+#page-h24 .sandbox__sidebar .panel__header { padding: 10px 14px; font-size: 0.85rem; }
+#page-h24 .sandbox__sidebar .panel__content { padding: 10px 14px; }
+@media (min-width: 1101px) {
+    #page-h24 .sandbox__sidebar { max-height: calc(100vh - var(--nav-height) - 56px); }
+    #page-h24 .h24-history { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    #page-h24 .h24-history .panel__content { flex: 1; min-height: 0; overflow-y: auto; }
+    #page-h24 .h24-card { flex: none; }
 }
-#h24-wheel-area .wheel-center {
-    width: var(--wheel-center-size);
-    height: var(--wheel-center-size);
-    font-size: calc(var(--wheel-center-size) * 0.35);
-}
-#page-h24 .h24-votes { --dock-size: min(280px, calc(100vh - 520px)); flex: none; }
-
-/* ---- Tirage à la bande : sous le podium, seulement pendant le tirage ---- */
-#h24-band-area { display: none; flex: none; }
-#h24-band-area.is-visible { display: block; }
-#h24-band-area .wheel-band { height: 56px; }
-#h24-band-area.is-spinning .wheel-band {
-    outline: 2px solid var(--accent-purple);
-    box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
-}
-#page-h24 .h24-score[hidden] { display: none; }

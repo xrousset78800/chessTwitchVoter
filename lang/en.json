@@ -609,7 +609,7 @@
   "h24": {
     "phase": { "play": "Game", "recap": "Recap", "voteMode": "Mode", "voteOptions": "Options", "signup": "Sign-up" },
     "mode": { "teams": "Two teams", "problems": "Puzzles" },
-    "decision": { "majority": "Majority", "draw": "Wheel draw", "band": "Band draw" },
+    "decision": { "majority": "Majority", "draw": "Random draw" },
     "level": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
     "ballot": { "mode": "Next game mode?", "turn": "Turn length?", "decision": "How is the move chosen?", "level": "Puzzle level?" },
     "drawReason": { "stalemate": "stalemate", "repetition": "repetition", "material": "insufficient material", "length": "game too long", "draw": "draw" },
@@ -662,6 +662,8 @@
     "movePlaceholder": "E.g. e4, Nf3, e2e4",
     "bothSides": "Nobody plays {side}: your team plays their moves too.",
     "sideW": "White",
-    "sideB": "Black"
+    "sideB": "Black",
+    "teamsTitle": "Teams",
+    "clickToVote": "Click a move or drag a piece"
   }
 }

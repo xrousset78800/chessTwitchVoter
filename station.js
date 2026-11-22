@@ -34,7 +34,7 @@ const MODES = ['teams', 'problems'];
 const BALLOTS = {
     teams: [
         { id: 'turn', choices: [30, 20, 45] },
-        { id: 'decision', choices: ['majority', 'draw', 'band'] }
+        { id: 'decision', choices: ['majority', 'draw'] }
     ],
     problems: [
         { id: 'level', choices: ['medium', 'easy', 'hard'] },
@@ -552,7 +552,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (key.startsWith('signup')) return join(login);
         if (key.startsWith('ballot')) {
             const b = s.ballot;
-            const prefer = { mode: ['teams', 'teams', 'problems'], decision: ['draw', 'band'], turn: bots.turn ? [bots.turn] : b.choices };
+            const prefer = { mode: ['teams', 'teams', 'problems'], decision: ['draw'], turn: bots.turn ? [bots.turn] : b.choices };
             return voteBallot(login, pick(prefer[b.id] || b.choices));
         }
         const g = s.game;

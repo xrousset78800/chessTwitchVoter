@@ -609,7 +609,7 @@
   "h24": {
     "phase": { "play": "Partie", "recap": "Récap", "voteMode": "Mode", "voteOptions": "Options", "signup": "Inscription" },
     "mode": { "teams": "Deux équipes", "problems": "Problèmes" },
-    "decision": { "majority": "Majorité", "draw": "Tirage à la roue", "band": "Tirage à la bande" },
+    "decision": { "majority": "Majorité", "draw": "Tirage au sort" },
     "level": { "easy": "Facile", "medium": "Moyen", "hard": "Difficile" },
     "ballot": { "mode": "Prochain mode de jeu ?", "turn": "Durée d'un tour ?", "decision": "Comment choisir le coup ?", "level": "Niveau des problèmes ?" },
     "drawReason": { "stalemate": "pat", "repetition": "répétition", "material": "matériel insuffisant", "length": "partie trop longue", "draw": "nulle" },
@@ -662,6 +662,8 @@
     "movePlaceholder": "Ex. e4, Cf3, e2e4",
     "bothSides": "Personne chez les {side} : ton équipe joue aussi leurs coups.",
     "sideW": "Blancs",
-    "sideB": "Noirs"
+    "sideB": "Noirs",
+    "teamsTitle": "Équipes",
+    "clickToVote": "Clique un coup ou déplace une pièce"
   }
 }
