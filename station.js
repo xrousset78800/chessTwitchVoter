@@ -906,7 +906,16 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             if (c !== undefined) voteBallot(login, c);
             return;
         }
-        if (s.phase === 'play' && word.length <= 8 && teamOf(login) && voteMove(login, word)) chat.seen.set(login, Date.now());
+        // Un coup tapé dans le chat : inscrit d'office s'il ne l'est pas encore (sauf s'il a quitté), puis vote
+        if (s.phase !== 'play' || word.length > 8 || !/^[a-h1-8nbrqkox=+#-]{2,8}$/i.test(word)) return;
+        if (!teamOf(login) && !s.optOut.has(login)) join(login);
+        const team = teamOf(login);
+        if (team && voteMove(login, word)) { chat.seen.set(login, Date.now()); return; }
+        const g = s.game;
+        const why = !team ? 'pas inscrit (a quitté)' : !g?.turnEndsAt ? 'hors tour de vote'
+            : s.mode !== 'rush' && team !== g.chess.turn() ? `équipe ${team === 'w' ? 'Blancs' : 'Noirs'}, trait aux ${g.chess.turn() === 'w' ? 'Blancs' : 'Noirs'}`
+            : 'coup illégal';
+        log(`💬 24/24 : ${login} « ${word} » refusé (${why})`);
     }
     // Joueurs du chat inactifs depuis 20 min : oubliés
     setInterval(() => {
