@@ -125,7 +125,8 @@ const H24Page = {
             if (this.me.regie && this.regieSent !== socket.id) {
                 this.regieSent = socket.id; this.regiePhantom = null; this.sendRegie(true);
                 // Chaîne gardée dans ce navigateur mais inconnue du serveur (jamais validée, ou perdue) : envoyée d'office
-                if (this.regie.channel && !this.regie.hidden && !this.state?.regie?.channel) socket.emit('h24:regie', { channel: this.regie.channel });
+                const own = this.regie.channel || this.me.login;
+                if (own && !this.regie.hidden && !this.state?.regie?.channel) socket.emit('h24:regie', { channel: own });
                 if (this.camSender?.active) { this.camSender.setSocket(socket); this.camSender.announce(); }   // reconnexion : la caméra reprend
             }
             this.render();
@@ -339,7 +340,7 @@ const H24Page = {
         } else if (action === 'show') {
             this.regie.hidden = false;
             this.saveRegie();
-            this.socket?.emit('h24:regie', { channel: this.regie.channel || '' });
+            this.socket?.emit('h24:regie', { channel: this.regie.channel || this.me.login || '' });
         }
         this.sendRegie();
         this.mirror();
@@ -356,7 +357,7 @@ const H24Page = {
         const server = this.state?.regie || {};
         if (this.cam.devices === null) { this.cam.devices = []; listCameras().then(d => { this.cam.devices = d; this.renderRegie(true); }); }
         const camLive = !!this.camSender?.active;
-        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!server.chat].join('|');
+        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!this.me.chat].join('|');
         if (!force && key === this.regieKey) return;
         this.regieKey = key;
         const typing = document.activeElement?.id === 'h24-regie-channel';
@@ -384,13 +385,12 @@ const H24Page = {
                 <button type="button" class="btn btn--sm${server.paused ? ' btn--primary' : ''}" data-h24-regie="pause"><i class="fas fa-${server.paused ? 'play' : 'pause'}"></i> ${esc(server.paused ? t('h24.regie.resume', null, 'Reprendre') : t('h24.regie.pause', null, 'Pause'))}</button>
             </div>
             <form class="h24-regie__row h24-regie__channel" data-h24-regie-form>
-                <input type="text" id="h24-regie-channel" maxlength="60" autocomplete="off" placeholder="${esc(t('h24.regie.channelPh', null, 'Chaîne Twitch de la vue réelle'))}" value="${esc(this.regie.channel || '')}">
+                <input type="text" id="h24-regie-channel" maxlength="60" autocomplete="off" placeholder="${esc(t('h24.regie.channelPh', null, 'Chaîne Twitch de la vue réelle'))}" value="${esc(this.regie.channel || shown || this.me.login || '')}">
                 <button type="submit" class="btn btn--sm${(this.regie.channel || '').toLowerCase() !== shown ? ' btn--primary' : ''}" title="${esc(t('h24.regie.channelSet', null, 'Afficher cette chaîne'))}"><i class="fas fa-check"></i></button>
                 ${shown ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-regie="hide" title="${esc(t('h24.regie.channelHide', null, 'Retirer la vue réelle'))}"><i class="fas fa-eye-slash"></i></button>` : ''}
             </form>
             <div class="h24-regie__hint">${shown ? esc(t('h24.regie.channelOn', { c: shown }, `Vue réelle : twitch.tv/${shown}`)) : esc(t('h24.regie.channelOff', null, 'Pas de vue réelle pour les viewers'))}</div>
-            ${shown ? `<div class="h24-regie__hint"><span class="h24-regie__dot h24-regie__dot--${server.chat ? 'ok' : 'error'}"></span> ${esc(t(server.chat ? 'h24.regie.chatOn' : 'h24.regie.chatOff', { c: shown }, ''))}</div>`
-                : `<div class="h24-regie__hint h24-regie__hint--warn"><span class="h24-regie__dot h24-regie__dot--error"></span> ${esc(t('h24.regie.chatNone', null, 'Chat Twitch non lu : indique ta chaîne et valide'))}</div>`}
+            <div class="h24-regie__hint"><span class="h24-regie__dot h24-regie__dot--${this.me.chat ? 'ok' : 'error'}"></span> ${esc(t(this.me.chat ? 'h24.regie.chatOn' : 'h24.regie.chatOff', { c: this.me.login || '' }, ''))}</div>
             ${this.camPanelHtml(camLive)}
             </div>`;
         el.querySelectorAll('[data-h24-cam-pref]').forEach(sel => sel.addEventListener('change', () => this.setCamPref(sel.dataset.h24CamPref, sel.value)));
@@ -726,7 +726,7 @@ const H24Page = {
             const mine = this.me.ballot;
             const decided = b.winner !== undefined && b.winner !== null;
             const canVote = !!this.me.login && !decided;
-            const chat = s.regie?.chat;
+            const chat = this.me.chat;
             const buttons = b.choices.map((c, i) => {
                 const n = counts[String(c)] || 0;
                 const pct = b.total ? Math.round(n * 100 / b.total) : 0;
@@ -758,7 +758,7 @@ const H24Page = {
             else cta = `<button type="button" class="btn btn--primary h24-card__cta" data-h24-signup><i class="fas fa-user-plus"></i> ${esc(t('h24.join', null, 'Rejoindre'))}</button>`;
             return `${clock}<h2 class="h24-card__title">${esc(t('h24.signupTitle', null, 'Inscriptions ouvertes'))}</h2>
                 <p class="h24-card__sub">${esc(t('h24.signupSub', null, 'La partie démarre à la fin du compte à rebours. Tu pourras aussi rejoindre en cours de route.'))}</p>
-                ${cta}${s.regie?.chat ? chatHint('h24.chatJoin', null, 'Dans le chat Twitch : tape join') : ''}<p class="h24-card__total">${esc(t('h24.registeredCount', { n }, `${n} inscrit(s)`))}</p>`;
+                ${cta}${this.me.chat ? chatHint('h24.chatJoin', null, 'Dans le chat Twitch : tape join') : ''}<p class="h24-card__total">${esc(t('h24.registeredCount', { n }, `${n} inscrit(s)`))}</p>`;
         }
         return `${clock}<p class="h24-card__sub">${esc(t('h24.loading', null, 'Chargement…'))}</p>`;
     },
@@ -797,9 +797,7 @@ const H24Page = {
         const hint = $('h24-hint');
         if (hint) {
             let msg = '';
-            if (!this.me.login) msg = s.regie?.chat
-                ? t('h24.chatPlay', null, 'Pour jouer : tape join dans le chat Twitch, puis ton coup (ex. e4, Nf3)')
-                : t('h24.watchOnly', null, 'Tu regardes. Connecte-toi pour jouer.');
+            if (!this.me.login) msg = t('h24.watchOnly', null, 'Tu regardes. Connecte-toi pour jouer.');
             else if (!this.me.team) msg = t('h24.joinToVote', null, 'Rejoins une équipe pour voter.');
             else if (this.myTurn() && myVotes(this.me).length) {
                 const mv = myVotes(this.me);

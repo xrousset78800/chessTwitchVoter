@@ -140,8 +140,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const regie = { socket: null, phantom: 'off', paused: false, channel: '' };
     try { if (regieFile) regie.channel = String(JSON.parse(fs.readFileSync(regieFile, 'utf8')).channel || ''); } catch {}
     const drawMs = () => SPIN_REVEAL_MS[s.options.spin] || SPIN_REVEAL_MS.normal;
-    // Chat Twitch de la chaîne de la régie, lu en anonyme : join, coups et votes (1, 2, 3…) comme sur la page
-    const chat = { client: null, channel: '', connected: false, seen: new Map(), recent: [], received: 0, events: [] };
+    // Chat Twitch de chaque compte connecté à la page (sa propre chaîne), lu en anonyme : join, coups et votes (1, 2, 3…)
+    const chat = { client: null, connected: false, joined: new Set(), queue: [], lastWanted: new Map(), seen: new Map(), recent: [], received: 0, events: [] };
+    const CHAT_LINGER_MS = 2 * 60 * 1000;   // chaîne gardée 2 min après le départ (rechargement de page)
     const chatEvent = (e) => { chat.events.push(`${new Date().toISOString()} ${e}`); if (chat.events.length > 15) chat.events.shift(); };
     const CHAT_KEEP_MS = 20 * 60 * 1000;   // réinscrit d'office au cycle suivant s'il a joué récemment
     // Caméra de la régie : un seul émetteur à la fois, rien n'est enregistré
@@ -190,8 +191,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             endsAt: s.endsAt,
             paused: s.paused,
             pauseReason: s.pauseReason || null,
-            regie: { live: !!regie.socket, phantom: regie.phantom, paused: regie.paused, channel: regie.channel, cam: !!cam.socket,
-                chat: chat.connected && chat.channel === regie.channel ? chat.channel : null },
+            regie: { live: !!regie.socket, phantom: regie.phantom, paused: regie.paused, channel: regie.channel, cam: !!cam.socket },
             mode: s.mode,
             options: s.options,
             teams: s.teams,
@@ -232,6 +232,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             team: login ? teamOf(login) : null,
             votes: login && s.game ? s.game.votes.get(login) || [] : [],
             maxVotes: s.options.votes || 1,
+            chat: !!login && chat.connected && chat.joined.has(login),   // son chat Twitch est lu
             ballot: login && s.ballot ? s.ballot.votes.get(login) ?? null : null
         });
     }
@@ -765,6 +766,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             if (login && sockets.has(socket.id)) {
                 sockets.set(socket.id, login);
                 autoJoin(login);
+                chatSync();
                 emitMe(socket.id);
             }
         });
@@ -801,7 +803,6 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                         try { fs.writeFileSync(regieFile, JSON.stringify({ channel: c })); } catch {}
                     }
                     regie.channel = c;
-                    chatConnect();
                 }
             }
             emit();
@@ -863,30 +864,44 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     });
 
     // ------------------------------------------------------------------ chat Twitch
-    function chatConnect() {
-        const want = process.env.H24_CHAT === '0' ? '' : regie.channel;
-        if (want === chat.channel && (chat.client || !want)) return;
-        const old = chat.client;
-        chat.client = null;
-        chat.connected = false;
-        chat.channel = want;
-        if (old) old.disconnect().catch(() => {});
-        emit();
-        if (!want) return;
-        let tmi;
-        try { tmi = require('tmi.js'); } catch { log('💬 24/24 : tmi.js absent, chat non lu'); return; }
-        const client = new tmi.Client({ connection: { reconnect: true, secure: true }, channels: [want] });
-        chat.client = client;
-        client.on('join', (ch, user, self) => { if (self && chat.client === client) { chat.connected = true; chatEvent(`join ${ch}`); emit(); } });
-        client.on('disconnected', (why) => { if (chat.client === client) { chat.connected = false; chatEvent(`déconnecté ${why || ''}`); emit(); } });
-        client.on('message', (ch, tags, msg, self) => {
-            if (chat.client === client) chat.received++;
-            if (!self && chat.client === client) chatMessage(String(tags.username || '').toLowerCase(), msg);
-        });
-        chatEvent(`connexion #${want}`);
-        client.connect().catch(e => { chatEvent(`échec ${e?.message || e}`); log('💬 24/24 : chat injoignable', e?.message || e); });
-        log(`💬 24/24 : lecture du chat de #${want}`);
+    /** Un seul client anonyme ; il rejoint le chat de chaque compte connecté à la page et quitte ceux partis depuis 2 min */
+    function chatSync() {
+        if (process.env.H24_CHAT === '0') return;
+        const now = Date.now();
+        for (const l of sockets.values()) if (l && !l.startsWith('sim_')) chat.lastWanted.set(l, now);
+        for (const [l, at] of chat.lastWanted) if (now - at > CHAT_LINGER_MS) chat.lastWanted.delete(l);
+        if (!chat.client) {
+            if (!chat.lastWanted.size) return;
+            let tmi;
+            try { tmi = require('tmi.js'); } catch { log('💬 24/24 : tmi.js absent, chat non lu'); return; }
+            const client = chat.client = new tmi.Client({ connection: { reconnect: true, secure: true }, channels: [] });
+            client.on('connected', () => { chat.connected = true; chat.joined.clear(); chat.queue = []; chatEvent('connecté'); chatSync(); });
+            client.on('disconnected', (why) => { chat.connected = false; chat.joined.clear(); chat.queue = []; chatEvent(`déconnecté ${why || ''}`); emitMeAll(); });
+            client.on('join', (ch, user, self) => {
+                if (!self) return;
+                const c = ch.replace(/^#/, '');
+                chat.joined.add(c);
+                chatEvent(`join #${c}`);
+                emitMeAll(c);
+            });
+            client.on('part', (ch, user, self) => { if (self) { const c = ch.replace(/^#/, ''); chat.joined.delete(c); emitMeAll(c); } });
+            client.on('message', (ch, tags, msg, self) => {
+                chat.received++;
+                if (!self) chatMessage(String(tags.username || '').toLowerCase(), msg);
+            });
+            client.connect().catch(e => { chatEvent(`échec ${e?.message || e}`); log('💬 24/24 : chat injoignable', e?.message || e); });
+            return;
+        }
+        if (!chat.connected) return;
+        for (const l of chat.lastWanted.keys()) if (!chat.joined.has(l) && !chat.queue.includes(l)) chat.queue.push(l);
+        for (const c of chat.joined) if (!chat.lastWanted.has(c)) chat.client.part(c).catch(() => {});
     }
+    // Rejoindre un chat à la fois (limite de Twitch sur les join), et resynchroniser régulièrement
+    setInterval(() => {
+        const c = chat.queue.shift();
+        if (c && chat.connected && !chat.joined.has(c)) chat.client.join(c).catch(e => chatEvent(`join #${c} refusé ${e?.message || e}`));
+    }, 700).unref?.();
+    setInterval(chatSync, 30 * 1000).unref?.();
     /** Un message du chat : join / quitter, numéro d'un choix pendant un vote, coup pendant la partie */
     function chatMessage(login, text) {
         let outcome;
@@ -931,7 +946,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function diag(o = {}) {
         const login = String(o.login || '').toLowerCase();
         return {
-            regieChannel: regie.channel, chat: { channel: chat.channel, client: !!chat.client, connected: chat.connected, received: chat.received, events: chat.events },
+            regieChannel: regie.channel, chat: { client: !!chat.client, connected: chat.connected, joined: [...chat.joined], queue: chat.queue, received: chat.received, events: chat.events },
             phase: s.phase, mode: s.mode, turn: s.game?.chess.turn() || null, turnOpen: !!s.game?.turnEndsAt,
             teams: { w: s.teams.w.length, b: s.teams.b.length }, login: login ? { login, team: teamOf(login), optOut: s.optOut.has(login) } : undefined,
             recent: chat.recent
@@ -942,7 +957,6 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const now = Date.now();
         for (const [l, at] of chat.seen) if (now - at > CHAT_KEEP_MS) chat.seen.delete(l);
     }, 60 * 1000).unref?.();
-    chatConnect();
 
     log('📺 Station 24/24 prête');
     return { state: s, join, leave, voteMove, voteBallot, publicState, setBots, chatMessage, diag, isRegie: (login) => !!login && REGIE.has(login) };
