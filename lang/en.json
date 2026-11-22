@@ -267,6 +267,7 @@
     "newLobby": "New registration",
     "revenge": "New game",
     "back": "Back",
+    "streamerTimeout": "⏱️ Time's up: random move played ({move})",
     "lateJoin": "{name} joins the game ({team})"
   },
   "roster": {

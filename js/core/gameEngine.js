@@ -368,9 +368,11 @@ startTurn() {
         return;
     }
 
-    // Tour du streamer : ni vote ni timer, il joue sur l'échiquier
+    // Tour du streamer : pas de vote, il joue sur l'échiquier avec le même temps que le chat
+    // (coup au hasard à la fin du chrono, voir onTimerComplete)
     if (this.session && this.canHumanPlay()) {
         timer.stop();
+        if (this.config.timerEnabled) timer.start(this.config.timerDuration);
         voting.reset();
         if (this.votingWheel) this.votingWheel.clear();
         this.updateAvailableMoves();
@@ -417,6 +419,17 @@ onTimerComplete() {
     // Mode problèmes : ne pas traiter ici, c'est le problemsManager qui gère
     if (window.problemsManager?.isActive) {
         console.log('⏱️ Timer ignoré (mode problèmes actif)');
+        return;
+    }
+
+    // Tour du streamer écoulé sans coup : tirage au sort, joué tout de suite
+    if (this.session && this.canHumanPlay()) {
+        const moves = this.chess.moves();
+        if (moves.length) {
+            const move = moves[Math.floor(Math.random() * moves.length)];
+            window.AppToast?.info?.(window.i18n?.t('lobby.streamerTimeout', { move }) || `⏱️ ${move}`);
+            this.executeMove(move);
+        }
         return;
     }
 
@@ -790,6 +803,8 @@ showWheelAnimation(results) {
         const move = this.chess.move(moveStr);
 
         if (move) {
+            // Partie à inscrits : le coup clôt le tour, chrono du streamer compris
+            if (this.session) timer.stop();
             // Stats viewers : qui a voté pour ce coup, et qui avait proposé le coup joué
             if (!fromNetwork) {
                 const twitchVotes = voting.getAllVotes().filter(v => v.twitch);
