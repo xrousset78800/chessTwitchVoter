@@ -168,7 +168,7 @@ class GameEngine {
      */
     canHumanPlay() {
         if (!this.session) return true;
-        return this.isRunning && this.session.humanColor === this.chess.turn();
+        return this.isRunning && !this.streamerDraw && this.session.humanColor === this.chess.turn();
     }
 
     /**
@@ -358,6 +358,7 @@ class GameEngine {
     // ========== TIMER ==========
 
 startTurn() {
+    this.streamerDraw = false;   // nouveau tour (ou nouvelle partie) : plus de tirage en cours
     clearTimeout(this.previewTimer);
     this.annotations?.setOverlay(null);
     VoteTicker.clear();
@@ -422,14 +423,13 @@ onTimerComplete() {
         return;
     }
 
-    // Tour du streamer écoulé sans coup : tirage au sort, joué tout de suite
+    // Tour du streamer écoulé sans coup : même tirage que le chat sans vote
+    // (roue ou bande, podium en majorité). L'échiquier est verrouillé pendant le tirage.
     if (this.session && this.canHumanPlay()) {
-        const moves = this.chess.moves();
-        if (moves.length) {
-            const move = moves[Math.floor(Math.random() * moves.length)];
-            window.AppToast?.info?.(window.i18n?.t('lobby.streamerTimeout', { move }) || `⏱️ ${move}`);
-            this.executeMove(move);
-        }
+        this.streamerDraw = true;
+        window.AppToast?.info?.(window.i18n?.t('lobby.streamerTimeout') || '⏱️');
+        voting.close();
+        this.playRandomMove();
         return;
     }
 
@@ -804,7 +804,7 @@ showWheelAnimation(results) {
 
         if (move) {
             // Partie à inscrits : le coup clôt le tour, chrono du streamer compris
-            if (this.session) timer.stop();
+            if (this.session) { timer.stop(); this.streamerDraw = false; }
             // Stats viewers : qui a voté pour ce coup, et qui avait proposé le coup joué
             if (!fromNetwork) {
                 const twitchVotes = voting.getAllVotes().filter(v => v.twitch);

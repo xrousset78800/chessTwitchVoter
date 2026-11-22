@@ -267,7 +267,7 @@
     "newLobby": "Nouvelles inscriptions",
     "revenge": "Nouvelle partie",
     "back": "Retour",
-    "streamerTimeout": "⏱️ Temps écoulé : coup joué au hasard ({move})",
+    "streamerTimeout": "⏱️ Temps écoulé : tirage au sort de ton coup",
     "lateJoin": "{name} rejoint la partie ({team})"
   },
   "roster": {
