@@ -451,7 +451,8 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
     const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
     // Bots de la page 24/24 (count=0 pour les retirer, turn=10 : durée de tour de test proposée au vote)
     const h24Bots = (o) => station ? station.setBots(o.count, { turn: o.turn }) : { error: 'station absente' };
-    const ACTIONS = { seed, 'live-start': liveStart, 'live-stop': liveStop, purge, snapshot, restore, status, 'h24-bots': h24Bots };
+    const h24Status = (o) => station?.diag ? station.diag(o) : { error: 'station absente' };
+    const ACTIONS = { seed, 'live-start': liveStart, 'live-stop': liveStop, purge, snapshot, restore, status, 'h24-bots': h24Bots, 'h24-status': h24Status };
     app.post('/api/sim/:action', (req, res) => {
         const given = String(req.headers['x-sim-key'] || '');
         const ok = LOOPBACK.has(req.socket.remoteAddress) && !req.headers['x-forwarded-for']

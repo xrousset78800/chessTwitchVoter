@@ -141,7 +141,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     try { if (regieFile) regie.channel = String(JSON.parse(fs.readFileSync(regieFile, 'utf8')).channel || ''); } catch {}
     const drawMs = () => SPIN_REVEAL_MS[s.options.spin] || SPIN_REVEAL_MS.normal;
     // Chat Twitch de la chaîne de la régie, lu en anonyme : join, coups et votes (1, 2, 3…) comme sur la page
-    const chat = { client: null, channel: '', connected: false, seen: new Map() };   // seen : login → dernier join / coup
+    const chat = { client: null, channel: '', connected: false, seen: new Map(), recent: [], received: 0, events: [] };
+    const chatEvent = (e) => { chat.events.push(`${new Date().toISOString()} ${e}`); if (chat.events.length > 15) chat.events.shift(); };
     const CHAT_KEEP_MS = 20 * 60 * 1000;   // réinscrit d'office au cycle suivant s'il a joué récemment
     // Caméra de la régie : un seul émetteur à la fois, rien n'est enregistré
     const cam = { socket: null, cfg: null, gop: [], gopBytes: 0, seq: 0, tokens: CAM.burst, at: 0 };
@@ -876,46 +877,65 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         try { tmi = require('tmi.js'); } catch { log('💬 24/24 : tmi.js absent, chat non lu'); return; }
         const client = new tmi.Client({ connection: { reconnect: true, secure: true }, channels: [want] });
         chat.client = client;
-        client.on('join', (ch, user, self) => { if (self && chat.client === client) { chat.connected = true; emit(); } });
-        client.on('disconnected', () => { if (chat.client === client) { chat.connected = false; emit(); } });
+        client.on('join', (ch, user, self) => { if (self && chat.client === client) { chat.connected = true; chatEvent(`join ${ch}`); emit(); } });
+        client.on('disconnected', (why) => { if (chat.client === client) { chat.connected = false; chatEvent(`déconnecté ${why || ''}`); emit(); } });
         client.on('message', (ch, tags, msg, self) => {
+            if (chat.client === client) chat.received++;
             if (!self && chat.client === client) chatMessage(String(tags.username || '').toLowerCase(), msg);
         });
-        client.connect().catch(e => log('💬 24/24 : chat injoignable', e?.message || e));
+        chatEvent(`connexion #${want}`);
+        client.connect().catch(e => { chatEvent(`échec ${e?.message || e}`); log('💬 24/24 : chat injoignable', e?.message || e); });
         log(`💬 24/24 : lecture du chat de #${want}`);
     }
     /** Un message du chat : join / quitter, numéro d'un choix pendant un vote, coup pendant la partie */
     function chatMessage(login, text) {
-        if (!LOGIN_RE.test(login)) return;
+        let outcome;
+        try { outcome = chatHandle(login, text); } catch (e) { outcome = `erreur : ${e?.message || e}`; }
+        chat.recent.push({ at: new Date().toISOString(), login, text: String(text || '').slice(0, 40), outcome: outcome || 'ignoré' });
+        if (chat.recent.length > 30) chat.recent.shift();
+    }
+    function chatHandle(login, text) {
+        if (!LOGIN_RE.test(login)) return 'login invalide';
         const word = (String(text || '').trim().split(/\s+/)[0] || '').replace(/^!/, '').toLowerCase();
         if (!word) return;
         if (['join', 'rejoindre', 'jouer', 'play'].includes(word)) {
             s.optOut.delete(login);
             chat.seen.set(login, Date.now());
-            join(login);
-            return;
+            return `join → ${join(login) || teamOf(login) || 'refusé'}`;
         }
         if (['quit', 'quitter', 'leave'].includes(word)) {
             s.optOut.add(login);
             chat.seen.delete(login);
             leave(login);
-            return;
+            return 'quit';
         }
         if (s.ballot && /^\d{1,2}$/.test(word)) {
             const c = s.ballot.choices[Number(word) - 1];
-            if (c !== undefined) voteBallot(login, c);
-            return;
+            if (c === undefined) return 'numéro hors choix';
+            voteBallot(login, c);
+            return `vote ${s.ballot.id} = ${c}`;
         }
         // Un coup tapé dans le chat : inscrit d'office s'il ne l'est pas encore (sauf s'il a quitté), puis vote
-        if (s.phase !== 'play' || word.length > 8 || !/^[a-h1-8nbrqkox=+#-]{2,8}$/i.test(word)) return;
+        if (s.phase !== 'play' || word.length > 8 || !/^[a-h1-8nbrqkox=+#-]{2,8}$/i.test(word)) return s.phase !== 'play' ? `ignoré (phase ${s.phase})` : undefined;
         if (!teamOf(login) && !s.optOut.has(login)) join(login);
         const team = teamOf(login);
-        if (team && voteMove(login, word)) { chat.seen.set(login, Date.now()); return; }
+        if (team && voteMove(login, word)) { chat.seen.set(login, Date.now()); return `coup ${word} compté (équipe ${team})`; }
         const g = s.game;
         const why = !team ? 'pas inscrit (a quitté)' : !g?.turnEndsAt ? 'hors tour de vote'
             : s.mode !== 'rush' && team !== g.chess.turn() ? `équipe ${team === 'w' ? 'Blancs' : 'Noirs'}, trait aux ${g.chess.turn() === 'w' ? 'Blancs' : 'Noirs'}`
             : 'coup illégal';
         log(`💬 24/24 : ${login} « ${word} » refusé (${why})`);
+        return `refusé : ${why}`;
+    }
+    /** Diagnostic (sim-cli h24-status) : état du chat et derniers messages reçus */
+    function diag(o = {}) {
+        const login = String(o.login || '').toLowerCase();
+        return {
+            regieChannel: regie.channel, chat: { channel: chat.channel, client: !!chat.client, connected: chat.connected, received: chat.received, events: chat.events },
+            phase: s.phase, mode: s.mode, turn: s.game?.chess.turn() || null, turnOpen: !!s.game?.turnEndsAt,
+            teams: { w: s.teams.w.length, b: s.teams.b.length }, login: login ? { login, team: teamOf(login), optOut: s.optOut.has(login) } : undefined,
+            recent: chat.recent
+        };
     }
     // Joueurs du chat inactifs depuis 20 min : oubliés
     setInterval(() => {
@@ -925,5 +945,5 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     chatConnect();
 
     log('📺 Station 24/24 prête');
-    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots, chatMessage, isRegie: (login) => !!login && REGIE.has(login) };
+    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots, chatMessage, diag, isRegie: (login) => !!login && REGIE.has(login) };
 };
