@@ -1016,7 +1016,7 @@ io.on('connection', (socket) => {
 const station = require('./station')({
     io, verifyTwitchToken, dataDir: DATA_DIR,
     // Tests locaux : phases raccourcies
-    durations: process.env.STATION_FAST ? { recap: 5000, voteMode: 6000, voteOption: 5000, signup: 8000, turn: 6000, maxPlies: 8 } : {}
+    durations: process.env.STATION_FAST ? { recap: 5000, voteMode: 6000, voteOption: 5000, signup: 8000, turn: 6000 } : {}
 });
 
 // Simulation d'activité (chaînes sim_*), pilotée depuis la machine : voir sim.js et sim-cli.js

@@ -640,7 +640,7 @@
     "maxRating": "max rating {r}",
     "rushN": "Puzzle {i}",
     "lives": "Mistakes left",
-    "drawReason": { "stalemate": "stalemate", "repetition": "repetition", "material": "insufficient material", "length": "game too long", "draw": "draw" },
+    "drawReason": { "stalemate": "stalemate", "repetition": "repetition", "material": "insufficient material", "fifty": "50-move rule", "draw": "draw" },
     "seconds": "{n} s",
     "viewers": "{n} online",
     "paused": "Paused",

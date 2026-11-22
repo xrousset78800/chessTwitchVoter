@@ -640,7 +640,7 @@
     "maxRating": "rating max {r}",
     "rushN": "Puzzle {i}",
     "lives": "Erreurs restantes",
-    "drawReason": { "stalemate": "pat", "repetition": "répétition", "material": "matériel insuffisant", "length": "partie trop longue", "draw": "nulle" },
+    "drawReason": { "stalemate": "pat", "repetition": "répétition", "material": "matériel insuffisant", "fifty": "règle des 50 coups", "draw": "nulle" },
     "seconds": "{n} s",
     "viewers": "{n} en ligne",
     "paused": "En pause",

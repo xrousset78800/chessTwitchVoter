@@ -26,7 +26,6 @@ const CAM = {
 };
 const LOGIN_RE = /^[a-z0-9_]{2,25}$/;
 const ALL_VOTED_MS = 3000;        // toute l'équipe a voté : fin du tour anticipée
-const MAX_PLIES = 160;            // au-delà : nulle, la station repart
 // Tirage au sort : temps laissé à la roue, selon la vitesse votée (animation + coup tiré montré ~1,5 s)
 const SPIN_REVEAL_MS = { fast: 4500, normal: 7500, slow: 11500 };
 const BALLOT_REVEAL_MS = 4000;    // résultat d'un vote (mode, option) montré avant la suite
@@ -165,7 +164,6 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const canPlay = (team, side) => !!team && (team === side || !s.teams[side].length);
     const teamOf = (login) => s.teams.w.includes(login) ? 'w' : s.teams.b.includes(login) ? 'b' : null;
     const viewers = () => sockets.size;
-    const maxPlies = () => DUR.maxPlies || bots.plies || MAX_PLIES;
 
     // ------------------------------------------------------------------ diffusion
     let emitTimer = null;
@@ -392,7 +390,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.history.push(m.san);
         g.lastMove = { from: m.from, to: m.to };
         g.draw = null;
-        if (g.chess.isGameOver() || g.history.length >= maxPlies()) return endGame();
+        // Seules les fins prévues par les règles : mat, pat, répétition, 50 coups, matériel insuffisant
+        if (g.chess.isGameOver()) return endGame();
         startTurn();
     }
 
@@ -488,8 +487,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         } else if (c.isCheckmate()) {
             result = { kind: 'mate', winner: c.turn() === 'w' ? 'b' : 'w' };
         } else {
-            const reason = c.isStalemate() ? 'stalemate' : c.isThreefoldRepetition() ? 'repetition'
-                : c.isInsufficientMaterial() ? 'material' : g.history.length >= maxPlies() ? 'length' : 'draw';
+            // 50 coups de chaque camp sans prise ni coup de pion : 100 demi-coups (5e champ du FEN)
+            const fifty = Number(c.fen().split(' ')[4]) >= 100;
+            const reason = c.isStalemate() ? 'stalemate' : c.isInsufficientMaterial() ? 'material'
+                : c.isThreefoldRepetition() ? 'repetition' : fifty ? 'fifty' : 'draw';
             result = { kind: 'draw', reason };
         }
         g.result = result;
@@ -650,20 +651,17 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // Faux joueurs pour suivre un cycle complet : ils s'inscrivent, votent le mode et les options,
     // et votent les coups à des moments aléatoires, répartis sur 2-3 coups (tirage au sort lisible).
     // Ils ne comptent pas comme spectateurs : sans vrai viewer, la station reste en pause.
-    const bots = { list: [], turn: 0, plies: 0, plans: new Map(), cands: null };
-    function setBots(count = 0, { turn = 0, plies = 0 } = {}) {
+    const bots = { list: [], turn: 0, plans: new Map(), cands: null };
+    function setBots(count = 0, { turn = 0 } = {}) {
         const n = Math.max(0, Math.min(BOT_NAMES.length, Number(count) || 0));
         for (const l of bots.list.slice(n)) leave(l);
         bots.list = BOT_NAMES.slice(0, n);
         bots.turn = n ? Math.max(5, Math.min(60, Number(turn) || 0)) || 0 : 0;
-        // Parties courtes pour voir passer récap, mode et options
-        // Sans « plies » : pas de limite (avant, Math.max(4, 0) imposait 4 demi-coups par partie)
-        bots.plies = n && Number(plies) > 0 ? Math.max(4, Math.min(MAX_PLIES, Number(plies))) : 0;
         bots.plans.clear();
         // Ajoutés en pleine partie : ils rejoignent tout de suite
         if (s.phase === 'play') for (const l of bots.list) if (!teamOf(l)) join(l);
         emit();
-        return { bots: bots.list, turn: bots.turn || null, plies: bots.plies || null };
+        return { bots: bots.list, turn: bots.turn || null };
     }
     /** Ce que le bot ferait maintenant (clé stable tant que la situation ne change pas) */
     function botSituation() {

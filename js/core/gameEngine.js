@@ -339,7 +339,13 @@ class GameEngine {
                 result = this.chess.turn() === 'w' ? 'Les Noirs gagnent !' : 'Les Blancs gagnent !';
             } else if (this.chess.in_stalemate()) {
                 result = 'Pat !';
-            } else if (this.chess.in_draw()) {
+            } else if (this.chess.insufficient_material()) {
+                result = 'Nulle : matériel insuffisant';
+            } else if (this.chess.in_threefold_repetition()) {
+                result = 'Nulle : répétition de la position';
+            } else if (Number(this.chess.fen().split(' ')[4]) >= 100) {
+                result = 'Nulle : règle des 50 coups';
+            } else {
                 result = 'Nulle !';
             }
 
