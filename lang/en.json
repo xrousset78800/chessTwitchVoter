@@ -23,7 +23,17 @@
   },
   "phantom": {
     "connect": "Connect Phantom",
-    "not-connected": "Not connected"
+    "not-connected": "Not connected",
+    "sensor": {
+      "title": "⚠️ Phantom: wrong position",
+      "lead": "The board does not detect the expected position ({seen}/{total} pieces detected). Here is the expected position:",
+      "missing": "Piece expected but not detected",
+      "extra": "Piece detected on a square that should be empty",
+      "unknown": "Mismatch not located by the sensors",
+      "hint": "Put the pieces back by hand as shown: this window updates and closes as soon as everything is in place.",
+      "close": "Close",
+      "ok": "✅ Phantom: position correct"
+    }
   },
   "sandbox": {
     "description": "Free mode with all options"

@@ -26,6 +26,7 @@ import { PALETTES, PALETTE_IDS, getPaletteId, setPaletteId } from './components/
 import { initAnonymity, secretVotes, getAnonymity, forceAnonymity, ANON_MODES } from './components/voteAnonymity.js';
 import { initGreenScreen } from './components/greenScreen.js';
 import { VoteTicker } from './components/voteViews.js';
+import { showSensorAlert, sensorsOk } from './components/phantomSensorAlert.js';
 
 // Anonymat du vote : sélecteurs (réglages, modale ⚙, formulaire Multi)
 initAnonymity();
@@ -2917,6 +2918,9 @@ async function initApp() {
     window.addEventListener('phantomError', (e) => {
         Toast.show(`Phantom : ${String(e.detail).slice(0, 160)}`, 'warning', 10000);
     });
+    // Capteurs en désaccord avec la position : fenêtre avec la position souhaitée et les cases fautives
+    window.addEventListener('phantomSensorMismatch', (e) => showSensorAlert(e.detail));
+    window.addEventListener('phantomSensorsOk', () => sensorsOk());
 
     // Écouter les événements Phantom pour pause/resume du timer
     window.addEventListener('phantomMoveStart', () => {

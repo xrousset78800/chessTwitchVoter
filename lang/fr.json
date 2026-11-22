@@ -23,7 +23,17 @@
   },
   "phantom": {
     "connect": "Connecter Phantom",
-    "not-connected": "Non connecté"
+    "not-connected": "Non connecté",
+    "sensor": {
+      "title": "⚠️ Phantom : position incorrecte",
+      "lead": "L'échiquier ne détecte pas la position attendue ({seen}/{total} pièces détectées). Voici la position souhaitée :",
+      "missing": "Pièce attendue mais non détectée",
+      "extra": "Pièce détectée sur une case qui devrait être vide",
+      "unknown": "Écart non localisé par les capteurs",
+      "hint": "Replace les pièces à la main comme sur le schéma : la fenêtre se met à jour et se ferme dès que tout est en place.",
+      "close": "Fermer",
+      "ok": "✅ Phantom : position correcte"
+    }
   },
   "sandbox": {
     "description": "Mode libre avec toutes les options"

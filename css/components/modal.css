@@ -302,3 +302,34 @@
 .modal--phantom .pm-credits a { color: var(--accent-purple, #8b5cf6); text-decoration: none; }
 .modal--phantom .pm-credits a:hover { text-decoration: underline; }
 .modal--phantom .modal__footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* ============================================
+   PHANTOM : capteurs en désaccord avec la position
+   ============================================ */
+.phantom-sensor { z-index: calc(var(--z-modal) + 5); }
+.phantom-sensor__modal { max-width: 440px; border-color: rgba(255, 170, 0, 0.55); }
+.phantom-sensor__modal.is-ok { border-color: rgba(0, 200, 120, 0.6); }
+.phantom-sensor .modal__header { margin-bottom: 12px; }
+.phantom-sensor .modal__title { font-size: 1.1rem; }
+.phantom-sensor .modal__body { margin-bottom: 14px; }
+.phantom-sensor__lead, .phantom-sensor__hint { font-size: 0.88rem; color: var(--text-secondary); margin: 0 0 10px; }
+.phantom-sensor__hint { margin: 10px 0 0; }
+.phantom-sensor__board {
+    display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
+    width: min(100%, 320px); aspect-ratio: 1; margin: 0 auto;
+    border-radius: 6px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.phantom-sensor__sq { position: relative; background: #eeeed2; display: flex; align-items: center; justify-content: center; }
+.phantom-sensor__sq.is-dark { background: #769656; }
+.phantom-sensor__sq img { width: 88%; height: 88%; object-fit: contain; }
+.phantom-sensor__sq.is-missing { box-shadow: inset 0 0 0 3px #ff3b3b; background-image: linear-gradient(rgba(255, 59, 59, 0.35), rgba(255, 59, 59, 0.35)); }
+.phantom-sensor__sq.is-missing img { opacity: 0.55; }
+.phantom-sensor__sq.is-extra { box-shadow: inset 0 0 0 3px #ffaa00; background-image: radial-gradient(circle, #ffaa00 0 18%, rgba(255, 170, 0, 0.3) 19%); }
+.phantom-sensor__rank, .phantom-sensor__file { position: absolute; font-size: 0.6rem; font-weight: 700; color: rgba(0, 0, 0, 0.55); line-height: 1; }
+.phantom-sensor__rank { top: 2px; left: 2px; }
+.phantom-sensor__file { bottom: 2px; right: 3px; }
+.phantom-sensor__legend { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.88rem; }
+.phantom-sensor__legend b { font-family: monospace; font-size: 0.95rem; }
+.phantom-sensor__dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
+.phantom-sensor__dot.is-missing { background: #ff3b3b; }
+.phantom-sensor__dot.is-extra { background: #ffaa00; }

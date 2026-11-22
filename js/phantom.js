@@ -491,13 +491,16 @@ class PhantomChessboard {
                 const d = this.describeSensorError(dataStr);
                 if (dataStr.startsWith('CLEAN')) {   // « CLEAN: Match. » : capteurs conformes
                     this.log(d ? `🧲 Capteurs OK : ${d.seen}/${d.total} pièces détectées` : '🧲 Capteurs OK', 'success');
+                    window.dispatchEvent(new CustomEvent('phantomSensorsOk'));
                     return;
                 }
                 this.log(`⚠️ [ERROR_MSG] ${dataStr}`, 'warn');
                 if (d) this.log(`🧲 Capteurs : ${d.seen}/${d.total} pièces détectées` +
                     (d.extra.length ? `, détection sur cases vides : ${d.extra.join(' ')}` : '') +
                     (d.missing.length && d.missing.length <= 12 ? `, manquantes : ${d.missing.join(' ')}` : ''), 'warn');
-                window.dispatchEvent(new CustomEvent('phantomError', { detail: dataStr }));
+                // Écart capteurs / position attendue : fenêtre détaillée pour le propriétaire, sinon simple message
+                if (d) window.dispatchEvent(new CustomEvent('phantomSensorMismatch', { detail: d }));
+                else window.dispatchEvent(new CustomEvent('phantomError', { detail: dataStr }));
                 return;
             }
 
@@ -734,7 +737,7 @@ class PhantomChessboard {
             if (piece && !detected) missing.push(square(i));
             if (!piece && detected) extra.push(square(i));
         }
-        return { seen, total, missing, extra };
+        return { seen, total, missing, extra, expected, sensors };
     }
 
     async snapToCenter() {
