@@ -11,7 +11,7 @@ import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
 import { renderHistory, paintMoveChips, clearWinner, nameColor, renderPodium, markPodiumWinner, pieceOf } from '../components/voteViews.js';
-import { paletteColors } from '../components/votePalettes.js';
+import { PALETTES, PALETTE_IDS, isPalette } from '../components/votePalettes.js';
 import { CamSender, CamPlayer, CAM_QUALITIES, CAM_ZOOM, listCameras, camSupported } from '../components/liveCam.js';
 
 const t = (key, params, fallback) => {
@@ -26,7 +26,9 @@ const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
 const STEPS = ['play', 'recap', 'voteMode', 'voteOptions', 'signup'];
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
 const clean = (m) => String(m || '').replace(/[+#!?]/g, '');
-const COLORS = paletteColors('violet');
+// Couleurs du tirage (roue, bande, podium, puces des coups) : au choix du viewer, gardées dans son navigateur
+const loadPalette = () => { try { const id = localStorage.getItem('h24Palette'); return isPalette(id) ? id : 'violet'; } catch { return 'violet'; } };
+let COLORS = PALETTES[loadPalette()];
 
 /** Libellé d'un choix de vote (mode, durée du tour, décision, niveau) */
 function choiceLabel(ballot, c) {
@@ -163,6 +165,9 @@ const H24Page = {
             if (e.target.closest('[data-h24-login]')) { twitchAuth.login?.(); return; }
             const st = e.target.closest('[data-h24-style]');
             if (st) { this.setStyle(st.dataset.h24Style); return; }
+            if (e.target.closest('[data-h24-settings]')) { this.toggleSettings(); return; }
+            const pal = e.target.closest('[data-h24-palette]');
+            if (pal) { this.setPalette(pal.dataset.h24Palette); return; }
             const rg = e.target.closest('[data-h24-regie]');
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
@@ -187,6 +192,47 @@ const H24Page = {
         this.bindTicker();
         $('h24-volume')?.addEventListener('input', (e) => this.setVolume(Number(e.target.value) / 100, Number(e.target.value) === 0));
         this.renderVolume();
+        // Panneau des paramètres : se ferme au clic ailleurs ou avec Échap
+        // (chemin du clic figé au départ : un bouton redessiné pendant le clic compte toujours comme « dedans »)
+        document.addEventListener('click', (e) => { if (!e.composedPath().some(n => n.classList?.contains('h24-settings'))) this.toggleSettings(false); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.toggleSettings(false); });
+        window.addEventListener('languageChanged', () => this.renderPalettes());
+        this.renderPalettes();
+    },
+
+    // ------------------------------------------------------------------ paramètres du viewer
+    toggleSettings(open) {
+        const pop = $('h24-settings');
+        if (!pop) return;
+        open = open ?? pop.hidden;
+        if (open === !pop.hidden) return;
+        pop.hidden = !open;
+        document.querySelector('[data-h24-settings]')?.setAttribute('aria-expanded', String(open));
+    },
+
+    renderPalettes() {
+        const box = $('h24-palettes');
+        if (!box) return;
+        const cur = loadPalette();
+        box.innerHTML = PALETTE_IDS.map(id => `<button type="button" class="h24-palette${id === cur ? ' is-active' : ''}" data-h24-palette="${id}" aria-pressed="${id === cur}">
+            <span class="h24-palette__dots">${PALETTES[id].slice(0, 5).map(c => `<i style="background:${c}"></i>`).join('')}</span>
+            <span class="h24-palette__name">${esc(t(`palette.${id}`, null, id))}</span>
+        </button>`).join('');
+    },
+
+    setPalette(id) {
+        if (!isPalette(id)) return;
+        try { localStorage.setItem('h24Palette', id); } catch {}
+        COLORS = PALETTES[id];
+        this.renderPalettes();
+        // Tout ce qui est déjà coloré se repeint : roue ou bande, podium, puces des coups
+        if (this.wheel) {
+            this.wheel.paletteColors = COLORS;
+            if (!this.wheel.isSpinning) this.wheel.draw?.();
+        }
+        this.liveSig = null;
+        $('h24-votes')?.querySelector('.podium')?.remove();
+        this.render();
     },
 
     // ------------------------------------------------------------------ son

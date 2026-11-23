@@ -783,13 +783,29 @@
                     <div class="sandbox__sidebar">
                         <div class="sandbox__actions game-toolbar">
                             <span class="spectators-badge"><i class="fas fa-eye"></i> <span id="h24-viewers">0</span></span>
-                            <div class="h24-volume">
-                                <button type="button" class="h24-volume__btn" data-h24-mute title="Couper le son"><i class="fas fa-volume-up"></i></button>
-                                <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" title="Volume">
-                            </div>
-                            <div class="h24-style" role="group">
-                                <button type="button" class="btn btn--sm" data-h24-style="band" title="Tirage : bande"><i class="fas fa-grip-lines"></i> <span data-i18n="h24.styleBand">Bande</span></button>
-                                <button type="button" class="btn btn--sm" data-h24-style="wheel" title="Tirage : roue"><i class="fas fa-dharmachakra"></i> <span data-i18n="h24.styleWheel">Roue</span></button>
+                            <!-- Réglages du viewer (son, tirage, couleurs) regroupés derrière la roue crantée -->
+                            <div class="h24-settings">
+                                <button type="button" class="h24-settings__btn" data-h24-settings aria-expanded="false" aria-haspopup="true"><i class="fas fa-cog"></i> <span data-i18n="h24.settings">Paramètres</span></button>
+                                <div class="h24-settings__pop" id="h24-settings" hidden>
+                                    <div class="h24-settings__row">
+                                        <span class="h24-settings__label" data-i18n="h24.settingsSound">Son</span>
+                                        <div class="h24-volume">
+                                            <button type="button" class="h24-volume__btn" data-h24-mute title="Couper le son"><i class="fas fa-volume-up"></i></button>
+                                            <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" title="Volume">
+                                        </div>
+                                    </div>
+                                    <div class="h24-settings__row">
+                                        <span class="h24-settings__label" data-i18n="h24.settingsDraw">Tirage</span>
+                                        <div class="h24-style" role="group">
+                                            <button type="button" class="btn btn--sm" data-h24-style="band" title="Tirage : bande"><i class="fas fa-grip-lines"></i> <span data-i18n="h24.styleBand">Bande</span></button>
+                                            <button type="button" class="btn btn--sm" data-h24-style="wheel" title="Tirage : roue"><i class="fas fa-dharmachakra"></i> <span data-i18n="h24.styleWheel">Roue</span></button>
+                                        </div>
+                                    </div>
+                                    <div class="h24-settings__row h24-settings__row--col">
+                                        <span class="h24-settings__label" data-i18n="palette.title">Couleurs du tirage</span>
+                                        <div class="h24-palettes" id="h24-palettes"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <!-- Régie (PC du streamer) : Phantom, pause, chaîne de la vue réelle -->
