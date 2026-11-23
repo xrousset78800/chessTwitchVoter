@@ -148,13 +148,6 @@ const H24Stats = {
             ${kv(t('wheels', null, 'Tirages à la roue'), fmtNum(dc.wheel))}`
             : `<p class="h24s-none">${esc(t('none', null, 'Pas encore de données'))}</p>`);
 
-        // Ouvertures et coups
-        const op = d.openings;
-        const openings = card(`<i class="fas fa-chess-pawn"></i> ${esc(t('openings', null, 'Ouvertures'))}`, `
-            <p class="h24s-sub">${esc(t('firstMoves', null, 'Premier coup des Blancs'))}</p>${bars(op.first.map(x => ({ label: x.k, n: x.n, cls: 'is-san' })))}
-            ${op.pairs.length ? `<p class="h24s-sub">${esc(t('pairs', null, 'Premier échange'))}</p>${bars(op.pairs.map(x => ({ label: x.k, n: x.n, cls: 'is-san' })))}` : ''}`);
-        const movesCard = card(`<i class="fas fa-fire"></i> ${esc(t('topMoves', null, 'Coups les plus joués'))}`, bars(op.moves.map(x => ({ label: x.k, n: x.n, cls: 'is-san' }))));
-
         // Puzzle rush
         const ru = d.rush;
         const rush = card(`<i class="fas fa-bolt"></i> Puzzle rush`, ru.games ? `
@@ -205,7 +198,7 @@ const H24Stats = {
             </div>`).join('')}</div>` : `<p class="h24s-none">${esc(t('none', null, 'Pas encore de données'))}</p>`, 'h24s-card--wide');
 
         const since = d.since ? `<p class="rec-hint">${esc(t('since', { d: new Date(d.since).toLocaleDateString(lang()) }, `Depuis le ${new Date(d.since).toLocaleDateString(lang())}`))}</p>` : '';
-        return `${head}${since}<div class="h24s-grid">${results}${decisions}${openings}${movesCard}${rush}${ballotCard}${playersCard}${activity}${recent}</div>`;
+        return `${head}${since}<div class="h24s-grid">${results}${decisions}${rush}${ballotCard}${playersCard}${activity}${recent}</div>`;
     }
 };
 

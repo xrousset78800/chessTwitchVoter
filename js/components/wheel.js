@@ -134,6 +134,24 @@ class VotingWheel {
         ctx.restore();
     }
 
+    /** Coup écrit à la couleur du camp, comme la pièce : blanc à contour sombre ou noir à contour clair */
+    drawMoveText(ctx, text, turn, x, y, size) {
+        ctx.save();
+        ctx.font = `800 ${Math.round(size)}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.max(2.5, size / 5);
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 3;
+        ctx.strokeStyle = turn === 'b' ? 'rgba(255, 255, 255, 0.92)' : 'rgba(10, 10, 15, 0.9)';
+        ctx.strokeText(text, x, y);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = turn === 'b' ? '#15151c' : '#ffffff';
+        ctx.fillText(text, x, y);
+        ctx.restore();
+    }
+
     /** Même chose en HTML (coup tiré au centre de la roue / sur la bande) */
     pieceHtml(move, turn = this.currentTurn()) {
         const dark = turn === 'b';
@@ -233,29 +251,18 @@ getSortedVotes() {
 
             // Texte du coup
             const midAngle = startAngle + sliceAngle / 2;
-            const textRadius = radius * 0.85;
-            const textX = centerX + Math.cos(midAngle) * textRadius;
-            const textY = centerY + Math.sin(midAngle) * textRadius;
-
             // Tailles selon la place : largeur de la part et rayon de la roue
             const arc = sliceAngle * radius * 0.8;
-            const fontSize = Math.max(11, Math.min(radius * 0.075, arc * 0.32, 20));
+            const fontSize = Math.max(12, Math.min(radius * 0.11, arc * 0.4, 30));
             const pieceSize = Math.max(16, Math.min(radius * 0.2, arc * 0.62, 46));
-            const r0 = radius - 6 - fontSize / 2;
+            const r0 = radius - 8 - fontSize / 2;
 
             ctx.save();
             ctx.translate(centerX + Math.cos(midAngle) * r0, centerY + Math.sin(midAngle) * r0);
             ctx.rotate(midAngle + Math.PI / 2);
 
-            ctx.shadowColor = 'rgba(0,0,0,0.7)';
-            ctx.shadowBlur = 4;
-            ctx.fillStyle = '#fff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            // Coup près du bord, pièce en dessous (vers le centre)
-            ctx.font = `bold ${Math.round(fontSize)}px "JetBrains Mono", monospace`;
-            ctx.fillText(vote.move, 0, 0);
+            // Coup près du bord, pièce en dessous (vers le centre), tous deux à la couleur du camp
+            this.drawMoveText(ctx, vote.move, turn, 0, 0, fontSize);
             this.drawPiece(ctx, vote.move, turn, 0, fontSize / 2 + 3 + pieceSize / 2, pieceSize);
 
             ctx.restore();

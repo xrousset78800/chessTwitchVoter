@@ -96,20 +96,17 @@ class WheelBand extends VotingWheel {
         ctx.fillRect(x + cellWidth - 1, 0, 2, height);
 
         // Pièce à la couleur du camp, plus grande quand la case le permet, puis le coup
-        const fontSize = Math.max(14, Math.min(height * 0.3, 20));
+        const fontSize = Math.max(14, Math.min(height * 0.36, cellWidth * 0.16, 28));
         const pieceSize = Math.max(18, Math.min(height * 0.62, cellWidth * 0.3, 44));
         ctx.save();
-        ctx.font = `bold ${Math.round(fontSize)}px "JetBrains Mono", monospace`;
+        ctx.font = `800 ${Math.round(fontSize)}px "JetBrains Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const tw = ctx.measureText(move).width;
         const gap = 6;
         const left = x + cellWidth / 2 - (pieceSize + gap + tw) / 2;
         this.drawPiece(ctx, move, this.currentTurn(), left + pieceSize / 2, height / 2, pieceSize);
-        ctx.shadowColor = 'rgba(0,0,0,0.7)';
-        ctx.shadowBlur = 4;
-        ctx.fillStyle = '#fff';
-        ctx.fillText(move, left + pieceSize + gap + tw / 2, height / 2);
+        this.drawMoveText(ctx, move, this.currentTurn(), left + pieceSize + gap + tw / 2, height / 2, fontSize);
         ctx.restore();
     }
 
