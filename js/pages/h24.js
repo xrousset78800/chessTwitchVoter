@@ -279,16 +279,30 @@ const H24Page = {
             this.tickerN = 0;
             track.innerHTML = '';
         }
-        const recent = g ? g.recent || [] : b ? (b.recent || []).map(r => ({ u: r.u, m: choiceLabel(b.id, r.c), choice: true })) : [];
+        const recent = g ? g.recent || [] : b ? (b.recent || []).map(r => ({ ...r, m: choiceLabel(b.id, r.c), choice: true })) : [];
         const total = g ? g.recentN ?? recent.length : b ? b.recentN ?? recent.length : 0;
         const fresh = Math.min(Math.max(0, total - (this.tickerN || 0)), recent.length);
         this.tickerN = total;
         const voted = t('anonymity.voted', null, 'a voté');
+        // Photo Twitch, provenance (#chaîne, site ou bot) et pseudo, puis le coup
+        const site = t('h24.viaSite', null, 'site');
+        const pic = r => r.p ? `<img class="vote-ticker__pic" src="${esc(r.p)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+            : `<span class="vote-ticker__pic" style="background:${nameColor(r.u)}">${r.v === 'bot' ? '<i class="fas fa-robot"></i>' : esc((r.u || '?')[0].toUpperCase())}</span>`;
         recent.slice(recent.length - fresh).forEach(r => {
             const item = document.createElement('span');
-            item.className = 'vote-ticker__item';
-            item.innerHTML = `<span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span> <span class="vote-ticker__move${r.m ? '' : ' is-hidden'}${r.choice ? ' is-choice' : ''}">${esc(r.m || voted)}</span>`;
+            item.className = 'vote-ticker__item vote-ticker__item--who';
+            item.dataset.u = r.u;
+            item.innerHTML = `${pic(r)}<span class="vote-ticker__who"><span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span><span class="vote-ticker__via">${esc(r.v === 'bot' ? 'bot' : r.v === 'chat' ? 'chat' : r.v || site)}</span></span><span class="vote-ticker__move${r.m ? '' : ' is-hidden'}${r.choice ? ' is-choice' : ''}">${esc(r.m || voted)}</span>`;
+            if (r.p) item.dataset.pic = '1';
             track.prepend(item);
+        });
+        // Photos arrivées après coup : on complète les votes déjà affichés
+        const pics = new Map(recent.filter(r => r.p).map(r => [r.u, r.p]));
+        track.querySelectorAll('.vote-ticker__item--who:not([data-pic])').forEach(item => {
+            const p = pics.get(item.dataset.u);
+            if (!p) return;
+            item.dataset.pic = '1';
+            item.querySelector('.vote-ticker__pic')?.replaceWith(Object.assign(document.createElement('img'), { className: 'vote-ticker__pic', src: p, alt: '', referrerPolicy: 'no-referrer' }));
         });
         while (track.children.length > 20) track.lastElementChild.remove();
         if (fresh) track.scrollLeft = 0;

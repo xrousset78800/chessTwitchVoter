@@ -18,10 +18,15 @@ jobs:
     steps:
       - name: Pull & rebuild on the VM
         uses: appleboy/ssh-action@v1
+        env:
+          # Clé de l'application Twitch (API côté serveur) ; vides tant que les secrets ne sont pas créés
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
+          envs: TWITCH_CLIENT_ID,TWITCH_CLIENT_SECRET
           script: |
             set -e
             cd /opt/apps/chesstwitchvoter

@@ -235,6 +235,15 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 
 /* Bandeau des votes sous l'échiquier */
 #page-h24 .h24-ticker { margin-top: 8px; }
+/* Un vote : photo Twitch, pseudo avec la provenance dessous (#chaîne, site, bot), puis le coup — compact */
+.vote-ticker__item--who { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); }
+.vote-ticker__pic {
+    flex: none; width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
+    display: inline-grid; place-items: center; font-size: 0.7rem; font-weight: 800; color: #0b0b10;
+}
+.vote-ticker__who { display: inline-flex; flex-direction: column; line-height: 1.05; }
+.vote-ticker__who .vote-ticker__user { font-size: 0.8rem; }
+.vote-ticker__via { font-size: 0.62rem; font-weight: 600; color: rgba(255, 255, 255, 0.45); }
 .vote-ticker__move.is-hidden { font-family: inherit; font-style: italic; opacity: 0.7; }
 .vote-ticker__move.is-choice { font-family: inherit; color: #c4b5fd; }
 

@@ -13,6 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Chess } = require('chess.js');
+const twitchApi = require('./twitchApi');
 
 const ROOM = 'h24';
 const CAM_ROOM = 'h24-cam';
@@ -309,6 +310,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
 
     // ------------------------------------------------------------------ diffusion
     let emitTimer = null;
+    // Photos Twitch arrivées (lot Helix) : le bandeau des votes se complète
+    twitchApi.onAvatars(() => emit());
     function emit() {
         if (emitTimer) return;
         emitTimer = setTimeout(() => {
@@ -337,7 +340,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             teams: s.teams,
             viewers: viewers(),
             ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how,
-                recent: (s.ballot.recent || []).slice(-20), recentN: s.ballot.recentN || 0 },
+                recent: (s.ballot.recent || []).slice(-20).map(r => tickerItem(r, { c: r.c })), recentN: s.ballot.recentN || 0 },
             bots: botCount(),
             next: s.ballotQueue.map(b => b.id),
             recap: s.recap,
@@ -355,7 +358,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 masked: hidden ? tally(g.votes).map(({ n }) => n) : null,
                 voters: g.votes.size,
                 // Bandeau des votes : pseudo et coup (coup caché en vote secret) ; recentN compte les votes du tour
-                recent: g.recent.slice(-20).map(r => ({ u: r.u, m: hidden ? null : r.m })),
+                recent: g.recent.slice(-20).map(r => tickerItem(r, { m: hidden ? null : r.m })),
                 recentN: g.recentN || 0,
                 draw: g.draw,
                 chosen: g.chosen || null,
@@ -768,7 +771,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
     /** Vote d'un coup (SAN, UCI ou « e4 »), seulement pour l'équipe dont c'est le tour.
      *  Un vote par tour : il se change. Plusieurs (option « votes ») : chacun compte, le même coup peut être repris. */
-    function voteMove(login, text) {
+    /** Provenance d'un vote pour le bandeau : '#chaîne' (chat Twitch), 'bot' (bots de test) ou null (site) */
+    function viaOf(login, via) { return /^(bot_|sim_)/.test(login) ? 'bot' : via || null; }
+    /** Bandeau des votes : photo Twitch (si connue ; sinon demandée, l'état repart quand elle arrive) et provenance */
+    function tickerItem(r, extra) { return { u: r.u, ...extra, v: r.v || null, p: r.v === 'bot' ? null : twitchApi.avatar(r.u) }; }
+    function voteMove(login, text, via) {
         const g = s.game;
         if (s.phase !== 'play' || !g?.turnEndsAt || g.result) return false;
         const side = g.chess.turn();
@@ -787,7 +794,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             if (mine.length >= max) return false;
             g.votes.set(login, [...mine, m.san]);
         }
-        g.recent.push({ u: login, m: m.san });
+        g.recent.push({ u: login, m: m.san, v: viaOf(login, via) });
         g.recentN = (g.recentN || 0) + 1;
         if (g.recent.length > 30) g.recent.shift();
         const vc = g.voteCount[s.mode === 'rush' ? 'w' : side];
@@ -803,14 +810,14 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emitMeAll(login);
         return true;
     }
-    function voteBallot(login, choice) {
+    function voteBallot(login, choice, via) {
         const b = s.ballot;
         if (!b || b.winner !== undefined || !LOGIN_RE.test(login || '')) return false;
         const c = b.choices.find(x => String(x) === String(choice));
         if (c === undefined) return false;
         b.votes.set(login, c);
         // Bandeau des votes : qui a voté quoi
-        (b.recent ||= []).push({ u: login, c });
+        (b.recent ||= []).push({ u: login, c, v: viaOf(login, via) });
         if (b.recent.length > 30) b.recent.shift();
         b.recentN = (b.recentN || 0) + 1;
         emit();
@@ -964,7 +971,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             emit();
         });
         // Tests locaux : un message du chat Twitch simulé
-        if (process.env.STATION_DEV === '1') socket.on('h24:devChat', (data = {}) => chatMessage(String(data.login || '').toLowerCase(), String(data.text || '').slice(0, 200)));
+        if (process.env.STATION_DEV === '1') socket.on('h24:devChat', (data = {}) => chatMessage(String(data.login || '').toLowerCase(), String(data.text || '').slice(0, 200), String(data.channel || '').toLowerCase().slice(0, 25)));
         // Régie : état du Phantom, pause manuelle, chaîne de la vue réelle
         socket.on('h24:regie', (data = {}) => {
             const l = me();
@@ -1068,7 +1075,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             client.on('part', (ch, user, self) => { if (self) { const c = ch.replace(/^#/, ''); chat.joined.delete(c); emitMeAll(c); } });
             client.on('message', (ch, tags, msg, self) => {
                 chat.received++;
-                if (!self) chatMessage(String(tags.username || '').toLowerCase(), msg);
+                if (!self) chatMessage(String(tags.username || '').toLowerCase(), msg, String(ch || '').replace(/^#/, '').toLowerCase());
             });
             client.connect().catch(e => { chatEvent(`échec ${e?.message || e}`); log('💬 24/24 : chat injoignable', e?.message || e); });
             return;
@@ -1084,13 +1091,13 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }, 700).unref?.();
     setInterval(chatSync, 30 * 1000).unref?.();
     /** Un message du chat : join / quitter, numéro d'un choix pendant un vote, coup pendant la partie */
-    function chatMessage(login, text) {
+    function chatMessage(login, text, channel) {
         let outcome;
-        try { outcome = chatHandle(login, text); } catch (e) { outcome = `erreur : ${e?.message || e}`; }
+        try { outcome = chatHandle(login, text, channel ? `#${channel}` : 'chat'); } catch (e) { outcome = `erreur : ${e?.message || e}`; }
         chat.recent.push({ at: new Date().toISOString(), login, text: String(text || '').slice(0, 40), outcome: outcome || 'ignoré' });
         if (chat.recent.length > 30) chat.recent.shift();
     }
-    function chatHandle(login, text) {
+    function chatHandle(login, text, via) {
         if (!LOGIN_RE.test(login)) return 'login invalide';
         const word = (String(text || '').trim().split(/\s+/)[0] || '').replace(/^!/, '').toLowerCase();
         if (!word) return;
@@ -1108,14 +1115,14 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (s.ballot && /^\d{1,2}$/.test(word)) {
             const c = s.ballot.choices[Number(word) - 1];
             if (c === undefined) return 'numéro hors choix';
-            voteBallot(login, c);
+            voteBallot(login, c, via);
             return `vote ${s.ballot.id} = ${c}`;
         }
         // Un coup tapé dans le chat : inscrit d'office s'il ne l'est pas encore (sauf s'il a quitté), puis vote
         if (s.phase !== 'play' || word.length > 8 || !/^[a-h1-8nbrqkox=+#-]{2,8}$/i.test(word)) return s.phase !== 'play' ? `ignoré (phase ${s.phase})` : undefined;
         if (!teamOf(login) && !s.optOut.has(login)) join(login);
         const team = teamOf(login);
-        if (team && voteMove(login, word)) { chat.seen.set(login, Date.now()); return `coup ${word} compté (équipe ${team})`; }
+        if (team && voteMove(login, word, via)) { chat.seen.set(login, Date.now()); return `coup ${word} compté (équipe ${team})`; }
         const g = s.game;
         const why = !team ? 'pas inscrit (a quitté)' : !g?.turnEndsAt ? 'hors tour de vote'
             : s.mode !== 'rush' && team !== g.chess.turn() ? `équipe ${team === 'w' ? 'Blancs' : 'Noirs'}, trait aux ${g.chess.turn() === 'w' ? 'Blancs' : 'Noirs'}`
