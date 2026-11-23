@@ -96,7 +96,7 @@
     "rush": {
       "rules": "Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité). <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote avant la fin du timer compte comme une erreur.",
       "pause": "Pause entre puzzles",
-      "recordHint": "Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href=\"#/records\">Records</a>."
+      "recordHint": "Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href=\"/records\">Records</a>."
     }
   },
   "game": {

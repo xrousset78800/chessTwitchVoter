@@ -154,7 +154,7 @@ const BrowseTable = {
 
     channel(login) {
         return login
-            ? `<a href="#/records?c=${encodeURIComponent(login)}" class="games-table__channel">${esc(login)}</a>`
+            ? `<a href="/records?c=${encodeURIComponent(login)}" class="games-table__channel">${esc(login)}</a>`
             : `<span class="games-table__muted">${esc(t('browsePage.anonymous'))}</span>`;
     },
 
@@ -178,7 +178,7 @@ const BrowseTable = {
                 <td class="games-table__num col-lg">${this.duration(g.startedAt)}</td>
                 <td class="games-table__actions">
                     ${join ? `<a class="btn btn--sm btn--primary" data-join href="${esc(join)}"><i class="fas fa-sign-in-alt"></i> <span class="col-lg-inline">${esc(t('browsePage.join'))}</span></a>` : ''}
-                    <a class="btn btn--sm btn--ghost" data-watch href="#/watch?g=${encodeURIComponent(g.gameId)}" title="${esc(t('browsePage.watch'))}"><i class="fas fa-eye"></i> <span class="col-lg-inline">${esc(t('browsePage.watch'))}</span></a>
+                    <a class="btn btn--sm btn--ghost" data-watch href="/watch?g=${encodeURIComponent(g.gameId)}" title="${esc(t('browsePage.watch'))}"><i class="fas fa-eye"></i> <span class="col-lg-inline">${esc(t('browsePage.watch'))}</span></a>
                 </td>
             </tr>`;
     },
@@ -287,7 +287,7 @@ const BrowseTable = {
         const join = g.join ? this.joinHref(g) : null;
         $('browse-preview-actions').innerHTML = `
             ${join ? `<a class="btn btn--primary btn--sm" data-preview-join href="${esc(join)}"><i class="fas fa-sign-in-alt"></i> ${esc(t('browsePage.join'))}</a>` : ''}
-            <a class="btn ${join ? 'btn--ghost' : 'btn--primary'} btn--sm" data-preview-watch href="#/watch?g=${encodeURIComponent(g.gameId)}"><i class="fas fa-eye"></i> ${esc(t('browsePage.watch'))}</a>`;
+            <a class="btn ${join ? 'btn--ghost' : 'btn--primary'} btn--sm" data-preview-watch href="/watch?g=${encodeURIComponent(g.gameId)}"><i class="fas fa-eye"></i> ${esc(t('browsePage.watch'))}</a>`;
 
         this.renderBoard(s);
     },

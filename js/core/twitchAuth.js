@@ -56,8 +56,8 @@ class TwitchAuth {
 
     /** URL de retour enregistrée dans la console Twitch (ex: http://localhost:3000/) */
     get redirectUri() {
-        const path = window.location.pathname.replace(/index\.html$/, '');
-        return window.location.origin + path;
+        // Toujours la racine (adresse enregistrée dans la console Twitch), quelle que soit la page
+        return window.location.origin + '/';
     }
 
     // ========== INIT ==========
@@ -95,7 +95,7 @@ class TwitchAuth {
         let forceVerify = !!opts.forceVerify;
         try {
             sessionStorage.setItem(STATE_KEY, state);
-            sessionStorage.setItem(RETURN_KEY, window.location.hash || '#/');
+            sessionStorage.setItem(RETURN_KEY, (location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search));
             if (localStorage.getItem(SWITCH_KEY)) {
                 forceVerify = true;
                 localStorage.removeItem(SWITCH_KEY);
@@ -234,7 +234,9 @@ class TwitchAuth {
         } catch {}
         ['error', 'error_description', 'state'].forEach(k => search.delete(k));
         const qs = search.toString();
-        const url = window.location.pathname + (qs ? `?${qs}` : '') + returnHash;
+        // Retour sur la page d'origine, en adresse propre (/24h plutôt que /#/24h)
+        const back = String(returnHash || '#/').replace(/^#/, '') || '/';
+        const url = back + (qs ? `${back.includes('?') ? '&' : '?'}${qs}` : '');
         window.history.replaceState(null, '', url);
     }
 

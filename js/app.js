@@ -7,6 +7,7 @@
  */
 
 import gameEngine from './core/gameEngine.js';
+import { routeHash, toUrl, go, cleanLegacyHash } from './core/route.js';
 import timer from './core/timer.js';
 import voting from './core/voting.js';
 import problemsManager from './core/problemManager.js';
@@ -281,7 +282,7 @@ const GameSession = {
             });
             timer.setDuration?.(c.timerDuration);
         }
-        if (window.location.hash !== hash) history.pushState(null, '', hash);
+        if (routeHash() !== hash) history.pushState(null, '', toUrl(hash));
         Router.handleRoute();
         updateConnectionUI();
         if (start) {
@@ -298,8 +299,8 @@ const GameSession = {
         } else if (saved) {
             // F5 pendant une partie : retour à la page de réglage de la route
             sessionStorage.removeItem(SESSION_KEY);
-            if (window.location.hash.startsWith('#/game')) {
-                history.replaceState(null, '', `#/${saved.route}`);
+            if (routeHash().startsWith('#/game')) {
+                history.replaceState(null, '', `/${saved.route}`);
             }
         }
         if (this.running) this.liveMode = AppState.gameMode;
@@ -341,13 +342,36 @@ const Router = {
     started: false,
 
     init() {
-        window.addEventListener('hashchange', () => this.handleRoute());
+        // Adresses propres : /24h plutôt que /#/24h (les anciens liens en #/ sont nettoyés)
+        cleanLegacyHash();
+        window.addEventListener('popstate', () => this.handleRoute());
+        window.addEventListener('routechange', () => this.handleRoute());
+        window.addEventListener('hashchange', () => {
+            if (!location.hash.startsWith('#/')) return;
+            cleanLegacyHash();
+            this.handleRoute();
+        });
 
         document.querySelectorAll('[data-navigate]').forEach(el => {
+            el.setAttribute('href', el.dataset.navigate);
             el.addEventListener('click', (e) => {
+                if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
                 e.preventDefault();
-                window.location.hash = el.dataset.navigate;
+                go(el.dataset.navigate);
             });
+        });
+        // Liens internes (/records?c=x, ou anciens #/…) : navigation sans recharger la page
+        document.addEventListener('click', (e) => {
+            if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+            const a = e.target.closest('a[href]');
+            if (!a || a.target === '_blank' || a.hasAttribute('download') || a.dataset.navigate) return;
+            const href = a.getAttribute('href');
+            const path = href.startsWith('#/') ? href.slice(1) : href.startsWith('/') && !href.startsWith('//') ? href : null;
+            if (!path) return;
+            const first = '/' + (path.split(/[/?#]/)[1] || '');
+            if (!this.routes[first] && first !== '/') return;
+            e.preventDefault();
+            go(path);
         });
 
         this.handleRoute();
@@ -355,7 +379,7 @@ const Router = {
     },
 
     handleRoute() {
-        const hash = window.location.hash.slice(1) || '/';
+        const hash = routeHash().slice(1) || '/';
         const [path, query] = hash.split('?');
         const room = MultiRoom.parse(path, query);
 
@@ -370,7 +394,7 @@ const Router = {
             MultiRoom.prepare(room);
             GameSession.running = true;
             GameSession.liveMode = AppState.gameMode;
-            GameSession.hash = window.location.hash;
+            GameSession.hash = routeHash();
             this.showPage('game');
             // Au démarrage, initApp entre dans le salon après la restauration de Twitch
             if (this.started) MultiRoom.enter();
@@ -379,13 +403,13 @@ const Router = {
 
         // Accueil (et adresse inconnue) : la station 24/24
         if (!this.routes[path]) {
-            history.replaceState(null, '', '#/24h');
+            history.replaceState(null, '', '/24h');
             return this.showPage('h24');
         }
         let pageName = this.routes[path];
         // #/game sans partie (F5, lien partagé) : écran de lancement
         if (pageName === 'game' && !GameSession.running) {
-            history.replaceState(null, '', '#/sandbox');
+            history.replaceState(null, '', '/sandbox');
             pageName = 'sandbox';
         }
 
@@ -485,7 +509,7 @@ const TournamentPage = {
         setTimeout(() => {
             stateT.board?.resize();
             // Auto-load depuis le hash
-            const hash = window.location.hash;
+            const hash = routeHash();
             const hashParams = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
             const eventSlug = hashParams.get('event');
             if (eventSlug && !stateT.tournamentSlug) {
@@ -2552,7 +2576,7 @@ const PresetGame = {
             'login':     () => twitchAuth.login(),
             'rematch':   () => this.rematch(),
             'new-lobby': () => GameSession.launch(GameSession.current),
-            'revenge':   () => GameSession.restart(window.location.hash),
+            'revenge':   () => GameSession.restart(routeHash()),
             'back':      () => GameSession.quit('#/multi')
         };
         document.querySelectorAll('[data-lobby-action]').forEach(btn => {
@@ -2594,12 +2618,12 @@ const MultiRoom = {
     open(host, code, settings, isPublic) {
         const room = { a: host, code, isPublic: !!isPublic, settings: { ...settings } };
         try { sessionStorage.setItem(this.STORE, JSON.stringify(room)); } catch {}
-        window.location.hash = `#/multi/${host}`;
+        go(`/multi/${host}`);
     },
 
     inviteLink() {
         const r = this.room;
-        return `${location.origin}${location.pathname}${this.buildHash(r.a, r.code, r.settings, r.isPublic)}`;
+        return `${location.origin}${toUrl(this.buildHash(r.a, r.code, r.settings, r.isPublic))}`;
     },
 
     /**
@@ -2945,7 +2969,7 @@ async function initApp() {
     window.repairPhantomCentering = async () => {
         const phantom = window.phantomChessboard;
         if (!phantom?.isConnected || !phantom.confirmRepair()) return;
-        const route = (window.location.hash.split('/')[1] || '').split('?')[0];
+        const route = (routeHash().split('/')[1] || '').split('?')[0];
         const provider = window.phantomPositionProviders?.[route];
         const fen = provider ? provider() : (gameEngine.isRunning ? gameEngine.chess?.fen() : null);
         Toast.show('Réparation du centrage : le Phantom redémarre puis se reconnecte tout seul (environ une minute)', 'info', 8000);

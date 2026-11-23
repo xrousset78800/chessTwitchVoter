@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <!-- Adresses propres (/records, /multi/hote…) : les fichiers restent servis depuis la racine -->
+    <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Twitchess</title>
@@ -203,7 +205,7 @@
                                             <input type="number" id="rush-pause" class="input input--sm"
                                                    style="width: 80px;" min="1" max="60" value="5">
                                         </div>
-                                        <p class="form-hint" data-i18n="gameMode.rush.recordHint" data-i18n-html>Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href="#/records">Records</a>.</p>
+                                        <p class="form-hint" data-i18n="gameMode.rush.recordHint" data-i18n-html>Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href="/records">Records</a>.</p>
                                     </div>
 
                                     <!-- Mode: Problems options -->
@@ -383,7 +385,7 @@
                         <div class="rush-end__actions">
                             <button class="btn btn--primary" id="rush-restart-btn"><i class="fas fa-redo"></i> Rejouer</button>
                             <button class="btn btn--ghost" id="rush-login-btn" style="display:none;"><i class="fab fa-twitch"></i> Se connecter</button>
-                            <a class="btn btn--ghost" href="#/records"><i class="fas fa-trophy"></i> Voir les records</a>
+                            <a class="btn btn--ghost" href="/records"><i class="fas fa-trophy"></i> Voir les records</a>
                         </div>
                     </div>
                 </div>
@@ -824,7 +826,7 @@
                     <div class="sandbox__left">
                         <div class="watch-head">
                             <div class="watch-head__row">
-                                <a href="#/browse" class="btn btn--icon watch-bar__back" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-arrow-left"></i></a>
+                                <a href="/browse" class="btn btn--icon watch-bar__back" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-arrow-left"></i></a>
                                 <h1 class="watch-bar__mode" id="watch-mode"></h1>
                                 <span class="watch-bar__live" data-i18n-title="watch.bannerHint" title="Tu vois la partie comme les joueurs, sans pouvoir jouer ni voter. Ils voient que tu regardes.">
                                     <span class="watch-bar__dot"></span><span class="watch-bar__live-text" data-i18n="watch.spectating">Spectateur</span>
@@ -899,7 +901,7 @@
                 <div class="watch__message empty-state" id="watch-message" hidden>
                     <div class="empty-state__icon">👀</div>
                     <p class="empty-state__title" id="watch-message-title"></p>
-                    <a href="#/browse" class="btn btn--primary btn--sm"><span data-i18n="watch.backToBrowse">Voir les parties en cours</span></a>
+                    <a href="/browse" class="btn btn--primary btn--sm"><span data-i18n="watch.backToBrowse">Voir les parties en cours</span></a>
                 </div>
             </div>
         </div>

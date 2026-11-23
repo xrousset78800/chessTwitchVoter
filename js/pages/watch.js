@@ -39,7 +39,7 @@ const WatchPage = {
 
     init() {
         this.bind();
-        const query = (window.location.hash.split('?')[1]) || '';
+        const query = ((location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search).split('?')[1]) || '';
         const id = new URLSearchParams(query).get('g') || '';
         if (id === this.id && this.socket) return;
         this.stop();
@@ -346,7 +346,7 @@ const WatchPage = {
         if (!name) return `<span class="watch__dot watch__dot--${color}"></span> <span class="watch__muted">${esc(t('browsePage.openSeat'))}</span>`;
         const login = String(name).toLowerCase();
         return `<span class="watch__dot watch__dot--${color}"></span>
-            <a href="#/records?c=${encodeURIComponent(login)}" class="watch__name">${esc(name)}</a>
+            <a href="/records?c=${encodeURIComponent(login)}" class="watch__name">${esc(name)}</a>
             <a href="https://twitch.tv/${encodeURIComponent(login)}" target="_blank" rel="noopener" class="watch__twitch" aria-label="Twitch"><i class="fab fa-twitch"></i></a>`;
     },
 

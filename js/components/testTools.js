@@ -50,7 +50,7 @@ const TestTools = {
 
     /** Page où ces outils servent : un salon Multi, ou une partie avec inscriptions (Mono) */
     relevant() {
-        return window.location.hash.startsWith('#/multi/') || lobby.active;
+        return (location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search).startsWith('#/multi/') || lobby.active;
     },
 
     check() {

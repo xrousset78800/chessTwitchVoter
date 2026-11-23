@@ -26,7 +26,7 @@ function avatar(p, cls = 'rec-avatar') {
         : `<span class="${cls}">${esc(name[0].toUpperCase())}</span>`;
 }
 
-const profileHref = (login) => `#/records?c=${encodeURIComponent(String(login || '').toLowerCase())}`;
+const profileHref = (login) => `/records?c=${encodeURIComponent(String(login || '').toLowerCase())}`;
 const twitchIcon = (login) => `<a class="rec-twitch" href="https://twitch.tv/${esc(login)}" target="_blank" rel="noopener" aria-label="Twitch" title="twitch.tv/${esc(login)}"><i class="fab fa-twitch"></i></a>`;
 /** Nom de chaîne : ouvre sa fiche dans Records (petit lien Twitch à côté) */
 const channelLink = (p) => `<a href="${profileHref(p.login)}" class="rec-link">${esc(p.displayName || p.login)}</a>${twitchIcon(p.login)}`;
@@ -34,7 +34,7 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 const RUSH_MODES = ['0', '30', '60', '120'];
 const modeLabel = (k) => (k === '0' ? t('modeUnlimited') : k === '60' ? '1 min' : k === '120' ? '2 min' : '30 s');
 const currentChannel = () => {
-    const q = window.location.hash.split('?')[1] || '';
+    const q = (location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search).split('?')[1] || '';
     const c = new URLSearchParams(q).get('c');
     return c && /^[a-z0-9_]{1,25}$/i.test(c) ? c.toLowerCase() : null;
 };
@@ -138,7 +138,8 @@ const RecordsPage = {
             close();
             input.value = '';
             input.blur();
-            window.location.hash = profileHref(login);
+            history.pushState(null, '', profileHref(login));
+            window.dispatchEvent(new Event('routechange'));
         };
         const mark = () => list.querySelectorAll('[role=option]').forEach((li, i) => {
             li.classList.toggle('is-active', i === active);
@@ -215,7 +216,7 @@ const RecordsPage = {
     },
 
     profileBack() {
-        return `<a class="btn btn--sm btn--ghost rec-profile__back" href="#/records"><i class="fas fa-arrow-left"></i> ${esc(t('profileBack'))}</a>`;
+        return `<a class="btn btn--sm btn--ghost rec-profile__back" href="/records"><i class="fas fa-arrow-left"></i> ${esc(t('profileBack'))}</a>`;
     },
 
     renderProfile(login, rush, multi, viewers) {

@@ -162,6 +162,8 @@
     /* La colonne a la hauteur de la fenêtre et ne défile jamais : l'historique prend la place qui reste
        (et défile seul), le podium / la roue reste toujours entier en bas, sans que rien ne monte ni ne descende */
     #page-h24 .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 56px); max-height: none; overflow: hidden; }
+    /* …sans rogner le chrono quand il pulse (il grossit de quelques pixels au-dessus de la colonne) */
+    @supports (overflow-clip-margin: 8px) { #page-h24 .sandbox__sidebar { overflow: clip; overflow-clip-margin: 8px; } }
     #page-h24 .sandbox__sidebar > * { flex-shrink: 0; }
     #page-h24 .h24-history { flex: 1 1 0; min-height: 130px; display: flex; flex-direction: column; overflow: hidden; }
     #page-h24 .h24-history.is-folded { min-height: 0; }

@@ -96,7 +96,7 @@
     "rush": {
       "rules": "Chat solves harder and harder puzzles (majority vote). <strong>3 mistakes</strong> and the run ends. A wrong move or no vote before the timer runs out counts as a mistake.",
       "pause": "Pause between puzzles",
-      "recordHint": "The channel record is saved if you are logged in with Twitch and shows up in <a href=\"#/records\">Records</a>."
+      "recordHint": "The channel record is saved if you are logged in with Twitch and shows up in <a href=\"/records\">Records</a>."
     }
   },
   "game": {

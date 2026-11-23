@@ -1168,8 +1168,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (icon) icon.style.animation = '';
     });
 
-    // Auto-load depuis ?event=slug ou #/tournament?event=slug
-    const hash = window.location.hash;
+    // Auto-load depuis /tournament?event=slug (ou l'ancien #/tournament?event=slug)
+    const hash = (location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search);
     const hashParams = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
     const eventSlug = hashParams.get('event');
     if (eventSlug) {

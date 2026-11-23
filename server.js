@@ -47,6 +47,12 @@ app.get('/multiplayer', (req, res) => {
     res.sendFile(path.join(__dirname, 'multiplayer-setup.html'));
 });
 
+// Adresses propres de l'appli (/24h, /records?c=x, /multi/hote/code…) : même page, le routeur côté client prend le relais
+const APP_ROUTES = /^\/(24h|sandbox|game|browse|records|watch|live|tournament|rush|mono|multi)(\/|$)/;
+app.get(APP_ROUTES, (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/proxy/chess/:gameId', async (req, res) => {
     try {
                 const url = `https://www.chess.com/service/play/games/${req.params.gameId}`;

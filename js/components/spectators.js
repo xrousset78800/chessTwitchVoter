@@ -26,7 +26,7 @@ export function renderSpectatorList(el, data, me = null) {
     const meLogin = (me || '').toLowerCase();
     const chips = names.map(login => {
         const isMe = login === meLogin;
-        return `<a class="spectators__chip${isMe ? ' is-me' : ''}" href="#/records?c=${encodeURIComponent(login)}">
+        return `<a class="spectators__chip${isMe ? ' is-me' : ''}" href="/records?c=${encodeURIComponent(login)}">
             <i class="fas fa-eye"></i> ${esc(login)}${isMe ? ` <span class="spectators__me">${esc(t('spectators.you'))}</span>` : ''}</a>`;
     });
     // Spectateurs non connectés à Twitch (un même compte ouvert deux fois ne compte qu'une fois)
