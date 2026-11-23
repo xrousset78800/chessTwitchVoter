@@ -26,6 +26,17 @@ const SOUNDS = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/chec
 const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
 // Ordre d'affichage du cycle : on choisit (mode, options), on s'inscrit, on joue, puis le récap avant le tour suivant
 const STEPS = ['voteMode', 'voteOptions', 'signup', 'play', 'recap'];
+
+/** Nombre de cases dont le contenu diffère entre deux positions (FEN ou 'start') */
+function squaresChanged(a, b) {
+    const grid = (fen) => (fen === 'start' ? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR' : String(fen).split(' ')[0])
+        .replace(/\d/g, (n) => '.'.repeat(Number(n))).replace(/\//g, '');
+    const x = grid(a), y = grid(b);
+    if (x.length !== 64 || y.length !== 64) return 64;
+    let n = 0;
+    for (let i = 0; i < 64; i++) if (x[i] !== y[i]) n++;
+    return n;
+}
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
 const clean = (m) => String(m || '').replace(/[+#!?]/g, '');
 // Couleurs du tirage (roue, bande, podium, puces des coups) : au choix du viewer, gardées dans son navigateur
@@ -484,7 +495,13 @@ const H24Page = {
         // Caméra (filmée côté Blancs) : retournée quand le viewer voit l'échiquier côté Noirs
         document.querySelector('#h24-live-frame .h24-live__cam')?.classList.toggle('is-flipped', orient === 'black');
         const key = fen + orient;
-        if (key !== this.boardKey) { this.board.position(fen, this.boardKey != null); this.boardKey = key; }
+        if (key !== this.boardKey) {
+            // Animer seulement un coup joué (au plus 4 cases changent : roque) ; un nouveau puzzle ou une
+            // nouvelle partie remplace la position sans faire voyager les pièces à travers l'échiquier
+            this.board.position(fen, this.boardFen != null && squaresChanged(this.boardFen, fen) <= 4);
+            this.boardKey = key;
+            this.boardFen = fen;
+        }
         $('h24-board-wrap')?.classList.toggle('is-my-turn', this.myTurn());
 
         // Flèche : coup tiré au sort, sinon coup en tête, sinon dernier coup joué
