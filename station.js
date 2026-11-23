@@ -212,7 +212,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 secret: hidden ? [...g.votes.values()].reduce((a, v) => a + v.length, 0) : false,
                 masked: hidden ? tally(g.votes).map(({ n }) => n) : null,
                 voters: g.votes.size,
-                recent: g.recent.slice(-8),
+                // Bandeau des votes : pseudo et coup (coup caché en vote secret) ; recentN compte les votes du tour
+                recent: g.recent.slice(-20).map(r => ({ u: r.u, m: hidden ? null : r.m })),
+                recentN: g.recentN || 0,
                 draw: g.draw,
                 random: g.random,
                 result: g.result,
@@ -325,6 +327,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const g = s.game;
         g.votes = new Map();
         g.recent = [];
+        g.recentN = 0;
         g.draw = null;
         // Même durée pour les deux camps (une équipe vide est jouée par l'autre)
         g.turnEndsAt = Date.now() + (DUR.turn || s.options.turn * 1000);
@@ -624,6 +627,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             g.votes.set(login, [...mine, m.san]);
         }
         g.recent.push({ u: login, m: m.san });
+        g.recentN = (g.recentN || 0) + 1;
         if (g.recent.length > 30) g.recent.shift();
         const vc = g.voteCount[s.mode === 'rush' ? 'w' : side];
         vc.set(login, (vc.get(login) || 0) + 1);

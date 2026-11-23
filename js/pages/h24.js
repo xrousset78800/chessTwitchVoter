@@ -10,7 +10,7 @@ import twitchAuth from '../core/twitchAuth.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
-import { renderPodium, renderHistory, paintMoveChips, markPodiumWinner, morphPodiumToWheel, revealWinner, clearWinner } from '../components/voteViews.js';
+import { renderHistory, paintMoveChips, revealWinner, clearWinner, nameColor } from '../components/voteViews.js';
 import { paletteColors } from '../components/votePalettes.js';
 import { CamSender, CamPlayer, CAM_QUALITIES, listCameras, camSupported } from '../components/liveCam.js';
 
@@ -66,6 +66,8 @@ const H24Page = {
     camWatching: false,
     liveFolded: (() => { try { return localStorage.getItem('h24LiveFolded') === '1'; } catch { return false; } })(),
     regieFolded: (() => { try { return localStorage.getItem('h24RegieFolded') === '1'; } catch { return false; } })(),
+    // Panneaux Équipes / Historique repliés (retenu par navigateur)
+    folds: (() => { try { return JSON.parse(localStorage.getItem('h24Fold') || '{}') || {}; } catch { return {}; } })(),
     board: null,
     state: null,
     me: { login: null, team: null, votes: [], maxVotes: 1, ballot: null },
@@ -154,6 +156,8 @@ const H24Page = {
             const rg = e.target.closest('[data-h24-regie]');
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
+            const fd = e.target.closest('[data-h24-fold]');
+            if (fd) { this.toggleFold(fd.dataset.h24Fold); return; }
             const mv = e.target.closest('[data-h24-move]');
             if (mv && !mv.disabled) this.socket?.emit('h24:vote', { move: mv.dataset.h24Move });
         });
@@ -165,6 +169,67 @@ const H24Page = {
             input.value = '';
         });
         window.addEventListener('resize', () => { if (this.socket) this.board?.resize(); });
+        this.applyFolds();
+        this.bindTicker();
+    },
+
+    toggleFold(name) {
+        this.folds[name] = !this.folds[name];
+        try { localStorage.setItem('h24Fold', JSON.stringify(this.folds)); } catch {}
+        this.applyFolds();
+    },
+
+    applyFolds() {
+        document.querySelectorAll('#page-h24 [data-h24-panel]').forEach(p => {
+            const folded = !!this.folds[p.dataset.h24Panel];
+            p.classList.toggle('is-folded', folded);
+            p.querySelector('[data-h24-fold]')?.setAttribute('aria-expanded', String(!folded));
+            const chev = p.querySelector('.h24-fold__chev');
+            if (chev) chev.className = `fas fa-chevron-${folded ? 'down' : 'up'} h24-fold__chev`;
+        });
+    },
+
+    // ------------------------------------------------------------------ bandeau des votes (sous l'échiquier)
+    bindTicker() {
+        const track = $('h24-ticker-track');
+        if (!track || track.dataset.wheelBound) return;
+        track.dataset.wheelBound = '1';
+        // Une seule ligne : la molette fait défiler les votes à l'horizontale
+        track.addEventListener('wheel', (e) => {
+            if (track.scrollWidth <= track.clientWidth) return;
+            const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+            if (!d) return;
+            e.preventDefault();
+            track.scrollLeft += d;
+        }, { passive: false });
+    },
+
+    /** Derniers votes du tour, le plus récent à gauche ; seuls les nouveaux s'animent */
+    renderTicker() {
+        const box = $('h24-ticker');
+        const track = $('h24-ticker-track');
+        if (!box || !track) return;
+        const g = this.state?.phase === 'play' ? this.state.game : null;
+        const key = g ? g.fen : '';
+        if (key !== this.tickerKey) {
+            this.tickerKey = key;
+            this.tickerN = 0;
+            track.innerHTML = '';
+        }
+        const recent = g?.recent || [];
+        const total = g?.recentN ?? recent.length;
+        const fresh = Math.min(Math.max(0, total - (this.tickerN || 0)), recent.length);
+        this.tickerN = total;
+        const voted = t('anonymity.voted', null, 'a voté');
+        recent.slice(recent.length - fresh).forEach(r => {
+            const item = document.createElement('span');
+            item.className = 'vote-ticker__item';
+            item.innerHTML = `<span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span> <span class="vote-ticker__move${r.m ? '' : ' is-hidden'}">${esc(r.m || voted)}</span>`;
+            track.prepend(item);
+        });
+        while (track.children.length > 20) track.lastElementChild.remove();
+        if (fresh) track.scrollLeft = 0;
+        box.classList.toggle('has-votes', track.children.length > 0);
     },
 
     // ------------------------------------------------------------------ échiquier
@@ -264,6 +329,7 @@ const H24Page = {
         this.renderAccount();
         this.renderStage();
         this.renderMoves();
+        this.renderTicker();
         this.renderStyle();
         this.renderBoard();
         this.renderClock();
@@ -635,6 +701,7 @@ const H24Page = {
             $('h24-move-form').hidden = true;
             $('h24-score').hidden = true;
             this.hideDraw();
+            this.clearLive();
         }
     },
 
@@ -685,6 +752,44 @@ const H24Page = {
         this.dock(this.style);
         // Bande : sa place reste réservée, l'échiquier garde la même taille d'une phase à l'autre
         $('h24-wheel-area')?.classList.toggle('is-reserved', this.style === 'band');
+        const g = this.state?.phase === 'play' ? this.state.game : null;
+        if (g) { this.liveSig = null; this.liveWheel(g); }
+    },
+
+    /** Roue ou bande toujours affichée pendant la partie : elle se remplit au fil des votes, puis tourne au tirage */
+    liveWheel(g) {
+        const slot = $('h24-votes-panel');
+        const area = $('h24-wheel-area');
+        if (!slot || !area || g.draw || g.result) return;
+        if (this.wheel?.isSpinning || this.revealing) return;
+        // Nouveau coup à jouer : roue neuve (plus de coup gagnant affiché au centre)
+        if (this.liveKey !== g.fen) {
+            this.liveKey = g.fen;
+            this.liveSig = null;
+            if (this.wheel) this.wheel = null;
+        }
+        const wheel = this.ensureWheel(this.style);
+        // Vote secret : des parts anonymes, mais qui grossissent quand même
+        const entries = g.secret !== false && Array.isArray(g.masked)
+            ? g.masked.filter(n => n > 0).map((n, i) => ['?' + '\u200b'.repeat(i), n])
+            : (g.votes || []).filter(v => v.count > 0).map(v => [v.move, v.count]);
+        slot.classList.add('is-live');
+        area.classList.add('is-visible', 'is-live');
+        const sig = `${this.style}|${JSON.stringify(entries)}`;
+        if (sig === this.liveSig) return;
+        this.liveSig = sig;
+        wheel.votes = new Map(entries.map(([m, n]) => [m, { count: n, voters: new Map() }]));
+        wheel.draw();
+        const total = entries.reduce((a, [, n]) => a + n, 0) || (typeof g.secret === 'number' ? g.secret : 0);
+        const tot = $('h24-votes-total');
+        if (tot) tot.textContent = total ? t(total > 1 ? 'watch.totalMany' : 'watch.totalOne', { n: total }, `${total} vote${total > 1 ? 's' : ''}`) : t('wheelStyle.waiting', null, '');
+    },
+
+    clearLive() {
+        this.liveKey = null;
+        this.liveSig = null;
+        $('h24-votes-panel')?.classList.remove('is-live');
+        $('h24-wheel-area')?.classList.remove('is-visible', 'is-live');
     },
 
     /** Bande sous l'échiquier ; roue classique à la place du podium */
@@ -699,7 +804,8 @@ const H24Page = {
         if (docked) {
             if (area.parentElement !== slot) slot.appendChild(area);
         } else {
-            const after = document.querySelector('#page-h24 .board-wrapper');
+            // Bande sous le bandeau des votes, lui-même collé sous l'échiquier
+            const after = $('h24-ticker') || document.querySelector('#page-h24 .board-wrapper');
             if (after && area.previousElementSibling !== after) after.after(area);
         }
     },
@@ -813,10 +919,8 @@ const H24Page = {
             hint.classList.toggle('is-active', this.myTurn());
         }
         $('h24-move-form')?.toggleAttribute('hidden', !this.myTurn());
-        // Nouveau tour : le podium repart de zéro (pas de coup fantôme du tour précédent)
-        if (!g.votes?.length) $('h24-votes')?.querySelector('.podium')?.remove();
-        if (!g.draw) renderPodium($('h24-votes'), $('h24-votes-total'), g.votes || [], { turn: g.turn, colors: COLORS, secret: g.secret, masked: g.masked });
         this.renderDraw(g);
+        this.liveWheel(g);
         const first = (g.startFen || '').split(' ')[1] === 'b' ? 'b' : 'w';
         renderHistory($('h24-history'), (g.history || []).map((san, i) => ({ san, v: s.mode === 'teams' ? g.hv?.[i] ?? null : null })), first);
         const score = $('h24-score');
@@ -844,7 +948,6 @@ const H24Page = {
         // Personne n'a voté, un seul coup proposé ou arrivé trop tard : le coup tiré directement
         if (g.draw.random || votes.length < 2 || left < 1500) {
             const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
-            markPodiumWinner($('h24-votes'), g.draw.winner);
             revealWinner(slot, { move: g.draw.winner, color: COLORS[0], pct: g.draw.random || !total ? null : Math.round(n * 100 / total), turn: g.turn });
             return;
         }
@@ -853,10 +956,8 @@ const H24Page = {
         wheel.votes = new Map(votes.map(v => [v.m, { count: v.n, voters: new Map() }]));
         area.classList.add('is-visible', 'is-spinning');
         wheel.draw();
-        if (area.classList.contains('wheel-area--docked') && !slot.classList.contains('is-drawing')) {
-            morphPodiumToWheel(slot, area.querySelector('.wheel-container'));
-            slot.classList.add('is-drawing');
-        }
+        // La roue est déjà en place (remplie pendant le vote) : elle tourne sans changer de place
+        if (area.classList.contains('wheel-area--docked') && !slot.classList.contains('is-live')) slot.classList.add('is-drawing');
         this.revealing = true;
         wheel.onSpinEnd = () => {
             this.revealing = false;
@@ -880,7 +981,6 @@ const H24Page = {
         wheel.currentTurn = () => (this.state?.game?.turn === 'b' ? 'b' : 'w');
         wheel.highlightWinner = () => {
             if (!this.drawSig) return;   // tirage déjà terminé côté serveur
-            markPodiumWinner($('h24-votes'), wheel.winner);
             revealWinner($('h24-votes-panel'), { move: wheel.winner, color: wheel.winnerColor, pct: wheel.winnerPct, turn: wheel.currentTurn() });
         };
         // La page tient sans scroll : pas de défilement vers la bande

@@ -761,7 +761,9 @@
                                 <div id="h24-board" class="watch__board"></div>
                             </div>
                         </div>
-                        <!-- Bande de tirage sous l'échiquier ; la roue classique se pose à la place du podium -->
+                        <!-- Derniers votes du tour : pseudo et coup -->
+                        <div class="vote-ticker h24-ticker" id="h24-ticker"><span class="vote-ticker__label" data-i18n="ticker.label">Votes</span><div class="vote-ticker__track" id="h24-ticker-track"></div></div>
+                        <!-- Bande sous l'échiquier ou roue dans la colonne : remplies en direct par les votes -->
                         <div id="h24-wheel-area" class="watch-wheel"></div>
                     </div>
 
@@ -775,6 +777,17 @@
                         </div>
                         <!-- Régie (PC du streamer) : Phantom, pause, chaîne de la vue réelle -->
                         <div class="h24-regie" id="h24-regie" hidden></div>
+                        <div class="panel h24-teams-panel" data-h24-panel="teams">
+                            <button type="button" class="panel__header h24-fold" data-h24-fold="teams" aria-expanded="true"><i class="fas fa-users"></i> <span data-i18n="h24.teamsTitle">Équipes</span><i class="fas fa-chevron-up h24-fold__chev"></i></button>
+                            <div class="panel__content">
+                                <div class="h24-account" id="h24-account"></div>
+                                <div class="h24-teams" id="h24-teams"></div>
+                            </div>
+                        </div>
+                        <div class="panel h24-history" data-h24-panel="history">
+                            <button type="button" class="panel__header h24-fold" data-h24-fold="history" aria-expanded="true"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span><i class="fas fa-chevron-up h24-fold__chev"></i></button>
+                            <div class="panel__content"><div class="history-list" id="h24-history"></div></div>
+                        </div>
                         <!-- Récap, votes du mode et des options, inscription -->
                         <div class="h24-card" id="h24-card" hidden></div>
                         <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
@@ -786,17 +799,6 @@
                                 <div class="vote-list" id="h24-votes"></div>
                                 <div class="vote-total" id="h24-votes-total"></div>
                             </div>
-                        </div>
-                        <div class="panel h24-teams-panel">
-                            <div class="panel__header"><i class="fas fa-users"></i> <span data-i18n="h24.teamsTitle">Équipes</span></div>
-                            <div class="panel__content">
-                                <div class="h24-account" id="h24-account"></div>
-                                <div class="h24-teams" id="h24-teams"></div>
-                            </div>
-                        </div>
-                        <div class="panel h24-history">
-                            <div class="panel__header"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span></div>
-                            <div class="panel__content"><div class="history-list" id="h24-history"></div></div>
                         </div>
                     </div>
                 </div>

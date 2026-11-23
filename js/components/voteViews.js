@@ -156,7 +156,7 @@ export function renderHistory(el, moves, firstColor = 'w') {
 
 const MAX_TICKER = 30;
 
-function nameColor(name) {
+export function nameColor(name) {
     let h = 0;
     for (const c of String(name)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
     return `hsl(${h % 360} 75% 72%)`;
