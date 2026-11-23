@@ -53,7 +53,7 @@ class GameEngine {
             move: new Audio('mp3/move.mp3'),
             capture: new Audio('mp3/take.mp3'),
             check: new Audio('mp3/check.mp3'),
-            mate: new Audio('mp3/mate.wav')
+            mate: new Audio('mp3/end.wav')
         };
     }
 

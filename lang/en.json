@@ -666,6 +666,8 @@
     "registeredCount": "{n} signed up",
     "loading": "Loading…",
     "recapProblems": "{solved} / {total} puzzles solved",
+    "checkmate": "Checkmate",
+    "endRush": "Rush over",
     "whiteWins": "White wins",
     "blackWins": "Black wins",
     "drawResult": "Draw",

@@ -81,7 +81,7 @@ class ProblemsManager {
                 move: new Audio('mp3/move.mp3'),
                 capture: new Audio('mp3/take.mp3'),
                 check: new Audio('mp3/check.mp3'),
-                success: new Audio('mp3/mate.wav'),
+                success: new Audio('mp3/end.wav'),
                 fail: new Audio('mp3/check.mp3')
             };
         } catch (e) {

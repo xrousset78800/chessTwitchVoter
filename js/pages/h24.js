@@ -21,7 +21,7 @@ const t = (key, params, fallback) => {
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = (id) => document.getElementById(id);
 // Sons des coups, comme sur les autres échiquiers
-const SOUNDS = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', mate: 'mp3/mate.wav' };
+const SOUNDS = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', end: 'mp3/end.wav' };
 const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
 const STEPS = ['play', 'recap', 'voteMode', 'voteOptions', 'signup'];
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
@@ -125,9 +125,10 @@ const H24Page = {
             this.skew = st.now - Date.now();
             const prev = this.state?.game;
             this.state = st;
-            // Un coup vient d'être joué : son du coup
+            // Fin de partie : carillon (mat, nulle ou fin du rush) ; sinon un coup vient d'être joué : son du coup
             const h = st.game?.history;
-            if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
+            if (prev && st.game?.result && !prev.result) this.playSound('end');
+            else if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
             this.render();
         });
         socket.on('h24:me', (me) => {
@@ -209,12 +210,16 @@ const H24Page = {
     },
 
     playMoveSound(san) {
+        if (!san) return;
+        this.playSound(san.includes('#') ? 'end' : san.includes('+') ? 'check' : san.includes('x') ? 'capture' : 'move');
+    },
+
+    playSound(kind) {
         const vol = this.muted ? 0 : this.volume;
-        if (!vol || !san) return;
-        const kind = san.includes('#') ? 'mate' : san.includes('+') ? 'check' : san.includes('x') ? 'capture' : 'move';
+        if (!vol || !SOUNDS[kind]) return;
         try {
             const a = new Audio(SOUNDS[kind]);
-            a.volume = vol * (kind === 'mate' ? 0.5 : 0.8);
+            a.volume = vol * (kind === 'end' ? 0.6 : 0.8);
             a.play().catch(() => {});   // pas encore de clic sur la page : le navigateur refuse, tant pis
         } catch {}
     },
@@ -356,6 +361,62 @@ const H24Page = {
         }
         this.annotations?.setOverlay?.(overlay);
         this.highlightLast(g?.lastMove);
+        this.renderEnd(g);
+    },
+
+    /** Issue de la partie en clair : icône, titre, détail, couleur */
+    resultInfo(res) {
+        if (!res) return null;
+        if (res.kind === 'rush') return {
+            tone: 'rush', icon: 'fa-flag-checkered',
+            title: t('h24.endRush', null, 'Fin du rush'),
+            sub: t('h24.recapRush', { solved: res.solved }, `${res.solved} puzzle(s) résolu(s)`)
+                + (res.maxRating ? ` · ${t('h24.maxRating', { r: res.maxRating }, `rating max ${res.maxRating}`)}` : '')
+        };
+        if (res.kind === 'mate') return {
+            tone: res.winner, icon: 'fa-crown',
+            title: t('h24.checkmate', null, 'Échec et mat'),
+            sub: t(res.winner === 'w' ? 'h24.whiteWins' : 'h24.blackWins', null, res.winner === 'w' ? 'Victoire des Blancs' : 'Victoire des Noirs')
+        };
+        const reason = res.reason && res.reason !== 'draw' ? t(`h24.drawReason.${res.reason}`, null, res.reason) : '';
+        return {
+            tone: 'draw', icon: 'fa-handshake',
+            title: t('h24.drawResult', null, 'Partie nulle'),
+            sub: reason ? reason.charAt(0).toUpperCase() + reason.slice(1) : ''
+        };
+    },
+
+    renderEnd(g) {
+        const wrap = $('h24-board-wrap');
+        if (!wrap) return;
+        const res = g?.result;
+        let el = $('h24-end');
+        const board = $('h24-board');
+        board?.querySelectorAll('.h24-mated, .h24-winner').forEach(sq => sq.classList.remove('h24-mated', 'h24-winner'));
+        if (!res) { if (el) el.remove(); this.endKey = null; return; }
+        // Rois : le maté en rouge, le vainqueur en doré
+        if (res.kind === 'mate' && board && typeof Chess === 'function') {
+            try {
+                new Chess(g.fen).board().forEach((row, r) => row.forEach((p, f) => {
+                    if (p?.type === 'k') board.querySelector(`.square-${'abcdefgh'[f]}${8 - r}`)?.classList.add(p.color === res.winner ? 'h24-winner' : 'h24-mated');
+                }));
+            } catch {}
+        }
+        const info = this.resultInfo(res);
+        const key = JSON.stringify(res) + (g.fen || '');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'h24-end';
+            wrap.appendChild(el);
+        }
+        el.className = `h24-end h24-end--${info.tone}`;
+        if (key === this.endKey) return;
+        this.endKey = key;
+        el.innerHTML = `<div class="h24-end__card">
+            <i class="fas ${info.icon} h24-end__icon"></i>
+            <div class="h24-end__title">${esc(info.title)}</div>
+            ${info.sub ? `<div class="h24-end__sub">${esc(info.sub)}</div>` : ''}
+        </div>`;
     },
 
     highlightLast(last) {
@@ -778,7 +839,11 @@ const H24Page = {
         else {
             card.innerHTML = this.cardHtml();
             const turn = $('h24-turn');
-            if (turn) { turn.textContent = ''; turn.className = 'watch__status h24-turn'; }
+            const end = this.resultInfo(s.game?.result);
+            if (turn) {
+                turn.textContent = end ? [end.title, end.sub].filter(Boolean).join(' · ') : '';
+                turn.className = `watch__status h24-turn${end ? ` h24-turn--end h24-turn--end-${end.tone}` : ''}`;
+            }
             $('h24-hint').textContent = t(`h24.phase.${s.phase}`, null, '');
             $('h24-hint').classList.remove('is-active');
             $('h24-move-form').hidden = true;
@@ -953,17 +1018,13 @@ const H24Page = {
     },
 
     recapHtml(r) {
-        const res = r.result || {};
-        let headline;
-        if (res.kind === 'rush') headline = t('h24.recapRush', { solved: res.solved }, `${res.solved} puzzle(s) résolu(s)`)
-            + (res.maxRating ? ` · ${t('h24.maxRating', { r: res.maxRating }, `rating max ${res.maxRating}`)}` : '');
-        else if (res.kind === 'mate') headline = t(res.winner === 'w' ? 'h24.whiteWins' : 'h24.blackWins', null, res.winner === 'w' ? 'Victoire des Blancs' : 'Victoire des Noirs');
-        else headline = t('h24.drawResult', null, 'Partie nulle') + (res.reason ? ` · ${t(`h24.drawReason.${res.reason}`, null, res.reason)}` : '');
+        const info = this.resultInfo(r.result || { kind: 'draw' });
+        const headline = [info.title, info.sub].filter(Boolean).join(' · ');
         const mins = Math.max(1, Math.round((r.durationMs || 0) / 60000));
         const tops = ['w', 'b'].filter(side => r.top?.[side]?.length).map(side => `<div class="h24-recap__top h24-recap__top--${side}">
             <span class="h24-team__swatch"></span><ol>${r.top[side].map(p => `<li>${esc(p.login)} <small>${p.n}</small></li>`).join('')}</ol></div>`).join('');
         return `<h2 class="h24-card__title">${esc(t('h24.recapTitle', null, 'Fin de partie'))}</h2>
-            <p class="h24-recap__headline">${esc(headline)}</p>
+            <p class="h24-recap__headline h24-recap__headline--${info.tone}"><i class="fas ${info.icon}"></i> ${esc(headline)}</p>
             <div class="h24-recap__stats">
                 ${r.mode !== 'rush' ? `<span><strong>${Math.ceil((r.plies || 0) / 2)}</strong> ${esc(t('h24.moves', null, 'coups'))}</span>` : ''}
                 <span><strong>${mins}</strong> min</span>

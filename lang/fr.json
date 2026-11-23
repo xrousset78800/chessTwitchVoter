@@ -666,6 +666,8 @@
     "registeredCount": "{n} inscrit(s)",
     "loading": "Chargement…",
     "recapProblems": "{solved} / {total} problèmes résolus",
+    "checkmate": "Échec et mat",
+    "endRush": "Fin du rush",
     "whiteWins": "Victoire des Blancs",
     "blackWins": "Victoire des Noirs",
     "drawResult": "Partie nulle",
