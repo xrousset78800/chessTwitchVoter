@@ -161,7 +161,7 @@
 @media (min-width: 1101px) {
     /* La colonne a la hauteur de la fenêtre et ne défile jamais : l'historique prend la place qui reste
        (et défile seul), le podium / la roue reste toujours entier en bas, sans que rien ne monte ni ne descende */
-    #page-h24 .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 56px); max-height: none; overflow: hidden; }
+    #page-h24 .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 56px + var(--h24-side-lift, 0px)); max-height: none; overflow: hidden; }
     /* …sans rogner le chrono quand il pulse (il grossit de quelques pixels au-dessus de la colonne) */
     @supports (overflow-clip-margin: 8px) { #page-h24 .sandbox__sidebar { overflow: clip; overflow-clip-margin: 8px; } }
     #page-h24 .sandbox__sidebar > * { flex-shrink: 0; }
@@ -418,13 +418,31 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-opt i { width: 12px; text-align: center; color: var(--twitch-purple); font-size: 0.72rem; }
 .h24-opt__label { color: var(--text-secondary); }
 .h24-opt__value { color: var(--text-primary); font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+/* Pendant les votes : le mode et les options apparaissent un à un, à mesure qu'ils sont votés */
+#page-h24 .watch-bar__mode.is-pending { color: var(--text-secondary); font-style: italic; font-weight: 600; }
+.h24-opt.is-new, #page-h24 .watch-bar__mode.is-new { animation: h24-opt-in 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.25) both; border-radius: 6px; }
+@keyframes h24-opt-in {
+    0%   { opacity: 0; transform: translateY(8px) scale(0.6); filter: blur(3px); background: rgba(145, 70, 255, 0.5); box-shadow: 0 0 0 0 rgba(145, 70, 255, 0.6); }
+    45%  { opacity: 1; transform: translateY(0) scale(1.12); filter: none; background: rgba(145, 70, 255, 0.35); box-shadow: 0 0 14px 2px rgba(145, 70, 255, 0.45); }
+    100% { transform: none; background: transparent; box-shadow: 0 0 0 0 rgba(145, 70, 255, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .h24-opt.is-new, #page-h24 .watch-bar__mode.is-new { animation-duration: 0.01s; } }
 #page-h24 .h24-turn { font-size: 0.82rem; }
 #page-h24 #h24-moves { padding: 8px; }
 #page-h24 #h24-moves .moves-panel__content { gap: 4px; }
 @media (min-width: 1101px) {
-    #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 56px); }
+    #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 56px + var(--h24-lift)); }
+    /* Le déroulé du cycle ne surmonte que l'échiquier : les deux colonnes remontent à sa hauteur */
+    #page-h24 { --h24-lift: 20px; }
+    #page-h24 .sandbox__left { margin-top: calc(-1 * var(--h24-lift)); }
+    /* À droite, seulement quand le déroulé (centré sur la page) ne la touche pas */
+    #page-h24 .sandbox__sidebar { margin-top: calc(-1 * var(--h24-side-lift, 0px)); }
+    #page-h24 .sandbox__left { top: calc(var(--nav-height) + 8px); }
     #page-h24 #h24-moves { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
     #page-h24 #h24-moves .moves-panel__content { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+}
+@media (min-width: 1280px) {
+    #page-h24 { --h24-side-lift: 20px; }
 }
 .podium.is-masked .podium__piece img { visibility: hidden; }
 

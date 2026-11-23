@@ -835,24 +835,55 @@ const H24Page = {
         const force = (p) => this.me.regie ? ` data-h24-force="${p}" title="${esc(t('h24.forceStep', null, 'Régie : passer à cette étape'))}"` : '';
         el.innerHTML = STEPS.map((p, i) => `<li class="h24-step${i === cur ? ' is-current' : ''}${cur > i ? ' is-done' : ''}"${force(p)}>
             <span class="h24-step__dot">${i + 1}</span><span>${esc(t(`h24.phase.${p}`, null, p))}</span></li>`).join('');
+        // Pendant les votes, le bloc se vide puis se remplit au fil des résultats : mode, puis chaque option
+        const b = s?.ballot;
+        const voting = s?.phase === 'voteMode' || s?.phase === 'voteOptions';
+        const pending = new Set(voting ? [...(s?.next || []), ...(b && b.winner == null ? [b.id] : [])] : []);
+        if (s?.phase === 'voteMode') ['turn', 'decision', 'spin', 'votes', 'anonymity'].forEach(k => pending.add(k));
+        const mode = s?.phase === 'voteMode' ? (b?.winner != null ? b.winner : null) : s?.mode;
         const title = $('h24-mode');
-        if (title) title.textContent = s?.mode ? t(`h24.mode.${s.mode}`, null, s.mode) : '24/24';
+        if (title) {
+            const txt = mode ? t(`h24.mode.${mode}`, null, mode) : t('h24.modeVoting', null, 'Mode au vote…');
+            if (title.textContent !== txt) {
+                title.textContent = txt;
+                if (voting && mode) this.popIn(title);
+            }
+            title.classList.toggle('is-pending', !mode);
+        }
         const opts = $('h24-options');
         if (opts) {
             // Récap des options en vigueur : intitulé court, valeur, icône
-            const o = s?.options || {};
+            const o = { ...(s?.options || {}) };
             const rows = [];
             const row = (key, label, value, icon) => rows.push(`<div class="h24-opt" data-opt="${key}"><i class="fas ${icon}"></i>
                 <span class="h24-opt__label">${esc(label)}</span><span class="h24-opt__value">${esc(value)}</span></div>`);
+            // Option en cours de vote : on montre déjà le gagnant dès qu'il est connu
+            if (b?.winner != null && b.id !== 'mode') o[b.id] = b.winner;
             if (o.turn) row('turn', t('h24.opt.turn', null, 'Tour'), choiceLabel('turn', o.turn), 'fa-stopwatch');
             if (s?.mode === 'teams' && o.decision) row('decision', t('h24.opt.decision', null, 'Décision'), choiceLabel('decision', o.decision), CHOICE_ICON[o.decision] || 'fa-check');
             if (s?.mode === 'teams' && o.spin) row('spin', t('h24.opt.spin', null, 'Tirage'), choiceLabel('spin', o.spin), CHOICE_ICON[o.spin] || 'fa-play');
             if (o.votes) row('votes', t('h24.opt.votes', null, 'Votes'), t('h24.opt.perTurn', { n: o.votes }, `${o.votes} / tour`), 'fa-hand-pointer');
             if (o.anonymity) row('anonymity', t('h24.opt.anonymity', null, 'Votes'), t(`h24.opt.anon.${o.anonymity}`, null, o.anonymity), CHOICE_ICON[o.anonymity] || 'fa-eye');
-            opts.innerHTML = s?.mode ? rows.join('') : '';
+            const shown = mode ? rows.filter(r => !pending.has(r.match(/data-opt="(\w+)"/)[1])) : [];
+            const html = shown.join('');
+            if (opts.dataset.html !== html) {
+                const before = new Set([...opts.querySelectorAll('[data-opt]')].map(e => e.dataset.opt));
+                opts.dataset.html = html;
+                opts.innerHTML = html;
+                // Une option qui vient d'être votée arrive avec une petite animation
+                if (voting) opts.querySelectorAll('[data-opt]').forEach(e => { if (!before.has(e.dataset.opt)) this.popIn(e); });
+            }
         }
         const viewers = $('h24-viewers');
         if (viewers) viewers.textContent = String(s?.viewers || 0);
+    },
+
+    /** Petite entrée animée (option tout juste votée) */
+    popIn(el) {
+        el.classList.remove('is-new');
+        void el.offsetWidth;
+        el.classList.add('is-new');
+        setTimeout(() => el.classList.remove('is-new'), 1400);
     },
 
     renderTeams() {
@@ -1162,9 +1193,8 @@ const H24Page = {
         const g = s.game;
         const side = $('h24-turn');
         if (side) {
-            side.textContent = s.mode === 'rush'
-                ? this.puzzleLabel(g)
-                : t(g.turn === 'w' ? 'h24.whiteToPlay' : 'h24.blackToPlay', null, g.turn === 'w' ? 'Aux Blancs de jouer' : 'Aux Noirs de jouer');
+            // Le trait se lit déjà dans les bandeaux d'équipe autour de l'échiquier : rien ici hors puzzle rush
+            side.textContent = s.mode === 'rush' ? this.puzzleLabel(g) : '';
             side.className = `watch__status h24-turn h24-turn--${g.turn}`;
         }
         const hint = $('h24-hint');

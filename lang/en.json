@@ -762,6 +762,7 @@
     "viaSite": "website",
     "yourTeam": "Your team",
     "toMove": "To move",
+    "modeVoting": "Mode being voted…",
     "volume": "Volume",
     "mute": "Mute / unmute",
     "ballotHow": { "votes": "chosen by vote", "tie": "tie: drawn at random", "default": "nobody voted: default value" },
