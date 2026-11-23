@@ -23,7 +23,8 @@ const $ = (id) => document.getElementById(id);
 // Sons des coups, comme sur les autres échiquiers
 const SOUNDS = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', end: 'mp3/end.wav' };
 const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
-const STEPS = ['play', 'recap', 'voteMode', 'voteOptions', 'signup'];
+// Ordre d'affichage du cycle : on choisit (mode, options), on s'inscrit, on joue, puis le récap avant le tour suivant
+const STEPS = ['voteMode', 'voteOptions', 'signup', 'play', 'recap'];
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
 const clean = (m) => String(m || '').replace(/[+#!?]/g, '');
 // Couleurs du tirage (roue, bande, podium, puces des coups) : au choix du viewer, gardées dans son navigateur
