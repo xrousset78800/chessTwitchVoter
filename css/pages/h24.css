@@ -439,6 +439,10 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
     background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid rgba(255, 255, 255, 0.15);
 }
 .h24-regie__err { color: #f87171; }
+/* Zoom de la caméra : curseur compact, valeur à droite (1.5×, « optique » si la caméra zoome elle-même) */
+.h24-regie__zoom { flex: 1 1 140px; display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 0.75rem; color: var(--text-secondary, rgba(255, 255, 255, 0.7)); }
+.h24-regie__zoom input { flex: 1; min-width: 60px; accent-color: var(--accent, #9146ff); }
+.h24-regie__zoom span { min-width: 2.6em; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------------ fin de partie : bandeau sur l'échiquier */
 .h24-end {

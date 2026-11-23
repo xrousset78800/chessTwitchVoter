@@ -799,6 +799,8 @@
       "camDefault": "Caméra par défaut",
       "camDevice": "Caméra",
       "camQuality": "Qualité",
+      "camZoom": "Zoom",
+      "camZoomOptical": "optique",
       "camLow": "Basse",
       "camMid": "Moyenne",
       "camHigh": "Haute",

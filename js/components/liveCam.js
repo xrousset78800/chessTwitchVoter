@@ -20,6 +20,7 @@ export const CAM_QUALITIES = {
     high: { width: 1280, height: 720, fps: 20, bitrate: 1_500_000 }
 };
 const KEY_EVERY_MS = 2000;
+export const CAM_ZOOM = { min: 1, max: 4, step: 0.1 };
 const MAX_IN_FLIGHT = 6;   // morceaux envoyés sans accusé de réception : au-delà, le réseau ne suit pas
 
 export const camSupported = {
@@ -58,7 +59,7 @@ export class CamSender {
 
     setSocket(socket) { this.socket = socket; }
 
-    async start({ deviceId = '', quality = 'mid' } = {}) {
+    async start({ deviceId = '', quality = 'mid', zoom = 1 } = {}) {
         this.stop(true);
         const q = CAM_QUALITIES[quality] || CAM_QUALITIES.mid;
         if (!camSupported.send()) throw new Error('Navigateur sans WebCodecs : utilise Chrome ou Edge');
@@ -87,6 +88,9 @@ export class CamSender {
         this.sent = 0;
         this.dropped = 0;
         this.info = { width, height, fps: q.fps, codec: cfg.codec.startsWith('avc1') ? 'H.264' : 'VP8', label: track.label };
+        this.zoomCaps = (() => { try { return track.getCapabilities?.().zoom || null; } catch { return null; } })();
+        this.crop = 1;
+        await this.setZoom(zoom);
 
         this.encoder = new VideoEncoder({
             output: (chunk) => this.send(chunk),
@@ -122,6 +126,39 @@ export class CamSender {
         return this.info;
     }
 
+    /**
+     * Zoom en direct, sans relancer la caméra : optique si la caméra le permet (Chrome/Edge),
+     * le reste en recadrant le centre de l'image avant compression.
+     */
+    async setZoom(z) {
+        z = Math.min(CAM_ZOOM.max, Math.max(CAM_ZOOM.min, Number(z) || 1));
+        this.zoom = z;
+        let hw = 1;
+        const c = this.zoomCaps;
+        if (c && this.track && c.max > c.min) {
+            const base = c.min > 0 ? c.min : 1;
+            const want = Math.min(c.max, Math.max(c.min, base * z));
+            try {
+                await this.track.applyConstraints({ advanced: [{ zoom: want }] });
+                hw = want / base;
+            } catch { hw = 1; }
+        }
+        this.crop = Math.max(1, z / hw);
+        if (this.info) this.info.zoom = { value: z, optical: hw > 1.01 };
+        return this.info?.zoom;
+    }
+
+    /** Image recadrée au centre (zoom numérique), aux dimensions de l'encodeur */
+    cropped(frame) {
+        const w = this.cfg.width, h = this.cfg.height;
+        if (!this.canvas) { this.canvas = new OffscreenCanvas(w, h); this.ctx2d = this.canvas.getContext('2d'); }
+        if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
+        const fw = frame.displayWidth, fh = frame.displayHeight;
+        const sw = fw / this.crop, sh = fh / this.crop;
+        this.ctx2d.drawImage(frame, (fw - sw) / 2, (fh - sh) / 2, sw, sh, 0, 0, w, h);
+        return new VideoFrame(this.canvas, { timestamp: frame.timestamp });
+    }
+
     /** (Re)présente le flux au serveur : début de diffusion, ou reconnexion */
     announce() {
         if (!this.active || !this.socket) return;
@@ -140,7 +177,10 @@ export class CamSender {
             this.lastFrame = now;
             const key = this.needKey || now - this.lastKey >= KEY_EVERY_MS;
             if (key) { this.lastKey = now; this.needKey = false; }
-            enc.encode(frame, { keyFrame: key });
+            if (this.crop > 1.001) {
+                const out = this.cropped(frame);
+                try { enc.encode(out, { keyFrame: key }); } finally { out.close(); }
+            } else enc.encode(frame, { keyFrame: key });
         } finally {
             frame.close();
         }

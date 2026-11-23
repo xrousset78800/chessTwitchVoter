@@ -12,7 +12,7 @@ import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
 import { renderHistory, paintMoveChips, revealWinner, clearWinner, nameColor, renderPodium, markPodiumWinner } from '../components/voteViews.js';
 import { paletteColors } from '../components/votePalettes.js';
-import { CamSender, CamPlayer, CAM_QUALITIES, listCameras, camSupported } from '../components/liveCam.js';
+import { CamSender, CamPlayer, CAM_QUALITIES, CAM_ZOOM, listCameras, camSupported } from '../components/liveCam.js';
 
 const t = (key, params, fallback) => {
     const s = window.i18n?.t(key, params);
@@ -62,7 +62,7 @@ const H24Page = {
     socket: null,
     regie: { live: false, channel: loadRegie().channel || '', hidden: !!loadRegie().hidden },
     // Caméra de la régie (émission) et lecteur de la vue réelle (réception)
-    cam: { deviceId: loadCam().deviceId || '', quality: CAM_QUALITIES[loadCam().quality] ? loadCam().quality : 'mid', error: '', devices: null },
+    cam: { deviceId: loadCam().deviceId || '', quality: CAM_QUALITIES[loadCam().quality] ? loadCam().quality : 'mid', zoom: Math.min(CAM_ZOOM.max, Math.max(CAM_ZOOM.min, Number(loadCam().zoom) || 1)), error: '', devices: null },
     camSender: null,
     camPlayer: null,
     camWatching: false,
@@ -608,6 +608,10 @@ const H24Page = {
             </div>
             </div>`;
         el.querySelectorAll('[data-h24-cam-pref]').forEach(sel => sel.addEventListener('change', () => this.setCamPref(sel.dataset.h24CamPref, sel.value)));
+        // Zoom : appliqué en direct pendant qu'on fait glisser, enregistré au relâchement
+        const zoom = el.querySelector('[data-h24-cam-zoom]');
+        zoom?.addEventListener('input', () => this.setCamZoom(zoom.value, false));
+        zoom?.addEventListener('change', () => this.setCamZoom(zoom.value, true));
         if (typing) { const i = $('h24-regie-channel'); i?.focus(); i?.setSelectionRange(i.value.length, i.value.length); }
         el.querySelector('[data-h24-regie-form]')?.addEventListener('submit', (e) => { e.preventDefault(); this.regieAction('channel'); });
         // Quitter le champ suffit à valider la chaîne
@@ -630,15 +634,41 @@ const H24Page = {
                 <select data-h24-cam-pref="quality" title="${esc(t('h24.regie.camQuality', null, 'Qualité'))}">
                     ${Object.keys(CAM_QUALITIES).map(k => `<option value="${k}"${k === this.cam.quality ? ' selected' : ''}>${esc(q[k])} (${CAM_QUALITIES[k].height}p)</option>`).join('')}
                 </select>
+                <label class="h24-regie__zoom" title="${esc(t('h24.regie.camZoom', null, 'Zoom'))}">
+                    <i class="fas fa-search-plus"></i>
+                    <input type="range" data-h24-cam-zoom min="${CAM_ZOOM.min}" max="${CAM_ZOOM.max}" step="${CAM_ZOOM.step}" value="${this.cam.zoom}">
+                    <span data-h24-cam-zoom-val>${this.zoomLabel()}</span>
+                </label>
                 <button type="button" class="btn btn--sm${camLive ? ' btn--primary' : ''}" data-h24-regie="cam"><i class="fas fa-${camLive ? 'stop' : 'camera'}"></i> ${esc(camLive ? t('h24.regie.camStop', null, 'Arrêter la caméra') : t('h24.regie.camStart', null, 'Diffuser ma caméra'))}</button>
             </div>
             <div class="h24-regie__hint">${hint}</div>`;
     },
 
+    zoomLabel() {
+        const z = this.cam.zoom;
+        const optical = this.camSender?.active && this.camSender.info?.zoom?.optical;
+        return `${z.toFixed(1).replace(/\.0$/, '')}×${optical ? ' ' + t('h24.regie.camZoomOptical', null, 'optique') : ''}`;
+    },
+
+    async setCamZoom(value, save) {
+        this.cam.zoom = Math.min(CAM_ZOOM.max, Math.max(CAM_ZOOM.min, Number(value) || 1));
+        if (save) this.saveCam();
+        const lbl = document.querySelector('[data-h24-cam-zoom-val]');
+        if (lbl) lbl.textContent = this.zoomLabel();
+        if (this.camSender?.active) {
+            await this.camSender.setZoom(this.cam.zoom);
+            if (lbl) lbl.textContent = this.zoomLabel();
+        }
+    },
+
+    saveCam() {
+        try { localStorage.setItem('h24Cam', JSON.stringify({ deviceId: this.cam.deviceId, quality: this.cam.quality, zoom: this.cam.zoom })); } catch {}
+    },
+
     setCamPref(name, value) {
         if (name === 'quality' && !CAM_QUALITIES[value]) return;
         this.cam[name] = value;
-        try { localStorage.setItem('h24Cam', JSON.stringify({ deviceId: this.cam.deviceId, quality: this.cam.quality })); } catch {}
+        this.saveCam();
         if (this.camSender?.active) this.startCam();   // en direct : on relance avec le nouveau réglage
     },
 
@@ -658,7 +688,7 @@ const H24Page = {
         this.camSender.setSocket(this.socket);
         this.cam.error = '';
         try {
-            await this.camSender.start({ deviceId: this.cam.deviceId, quality: this.cam.quality });
+            await this.camSender.start({ deviceId: this.cam.deviceId, quality: this.cam.quality, zoom: this.cam.zoom });
             this.cam.devices = await listCameras();   // les noms des caméras sont visibles une fois l'accès accordé
         } catch (e) {
             this.cam.error = e?.name === 'NotAllowedError' ? t('h24.regie.camDenied', null, 'Accès à la caméra refusé par le navigateur')
