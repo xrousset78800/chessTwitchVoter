@@ -1355,15 +1355,19 @@ const H24Page = {
         // La roue est déjà en place (remplie pendant le vote) : elle tourne sans changer de place
         if (area.classList.contains('wheel-area--docked') && !slot.classList.contains('is-live')) slot.classList.add('is-drawing');
         this.revealing = true;
-        wheel.onSpinEnd = () => {
+        // Dès que la roue s'arrête (et pas 2 s plus tard, à la fin de son effet) : flèche, podium et coup retenu
+        const reveal = () => {
+            if (!this.revealing) return;
             this.revealing = false;
             area.classList.remove('is-spinning');
             markPodiumWinner($('h24-votes'), g.draw?.winner);
             this.renderBoard();
             if (this.state?.game) this.renderNextMove(this.state.game);
         };
-        // La roue s'arrête un peu avant que le coup soit joué
-        wheel.spin(Math.max(600, left - 1300), g.draw.winner);
+        wheel.highlightWinner = reveal;
+        wheel.onSpinEnd = reveal;
+        // La roue s'arrête un peu avant que le coup soit joué : le temps de voir la flèche
+        wheel.spin(Math.max(600, left - 2200), g.draw.winner);
     },
 
     /** Une seule roue à la fois : recréée quand le viewer change de style (hors tirage) */
