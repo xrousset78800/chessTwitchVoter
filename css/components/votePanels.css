@@ -211,6 +211,7 @@
 .hist-move {
     display: flex;
     align-items: baseline;
+    position: relative;
     gap: 6px;
     padding: 2px 6px;
     border-radius: 5px;
@@ -229,6 +230,9 @@
 }
 
 .hist-vote--random { font-size: 0.8rem; }
+
+/* Pièce jouée, dans sa couleur */
+.hist-piece { width: 1.25em; height: 1.25em; flex: none; align-self: center; margin: -2px -2px -2px -3px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
 
 /* Dernier coup en jaune, comme sur l'échiquier */
 .hist-move.is-last {

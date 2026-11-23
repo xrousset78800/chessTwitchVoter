@@ -130,16 +130,24 @@ export function markPodiumWinner(listEl, move) {
 export function renderHistory(el, moves, firstColor = 'w') {
     if (!el) return;
     if (!moves?.length) {
+        el.dataset.sig = '';
         el.innerHTML = `<div class="hist-empty">${esc(t('podium.noMoves', null, 'Aucun coup joué'))}</div>`;
         return;
     }
+    // Rien de neuf : on ne reconstruit pas (pas de clignotement des pièces, animations préservées)
+    const sig = firstColor + '|' + t('roster.white', null, 'Blancs') + '|' + moves.map(m => `${m.san}:${m.v ?? ''}`).join(',');
+    if (el.dataset.sig === sig) return;
+    el.dataset.sig = sig;
     const cells = firstColor === 'b' ? [null, ...moves] : [...moves];
     const lastIndex = cells.length - 1;
     const cell = (m, i) => {
         if (!m) return `<span class="hist-move hist-move--none">${i === 0 ? '…' : ''}</span>`;
         const vote = m.v === 'r' ? `<span class="hist-vote hist-vote--random" title="${esc(t('podium.random', null, 'Tirage au sort'))}">🎲</span>`
             : typeof m.v === 'number' ? `<span class="hist-vote">${m.v}%</span>` : '';
-        return `<span class="hist-move${i === lastIndex ? ' is-last' : ''}"><span class="hist-san">${esc(m.san)}</span>${vote}</span>`;
+        // Pièce jouée, dans la couleur du camp (Blancs en colonne de gauche)
+        const piece = pieceOf(m.san);
+        const img = piece ? `<img class="hist-piece" src="${PIECE_IMG.replace('{piece}', (i % 2 ? 'b' : 'w') + piece)}" alt="" draggable="false">` : '';
+        return `<span class="hist-move${i === lastIndex ? ' is-last' : ''}" data-ply="${i}">${img}<span class="hist-san">${esc(m.san)}</span>${vote}</span>`;
     };
     let rows = '';
     for (let i = 0; i < cells.length; i += 2) {

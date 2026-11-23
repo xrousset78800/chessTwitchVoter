@@ -10,7 +10,7 @@ import twitchAuth from '../core/twitchAuth.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
-import { renderHistory, paintMoveChips, revealWinner, clearWinner, nameColor, renderPodium, markPodiumWinner } from '../components/voteViews.js';
+import { renderHistory, paintMoveChips, clearWinner, nameColor, renderPodium, markPodiumWinner, pieceOf } from '../components/voteViews.js';
 import { paletteColors } from '../components/votePalettes.js';
 import { CamSender, CamPlayer, CAM_QUALITIES, CAM_ZOOM, listCameras, camSupported } from '../components/liveCam.js';
 
@@ -230,6 +230,68 @@ const H24Page = {
         this.folds[name] = !this.folds[name];
         try { localStorage.setItem('h24Fold', JSON.stringify(this.folds)); } catch {}
         this.applyFolds();
+    },
+
+    /** Coup retenu (majorité, ou tiré au sort une fois la roue arrêtée), en attente d'être joué : carte en bas de l'historique */
+    renderNextMove(g) {
+        const sc = $('h24-history')?.closest('.panel__content');
+        if (!sc) return;
+        let next = null;
+        if (g && !g.result && g.draw && !this.revealing) {
+            const votes = g.draw.votes || [];
+            const total = votes.reduce((a, v) => a + (v.n || 0), 0);
+            const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
+            next = { san: g.draw.winner, pct: g.draw.random || !total ? null : g.draw.pct ?? Math.round(n * 100 / total), random: !!g.draw.random || !total, voter: g.draw.voter };
+        } else if (g && !g.result && g.chosen) {
+            next = { san: g.chosen.move, pct: g.chosen.pct ?? null, voter: g.chosen.voter };
+        }
+        let card = sc.querySelector('.h24-next');
+        const ply = (g?.history || []).length;
+        if (!next?.san) { card?.remove(); return; }
+        const key = `${ply}:${next.san}`;
+        if (card?.dataset.key === key) return;
+        const piece = pieceOf(next.san);
+        const color = g.turn === 'b' ? 'b' : 'w';
+        if (!card) { card = document.createElement('div'); card.className = 'h24-next'; sc.appendChild(card); }
+        card.dataset.key = key;
+        card.dataset.ply = String(ply);
+        const score = next.random ? `<span class="h24-next__pct">🎲</span>` : next.pct != null ? `<span class="h24-next__pct">${next.pct}%</span>` : '';
+        card.innerHTML = `${piece ? `<img class="h24-next__piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png" alt="">` : ''}
+            <span class="h24-next__body"><span class="h24-next__label">${esc(t('h24.nextMove', null, 'Coup retenu'))}</span>
+            <span class="h24-next__line"><span class="h24-next__san">${esc(next.san)}</span>${score}${next.voter ? `<span class="h24-next__voter">@${esc(next.voter)}</span>` : ''}</span></span>`;
+        card.classList.remove('is-in'); void card.offsetWidth; card.classList.add('is-in');
+        this.historyToBottom();
+    },
+
+    /** Fondu enchaîné : la carte du coup retenu rejoint sa case dans l'historique */
+    flyIntoHistory(card, from) {
+        const cell = $('h24-history')?.querySelector('.hist-move.is-last');
+        if (!cell || !document.body.contains(cell) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+        const to = cell.getBoundingClientRect();
+        if (!to.width) return;
+        const ghost = card.cloneNode(true);
+        ghost.classList.remove('is-in');
+        ghost.classList.add('is-ghost');
+        Object.assign(ghost.style, { position: 'fixed', left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px`, margin: 0, zIndex: 50, pointerEvents: 'none', transformOrigin: '0 0' });
+        document.body.appendChild(ghost);
+        const dx = to.left - from.left, dy = to.top - from.top;
+        const sx = to.width / from.width, sy = to.height / from.height;
+        const ease = 'cubic-bezier(0.5, 0, 0.2, 1)';
+        ghost.animate([
+            { transform: 'none', opacity: 1 },
+            { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 0 }
+        ], { duration: 650, easing: ease, fill: 'forwards' }).finished.finally(() => ghost.remove());
+        // La case apparaît pendant que la carte s'y fond, puis un éclat confirme le coup
+        cell.animate([
+            { opacity: 0, transform: `translate(${-dx * 0.25}px, ${-dy * 0.25}px) scale(1.4)` },
+            { opacity: 0, offset: 0.35 },
+            { opacity: 1, transform: 'none' }
+        ], { duration: 650, easing: ease });
+        cell.animate([
+            { boxShadow: 'inset 0 0 0 1px rgba(250, 204, 21, 0.55), 0 0 0 0 rgba(250, 204, 21, 0.8)' },
+            { boxShadow: 'inset 0 0 0 1px rgba(250, 204, 21, 0.55), 0 0 14px 3px rgba(250, 204, 21, 0.45)', offset: 0.4 },
+            { boxShadow: 'inset 0 0 0 1px rgba(250, 204, 21, 0.55), 0 0 0 0 rgba(250, 204, 21, 0)' }
+        ], { duration: 900, delay: 550, easing: 'ease-out' });
     },
 
     /** Défile l'historique jusqu'au dernier coup (le panneau défile, pas la liste) */
@@ -1250,8 +1312,14 @@ const H24Page = {
         const histLen = (g.history || []).length;
         const stick = !histSc || histLen !== this.histLen || histSc.scrollHeight - histSc.scrollTop - histSc.clientHeight < 40;
         this.histLen = histLen;
+        // Coup retenu affiché en bas de l'historique : quand il est joué, il glisse à sa place dans la liste
+        const card = histSc?.querySelector('.h24-next');
+        const from = card && histLen > Number(card.dataset.ply) ? card.getBoundingClientRect() : null;
+        if (from) card.remove();
         renderHistory(histEl, (g.history || []).map((san, i) => ({ san, v: s.mode === 'teams' ? g.hv?.[i] ?? null : null })), first);
-        if (stick) this.historyToBottom();
+        this.renderNextMove(g);
+        if (stick || from) this.historyToBottom();
+        if (from) this.flyIntoHistory(card, from);
         const score = $('h24-score');
         if (score) {
             score.hidden = s.mode !== 'rush';
@@ -1276,8 +1344,7 @@ const H24Page = {
         const left = (g.draw.endsAt || 0) - (Date.now() + (this.skew || 0));
         // Un seul coup proposé ou arrivé trop tard : le coup tiré directement
         if (votes.length < 2 || left < 1500) {
-            const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
-            revealWinner(slot, { move: g.draw.winner, color: COLORS[0], pct: g.draw.random || !total ? null : Math.round(n * 100 / total), turn: g.turn });
+            markPodiumWinner($('h24-votes'), g.draw.winner);
             return;
         }
         const wheel = this.ensureWheel(this.style);
@@ -1293,6 +1360,7 @@ const H24Page = {
             area.classList.remove('is-spinning');
             markPodiumWinner($('h24-votes'), g.draw?.winner);
             this.renderBoard();
+            if (this.state?.game) this.renderNextMove(this.state.game);
         };
         // La roue s'arrête un peu avant que le coup soit joué
         wheel.spin(Math.max(600, left - 1300), g.draw.winner);
@@ -1309,11 +1377,8 @@ const H24Page = {
         wheel.showResultInside = false;
         wheel.paletteColors = COLORS;
         wheel.currentTurn = () => (this.state?.game?.turn === 'b' ? 'b' : 'w');
-        wheel.highlightWinner = () => {
-            if (!this.drawSig) return;   // tirage déjà terminé côté serveur
-            const random = !!this.state?.game?.draw?.random;
-            revealWinner($('h24-votes-panel'), { move: wheel.winner, color: wheel.winnerColor, pct: random ? null : wheel.winnerPct, turn: wheel.currentTurn() });
-        };
+        // Le coup tiré s'affiche dans l'historique (renderNextMove), plus à la place du podium
+        wheel.highlightWinner = () => {};
         // La page tient sans scroll : pas de défilement vers la bande
         if (wheel.container) wheel.container.scrollIntoView = () => {};
         this.wheel = wheel;
