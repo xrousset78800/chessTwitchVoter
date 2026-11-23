@@ -236,7 +236,7 @@
             }
             arrows.forEach(([key, color]) => this.drawArrow(key.slice(0, 2), key.slice(2), COLORS[color]));
             this.drawOverlay();
-            if (this.hover) this.drawArrow(this.hover.from, this.hover.to, 'rgb(244, 238, 232)', { opacity: 0.55, scale: 0.85 })
+            if (this.hover) this.drawArrow(this.hover.from, this.hover.to, 'rgb(250, 246, 242)', { opacity: 0.95, scale: 1, dash: true })
                 ?.classList.add('board-annotations__hover');
         }
 
@@ -361,6 +361,8 @@
             line.setAttribute('stroke', color);
             line.setAttribute('stroke-width', width);
             line.setAttribute('stroke-linejoin', 'miter');
+            // Aperçu : trait en pointillés, pour ne pas le confondre avec une flèche posée
+            if (opts.dash) line.setAttribute('stroke-dasharray', `${width * 1.5} ${width * 0.9}`);
             const head = document.createElementNS(SVG_NS, 'polygon');
             const px = -uy * headWidth / 2, py = ux * headWidth / 2;
             head.setAttribute('points', `${end.x},${end.y} ${base.x + px},${base.y + py} ${base.x - px},${base.y - py}`);
