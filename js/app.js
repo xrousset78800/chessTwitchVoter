@@ -2808,7 +2808,7 @@ const MultiRoom = {
 // ============================================
 async function initApp() {
     SpectatorFeed.start();
-    console.log('🚀 Phantom Twitchess - Initialisation...');
+    console.log('🚀 Crowd Gambit - Initialisation...');
 
     // Charger la config sauvegardée
     Storage.loadConfig();
@@ -3009,7 +3009,7 @@ async function initApp() {
         if (conn !== lastConn) { lastConn = conn; updateConnectionUI(); }
     }, 1000);
 
-    console.log('✅ Phantom Twitchess prêt !');
+    console.log('✅ Crowd Gambit prêt !');
 }
 
 // Démarrer quand le DOM est prêt

@@ -465,7 +465,7 @@ function updatePageTitle() {
     const title = generateTitle();
     
     // Mettre à jour le titre de la page
-    document.title = `Twitchess - ${title}`;
+    document.title = `Crowd Gambit - ${title}`;
     
     // Mettre à jour un élément de titre si il existe
     const titleElement = document.getElementById('gameTitle');

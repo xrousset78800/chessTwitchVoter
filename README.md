@@ -1,4 +1,4 @@
-# Phantom Twitchess
+# Crowd Gambit
 
 Échecs interactifs pilotés par le chat Twitch : le chat vote les coups, l'échiquier
 Phantom (optionnel) les rejoue physiquement.
