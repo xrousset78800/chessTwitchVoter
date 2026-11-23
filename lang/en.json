@@ -723,7 +723,7 @@
     "recapProblems": "{solved} / {total} puzzles solved",
     "checkmate": "Checkmate",
     "endRush": "Rush over",
-    "opt": { "turn": "Turn", "decision": "Decision", "spin": "Draw", "votes": "Votes", "anonymity": "Votes", "perTurn": "{n} / turn", "anon": { "none": "visible", "secret": "secret" } },
+    "opt": { "turn": "Turn", "decision": "Decision", "spin": "Draw", "votes": "Votes", "anonymity": "Visibility", "perTurn": "{n} / turn", "anon": { "none": "visible", "secret": "secret" } },
     "whiteWins": "White wins",
     "blackWins": "Black wins",
     "drawResult": "Draw",

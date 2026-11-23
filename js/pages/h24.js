@@ -846,44 +846,70 @@ const H24Page = {
             const txt = mode ? t(`h24.mode.${mode}`, null, mode) : t('h24.modeVoting', null, 'Mode au vote…');
             if (title.textContent !== txt) {
                 title.textContent = txt;
-                if (voting && mode) this.popIn(title);
+                if (voting) this.animate(title, mode ? 'is-new' : 'is-reset', mode ? 1500 : 600);
             }
             title.classList.toggle('is-pending', !mode);
         }
         const opts = $('h24-options');
         if (opts) {
-            // Récap des options en vigueur : intitulé court, valeur, icône
+            // Récap des options : une ligne par option (intitulé, valeur, icône). Pendant les votes, chaque valeur
+            // repart à « … » (remise à zéro visible), l'option en cours de vote clignote, puis le résultat se dévoile.
             const o = { ...(s?.options || {}) };
-            const rows = [];
-            const row = (key, label, value, icon) => rows.push(`<div class="h24-opt" data-opt="${key}"><i class="fas ${icon}"></i>
-                <span class="h24-opt__label">${esc(label)}</span><span class="h24-opt__value">${esc(value)}</span></div>`);
-            // Option en cours de vote : on montre déjà le gagnant dès qu'il est connu
-            if (b?.winner != null && b.id !== 'mode') o[b.id] = b.winner;
-            if (o.turn) row('turn', t('h24.opt.turn', null, 'Tour'), choiceLabel('turn', o.turn), 'fa-stopwatch');
-            if (s?.mode === 'teams' && o.decision) row('decision', t('h24.opt.decision', null, 'Décision'), choiceLabel('decision', o.decision), CHOICE_ICON[o.decision] || 'fa-check');
-            if (s?.mode === 'teams' && o.spin) row('spin', t('h24.opt.spin', null, 'Tirage'), choiceLabel('spin', o.spin), CHOICE_ICON[o.spin] || 'fa-play');
-            if (o.votes) row('votes', t('h24.opt.votes', null, 'Votes'), t('h24.opt.perTurn', { n: o.votes }, `${o.votes} / tour`), 'fa-hand-pointer');
-            if (o.anonymity) row('anonymity', t('h24.opt.anonymity', null, 'Votes'), t(`h24.opt.anon.${o.anonymity}`, null, o.anonymity), CHOICE_ICON[o.anonymity] || 'fa-eye');
-            const shown = mode ? rows.filter(r => !pending.has(r.match(/data-opt="(\w+)"/)[1])) : [];
-            const html = shown.join('');
-            if (opts.dataset.html !== html) {
-                const before = new Set([...opts.querySelectorAll('[data-opt]')].map(e => e.dataset.opt));
-                opts.dataset.html = html;
-                opts.innerHTML = html;
-                // Une option qui vient d'être votée arrive avec une petite animation
-                if (voting) opts.querySelectorAll('[data-opt]').forEach(e => { if (!before.has(e.dataset.opt)) this.popIn(e); });
-            }
+            if (b?.winner != null && b.id !== 'mode') o[b.id] = b.winner;   // résultat montré dès qu'il est connu
+            const defs = {
+                turn: [t('h24.opt.turn', null, 'Tour'), () => choiceLabel('turn', o.turn), () => 'fa-stopwatch'],
+                decision: [t('h24.opt.decision', null, 'Décision'), () => choiceLabel('decision', o.decision), () => CHOICE_ICON[o.decision] || 'fa-check'],
+                spin: [t('h24.opt.spin', null, 'Tirage'), () => choiceLabel('spin', o.spin), () => CHOICE_ICON[o.spin] || 'fa-play'],
+                votes: [t('h24.opt.votes', null, 'Votes'), () => t('h24.opt.perTurn', { n: o.votes }, `${o.votes} / tour`), () => 'fa-hand-pointer'],
+                anonymity: [t('h24.opt.anonymity', null, 'Visibilité'), () => t(`h24.opt.anon.${o.anonymity}`, null, o.anonymity), () => CHOICE_ICON[o.anonymity] || 'fa-eye']
+            };
+            // Options du mode (toutes tant que le mode n'est pas choisi)
+            const keys = Object.keys(defs).filter(k => (!mode || mode === 'teams' || (k !== 'decision' && k !== 'spin')) && (o[k] != null || pending.has(k)));
+            const live = voting && b && b.winner == null ? b.id : null;
+            const shown = s?.mode || voting ? keys : [];
+            const els = new Map([...opts.querySelectorAll('[data-opt]')].map(e => [e.dataset.opt, e]));
+            els.forEach((e, k) => { if (!shown.includes(k)) e.remove(); });
+            shown.forEach((k, i) => {
+                const [label, value, icon] = defs[k];
+                const wait = pending.has(k);
+                const val = wait ? '…' : value();
+                let e = els.get(k);
+                if (!e) {
+                    e = document.createElement('div');
+                    e.className = 'h24-opt';
+                    e.dataset.opt = k;
+                    e.innerHTML = `<i class="fas"></i><span class="h24-opt__label">${esc(label)}</span><span class="h24-opt__value"></span>`;
+                    e.dataset.val = '';
+                }
+                if (opts.children[i] !== e) opts.insertBefore(e, opts.children[i] || null);
+                e.classList.toggle('is-pending', wait);
+                e.classList.toggle('is-live', live === k);
+                e.querySelector('i').className = `fas ${wait ? 'fa-question' : icon()}`;
+                if (e.dataset.val !== val) {
+                    const was = e.dataset.val;
+                    e.dataset.val = val;
+                    e.querySelector('.h24-opt__value').textContent = val;
+                    // Remise à zéro : la valeur s'efface ; résultat d'un vote : il se dévoile (en décalé pour un départ groupé)
+                    if (voting && was && wait) this.animate(e, 'is-reset', 600, i * 70);
+                    else if (voting && was === '…' && !wait) this.animate(e, 'is-new', 1500);
+                }
+            });
         }
         const viewers = $('h24-viewers');
         if (viewers) viewers.textContent = String(s?.viewers || 0);
     },
 
     /** Petite entrée animée (option tout juste votée) */
-    popIn(el) {
-        el.classList.remove('is-new');
+    popIn(el) { this.animate(el, 'is-new', 1500); },
+
+    /** Rejoue une animation CSS (classe posée puis retirée), avec un délai éventuel */
+    animate(el, cls, ms, delay = 0) {
+        el.classList.remove('is-new', 'is-reset');
+        el.style.animationDelay = delay ? `${delay}ms` : '';
         void el.offsetWidth;
-        el.classList.add('is-new');
-        setTimeout(() => el.classList.remove('is-new'), 1400);
+        el.classList.add(cls);
+        clearTimeout(el._anim);
+        el._anim = setTimeout(() => { el.classList.remove(cls); el.style.animationDelay = ''; }, ms + delay);
     },
 
     renderTeams() {

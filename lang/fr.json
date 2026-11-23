@@ -723,7 +723,7 @@
     "recapProblems": "{solved} / {total} problèmes résolus",
     "checkmate": "Échec et mat",
     "endRush": "Fin du rush",
-    "opt": { "turn": "Tour", "decision": "Décision", "spin": "Tirage", "votes": "Votes", "anonymity": "Votes", "perTurn": "{n} / tour", "anon": { "none": "visibles", "secret": "secrets" } },
+    "opt": { "turn": "Tour", "decision": "Décision", "spin": "Tirage", "votes": "Votes", "anonymity": "Visibilité", "perTurn": "{n} / tour", "anon": { "none": "visibles", "secret": "secrets" } },
     "whiteWins": "Victoire des Blancs",
     "blackWins": "Victoire des Noirs",
     "drawResult": "Partie nulle",
