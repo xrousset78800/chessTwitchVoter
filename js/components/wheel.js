@@ -417,14 +417,14 @@ spin(duration = 5000, forcedWinner = null) {
     // Les spectateurs rejouent le même tirage (mêmes coups, même gagnant)
     this.spinInfo = { winner, votes: sortedVotes.map(v => ({ m: v.move, n: v.count })), duration, startedAt: Date.now() };
 
-    // Angle du milieu du segment gagnant
+    // Point d'arrêt : n'importe où dans le segment gagnant, sans frôler ses bords (comme la bande)
     let angleAccum = 0;
     let winnerMidAngle = 0;
     let winnerColorIndex = 0;
     for (let i = 0; i < sortedVotes.length; i++) {
         const sliceAngle = (sortedVotes[i].count / totalVotes) * 2 * Math.PI;
         if (sortedVotes[i].move === winner) {
-            winnerMidAngle = angleAccum + sliceAngle / 2;
+            winnerMidAngle = angleAccum + sliceAngle * (0.15 + Math.random() * 0.7);
             winnerColorIndex = i;
             break;
         }
