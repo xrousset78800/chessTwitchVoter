@@ -33,6 +33,7 @@ const RANDOM_REVEAL_MS = 1800;    // personne n'a voté : coup au hasard montré
 const REPLY_MS = 900;             // rush : réponse de l'adversaire
 const PUZZLE_PAUSE_MS = 3000;     // rush : solution montrée avant le suivant
 const SECRET_REVEAL_MS = 2500;    // vote secret : les votes dévoilés avant que le coup soit joué
+const CHOSEN_MS = 2200;           // coup choisi (flèche, part des votes, viewer tiré) montré avant d'être joué
 
 const DUR = {
     recap: 15000,
@@ -357,6 +358,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 recent: g.recent.slice(-20).map(r => ({ u: r.u, m: hidden ? null : r.m })),
                 recentN: g.recentN || 0,
                 draw: g.draw,
+                chosen: g.chosen || null,
                 random: g.random,
                 result: g.result,
                 // rush
@@ -472,12 +474,21 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.recent = [];
         g.recentN = 0;
         g.draw = null;
+        g.chosen = null;
         // Même durée pour les deux camps (une équipe vide est jouée par l'autre)
         g.turnEndsAt = Date.now() + (DUR.turn || s.options.turn * 1000);
         s.endsAt = g.turnEndsAt;
         if (g.tally) g.tally.peak = Math.max(g.tally.peak, viewers());
         emit();
         emitMeAll();
+    }
+
+    /** Coup retenu : part des votes et un viewer tiré parmi ceux qui l'ont voté (mis en avant sur l'échiquier) */
+    function chosenInfo(move) {
+        let total = 0, n = 0;
+        const fans = [];
+        for (const [login, list] of s.game.votes) for (const m of list) { total++; if (m === move) { n++; fans.push(login); } }
+        return { move, n, total, pct: total ? Math.round(n * 100 / total) : 0, voter: fans.length ? pick(fans) : null };
     }
 
     /** Coup choisi à la fin du tour : majorité (ex æquo tirés au sort), tirage pondéré, ou hasard sans vote */
@@ -505,7 +516,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
             g.tally.wheel++;
-            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs() };
+            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs(), ...(({ voter, pct }) => ({ voter, pct }))(chosenInfo(move)) };
             s.endsAt = g.draw.endsAt;
             emit();
             return later(drawMs(), () => playMove(move));
@@ -516,19 +527,18 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             // Ex æquo : tirage au sort visible entre eux, à chances égales
             if (tied.length > 1) {
                 g.tally.ties++;
-                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs() };
+                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs(), ...(({ voter, pct }) => ({ voter, pct }))(chosenInfo(move)) };
                 s.endsAt = g.draw.endsAt;
                 emit();
                 return later(drawMs(), () => playMove(move));
             }
         }
-        // Vote secret : les votes se dévoilent un instant avant que le coup soit joué
-        if (s.options.anonymity === 'secret') {
-            s.endsAt = null;
-            emit();
-            return later(SECRET_REVEAL_MS, () => playMove(move));
-        }
-        playMove(move);
+        // Coup retenu mis en avant (flèche, %, viewer) un instant avant d'être joué ;
+        // en vote secret, c'est aussi le moment où les votes se dévoilent
+        g.chosen = chosenInfo(move);
+        s.endsAt = null;
+        emit();
+        later(s.options.anonymity === 'secret' ? Math.max(SECRET_REVEAL_MS, CHOSEN_MS) : CHOSEN_MS, () => playMove(move));
     }
 
     function playMove(san) {
@@ -544,6 +554,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.history.push(m.san);
         g.lastMove = { from: m.from, to: m.to };
         g.draw = null;
+        g.chosen = null;
         // Seules les fins prévues par les règles : mat, pat, répétition, 50 coups, matériel insuffisant
         if (g.chess.isGameOver()) return endGame();
         startTurn();

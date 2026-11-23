@@ -350,10 +350,19 @@ const H24Page = {
             const find = (san) => {
                 try { const c = new Chess(g.fen); return c.move(san); } catch { return null; }
             };
+            // Étiquette du coup retenu : coup · part des votes · viewer tiré parmi ceux qui l'ont voté
+            const label = (san, pct, voter) => [san, pct != null ? `${pct} %` : null, voter ? `@${voter}` : null].filter(Boolean).join(' · ');
             if (g.draw) {
                 // Rien pendant que la roue tourne : le suspense reste entier
                 const m = !this.revealing && find(g.draw.winner);
-                if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: g.draw.random ? `🎲 ${m.san}` : m.san };
+                const votes = g.draw.votes || [];
+                const total = votes.reduce((a, v) => a + (v.n || 0), 0);
+                const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
+                if (m) overlay = { kind: 'win', from: m.from, to: m.to,
+                    label: g.draw.random ? `🎲 ${m.san}` : label(m.san, g.draw.pct ?? (total ? Math.round(n / total * 100) : null), g.draw.voter) };
+            } else if (g.chosen) {
+                const m = find(g.chosen.move);
+                if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: label(m.san, g.chosen.pct, g.chosen.voter) };
             } else {
                 const m = g.votes?.[0] && find(g.votes[0].move);
                 if (m) overlay = { kind: 'lead', from: m.from, to: m.to };
