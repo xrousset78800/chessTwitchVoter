@@ -5,36 +5,25 @@
 
 #page-h24 .sandbox { padding-top: calc(var(--nav-height) + 2px); padding-bottom: 12px; }
 
-/* ---- Déroulé du cycle : une ligne discrète sous l'en-tête ---- */
+/* ---- Déroulé du cycle : petits numéros à droite du titre, dans le bloc orange ---- */
 .h24-steps {
     list-style: none;
-    margin: 0 auto 4px;
+    margin: 0 0 0 auto;
     padding: 0;
-    max-width: 1600px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
+    gap: 3px;
+    flex: none;
 }
 .h24-step {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 2px 10px 2px 3px; border-radius: 2px;
-    color: var(--text-secondary); font-size: 0.78rem; line-height: 1;
+    width: 16px; height: 16px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 0.6rem; font-weight: 700; line-height: 1;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 138, 61, 0.3);
 }
-.h24-step + .h24-step::before {
-    content: ''; width: 14px; height: 1px; background: var(--border-subtle);
-    margin: 0 4px 0 -8px;
-}
-.h24-step__dot {
-    width: 18px; height: 18px; border-radius: 50%;
-    display: inline-grid; place-items: center;
-    font-size: 0.65rem; font-weight: 700;
-    border: 1px solid var(--border-subtle);
-}
-.h24-step.is-done { opacity: 0.55; }
-.h24-step.is-current { background: rgba(255, 138, 61, 0.15); color: var(--text-primary); font-weight: 700; }
-.h24-step.is-current .h24-step__dot { background: var(--twitch-purple); border-color: var(--twitch-purple); color: var(--on-accent); }
+.h24-step.is-done { opacity: 0.5; }
+.h24-step.is-current { background: var(--twitch-purple); border-color: var(--twitch-purple); color: var(--on-accent); }
 
 /* ---- En-tête de gauche ---- */
 .h24-options { color: var(--text-secondary); font-size: 0.82rem; }
@@ -148,10 +137,6 @@
 .h24-recap__top ol { margin: 0; padding-left: 18px; font-size: 0.85rem; }
 .h24-recap__top small { color: var(--text-secondary); }
 
-@media (max-width: 760px) {
-    .h24-steps { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
-    .h24-step { flex: none; }
-}
 
 /* ---- Colonne de droite compacte : tient dans l'écran, l'historique défile ---- */
 #page-h24 .sandbox__sidebar { gap: 12px; }
@@ -161,7 +146,7 @@
 @media (min-width: 1101px) {
     /* La colonne a la hauteur de la fenêtre et ne défile jamais : l'historique prend la place qui reste
        (et défile seul), le podium / la roue reste toujours entier en bas, sans que rien ne monte ni ne descende */
-    #page-h24 .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 56px + var(--h24-side-lift, 0px)); max-height: none; overflow: hidden; }
+    #page-h24 .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 36px); max-height: none; overflow: hidden; }
     /* …sans rogner le chrono quand il pulse (il grossit de quelques pixels au-dessus de la colonne) */
     @supports (overflow-clip-margin: 8px) { #page-h24 .sandbox__sidebar { overflow: clip; overflow-clip-margin: 8px; } }
     #page-h24 .sandbox__sidebar > * { flex-shrink: 0; }
@@ -328,7 +313,9 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-side__turn { padding: 1px 8px; border-radius: 2px; font-size: 0.72rem; font-weight: 800; color: #0b0b10; background: #22c55e; }
 .h24-side__spacer { flex: 1; }
 .h24-side.is-turn { border-color: rgba(34, 197, 94, 0.55); background: rgba(34, 197, 94, 0.08); }
-.h24-side.is-mine { box-shadow: inset 3px 0 0 var(--twitch-purple, #ff8a3d); }
+/* Ton équipe : repère orange seulement quand c'est à elle de jouer ; sinon la bande reste neutre */
+.h24-side.is-mine.is-turn { box-shadow: inset 3px 0 0 var(--twitch-purple, #ff8a3d); }
+.h24-side.is-mine:not(.is-turn) .h24-side__mine { color: var(--text-secondary); background: none; box-shadow: inset 0 0 0 1px var(--border-subtle); }
 .h24-side .btn { padding: 2px 10px; }
 .h24-side__quit { border: 0; background: none; padding: 0; font: inherit; font-size: 0.78rem; color: rgba(255, 255, 255, 0.5); cursor: pointer; text-decoration: underline; }
 .h24-side__quit:hover { color: #fff; }
@@ -399,7 +386,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 
 /* ------------------------------------------- Régie : étapes forcées au clic */
 .h24-step[data-h24-force] { cursor: pointer; }
-.h24-step[data-h24-force]:hover { background: rgba(255, 138, 61, 0.25); color: var(--text-primary); opacity: 1; }
+.h24-step[data-h24-force]:hover { border-color: var(--twitch-purple); color: var(--text-primary); opacity: 1; }
 
 /* ------------------------------------------- Vote secret : podium vivant, coups masqués */
 .podium.is-masked .podium__move { font-size: 1.3rem; opacity: 0.75; }
@@ -463,18 +450,10 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 #page-h24 #h24-moves { padding: 8px; }
 #page-h24 #h24-moves .moves-panel__content { gap: 4px; }
 @media (min-width: 1101px) {
-    #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 56px + var(--h24-lift)); }
-    /* Le déroulé du cycle ne surmonte que l'échiquier : les deux colonnes remontent à sa hauteur */
-    #page-h24 { --h24-lift: 20px; }
-    #page-h24 .sandbox__left { margin-top: calc(-1 * var(--h24-lift)); }
-    /* À droite, seulement quand le déroulé (centré sur la page) ne la touche pas */
-    #page-h24 .sandbox__sidebar { margin-top: calc(-1 * var(--h24-side-lift, 0px)); }
+    #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 36px); }
     #page-h24 .sandbox__left { top: calc(var(--nav-height) + 8px); }
     #page-h24 #h24-moves { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
     #page-h24 #h24-moves .moves-panel__content { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
-}
-@media (min-width: 1280px) {
-    #page-h24 { --h24-side-lift: 20px; }
 }
 .podium.is-masked .podium__piece img { visibility: hidden; }
 

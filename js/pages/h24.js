@@ -954,9 +954,11 @@ const H24Page = {
         if (!el) return;
         const cur = STEPS.indexOf(s?.phase);
         // Régie : chaque étape se force au clic (tests)
-        const force = (p) => this.me.regie ? ` data-h24-force="${p}" title="${esc(t('h24.forceStep', null, 'Régie : passer à cette étape'))}"` : '';
-        el.innerHTML = STEPS.map((p, i) => `<li class="h24-step${i === cur ? ' is-current' : ''}${cur > i ? ' is-done' : ''}"${force(p)}>
-            <span class="h24-step__dot">${i + 1}</span><span>${esc(t(`h24.phase.${p}`, null, p))}</span></li>`).join('');
+        const force = (p) => this.me.regie ? ` data-h24-force="${p}"` : '';
+        el.innerHTML = STEPS.map((p, i) => {
+            const name = esc(t(`h24.phase.${p}`, null, p));
+            return `<li class="h24-step${i === cur ? ' is-current' : ''}${cur > i ? ' is-done' : ''}" title="${name}" aria-label="${i + 1}. ${name}"${i === cur ? ' aria-current="step"' : ''}${force(p)}>${i + 1}</li>`;
+        }).join('');
         // Pendant les votes, le bloc se vide puis se remplit au fil des résultats : mode, puis chaque option
         const b = s?.ballot;
         const voting = s?.phase === 'voteMode' || s?.phase === 'voteOptions';
