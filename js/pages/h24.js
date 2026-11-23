@@ -1122,14 +1122,6 @@ const H24Page = {
         wheel.votes = new Map(votes.map(v => [v.m, { count: v.n, voters: new Map() }]));
         area.classList.add('is-visible', 'is-spinning');
         wheel.draw();
-        // Roue de départage sous l'écran (colonne de droite chargée) : on l'amène en vue
-        requestAnimationFrame(() => {
-            const col = area.closest('.sandbox__sidebar');
-            if (!col) return;
-            const r = area.getBoundingClientRect(), c = col.getBoundingClientRect();
-            const bottom = Math.min(c.bottom, window.innerHeight);
-            if (r.height && r.bottom > bottom) col.scrollBy({ top: Math.min(r.bottom - bottom + 8, r.top - c.top), behavior: 'smooth' });
-        });
         // La roue est déjà en place (remplie pendant le vote) : elle tourne sans changer de place
         if (area.classList.contains('wheel-area--docked') && !slot.classList.contains('is-live')) slot.classList.add('is-drawing');
         this.revealing = true;

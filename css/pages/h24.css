@@ -203,6 +203,12 @@
 /* Tirage au sort : roue ou bande en direct, sans podium ; majorité : podium, roue ou bande seulement en cas d'égalité */
 #h24-votes-panel.is-live #h24-votes { display: none; }
 #h24-votes-panel.votes-slot--wheel.is-live { min-height: calc(var(--dock-size) + 20px); }
+/* Style roue : la place de la roue reste réservée (podium centré dedans), sans transition de hauteur :
+   rien ne saute dans la colonne quand on passe du podium à la roue et inversement */
+#page-h24 #h24-votes-panel.votes-slot--wheel {
+    min-height: calc(var(--dock-size) + 20px); transition: none;
+    display: flex; flex-direction: column; justify-content: center;
+}
 #h24-votes-panel.votes-slot--wheel.is-live .votes-slot__podium { visibility: hidden; }
 #h24-votes-panel.is-live:not(.votes-slot--wheel) { min-height: 84px; display: grid; place-items: center; }
 #h24-votes-panel.is-live:not(.votes-slot--wheel) .vote-total { font-size: 1rem; font-weight: 700; color: rgba(255, 255, 255, 0.75); }
