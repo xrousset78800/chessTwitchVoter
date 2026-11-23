@@ -697,7 +697,7 @@ const H24Page = {
         return Math.max(0, Math.ceil((at - (Date.now() + (this.skew || 0))) / 1000));
     },
 
-    /** Barre du bloc de vote : temps du tour en partie, temps de la phase sinon */
+    /** Chrono : anneau en haut à droite de l'échiquier pendant le tour, barre de la fenêtre centrale entre deux parties */
     renderClock() {
         const s = this.state;
         const box = $('h24-timer');
@@ -705,11 +705,11 @@ const H24Page = {
         const g = s.game;
         const inPlay = s.phase === 'play' && !!g;
         const at = inPlay ? (g.draw || g.result ? null : g.turnEndsAt) : s.endsAt;
-        // En partie, le chrono est dans la roue (au centre) ou au bout de la bande
         const area = $('h24-wheel-area');
-        const ring = inPlay && area?.classList.contains('is-live') ? this.ringEl(area) : null;
-        if (!ring) area?.querySelector(':scope > .h24-clock')?.remove();
-        if (!at && !s.paused) { box.hidden = true; if (ring) ring.hidden = true; return; }
+        const wrap = $('h24-board-wrap');
+        const ring = inPlay && wrap ? this.ringEl(wrap) : null;
+        if (!ring) wrap?.querySelector(':scope > .h24-clock')?.remove();
+        if (!at && !s.paused) { box.hidden = true; if (ring) ring.hidden = true; area?.classList.remove('is-soon'); return; }
         box.hidden = !!ring;
         const left = s.paused ? null : this.remaining(at);
         // Durée totale : la plus grande valeur vue pour cette échéance
@@ -739,14 +739,14 @@ const H24Page = {
         $('h24-wheel-area')?.classList.toggle('is-soon', inPlay && left != null && left <= 1);
     },
 
-    /** Anneau du chrono, posé dans la zone de la roue / de la bande (recréé avec elle) */
-    ringEl(area) {
-        let el = area.querySelector(':scope > .h24-clock');
+    /** Anneau du chrono, posé en haut à droite de l'échiquier */
+    ringEl(wrap) {
+        let el = wrap.querySelector(':scope > .h24-clock');
         if (!el) {
             el = document.createElement('div');
             el.className = 'h24-clock';
             el.innerHTML = '<span class="h24-clock__num"></span>';
-            area.prepend(el);
+            wrap.appendChild(el);
         }
         return el;
     },
@@ -836,7 +836,9 @@ const H24Page = {
         const card = $('h24-card');
         const slot = $('h24-votes-panel');
         const inGame = s.phase === 'play' && !!s.game;
-        card.hidden = inGame;
+        const modal = $('h24-modal');
+        if (modal) modal.hidden = inGame;
+        $('page-h24')?.classList.toggle('has-h24-modal', !inGame);
         slot.hidden = !inGame;
         if (inGame) this.renderPlay();
         else {

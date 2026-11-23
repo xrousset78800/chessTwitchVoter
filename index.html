@@ -765,6 +765,15 @@
                         <div class="vote-ticker h24-ticker" id="h24-ticker"><span class="vote-ticker__label" data-i18n="ticker.label">Votes</span><div class="vote-ticker__track" id="h24-ticker-track"></div></div>
                         <!-- Bande sous l'échiquier ou roue dans la colonne : remplies en direct par les votes -->
                         <div id="h24-wheel-area" class="watch-wheel"></div>
+                    <!-- Entre deux parties : récap, votes du mode et des options, inscription, avec le temps restant, au milieu de la page -->
+                    <div class="h24-modal" id="h24-modal" hidden>
+                        <div class="h24-modal__box">
+                            <div class="vote-timer" id="h24-timer" hidden>
+                                <div class="vote-timer__row"><div class="vote-timer__bar"><div class="vote-timer__fill"></div></div><span class="vote-timer__num" id="h24-timer-value">--</span><span class="vote-timer__label" id="h24-timer-label"></span></div>
+                            </div>
+                            <div class="h24-card" id="h24-card"></div>
+                        </div>
+                    </div>
                     </div>
 
                     <div class="sandbox__sidebar">
@@ -793,12 +802,7 @@
                             <button type="button" class="panel__header h24-fold" data-h24-fold="history" aria-expanded="true"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span><i class="fas fa-chevron-up h24-fold__chev"></i></button>
                             <div class="panel__content"><div class="history-list" id="h24-history"></div></div>
                         </div>
-                        <!-- Récap, votes du mode et des options, inscription -->
-                        <div class="h24-card" id="h24-card" hidden></div>
                         <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
-                        <div class="vote-timer" id="h24-timer" hidden>
-                            <div class="vote-timer__row"><div class="vote-timer__bar"><div class="vote-timer__fill"></div></div><span class="vote-timer__num" id="h24-timer-value">--</span><span class="vote-timer__label" id="h24-timer-label"></span></div>
-                        </div>
                         <div class="votes-slot" id="h24-votes-panel">
                             <div class="votes-slot__podium">
                                 <div class="vote-list" id="h24-votes"></div>
