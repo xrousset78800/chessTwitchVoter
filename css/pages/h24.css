@@ -211,6 +211,49 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 /* Bandeau des votes sous l'échiquier */
 #page-h24 .h24-ticker { margin-top: 8px; }
 .vote-ticker__move.is-hidden { font-family: inherit; font-style: italic; opacity: 0.7; }
+.vote-ticker__move.is-choice { font-family: inherit; color: #c4b5fd; }
+
+/* Chrono du tour : anneau au centre de la roue, ou au bout de la bande */
+.h24-clock {
+    --p: 1;
+    --ring: #8b5cf6;
+    position: relative; flex: none; display: grid; place-items: center;
+    width: 64px; height: 64px; border-radius: 50%;
+    background: conic-gradient(var(--ring) calc(var(--p) * 360deg), rgba(255, 255, 255, 0.1) 0);
+}
+.h24-clock[hidden] { display: none; }
+.h24-clock::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #16131f; }
+.h24-clock__num { position: relative; font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.35rem; color: #fff; }
+.h24-clock.is-critical { --ring: #f59e0b; animation: h24-clockPulse 0.5s ease-in-out infinite alternate; }
+.h24-clock.is-critical .h24-clock__num { color: #fbbf24; }
+.h24-clock.is-paused { --ring: #6b7280; }
+@keyframes h24-clockPulse { to { transform: scale(1.08); } }
+#page-h24 #h24-wheel-area.wheel-area--band.is-live { display: flex; align-items: center; gap: 10px; }
+#page-h24 #h24-wheel-area.wheel-area--band.is-live > .wheel-band { flex: 1; min-width: 0; }
+#page-h24 #h24-wheel-area.wheel-area--docked > .h24-clock {
+    position: absolute; left: 50%; top: 50%; z-index: 20; width: 84px; height: 84px; margin: -42px 0 0 -42px;
+}
+#page-h24 #h24-wheel-area.wheel-area--docked > .h24-clock.is-critical { animation: none; }
+#page-h24 #h24-wheel-area.wheel-area--docked > .h24-clock .h24-clock__num { font-size: 1.7rem; }
+
+/* Son : bouton et jauge de volume */
+.h24-volume { display: inline-flex; align-items: center; gap: 6px; }
+.h24-volume__btn {
+    display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--border-subtle); border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04); color: var(--text-secondary, #cbd5e1); cursor: pointer;
+}
+.h24-volume__btn:hover { color: #fff; border-color: var(--twitch-purple); }
+#page-h24 .h24-volume__range {
+    --v: 60%;
+    flex: none; width: 56px; height: 6px; margin: 0; appearance: none; -webkit-appearance: none; border-radius: 3px; cursor: pointer;
+    background: linear-gradient(90deg, var(--twitch-purple) var(--v), rgba(255, 255, 255, 0.15) var(--v));
+}
+.h24-volume__range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
+.h24-volume__range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
+
+/* Bots de test : retirables par tout le monde */
+.h24-bots { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.7); }
+.h24-bots[hidden] { display: none; }
 .h24-regie__chev { margin-left: auto; }
 .h24-regie__body { display: flex; flex-direction: column; gap: 6px; }
 .h24-regie__body[hidden] { display: none; }

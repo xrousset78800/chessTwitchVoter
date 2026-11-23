@@ -770,9 +770,13 @@
                     <div class="sandbox__sidebar">
                         <div class="sandbox__actions game-toolbar">
                             <span class="spectators-badge"><i class="fas fa-eye"></i> <span id="h24-viewers">0</span></span>
+                            <div class="h24-volume">
+                                <button type="button" class="h24-volume__btn" data-h24-mute title="Couper le son"><i class="fas fa-volume-up"></i></button>
+                                <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" title="Volume">
+                            </div>
                             <div class="h24-style" role="group">
-                                <button type="button" class="btn btn--sm" data-h24-style="band"><i class="fas fa-grip-lines"></i> <span data-i18n="wheelStyle.band">Tirage : bande</span></button>
-                                <button type="button" class="btn btn--sm" data-h24-style="wheel"><i class="fas fa-dharmachakra"></i> <span data-i18n="wheelStyle.classic">Tirage : roue</span></button>
+                                <button type="button" class="btn btn--sm" data-h24-style="band" title="Tirage : bande"><i class="fas fa-grip-lines"></i> <span data-i18n="h24.styleBand">Bande</span></button>
+                                <button type="button" class="btn btn--sm" data-h24-style="wheel" title="Tirage : roue"><i class="fas fa-dharmachakra"></i> <span data-i18n="h24.styleWheel">Roue</span></button>
                             </div>
                         </div>
                         <!-- Régie (PC du streamer) : Phantom, pause, chaîne de la vue réelle -->
@@ -781,6 +785,7 @@
                             <button type="button" class="panel__header h24-fold" data-h24-fold="teams" aria-expanded="true"><i class="fas fa-users"></i> <span data-i18n="h24.teamsTitle">Équipes</span><i class="fas fa-chevron-up h24-fold__chev"></i></button>
                             <div class="panel__content">
                                 <div class="h24-account" id="h24-account"></div>
+                                <div class="h24-bots" id="h24-bots" hidden></div>
                                 <div class="h24-teams" id="h24-teams"></div>
                             </div>
                         </div>

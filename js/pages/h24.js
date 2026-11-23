@@ -20,6 +20,8 @@ const t = (key, params, fallback) => {
 };
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = (id) => document.getElementById(id);
+// Sons des coups, comme sur les autres échiquiers
+const SOUNDS = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', mate: 'mp3/mate.wav' };
 const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
 const STEPS = ['play', 'recap', 'voteMode', 'voteOptions', 'signup'];
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
@@ -68,6 +70,9 @@ const H24Page = {
     regieFolded: (() => { try { return localStorage.getItem('h24RegieFolded') === '1'; } catch { return false; } })(),
     // Panneaux Équipes / Historique repliés (retenu par navigateur)
     folds: (() => { try { return JSON.parse(localStorage.getItem('h24Fold') || '{}') || {}; } catch { return {}; } })(),
+    // Son : volume 0..1 et coupure, retenus par navigateur
+    volume: (() => { try { const v = parseFloat(localStorage.getItem('h24Volume')); return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0.6; } catch { return 0.6; } })(),
+    muted: (() => { try { return localStorage.getItem('h24Muted') === '1'; } catch { return false; } })(),
     board: null,
     state: null,
     me: { login: null, team: null, votes: [], maxVotes: 1, ballot: null },
@@ -118,7 +123,11 @@ const H24Page = {
         });
         socket.on('h24:state', (st) => {
             this.skew = st.now - Date.now();
+            const prev = this.state?.game;
             this.state = st;
+            // Un coup vient d'être joué : son du coup
+            const h = st.game?.history;
+            if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
             this.render();
         });
         socket.on('h24:me', (me) => {
@@ -156,6 +165,8 @@ const H24Page = {
             const rg = e.target.closest('[data-h24-regie]');
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
+            if (e.target.closest('[data-h24-mute]')) { this.setVolume(this.muted && !this.volume ? 0.6 : this.volume, !this.muted); return; }
+            if (e.target.closest('[data-h24-bots-off]')) { this.socket?.emit('h24:botsOff'); return; }
             const fd = e.target.closest('[data-h24-fold]');
             if (fd) { this.toggleFold(fd.dataset.h24Fold); return; }
             const mv = e.target.closest('[data-h24-move]');
@@ -171,6 +182,41 @@ const H24Page = {
         window.addEventListener('resize', () => { if (this.socket) this.board?.resize(); });
         this.applyFolds();
         this.bindTicker();
+        $('h24-volume')?.addEventListener('input', (e) => this.setVolume(Number(e.target.value) / 100, Number(e.target.value) === 0));
+        this.renderVolume();
+    },
+
+    // ------------------------------------------------------------------ son
+    setVolume(v, muted) {
+        this.volume = Math.max(0, Math.min(1, v));
+        this.muted = !!muted;
+        try { localStorage.setItem('h24Volume', String(this.volume)); localStorage.setItem('h24Muted', this.muted ? '1' : '0'); } catch {}
+        this.renderVolume();
+    },
+
+    renderVolume() {
+        const range = $('h24-volume');
+        const vol = this.muted ? 0 : this.volume;
+        if (range) {
+            range.value = String(Math.round(vol * 100));
+            range.style.setProperty('--v', `${Math.round(vol * 100)}%`);
+        }
+        const btn = document.querySelector('[data-h24-mute]');
+        if (btn) btn.title = t('h24.mute', null, 'Couper / remettre le son');
+        if (range) range.title = `${t('h24.volume', null, 'Volume')} ${Math.round(vol * 100)} %`;
+        const icon = btn?.querySelector('i');
+        if (icon) icon.className = `fas fa-volume-${!vol ? 'mute' : vol < 0.4 ? 'down' : 'up'}`;
+    },
+
+    playMoveSound(san) {
+        const vol = this.muted ? 0 : this.volume;
+        if (!vol || !san) return;
+        const kind = san.includes('#') ? 'mate' : san.includes('+') ? 'check' : san.includes('x') ? 'capture' : 'move';
+        try {
+            const a = new Audio(SOUNDS[kind]);
+            a.volume = vol * (kind === 'mate' ? 0.5 : 0.8);
+            a.play().catch(() => {});   // pas encore de clic sur la page : le navigateur refuse, tant pis
+        } catch {}
     },
 
     toggleFold(name) {
@@ -209,22 +255,25 @@ const H24Page = {
         const box = $('h24-ticker');
         const track = $('h24-ticker-track');
         if (!box || !track) return;
-        const g = this.state?.phase === 'play' ? this.state.game : null;
-        const key = g ? g.fen : '';
+        const s = this.state;
+        const g = s?.phase === 'play' ? s.game : null;
+        // Hors partie : les votes du mode et des options (« pseudo  Deux équipes »)
+        const b = !g && s?.ballot && s.ballot.winner == null ? s.ballot : null;
+        const key = g ? g.fen : b ? `ballot:${s.phase}:${b.id}` : '';
         if (key !== this.tickerKey) {
             this.tickerKey = key;
             this.tickerN = 0;
             track.innerHTML = '';
         }
-        const recent = g?.recent || [];
-        const total = g?.recentN ?? recent.length;
+        const recent = g ? g.recent || [] : b ? (b.recent || []).map(r => ({ u: r.u, m: choiceLabel(b.id, r.c), choice: true })) : [];
+        const total = g ? g.recentN ?? recent.length : b ? b.recentN ?? recent.length : 0;
         const fresh = Math.min(Math.max(0, total - (this.tickerN || 0)), recent.length);
         this.tickerN = total;
         const voted = t('anonymity.voted', null, 'a voté');
         recent.slice(recent.length - fresh).forEach(r => {
             const item = document.createElement('span');
             item.className = 'vote-ticker__item';
-            item.innerHTML = `<span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span> <span class="vote-ticker__move${r.m ? '' : ' is-hidden'}">${esc(r.m || voted)}</span>`;
+            item.innerHTML = `<span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span> <span class="vote-ticker__move${r.m ? '' : ' is-hidden'}${r.choice ? ' is-choice' : ''}">${esc(r.m || voted)}</span>`;
             track.prepend(item);
         });
         while (track.children.length > 20) track.lastElementChild.remove();
@@ -595,16 +644,31 @@ const H24Page = {
         const g = s.game;
         const inPlay = s.phase === 'play' && !!g;
         const at = inPlay ? (g.draw || g.result ? null : g.turnEndsAt) : s.endsAt;
-        if (!at && !s.paused) { box.hidden = true; return; }
-        box.hidden = false;
+        // En partie, le chrono est dans la roue (au centre) ou au bout de la bande
+        const area = $('h24-wheel-area');
+        const ring = inPlay && area?.classList.contains('is-live') ? this.ringEl(area) : null;
+        if (!ring) area?.querySelector(':scope > .h24-clock')?.remove();
+        if (!at && !s.paused) { box.hidden = true; if (ring) ring.hidden = true; return; }
+        box.hidden = !!ring;
         const left = s.paused ? null : this.remaining(at);
         // Durée totale : la plus grande valeur vue pour cette échéance
         const key = `${s.phase}:${at}`;
         if (this.clockKey !== key) { this.clockKey = key; this.clockTotal = left || 1; }
         this.clockTotal = Math.max(this.clockTotal, left || 0);
-        $('h24-timer-value').textContent = left == null ? '--'
+        const txt = left == null ? '--'
             : left >= 60 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : String(left);
         const critical = inPlay && left != null && left <= 5;
+        if (ring) {
+            const exactLeft = s.paused || !at ? left : Math.max(0, (at - (Date.now() + (this.skew || 0))) / 1000);
+            ring.hidden = false;
+            ring.style.setProperty('--p', String(Math.max(0, Math.min(1, (exactLeft || 0) / this.clockTotal))));
+            ring.classList.toggle('is-critical', critical);
+            ring.classList.toggle('is-paused', !!s.paused);
+            ring.querySelector('.h24-clock__num').innerHTML = s.paused ? '<i class="fas fa-pause"></i>' : esc(txt);
+            area.classList.toggle('is-soon', left != null && left <= 1);
+            return;
+        }
+        $('h24-timer-value').textContent = txt;
         $('h24-timer-label').textContent = s.paused ? (s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'))
             : critical ? t('timerRing.hurry', null, 'votez !') : t('timerRing.seconds', null, 'secondes');
         const exact = s.paused || !at ? left : Math.max(0, (at - (Date.now() + (this.skew || 0))) / 1000);
@@ -612,6 +676,18 @@ const H24Page = {
         fillVoteTimer(box, 1 - (exact || 0) / this.clockTotal, s.paused ? 0 : 0.25);
         box.classList.toggle('is-critical', critical);
         $('h24-wheel-area')?.classList.toggle('is-soon', inPlay && left != null && left <= 1);
+    },
+
+    /** Anneau du chrono, posé dans la zone de la roue / de la bande (recréé avec elle) */
+    ringEl(area) {
+        let el = area.querySelector(':scope > .h24-clock');
+        if (!el) {
+            el = document.createElement('div');
+            el.className = 'h24-clock';
+            el.innerHTML = '<span class="h24-clock__num"></span>';
+            area.prepend(el);
+        }
+        return el;
     },
 
     renderSteps() {
@@ -658,6 +734,13 @@ const H24Page = {
             </div>`;
         };
         el.innerHTML = solo ? list('w') : list('w') + list('b');
+        const bots = $('h24-bots');
+        if (bots) {
+            const n = s?.bots || 0;
+            bots.hidden = !n;
+            if (n) bots.innerHTML = `<span><i class="fas fa-robot"></i> ${esc(t('h24.botsIn', { n }, `${n} bots de test en jeu`))}</span>
+                <button type="button" class="btn btn--sm btn--ghost" data-h24-bots-off><i class="fas fa-times"></i> ${esc(t('h24.botsOff', null, 'Retirer les bots'))}</button>`;
+        }
     },
 
     renderAccount() {

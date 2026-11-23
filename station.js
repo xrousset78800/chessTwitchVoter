@@ -196,7 +196,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             options: s.options,
             teams: s.teams,
             viewers: viewers(),
-            ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how },
+            ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how,
+                recent: (s.ballot.recent || []).slice(-20), recentN: s.ballot.recentN || 0 },
+            bots: botCount(),
             next: s.ballotQueue.map(b => b.id),
             recap: s.recap,
             game: g && {
@@ -648,6 +650,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const c = b.choices.find(x => String(x) === String(choice));
         if (c === undefined) return false;
         b.votes.set(login, c);
+        // Bandeau des votes : qui a voté quoi
+        (b.recent ||= []).push({ u: login, c });
+        if (b.recent.length > 30) b.recent.shift();
+        b.recentN = (b.recentN || 0) + 1;
         emit();
         emitMeAll(login);
         return true;
@@ -658,6 +664,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // et votent les coups à des moments aléatoires, répartis sur 2-3 coups (tirage au sort lisible).
     // Ils ne comptent pas comme spectateurs : sans vrai viewer, la station reste en pause.
     const bots = { list: [], turn: 0, plans: new Map(), cands: null };
+    function botCount() { try { return bots.list.length; } catch { return 0; } }
     function setBots(count = 0, { turn = 0 } = {}) {
         const n = Math.max(0, Math.min(BOT_NAMES.length, Number(count) || 0));
         for (const l of bots.list.slice(n)) leave(l);
@@ -790,6 +797,13 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
         socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 10)); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
+        // Bots de test : n'importe quel viewer peut les retirer (utile tant que le public est rare)
+        socket.on('h24:botsOff', () => {
+            if (!bots.list.length) return;
+            log(`🤖 24/24 : bots retirés depuis la page (${me() || 'anonyme'})`);
+            setBots(0);
+            emit();
+        });
         // Tests locaux : un message du chat Twitch simulé
         if (process.env.STATION_DEV === '1') socket.on('h24:devChat', (data = {}) => chatMessage(String(data.login || '').toLowerCase(), String(data.text || '').slice(0, 200)));
         // Régie : état du Phantom, pause manuelle, chaîne de la vue réelle
