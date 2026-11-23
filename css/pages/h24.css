@@ -167,6 +167,8 @@
     /* La roue tient avec les panneaux au-dessus */
     #page-h24 #h24-votes-panel.votes-slot { --dock-size: min(380px, 82vw, calc(var(--sidebar-width) - 50px), 36vh); }
     #page-h24 .h24-history .panel__content { flex: 1; min-height: 0; overflow-y: auto; }
+    /* Un seul défilement : celui du panneau, pas en plus celui de la liste */
+    #page-h24 #h24-history { max-height: none; overflow: visible; }
     #page-h24 .h24-card { flex: none; }
 }
 
@@ -215,7 +217,13 @@
 #page-h24 #h24-wheel-area .wheel-canvas { box-shadow: 0 0 0 4px var(--border-subtle); }
 #page-h24 #h24-votes-panel.has-winner > #h24-wheel-area { filter: saturate(0.6); }
 #h24-votes-panel.is-live:not(.votes-slot--wheel) { min-height: 84px; display: grid; place-items: center; }
-#h24-votes-panel.is-live:not(.votes-slot--wheel) .vote-total { font-size: 1rem; font-weight: 700; color: rgba(255, 255, 255, 0.75); }
+/* Nombre de votes : en haut du bloc, gros et lisible, sans trait de séparation */
+#h24-votes-panel .vote-total {
+    margin: 0 0 8px; padding: 0; border: 0; text-align: center;
+    font-size: 1.35rem; font-weight: 800; letter-spacing: 0.02em; color: #fff;
+}
+#h24-votes-panel .vote-total:empty { display: none; }
+#h24-votes-panel.is-live:not(.votes-slot--wheel) .vote-total { margin: 0; font-size: 1.6rem; }
 body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opacity: 1; pointer-events: auto; }
 #page-h24 #h24-wheel-area.wheel-area--band.is-live { opacity: 1; transform: none; pointer-events: auto; }
 
