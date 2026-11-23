@@ -103,8 +103,6 @@ function setupProblemsCallbacks() {
         
         // Feedback visuel
         showFeedback('wrong', expectedSAN);
-        
-        Toast?.error(`Mauvais coup ! Le bon était ${expectedSAN}`);
     };
     
     // Problème résolu
@@ -113,7 +111,6 @@ function setupProblemsCallbacks() {
         
         // Animation de victoire
         document.body.classList.add('problem-solved');
-        Toast?.success('🎉 Problème résolu !');
         
         // Charger le prochain après un délai
         setTimeout(() => {

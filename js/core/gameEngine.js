@@ -166,6 +166,11 @@ class GameEngine {
      * Partie à joueurs inscrits : seul le streamer touche l'échiquier, à son tour.
      * Toujours true hors de ces parties.
      */
+    dropIsVote() {
+        const pm = window.problemsManager;
+        return !!pm?.isActive && !!(pm.config?.timerEnabled ?? this.config.timerEnabled);
+    }
+
     canHumanPlay() {
         if (!this.session) return true;
         return this.isRunning && !this.streamerDraw && this.session.humanColor === this.chess.turn();
@@ -184,6 +189,12 @@ class GameEngine {
             // Construire le coup UCI
             const moveUCI = source + target;
 
+            // Vote en cours : le coup posé compte comme un vote, il n'est pas joué
+            if (this.dropIsVote()) {
+                window.problemsManager.receiveVote(moveUCI);
+                return 'snapback';
+            }
+
             // Déléguer la validation au problemsManager
             const result = window.problemsManager.validateAndPlayMove(moveUCI);
 
@@ -200,6 +211,14 @@ class GameEngine {
         }
 
         // ========== MODE NORMAL ==========
+        // Vote en cours (timer actif, hors partie à inscrits) : le coup posé par le streamer
+        // compte comme un vote, comme un clic dans la liste des coups ; il n'est pas joué
+        if (!this.session && this.config.timerEnabled) {
+            const probe = new Chess(this.chess.fen()).move({ from: source, to: target, promotion: 'q' });
+            if (probe && voting.isOpen) voting.addVote(this.currentVoterName, probe.san);
+            return 'snapback';
+        }
+
         // Tenter le coup
         const move = this.chess.move({
             from: source,

@@ -144,7 +144,6 @@ class RushManager {
                 return;
             }
             console.log('🔥 Aucun vote dans le temps → erreur');
-            window.AppToast?.warning('⏱️ Aucun vote dans le temps : erreur !');
             problemsManager.failCurrentProblem('Aucun vote dans le temps');
         };
     }

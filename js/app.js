@@ -678,7 +678,6 @@ async applyConfigAfterReload() {
         rushManager.config.mode = rushMode();
         await rushManager.fetchChannelRecord();
         rushManager.start({ startRating: AppState.config.rushStartRating || 100, mode: rushMode() });
-        Toast.success('🔥 Puzzle Rush lancé ! 3 erreurs et c\'est fini.');
         return;
     }
 
@@ -818,14 +817,12 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         problemsManager.onWrongMove = (expectedSAN, expectedUCI) => {
             console.log('❌ Erreur! Attendu:', expectedSAN);
             this.showProblemFeedback('wrong', expectedSAN);
-            Toast.error(`Mauvais coup ! Le bon était ${expectedSAN}`);
         };
 
         // Problème résolu
         problemsManager.onProblemSolved = (problem) => {
             console.log('🎉 Résolu!');
             this.showProblemFeedback('solved');
-            Toast.success('🎉 Problème résolu !');
             // Le suivant est enchaîné par problemsManager.startPauseTimer()
         };
 
@@ -865,7 +862,6 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         rushManager.stop();
         gameEngine.hideWheel?.();
         rushManager.start({ startRating: AppState.config.rushStartRating || 100 });
-        Toast.info('🔥 Nouveau run !');
     },
 
     updateRushHUD(state) {
@@ -1365,6 +1361,8 @@ problemsManager.onResolveWithWheel = (results, callback) => {
             // Si mode problèmes actif, déléguer au problemsManager
             if (isPuzzleMode() && problemsManager.isActive) {
                 const move = source + target;
+                // Vote en cours : le coup posé compte comme un vote, il n'est pas joué
+                if (gameEngine.dropIsVote?.()) { problemsManager.receiveVote(move); return 'snapback'; }
                 const result = problemsManager.validateAndPlayMove(move);
 
                 if (!result.valid || !result.correct) {
