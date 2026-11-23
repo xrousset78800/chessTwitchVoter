@@ -131,8 +131,10 @@ class WheelBand extends VotingWheel {
     /**
      * Fait défiler la bande jusqu'au coup tiré au sort
      */
-    spin(duration = 5000, forcedWinner = null) {
+    spin(duration = 5000, forcedWinner = null, stop = null) {
         if (this.isSpinning || this.votes.size === 0) return null;
+        // Point d'arrêt dans la case gagnante (0.15 à 0.85) : imposé pour que tous les spectateurs voient le même
+        stop = Number.isFinite(stop) && stop >= 0.15 && stop <= 0.85 ? stop : 0.15 + Math.random() * 0.7;
 
         this.isSpinning = true;
         const token = this.spinToken = (this.spinToken || 0) + 1;
@@ -151,7 +153,7 @@ class WheelBand extends VotingWheel {
             ? forcedWinner
             : this.pickWeightedRandom();
         // Les spectateurs rejouent le même tirage (mêmes coups, même gagnant)
-        this.spinInfo = { winner: this.winner, votes: sortedVotes.map(v => ({ m: v.move, n: v.count })), duration, startedAt: Date.now() };
+        this.spinInfo = { winner: this.winner, votes: sortedVotes.map(v => ({ m: v.move, n: v.count })), duration, stop, startedAt: Date.now() };
 
         // Case du gagnant sur la bande
         let cellStart = 0;
@@ -166,7 +168,7 @@ class WheelBand extends VotingWheel {
         }
 
         // S'arrête n'importe où dans la case gagnante, sans frôler ses bords
-        const target = cellStart + cellWidth * (0.15 + Math.random() * 0.7);
+        const target = cellStart + cellWidth * stop;
         const startPosition = this.position ?? width / 2;
         // Distance proportionnelle à la durée (≈ 400 px/s en moyenne) : démarrage plus doux ; 0 = direct
         const travel = duration > 0 ? Math.max(period, MIN_TRAVEL * Math.min(1.6, duration / 7500)) : 0;

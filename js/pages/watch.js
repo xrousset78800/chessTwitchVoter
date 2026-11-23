@@ -304,7 +304,7 @@ const WatchPage = {
                     this.renderWheel();
                 };
                 // Arrivé en plein tirage : il se termine en même temps que chez les joueurs
-                wheel.spin(Math.max(400, s.draw.endsIn), s.draw.winner);
+                wheel.spin(Math.max(400, s.draw.endsIn), s.draw.winner, s.draw.stop);
                 return;
             }
         }

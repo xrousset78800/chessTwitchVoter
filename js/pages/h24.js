@@ -1455,7 +1455,7 @@ const H24Page = {
         wheel.highlightWinner = reveal;
         wheel.onSpinEnd = reveal;
         // La roue s'arrête un peu avant que le coup soit joué : le temps de voir la flèche
-        wheel.spin(Math.max(600, left - 2200), g.draw.winner);
+        wheel.spin(Math.max(600, left - 2200), g.draw.winner, g.draw.stop);
     },
 
     /** Une seule roue à la fois : recréée quand le viewer change de style (hors tirage) */

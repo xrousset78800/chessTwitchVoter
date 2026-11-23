@@ -386,11 +386,13 @@ getSortedVotes() {
     /**
      * Faire tourner la roue
      */
-spin(duration = 5000, forcedWinner = null) {
+spin(duration = 5000, forcedWinner = null, stop = null) {
     if (this.isSpinning || this.votes.size === 0) return null;
 
     this.isSpinning = true;
     this.revealMove = null;
+    // Point d'arrêt dans la part gagnante (0.15 à 0.85) : imposé pour que tous les spectateurs voient le même
+    stop = Number.isFinite(stop) && stop >= 0.15 && stop <= 0.85 ? stop : 0.15 + Math.random() * 0.7;
     this.spinProgress = 0;
     this.flap = 0;
     const token = this.spinToken = (this.spinToken || 0) + 1;
@@ -415,7 +417,7 @@ spin(duration = 5000, forcedWinner = null) {
     this.winner = winner;
     console.log('🎯 Gagnant tiré:', winner, forcedWinner ? '(imposé)' : '(aléatoire)');
     // Les spectateurs rejouent le même tirage (mêmes coups, même gagnant)
-    this.spinInfo = { winner, votes: sortedVotes.map(v => ({ m: v.move, n: v.count })), duration, startedAt: Date.now() };
+    this.spinInfo = { winner, votes: sortedVotes.map(v => ({ m: v.move, n: v.count })), duration, stop, startedAt: Date.now() };
 
     // Point d'arrêt : n'importe où dans le segment gagnant, sans frôler ses bords (comme la bande)
     let angleAccum = 0;
@@ -424,7 +426,7 @@ spin(duration = 5000, forcedWinner = null) {
     for (let i = 0; i < sortedVotes.length; i++) {
         const sliceAngle = (sortedVotes[i].count / totalVotes) * 2 * Math.PI;
         if (sortedVotes[i].move === winner) {
-            winnerMidAngle = angleAccum + sliceAngle * (0.15 + Math.random() * 0.7);
+            winnerMidAngle = angleAccum + sliceAngle * stop;
             winnerColorIndex = i;
             break;
         }

@@ -520,7 +520,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             // Personne n'a voté : tirage à la roue (ou à la bande) entre tous les coups légaux, à chances égales
             const legal = g.chess.moves();
             move = pick(legal);
-            g.draw = { winner: move, votes: legal.map(m => ({ m, n: 1 })), random: true, endsAt: Date.now() + drawMs() };
+            g.draw = { winner: move, votes: legal.map(m => ({ m, n: 1 })), random: true, endsAt: Date.now() + drawMs(), stop: 0.15 + Math.random() * 0.7 };
             s.endsAt = g.draw.endsAt;
             emit();
             return later(drawMs(), () => playMove(move));
@@ -529,7 +529,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
             g.tally.wheel++;
-            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs(), ...(({ voter, pct, via, bot }) => ({ voter, pct, via, bot }))(chosenInfo(move)) };
+            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs(), stop: 0.15 + Math.random() * 0.7, ...(({ voter, pct, via, bot }) => ({ voter, pct, via, bot }))(chosenInfo(move)) };
             s.endsAt = g.draw.endsAt;
             emit();
             return later(drawMs(), () => playMove(move));
@@ -540,7 +540,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             // Ex æquo : tirage au sort visible entre eux, à chances égales
             if (tied.length > 1) {
                 g.tally.ties++;
-                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs(), ...(({ voter, pct, via, bot }) => ({ voter, pct, via, bot }))(chosenInfo(move)) };
+                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs(), stop: 0.15 + Math.random() * 0.7, ...(({ voter, pct, via, bot }) => ({ voter, pct, via, bot }))(chosenInfo(move)) };
                 s.endsAt = g.draw.endsAt;
                 emit();
                 return later(drawMs(), () => playMove(move));

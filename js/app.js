@@ -1937,7 +1937,7 @@ const SpectatorFeed = {
             // Tirage en cours ou gagnant encore affiché (2 s après l'arrêt)
             if (spin && Date.now() < spin.startedAt + spin.duration + 2000) {
                 d.wheel = gameEngine.wheelStyle;
-                d.draw = { votes: spin.votes, winner: spin.winner, duration: spin.duration,
+                d.draw = { votes: spin.votes, winner: spin.winner, duration: spin.duration, stop: spin.stop,
                     endsIn: Math.max(0, spin.startedAt + spin.duration - Date.now()) };
             }
         } catch {}

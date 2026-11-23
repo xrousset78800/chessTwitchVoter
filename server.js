@@ -653,7 +653,7 @@ function spectateState(g) {
         hv:          g.detail?.hv || [],
         // Vote secret de l'hôte : seulement le nombre de votes, pas les coups
         sec:         g.detail?.sec ?? null,
-        draw:        g.detail?.draw ? { votes: g.detail.draw.votes, winner: g.detail.draw.winner, duration: g.detail.draw.duration, endsIn: Math.max(0, g.detail.draw.endsAt - Date.now()) } : null,
+        draw:        g.detail?.draw ? { votes: g.detail.draw.votes, winner: g.detail.draw.winner, duration: g.detail.draw.duration, stop: g.detail.draw.stop ?? null, endsIn: Math.max(0, g.detail.draw.endsAt - Date.now()) } : null,
         spectators:  spectatorsOf(g.publicId)
     };
 }
@@ -707,7 +707,9 @@ function sanitizeDetail(data = {}, prev = null) {
             const duration = clampInt(data.draw.duration, 300, 30000);
             const endsAt = Date.now() + clampInt(data.draw.endsIn, 0, 30000);
             const same = prev?.draw && prev.draw.winner === winner && JSON.stringify(prev.draw.votes) === JSON.stringify(dv);
-            draw = same ? prev.draw : { votes: dv, winner, duration, endsAt };
+            const stop = Number(data.draw.stop);
+            draw = same ? prev.draw : { votes: dv, winner, duration, endsAt,
+                stop: Number.isFinite(stop) ? Math.min(0.85, Math.max(0.15, stop)) : null };
         }
     }
     const pal = PALETTE_IDS.includes(data.pal) ? data.pal : null;
