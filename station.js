@@ -119,14 +119,15 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
 
     // ------------------------------------------------------------------ état
+    // Au démarrage (donc après chaque déploiement), le cycle commence par l'étape 1 : le vote du mode
     const s = {
-        phase: 'signup',
-        endsAt: Date.now() + DUR.signup,
+        phase: 'voteMode',
+        endsAt: Date.now() + DUR.voteMode,
         paused: false,
         mode: 'teams',
         options: { turn: 30, decision: 'majority', spin: 'normal', votes: 1, anonymity: 'none' },
         teams: { w: [], b: [] },
-        ballot: null,          // { id, choices, votes: Map(login → choix) }
+        ballot: { id: 'mode', choices: [...MODES], votes: new Map() },   // { id, choices, votes: Map(login → choix) }
         ballotQueue: [],
         game: null,
         recap: null,
