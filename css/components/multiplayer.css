@@ -24,14 +24,14 @@
 /* ==================== MULTIPLAYER PANEL ==================== */
 
 .panel--multi {
-    border-color: rgba(139, 92, 246, 0.4);
-    background: rgba(139, 92, 246, 0.04);
+    border-color: rgba(34, 211, 238, 0.4);
+    background: rgba(34, 211, 238, 0.04);
     order: -1;
 }
 
 .panel--multi .panel__header {
-    background: rgba(139, 92, 246, 0.12);
-    color: #a78bfa;
+    background: rgba(34, 211, 238, 0.12);
+    color: #67e8f9;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -71,15 +71,15 @@
 }
 
 .multi-tab:hover {
-    background: rgba(139, 92, 246, 0.12);
-    border-color: rgba(139, 92, 246, 0.35);
-    color: #a78bfa;
+    background: rgba(34, 211, 238, 0.12);
+    border-color: rgba(34, 211, 238, 0.35);
+    color: #67e8f9;
 }
 
 .multi-tab.active {
-    background: rgba(139, 92, 246, 0.18);
-    border-color: #8b5cf6;
-    color: #a78bfa;
+    background: rgba(34, 211, 238, 0.18);
+    border-color: #22d3ee;
+    color: #67e8f9;
     font-weight: 600;
 }
 
@@ -100,8 +100,8 @@
     font-size: 2.2rem;
     font-weight: 700;
     letter-spacing: 10px;
-    color: #a78bfa;
-    text-shadow: 0 0 24px rgba(139, 92, 246, 0.6);
+    color: #67e8f9;
+    text-shadow: 0 0 24px rgba(34, 211, 238, 0.6);
 }
 
 /* ---- URL box ---- */
@@ -166,8 +166,8 @@
 
 /* ---- Banner partie active ---- */
 .multi-banner {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(59, 130, 246, 0.12));
-    border: 1px solid rgba(139, 92, 246, 0.25);
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(59, 130, 246, 0.12));
+    border: 1px solid rgba(34, 211, 238, 0.25);
     border-radius: 10px;
     padding: 10px 12px;
     margin-bottom: 10px;
@@ -186,7 +186,7 @@
 
 .multi-banner__team--white { color: #f9fafb; }
 .multi-banner__team--black { color: #9ca3af; }
-.multi-banner__vs { color: #8b5cf6; font-size: 1rem; }
+.multi-banner__vs { color: #22d3ee; font-size: 1rem; }
 
 .multi-banner__status {
     display: flex;

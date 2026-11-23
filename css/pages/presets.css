@@ -24,7 +24,7 @@
 }
 
 .preset__subtitle {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1rem;
     margin-top: 8px;
 }
@@ -51,7 +51,7 @@
 
 .preset-choice.is-active {
     border-color: var(--twitch-purple);
-    background: rgba(145, 70, 255, 0.1);
+    background: rgba(34, 211, 238, 0.1);
 }
 
 .preset-choice__title {
@@ -80,7 +80,7 @@
     gap: 12px 20px;
     padding: 12px 16px;
     margin-bottom: 16px;
-    background: rgba(145, 70, 255, 0.1);
+    background: rgba(34, 211, 238, 0.1);
     border: 1px solid var(--twitch-purple);
     border-radius: var(--radius-lg);
 }
@@ -231,7 +231,7 @@ body.preset-multi #btn-reset {
 }
 
 .new-tab.is-active {
-    color: #fff;
+    color: var(--on-accent);
     background: var(--twitch-purple);
 }
 

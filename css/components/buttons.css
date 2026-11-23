@@ -34,7 +34,7 @@
 .btn--primary {
     background: var(--gradient-hero);
     border: none;
-    color: #fff;
+    color: var(--on-accent);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -106,12 +106,12 @@
 }
 
 .connect-btn--twitch:hover {
-    background: rgba(145, 70, 255, 0.1);
-    box-shadow: 0 0 30px rgba(145, 70, 255, 0.3);
+    background: rgba(34, 211, 238, 0.1);
+    box-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
 }
 
 .connect-btn--twitch.is-connected {
-    background: rgba(145, 70, 255, 0.2);
+    background: rgba(34, 211, 238, 0.2);
 }
 
 .connect-btn--phantom {
@@ -181,12 +181,13 @@
     align-items: center;
     justify-content: center;
     font-size: 32px;
+    color: var(--on-accent);
 }
 
 .action-card__title {
     font-size: 1.5rem;
     font-weight: 700;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
 }
 
 .action-card__desc {
@@ -211,7 +212,7 @@
 .input:focus {
     outline: none;
     border-color: var(--accent-purple);
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
 }
 
 .input::placeholder {
@@ -277,6 +278,7 @@
 
 .toggle.is-active {
     background: var(--accent-purple);
+    color: var(--on-accent);
 }
 
 .toggle.is-active::after {
@@ -333,6 +335,7 @@
 .radio__input:checked {
     border-color: var(--accent-purple);
     background: var(--accent-purple);
+    color: var(--on-accent);
 }
 
 .checkbox__input:checked::after {
@@ -375,6 +378,7 @@
     border-radius: 50%;
     cursor: pointer;
     transition: var(--transition-fast);
+    color: var(--on-accent);
 }
 
 .range::-webkit-slider-thumb:hover {
@@ -389,6 +393,7 @@
     border: none;
     border-radius: 50%;
     cursor: pointer;
+    color: var(--on-accent);
 }
 
 /* ============================================
@@ -428,7 +433,7 @@
 
 .badge--purple {
     background: var(--accent-purple);
-    color: #fff;
+    color: var(--on-accent);
 }
 
 /* ============================================
@@ -450,6 +455,7 @@
 .status-dot--twitch.is-connected {
     background: var(--twitch-purple);
     box-shadow: 0 0 10px var(--twitch-purple);
+    color: var(--on-accent);
 }
 
 .status-dot--phantom.is-connected {
@@ -480,7 +486,7 @@
 .panel__header {
     padding: 16px 20px;
     border-bottom: 1px solid var(--border-subtle);
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-weight: 600;
     font-size: 0.95rem;
     display: flex;

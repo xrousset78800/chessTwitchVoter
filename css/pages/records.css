@@ -32,7 +32,7 @@
 .rec-tile__icon { font-size: 1.1rem; }
 
 .rec-tile__value {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
@@ -76,7 +76,7 @@
 .rec-panel.is-active { display: block; }
 
 .rec-h2 {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1rem;
     margin: 0 0 6px;
 }
@@ -138,7 +138,7 @@ a.rec-link, .rec-podium a, .rec-row a, .rec-duel a, .rec-chan a, .rec-me a {
     margin-bottom: 24px;
     border-radius: var(--radius-lg);
     border: 1px solid rgba(245, 158, 11, 0.35);
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(168, 85, 247, 0.08));
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(34, 211, 238, 0.08));
 }
 
 .rec-me__who {
@@ -170,7 +170,7 @@ a.rec-link, .rec-podium a, .rec-row a, .rec-duel a, .rec-chan a, .rec-me a {
 }
 
 .rec-me__big {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1.4rem;
     font-weight: 700;
 }
@@ -246,7 +246,7 @@ button.rec-chip { cursor: pointer; }
 }
 
 .rec-podium__score {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1.6rem;
     font-weight: 700;
     color: var(--accent-orange);
@@ -265,7 +265,7 @@ button.rec-chip { cursor: pointer; }
     justify-content: center;
     padding-top: 8px;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-weight: 900;
     font-size: 1.4rem;
     color: rgba(255, 255, 255, 0.85);
@@ -316,7 +316,7 @@ button.rec-chip { cursor: pointer; }
 }
 
 .rec-row__score {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-weight: 700;
     font-size: 1.2rem;
 }
@@ -494,7 +494,7 @@ button.rec-chip { cursor: pointer; }
     flex-direction: column;
     gap: 3px;
     min-width: 0;
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
     font-weight: 600;
     font-size: 1rem;
     overflow: hidden;
@@ -620,7 +620,7 @@ a.rec-link:hover { text-decoration: underline; }
     align-items: center;
     gap: 8px;
     margin: 0 0 4px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1.5rem;
     overflow-wrap: anywhere;
 }
@@ -683,7 +683,7 @@ a.rec-link:hover { text-decoration: underline; }
 }
 
 .rec-mode__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.rec-mode__rank { font-family: 'Orbitron', sans-serif; font-weight: 700; }
+.rec-mode__rank { font-family: 'Chakra Petch', sans-serif; font-weight: 700; }
 
 .rec-mode__stats {
     display: grid;
@@ -693,7 +693,7 @@ a.rec-link:hover { text-decoration: underline; }
 }
 
 .rec-mode__stats > div { display: flex; flex-direction: column; min-width: 0; }
-.rec-mode__stats b { font-family: 'Orbitron', sans-serif; font-size: 1.15rem; }
+.rec-mode__stats b { font-family: 'Chakra Petch', sans-serif; font-size: 1.15rem; }
 .rec-mode__stats small { font-size: 0.7rem; color: var(--text-muted); }
 .rec-mode .rec-spark { width: 100%; }
 
@@ -737,7 +737,7 @@ a.rec-link:hover { text-decoration: underline; }
 }
 
 .rec-game--w .rec-game__res { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
-.rec-game--d .rec-game__res { background: rgba(136, 136, 160, 0.2); color: var(--text-secondary); }
+.rec-game--d .rec-game__res { background: rgba(163, 181, 187, 0.2); color: var(--text-secondary); }
 .rec-game--l .rec-game__res { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
 
 .rec-game__name { min-width: 0; overflow-wrap: anywhere; }
@@ -759,7 +759,7 @@ a.rec-link:hover { text-decoration: underline; }
     padding: 14px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--bg-card);
 }
 .h24s-card--wide { grid-column: 1 / -1; }
-.h24s-card__title { margin: 0 0 2px; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+.h24s-card__title { margin: 0 0 2px; font-family: 'Chakra Petch', sans-serif; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
 .h24s-card__title i { color: var(--accent-orange); }
 .h24s-sub { margin: 6px 0 2px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
 .h24s-sub small { text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 4px; }

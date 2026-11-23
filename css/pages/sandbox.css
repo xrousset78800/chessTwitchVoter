@@ -25,7 +25,7 @@
 }
 
 .sandbox__title {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1.8rem;
     font-weight: 700;
 }
@@ -57,7 +57,7 @@
 }
 
 .moves-panel__header {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--accent-purple);
@@ -108,9 +108,9 @@
     padding: 5px 8px;
     font-size: 0.95rem;
     font-weight: 600;
-    background: rgba(145, 70, 255, 0.14);
+    background: rgba(34, 211, 238, 0.14);
     color: var(--text-primary);
-    border: 1px solid rgba(145, 70, 255, 0.45);
+    border: 1px solid rgba(34, 211, 238, 0.45);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -121,6 +121,7 @@
     background: var(--accent-purple);
     border-color: var(--accent-purple);
     transform: translateY(-1px);
+    color: var(--on-accent);
 }
 
 .sandbox__moves-panel .moves-group li.most-voted button {
@@ -254,7 +255,7 @@
 
 .mode-option.is-active {
     border-color: var(--accent-purple);
-    background: rgba(139, 92, 246, 0.1);
+    background: rgba(34, 211, 238, 0.1);
 }
 
 .mode-option__icon {
@@ -375,7 +376,7 @@
 }
 
 .sandbox-setup__title {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 1.3rem;
     font-weight: 600;
 }
@@ -498,7 +499,7 @@ body.sandbox-launch #page-sandbox .new-tabs { margin-bottom: 14px; }
 body.sandbox-launch .sandbox-setup__card {
     padding: 18px 20px;
     background:
-        radial-gradient(120% 90px at 0 0, rgba(139, 92, 246, 0.14), transparent),
+        radial-gradient(120% 90px at 0 0, rgba(34, 211, 238, 0.14), transparent),
         radial-gradient(90% 80px at 100% 0, rgba(6, 182, 212, 0.10), transparent),
         var(--bg-card);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
@@ -506,7 +507,7 @@ body.sandbox-launch .sandbox-setup__card {
 body.sandbox-launch .sandbox-setup__header { margin-bottom: 14px; }
 body.sandbox-launch .sandbox-setup__title {
     font-size: 1.1rem;
-    background: linear-gradient(90deg, #a78bfa, #22d3ee);
+    background: linear-gradient(90deg, #67e8f9, #22d3ee);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -514,7 +515,7 @@ body.sandbox-launch .sandbox-setup__title {
 body.sandbox-launch .sandbox-setup__grid,
 body.sandbox-launch .sandbox-setup__col { gap: 12px; }
 .sandbox-setup .panel__header { padding: 11px 16px; font-size: 0.85rem; }
-.sandbox-setup .panel__header i { color: var(--accent-purple, #8b5cf6); }
+.sandbox-setup .panel__header i { color: var(--accent-purple, #22d3ee); }
 .sandbox-setup .panel__content { padding: 12px 16px; }
 .sandbox-setup .form-row { padding: 8px 0; }
 body.sandbox-launch .sandbox-setup__footer { margin-top: 14px; padding-top: 14px; }
@@ -540,10 +541,10 @@ body.sandbox-launch .mode-option__icon {
     font-size: 18px;
 }
 body.sandbox-launch .mode-option.is-active {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(6, 182, 212, 0.08));
-    box-shadow: 0 0 0 1px var(--accent-purple, #8b5cf6), 0 4px 18px rgba(139, 92, 246, 0.25);
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(6, 182, 212, 0.08));
+    box-shadow: 0 0 0 1px var(--accent-purple, #22d3ee), 0 4px 18px rgba(34, 211, 238, 0.25);
 }
-body.sandbox-launch .mode-option.is-active .mode-option__icon { background: rgba(139, 92, 246, 0.3); }
+body.sandbox-launch .mode-option.is-active .mode-option__icon { background: rgba(34, 211, 238, 0.3); }
 
 body.sandbox-launch .sandbox__actions,
 body.sandbox-launch .sandbox__content,
@@ -723,7 +724,7 @@ body.no-vote-timer .vote-timer--board .timer-instant {
 }
 
 .timer-instant__title {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--accent-orange);
@@ -774,11 +775,11 @@ body.no-vote-timer #btn-wheel-style { display: none; }
 
 .preset-card:hover { background: rgba(255, 255, 255, 0.06); }
 
-.preset-card:focus-visible { outline: 2px solid var(--accent-purple, #a855f7); outline-offset: 2px; }
+.preset-card:focus-visible { outline: 2px solid var(--accent-purple, #22d3ee); outline-offset: 2px; }
 
 .preset-card.is-active {
-    border-color: var(--accent-purple, #a855f7);
-    background: rgba(168, 85, 247, 0.1);
+    border-color: var(--accent-purple, #22d3ee);
+    background: rgba(34, 211, 238, 0.1);
 }
 
 .preset-card__icon { font-size: 1.3rem; line-height: 1.3; }

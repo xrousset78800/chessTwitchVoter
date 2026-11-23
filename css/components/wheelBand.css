@@ -35,7 +35,7 @@ body #wheel-area.wheel-area--band.is-visible {
 
 #wheel-area.is-spinning .wheel-band {
     outline: 2px solid var(--accent-purple);
-    box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 24px rgba(34, 211, 238, 0.4);
 }
 
 .wheel-band__canvas {

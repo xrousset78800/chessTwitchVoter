@@ -33,8 +33,8 @@
     border: 1px solid var(--border-subtle);
 }
 .h24-step.is-done { opacity: 0.55; }
-.h24-step.is-current { background: rgba(145, 70, 255, 0.15); color: var(--text-primary); font-weight: 700; }
-.h24-step.is-current .h24-step__dot { background: var(--twitch-purple); border-color: var(--twitch-purple); color: #fff; }
+.h24-step.is-current { background: rgba(34, 211, 238, 0.15); color: var(--text-primary); font-weight: 700; }
+.h24-step.is-current .h24-step__dot { background: var(--twitch-purple); border-color: var(--twitch-purple); color: var(--on-accent); }
 
 /* ---- En-tête de gauche ---- */
 .h24-options { color: var(--text-secondary); font-size: 0.82rem; }
@@ -61,20 +61,20 @@
 
 /* ---- Échiquier ---- */
 #h24-board-wrap { border-radius: 6px; transition: box-shadow 0.2s; }
-#h24-board-wrap.is-my-turn { box-shadow: 0 0 0 3px var(--twitch-purple), 0 0 24px rgba(145, 70, 255, 0.45); }
+#h24-board-wrap.is-my-turn { box-shadow: 0 0 0 3px var(--twitch-purple), 0 0 24px rgba(34, 211, 238, 0.45); }
 #h24-board .h24-last { box-shadow: inset 0 0 0 100px rgba(255, 214, 10, 0.35); }
 
 /* ---- Barre d'outils : style du tirage ---- */
 .h24-style { display: inline-flex; gap: 4px; margin-left: auto; }
-.h24-style .btn.is-active { border-color: var(--twitch-purple); background: rgba(145, 70, 255, 0.18); color: var(--text-primary); }
+.h24-style .btn.is-active { border-color: var(--twitch-purple); background: rgba(34, 211, 238, 0.18); color: var(--text-primary); }
 
 /* ---- Équipes et compte ---- */
 .h24-account { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .h24-account p { margin: 0; font-size: 0.85rem; flex: 1; min-width: 0; }
 .h24-account__hint { color: var(--text-secondary); }
 .h24-account__me--w strong { color: #f5f5f5; }
-.h24-account__me--b strong { color: #c4b5fd; }
-.btn--twitch { background: var(--twitch-purple); color: #fff; border: none; }
+.h24-account__me--b strong { color: #a5f3fc; }
+.btn--twitch { background: var(--twitch-brand); color: #fff; border: none; }
 .btn--twitch:hover { filter: brightness(1.1); }
 
 .h24-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -93,7 +93,7 @@
     font-size: 0.72rem;
 }
 .h24-team__list li { padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); }
-.h24-team__list li.is-me { background: var(--twitch-purple); color: #fff; font-weight: 700; }
+.h24-team__list li.is-me { background: var(--twitch-purple); color: var(--on-accent); font-weight: 700; }
 .h24-team__list .h24-team__empty { background: none; color: var(--text-secondary); padding: 0; }
 
 /* ---- Entre deux parties : récap, votes, inscription à la place du podium ---- */
@@ -121,7 +121,7 @@
 }
 .h24-choice::before {
     content: ''; position: absolute; inset: 0 auto 0 0; width: var(--pct, 0%);
-    background: rgba(145, 70, 255, 0.22);
+    background: rgba(34, 211, 238, 0.22);
     transition: width 0.4s ease;
 }
 .h24-choice > * { position: relative; }
@@ -132,9 +132,9 @@
 .h24-choice__num {
     display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 6px; flex: none;
     font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.9rem;
-    background: var(--twitch-purple); color: #fff;
+    background: var(--twitch-purple); color: var(--on-accent);
 }
-.h24-chat-hint { margin: 10px 0 0; font-size: 0.95rem; font-weight: 600; color: #c4b5fd; text-align: center; }
+.h24-chat-hint { margin: 10px 0 0; font-size: 0.95rem; font-weight: 600; color: #a5f3fc; text-align: center; }
 .h24-chat-hint i { margin-right: 4px; }
 .h24-choice__pct { font-variant-numeric: tabular-nums; font-size: 1.15rem; }
 .h24-choice__pct small { margin-left: 6px; color: var(--text-secondary); font-weight: 500; font-size: 0.8rem; }
@@ -185,9 +185,9 @@
     flex-direction: column;
     gap: 6px;
     padding: 8px 10px;
-    border: 1px dashed rgba(139, 92, 246, 0.6);
+    border: 1px dashed rgba(34, 211, 238, 0.6);
     border-radius: 10px;
-    background: rgba(139, 92, 246, 0.08);
+    background: rgba(34, 211, 238, 0.08);
     flex: none;
 }
 .h24-regie[hidden] { display: none; }
@@ -247,18 +247,18 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .vote-ticker__who .vote-ticker__user { font-size: 0.8rem; }
 .vote-ticker__via { font-size: 0.62rem; font-weight: 600; color: rgba(255, 255, 255, 0.45); }
 .vote-ticker__move.is-hidden { font-family: inherit; font-style: italic; opacity: 0.7; }
-.vote-ticker__move.is-choice { font-family: inherit; color: #c4b5fd; }
+.vote-ticker__move.is-choice { font-family: inherit; color: #a5f3fc; }
 
 /* Chrono du tour : anneau au centre de la roue, ou au bout de la bande */
 .h24-clock {
     --p: 1;
-    --ring: #8b5cf6;
+    --ring: #22d3ee;
     position: relative; flex: none; display: grid; place-items: center;
     width: 64px; height: 64px; border-radius: 50%;
     background: conic-gradient(var(--ring) calc(var(--p) * 360deg), rgba(255, 255, 255, 0.1) 0);
 }
 .h24-clock[hidden] { display: none; }
-.h24-clock::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #16131f; }
+.h24-clock::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #101a1f; }
 .h24-clock__num { position: relative; font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1.35rem; color: #fff; }
 .h24-clock.is-critical { --ring: #f59e0b; animation: h24-clockPulse 0.5s ease-in-out infinite alternate; }
 .h24-clock.is-critical .h24-clock__num { color: #fbbf24; }
@@ -282,7 +282,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
     pointer-events: auto; width: min(440px, 100%); max-height: 100%; overflow-y: auto;
     display: flex; flex-direction: column; gap: 10px; padding: 14px;
     background: color-mix(in srgb, var(--bg-secondary, #18181b) 94%, transparent);
-    border: 1px solid rgba(145, 70, 255, 0.45); border-radius: 16px;
+    border: 1px solid rgba(34, 211, 238, 0.45); border-radius: 16px;
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(6px);
     animation: h24-modal-in 0.25s ease-out;
@@ -324,11 +324,11 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-side__team { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: #fff; }
 .h24-side__count { font-weight: 700; font-variant-numeric: tabular-nums; }
 .h24-side__count i { font-size: 0.75em; opacity: 0.7; }
-.h24-side__mine { padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #fff; background: var(--twitch-purple, #9146ff); }
+.h24-side__mine { padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: var(--on-accent); background: var(--twitch-purple, #22d3ee); }
 .h24-side__turn { padding: 1px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #0b0b10; background: #22c55e; }
 .h24-side__spacer { flex: 1; }
 .h24-side.is-turn { border-color: rgba(34, 197, 94, 0.55); background: rgba(34, 197, 94, 0.08); }
-.h24-side.is-mine { box-shadow: inset 3px 0 0 var(--twitch-purple, #9146ff); }
+.h24-side.is-mine { box-shadow: inset 3px 0 0 var(--twitch-purple, #22d3ee); }
 .h24-side .btn { padding: 2px 10px; }
 .h24-side__quit { border: 0; background: none; padding: 0; font: inherit; font-size: 0.78rem; color: rgba(255, 255, 255, 0.5); cursor: pointer; text-decoration: underline; }
 .h24-side__quit:hover { color: #fff; }
@@ -399,7 +399,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 
 /* ------------------------------------------- Régie : étapes forcées au clic */
 .h24-step[data-h24-force] { cursor: pointer; }
-.h24-step[data-h24-force]:hover { background: rgba(145, 70, 255, 0.25); color: var(--text-primary); opacity: 1; }
+.h24-step[data-h24-force]:hover { background: rgba(34, 211, 238, 0.25); color: var(--text-primary); opacity: 1; }
 
 /* ------------------------------------------- Vote secret : podium vivant, coups masqués */
 .podium.is-masked .podium__move { font-size: 1.3rem; opacity: 0.75; }
@@ -423,10 +423,10 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-opt__value { display: inline-block; }
 .h24-opt.is-pending .h24-opt__value { color: var(--text-secondary); font-weight: 600; letter-spacing: 1px; }
 .h24-opt.is-pending i { color: var(--text-secondary); opacity: 0.6; }
-.h24-opt.is-live { background: rgba(145, 70, 255, 0.14); animation: h24-opt-live 1.4s ease-in-out infinite; }
+.h24-opt.is-live { background: rgba(34, 211, 238, 0.14); animation: h24-opt-live 1.4s ease-in-out infinite; }
 .h24-opt.is-live i { color: var(--twitch-purple); opacity: 1; animation: h24-opt-wobble 1.4s ease-in-out infinite; }
 .h24-opt.is-live .h24-opt__value { color: var(--text-primary); animation: h24-opt-dots 1.4s steps(1) infinite; }
-@keyframes h24-opt-live { 0%, 100% { box-shadow: inset 0 0 0 1px rgba(145, 70, 255, 0.25); } 50% { box-shadow: inset 0 0 0 1px rgba(145, 70, 255, 0.7), 0 0 10px rgba(145, 70, 255, 0.35); } }
+@keyframes h24-opt-live { 0%, 100% { box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.25); } 50% { box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.7), 0 0 10px rgba(34, 211, 238, 0.35); } }
 @keyframes h24-opt-wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
 @keyframes h24-opt-dots { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 /* Remise à zéro : la valeur glisse vers le bas et s'efface */
@@ -449,12 +449,12 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 }
 @keyframes h24-opt-pop { 0% { transform: scale(0) rotate(-90deg); } 100% { transform: none; } }
 @keyframes h24-opt-flash {
-    0%   { background: rgba(145, 70, 255, 0.55); box-shadow: 0 0 0 0 rgba(145, 70, 255, 0.7); }
-    35%  { background: rgba(145, 70, 255, 0.3); box-shadow: 0 0 16px 3px rgba(145, 70, 255, 0.45); }
-    100% { background: transparent; box-shadow: 0 0 0 0 rgba(145, 70, 255, 0); }
+    0%   { background: rgba(34, 211, 238, 0.55); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
+    35%  { background: rgba(34, 211, 238, 0.3); box-shadow: 0 0 16px 3px rgba(34, 211, 238, 0.45); }
+    100% { background: transparent; box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
 }
 @keyframes h24-opt-shine { 0% { background-position: -80% 0; opacity: 1; } 100% { background-position: 180% 0; opacity: 0; } }
-@keyframes h24-opt-glow { 0% { text-shadow: 0 0 18px rgba(145, 70, 255, 1); } 100% { text-shadow: none; } }
+@keyframes h24-opt-glow { 0% { text-shadow: 0 0 18px rgba(34, 211, 238, 1); } 100% { text-shadow: none; } }
 #page-h24 .watch-bar__mode.is-pending { color: var(--text-secondary); font-style: italic; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
     .h24-opt, .h24-opt *, .h24-opt::after, #page-h24 .watch-bar__mode { animation-duration: 0.01s !important; animation-iteration-count: 1 !important; }
@@ -491,7 +491,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-regie__err { color: #f87171; }
 /* Zoom de la caméra : curseur compact, valeur à droite (1.5×, « optique » si la caméra zoome elle-même) */
 .h24-regie__zoom { flex: 1 1 140px; display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 0.75rem; color: var(--text-secondary, rgba(255, 255, 255, 0.7)); }
-.h24-regie__zoom input { flex: 1; min-width: 60px; accent-color: var(--accent, #9146ff); }
+.h24-regie__zoom input { flex: 1; min-width: 60px; accent-color: var(--accent, #22d3ee); }
 .h24-regie__zoom span { min-width: 2.6em; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------------ fin de partie : bandeau sur l'échiquier */
@@ -531,7 +531,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-next {
     position: sticky; bottom: 0; z-index: 2; margin: 6px 0 0;
     display: flex; align-items: center; gap: 10px; padding: 6px 10px;
-    border-radius: 10px; background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(145, 70, 255, 0.22)), var(--bg-panel, #16131f);
+    border-radius: 10px; background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(34, 211, 238, 0.22)), var(--bg-panel, #101a1f);
     box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.6), 0 -6px 14px rgba(0, 0, 0, 0.35);
 }
 .h24-next__piece { width: 36px; height: 36px; flex: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); }
@@ -539,7 +539,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-next__label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.6); }
 .h24-next__line { display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap; }
 .h24-next__san { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 800; color: #fde68a; }
-.h24-next__pct { font-size: 0.8rem; font-weight: 700; color: #c4b5fd; }
+.h24-next__pct { font-size: 0.8rem; font-weight: 700; color: #a5f3fc; }
 .h24-next__voter { font-size: 0.75rem; color: rgba(255, 255, 255, 0.65); overflow: hidden; text-overflow: ellipsis; }
 .h24-next.is-in { animation: h24-next-in 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both; }
 .h24-next.is-in .h24-next__piece { animation: h24-next-piece 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) 0.1s both; }
@@ -553,7 +553,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
     display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid var(--border-subtle); border-radius: 8px;
     background: rgba(255, 255, 255, 0.04); color: var(--text-secondary, #cbd5e1); font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
 }
-.h24-settings__btn:hover, .h24-settings__btn[aria-expanded="true"] { color: #fff; border-color: var(--twitch-purple); background: rgba(145, 70, 255, 0.18); }
+.h24-settings__btn:hover, .h24-settings__btn[aria-expanded="true"] { color: #fff; border-color: var(--twitch-purple); background: rgba(34, 211, 238, 0.18); }
 .h24-settings__btn i { transition: transform 0.4s; }
 .h24-settings__btn[aria-expanded="true"] i { transform: rotate(90deg); }
 .h24-settings__pop {
@@ -574,8 +574,8 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
     display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 8px; border: 1px solid var(--border-subtle); border-radius: 8px;
     background: rgba(255, 255, 255, 0.03); color: var(--text-secondary, #cbd5e1); font: inherit; font-size: 0.75rem; cursor: pointer; text-align: left;
 }
-.h24-palette:hover { border-color: rgba(145, 70, 255, 0.6); color: #fff; }
-.h24-palette.is-active { border-color: var(--twitch-purple); background: rgba(145, 70, 255, 0.18); color: #fff; }
+.h24-palette:hover { border-color: rgba(34, 211, 238, 0.6); color: #fff; }
+.h24-palette.is-active { border-color: var(--twitch-purple); background: rgba(34, 211, 238, 0.18); color: #fff; }
 .h24-palette__dots { display: flex; gap: 3px; }
 .h24-palette__dots i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); }
 
@@ -585,7 +585,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 #page-h24 #h24-moves.is-idle:hover { opacity: 0.75; }
 #page-h24 #h24-moves.is-turn {
     border-color: var(--twitch-purple);
-    box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 22px rgba(145, 70, 255, 0.35);
+    box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 22px rgba(34, 211, 238, 0.35);
 }
 #page-h24 #h24-moves.is-turn #h24-hint { color: #fff; }
 /* Début du tour : éclat qui balaie le bloc et halo qui pulse, pour faire réagir le joueur */
@@ -601,10 +601,10 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 #page-h24 #h24-moves.is-wake .moves-group:nth-child(n+4) button { animation-delay: 0.24s; }
 @keyframes h24-wake-sweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
 @keyframes h24-wake-glow {
-    0%   { transform: scale(1); box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 0 0 rgba(145, 70, 255, 0.7); }
-    25%  { transform: scale(1.02); box-shadow: 0 0 0 2px #bf94ff, 0 0 36px 6px rgba(145, 70, 255, 0.65); }
-    60%  { transform: scale(1); box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 26px 2px rgba(145, 70, 255, 0.45); }
-    100% { box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 22px rgba(145, 70, 255, 0.35); }
+    0%   { transform: scale(1); box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 0 0 rgba(34, 211, 238, 0.7); }
+    25%  { transform: scale(1.02); box-shadow: 0 0 0 2px #67e8f9, 0 0 36px 6px rgba(34, 211, 238, 0.65); }
+    60%  { transform: scale(1); box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 26px 2px rgba(34, 211, 238, 0.45); }
+    100% { box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 22px rgba(34, 211, 238, 0.35); }
 }
 @keyframes h24-wake-btn { 0% { transform: translateY(4px) scale(0.92); filter: brightness(1.6); } 60% { transform: translateY(-1px) scale(1.04); } 100% { transform: none; filter: none; } }
 @media (prefers-reduced-motion: reduce) {

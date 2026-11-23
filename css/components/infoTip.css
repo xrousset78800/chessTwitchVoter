@@ -30,7 +30,7 @@
 .info-tip:hover,
 .info-tip:focus-visible,
 .info-tip[aria-expanded="true"] {
-    color: #fff;
+    color: var(--on-accent);
     border-color: var(--accent-purple);
     background: var(--accent-purple);
     outline: none;

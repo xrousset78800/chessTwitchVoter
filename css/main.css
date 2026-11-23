@@ -5,22 +5,22 @@
 
 :root {
     /* Colors - Dark Theme */
-    --bg-dark: #0a0a0f;
-    --bg-card: #12121a;
-    --bg-card-hover: #1a1a25;
-    --bg-input: #0d0d14;
+    --bg-dark: #091014;
+    --bg-card: #101a1f;
+    --bg-card-hover: #15232a;
+    --bg-input: #0c151a;
 
     /* Borders */
-    --border-subtle: #2a2a3a;
-    --border-glow: #6366f1;
+    --border-subtle: #1c2a30;
+    --border-glow: #22d3ee;
 
     /* Text */
-    --text-primary: #f0f0f5;
-    --text-secondary: #8888a0;
-    --text-muted: #55556a;
+    --text-primary: #e8f2f5;
+    --text-secondary: #a3b5bb;
+    --text-muted: #6b7f86;
 
     /* Accents */
-    --accent-purple: #8b5cf6;
+    --accent-purple: #22d3ee;
     --accent-blue: #3b82f6;
     --accent-cyan: #06b6d4;
     --accent-green: #10b981;
@@ -29,15 +29,19 @@
     --accent-pink: #ec4899;
 
     /* Brand Colors */
-    --twitch-purple: #9146ff;
+    --twitch-purple: #22d3ee;     /* accent du site (nom historique) */
+    --twitch-brand: #9146ff;      /* vrai violet Twitch : connexion, chaîne */
+    --accent: #22d3ee;
+    --accent-light: #67e8f9;
+    --on-accent: #091014;         /* texte posé sur l'accent */
     --phantom-blue: #00d4ff;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #06b6d4 100%);
-    --gradient-card: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);
+    --gradient-hero: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    --gradient-card: linear-gradient(180deg, rgba(34, 211, 238, 0.1) 0%, transparent 100%);
 
     /* Shadows */
-    --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.3);
+    --shadow-glow: 0 0 30px rgba(34, 211, 238, 0.3);
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
 
@@ -87,7 +91,7 @@ html {
 }
 
 body {
-    font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg-dark);
     color: var(--text-primary);
     min-height: 100vh;
@@ -159,8 +163,8 @@ img, video {
     width: 100%;
     height: 100%;
     background-image:
-        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
     background-size: 50px 50px;
     pointer-events: none;
     z-index: 0;
@@ -184,6 +188,7 @@ img, video {
     top: -200px;
     left: -200px;
     background: var(--accent-purple);
+    color: var(--on-accent);
 }
 
 .bg-glow--bottom-right {
@@ -297,7 +302,7 @@ img, video {
     font-size: 1.5rem;
     font-weight: bold;
     color: #fff;
-    text-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
 }
 
 /* ============================================
@@ -413,6 +418,7 @@ img, video {
     background: var(--accent-purple);
     border-color: var(--accent-purple);
     transform: translateY(-2px);
+    color: var(--on-accent);
 }
 
 #availableList li.most-voted button {
@@ -434,12 +440,13 @@ img, video {
 
 .btn--primary.btn--lg {
     background: var(--gradient-hero);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 15px rgba(34, 211, 238, 0.4);
+    color: var(--on-accent);
 }
 
 .btn--primary.btn--lg:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 6px 20px rgba(34, 211, 238, 0.5);
 }
 
 .sandbox__actions-separator {
@@ -587,8 +594,8 @@ body[data-turn="b"] .sandbox__title::after {
 
 
 .history-row.is-selected {
-    background: rgba(99, 102, 241, 0.2);
-    border-left: 3px solid #6366f1;
+    background: rgba(34, 211, 238, 0.2);
+    border-left: 3px solid #22d3ee;
 }
 
 /* Indicateur de coup spécial (échec, mat, roque) */
@@ -605,7 +612,7 @@ body[data-turn="b"] .sandbox__title::after {
 }
 
 .history-row__move.is-castle {
-    color: #a78bfa;
+    color: #67e8f9;
 }
 
 /* Responsive */
@@ -680,7 +687,7 @@ body[data-turn="b"] .sandbox__title::after {
 }
 
 #voting-indicator.mode-chatVsChat {
-    color: #a78bfa;
+    color: #67e8f9;
 }
 
 #voting-indicator.mode-chatVsChat::before {
@@ -822,7 +829,7 @@ body.showTimer .board-timer-container .countdown {
     font-size: 1.2rem;
     font-weight: bold;
     color: #fff;
-    text-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
     text-align: center;
     min-width: 60px;
     margin-top: 4px;
@@ -900,7 +907,7 @@ body.showTimer .board-timer-container {
     top: 100px;
     width: 280px;
     max-height: calc(100vh - 120px);
-    background: linear-gradient(145deg, #1a1a2e, #16213e);
+    background: linear-gradient(145deg, #101a1f, #16213e);
     border-radius: 12px;
     padding: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
@@ -1146,7 +1153,7 @@ body.showTimer .board-timer-container {
 #voting-indicator.mode-problems { color: #4ecdc4; }
 #voting-indicator.mode-problems::before { content: '🧩'; }
 
-#voting-indicator.mode-chatVsChat { color: #a78bfa; }
+#voting-indicator.mode-chatVsChat { color: #67e8f9; }
 #voting-indicator.mode-chatVsChat::before { content: '🎭'; }
 /* ============================================
    SCROLLBAR
@@ -1174,7 +1181,7 @@ body.showTimer .board-timer-container {
    ============================================ */
 ::selection {
     background: var(--accent-purple);
-    color: white;
+    color: var(--on-accent);
 }
 .countdown.timer-paused ~ #timer-value {
     animation: timerWaitingPulse 1.2s ease-in-out infinite;
@@ -1239,7 +1246,7 @@ body:not(.phantom-connected) .nav__link--phantom:not(.is-active) { display: none
     font-size: 0.85rem;
     color: var(--text-secondary, #a0a0b8);
 }
-.restrict-row__label .fa-twitch { color: #9146ff; }
+.restrict-row__label .fa-twitch { color: #22d3ee; }
 .toggle.toggle--chip {
     display: inline-flex;
     align-items: center;
@@ -1257,9 +1264,9 @@ body:not(.phantom-connected) .nav__link--phantom:not(.is-active) { display: none
 }
 .toggle.toggle--chip::after { display: none; }
 .toggle.toggle--chip:hover { color: var(--text-primary, #fff); }
-.toggle--follow.is-active { background: rgba(145, 70, 255, 0.18); border-color: #9146ff; color: #c4a5ff; }
+.toggle--follow.is-active { background: rgba(34, 211, 238, 0.18); border-color: #22d3ee; color: #c4a5ff; }
 .toggle--sub.is-active    { background: rgba(245, 158, 11, 0.16); border-color: #f59e0b; color: #fbbf24; }
-.toggle--follow.is-active .fa-heart { color: #9146ff; }
+.toggle--follow.is-active .fa-heart { color: #22d3ee; }
 .toggle--sub.is-active .fa-star { color: #f59e0b; }
 
 /* Fond vert : couleur unie derrière le jeu, à découper dans OBS (clé de chrominance) */
