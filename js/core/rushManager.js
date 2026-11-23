@@ -22,7 +22,7 @@ class RushManager {
         this.ended    = false;
 
         this.config = {
-            startRating: 600,    // rating du 1er puzzle
+            startRating: 100,    // rating du 1er puzzle
             mode: '0',           // temps pour voter (s), '0' = illimité : un classement par mode
             ratingStep:  60,     // +rating par puzzle résolu
             ratingSpread: 120,   // tolérance autour du rating cible

@@ -677,7 +677,7 @@ async applyConfigAfterReload() {
         this.setupRushUI();
         rushManager.config.mode = rushMode();
         await rushManager.fetchChannelRecord();
-        rushManager.start({ startRating: AppState.config.rushStartRating || 600, mode: rushMode() });
+        rushManager.start({ startRating: AppState.config.rushStartRating || 100, mode: rushMode() });
         Toast.success('🔥 Puzzle Rush lancé ! 3 erreurs et c\'est fini.');
         return;
     }
@@ -865,7 +865,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         document.getElementById('rush-end')?.classList.remove('is-active');
         rushManager.stop();
         gameEngine.hideWheel?.();
-        rushManager.start({ startRating: AppState.config.rushStartRating || 600 });
+        rushManager.start({ startRating: AppState.config.rushStartRating || 100 });
         Toast.info('🔥 Nouveau run !');
     },
 
@@ -1072,8 +1072,8 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         });
 
         document.getElementById('rush-start-rating')?.addEventListener('change', (e) => {
-            const v = parseInt(e.target.value) || 600;
-            AppState.config.rushStartRating = Math.min(3000, Math.max(400, v));
+            const v = parseInt(e.target.value) || 100;
+            AppState.config.rushStartRating = Math.min(3000, Math.max(100, v));
             e.target.value = AppState.config.rushStartRating;
         });
         // Flip
@@ -1496,7 +1496,7 @@ fullReset() {
         if (wheelDuration) wheelDuration.value = String(snapSpin(AppState.config.wheelDuration));
 
         const rushRating = document.getElementById('rush-start-rating');
-        if (rushRating) rushRating.value = AppState.config.rushStartRating || 600;
+        if (rushRating) rushRating.value = AppState.config.rushStartRating || 100;
 
         ['problem-pause', 'rush-pause'].forEach(id => {
             const el = document.getElementById(id);
@@ -2258,13 +2258,13 @@ const RushPage = {
         GameSession.clear();
         AppState.config.rushTimer = RUSH_MODES.includes(mode) ? mode : '0';
         Storage.saveConfig();
-        // Règles figées pour que les records restent comparables : rating de départ 600, pause 15 s.
+        // Règles figées pour que les records restent comparables : rating de départ 100, pause 15 s.
         // Le temps pour voter vient du mode choisi. Rien de tout ça ne touche aux réglages de la partie libre.
         const seconds = parseInt(AppState.config.rushTimer, 10);
         GameSession.launch({
             route, gameMode: 'rush',
             config: { rushTimer: AppState.config.rushTimer, timerEnabled: seconds > 0, timerDuration: seconds || 30,
-                      rushStartRating: 600, pauseAfterEnd: 15 }
+                      rushStartRating: 100, pauseAfterEnd: 15 }
         });
     }
 };
