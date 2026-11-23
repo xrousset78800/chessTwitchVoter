@@ -956,9 +956,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
         socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 10)); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
-        // Bots de test : n'importe quel viewer peut les retirer (utile tant que le public est rare)
+        // Bots de test : réglés depuis la régie (h24:regie { bots }) ; retrait réservé à la régie aussi
         socket.on('h24:botsOff', () => {
-            if (!bots.list.length) return;
+            if (!bots.list.length || !REGIE.has(me())) return;
             log(`🤖 24/24 : bots retirés depuis la page (${me() || 'anonyme'})`);
             setBots(0);
             emit();
@@ -973,6 +973,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             if (['ok', 'busy', 'error'].includes(data.phantom)) { regie.socket = socket.id; regie.phantom = data.phantom; }
             else if (data.phantom === 'off' && regie.socket === socket.id) { regie.socket = null; regie.phantom = 'off'; }
             if (typeof data.paused === 'boolean') regie.paused = data.paused;
+            if (Number.isInteger(data.bots) && data.bots !== bots.list.length) {
+                log(`🤖 24/24 : ${data.bots} bot(s) depuis la régie (${l})`);
+                setBots(data.bots, { turn: bots.turn || 10 });
+            }
             if (typeof data.channel === 'string') {
                 const c = data.channel.trim().toLowerCase().replace(/^.*twitch\.tv\//, '').replace(/[/?#].*$/, '');
                 if (c === '' || LOGIN_RE.test(c)) {

@@ -167,7 +167,9 @@ const H24Page = {
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
             if (e.target.closest('[data-h24-mute]')) { this.setVolume(this.muted && !this.volume ? 0.6 : this.volume, !this.muted); return; }
-            if (e.target.closest('[data-h24-bots-off]')) { this.socket?.emit('h24:botsOff'); return; }
+            const bt = e.target.closest('[data-h24-bots]');
+            if (bt) { this.socket?.emit('h24:regie', { bots: Math.max(0, (this.state?.bots || 0) + Number(bt.dataset.h24Bots)) }); return; }
+            if (e.target.closest('[data-h24-bots-off]')) { this.socket?.emit('h24:regie', { bots: 0 }); return; }
             const fd = e.target.closest('[data-h24-fold]');
             if (fd) { this.toggleFold(fd.dataset.h24Fold); return; }
             const mv = e.target.closest('[data-h24-move]');
@@ -542,7 +544,7 @@ const H24Page = {
         const server = this.state?.regie || {};
         if (this.cam.devices === null) { this.cam.devices = []; listCameras().then(d => { this.cam.devices = d; this.renderRegie(true); }); }
         const camLive = !!this.camSender?.active;
-        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!this.me.chat].join('|');
+        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!this.me.chat, this.state?.bots || 0].join('|');
         if (!force && key === this.regieKey) return;
         this.regieKey = key;
         const typing = document.activeElement?.id === 'h24-regie-channel';
@@ -577,6 +579,12 @@ const H24Page = {
             <div class="h24-regie__hint">${shown ? esc(t('h24.regie.channelOn', { c: shown }, `Vue réelle : twitch.tv/${shown}`)) : esc(t('h24.regie.channelOff', null, 'Pas de vue réelle pour les viewers'))}</div>
             <div class="h24-regie__hint"><span class="h24-regie__dot h24-regie__dot--${this.me.chat ? 'ok' : 'error'}"></span> ${esc(t(this.me.chat ? 'h24.regie.chatOn' : 'h24.regie.chatOff', { c: this.me.login || '' }, ''))}</div>
             ${this.camPanelHtml(camLive)}
+            <div class="h24-regie__row h24-regie__bots">
+                <span class="h24-regie__status"><i class="fas fa-robot"></i> ${esc(t('h24.regie.bots', { n: this.state?.bots || 0 }, `Bots de test : ${this.state?.bots || 0}`))}</span>
+                <button type="button" class="btn btn--sm" data-h24-bots="-2" title="${esc(t('h24.regie.botsLess', null, 'Retirer 2 bots'))}"${this.state?.bots ? '' : ' disabled'}><i class="fas fa-minus"></i></button>
+                <button type="button" class="btn btn--sm" data-h24-bots="2" title="${esc(t('h24.regie.botsMore', null, 'Ajouter 2 bots'))}"><i class="fas fa-plus"></i></button>
+                ${this.state?.bots ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-bots-off><i class="fas fa-times"></i> ${esc(t('h24.botsOff', null, 'Retirer les bots'))}</button>` : ''}
+            </div>
             </div>`;
         el.querySelectorAll('[data-h24-cam-pref]').forEach(sel => sel.addEventListener('change', () => this.setCamPref(sel.dataset.h24CamPref, sel.value)));
         if (typing) { const i = $('h24-regie-channel'); i?.focus(); i?.setSelectionRange(i.value.length, i.value.length); }
@@ -814,13 +822,39 @@ const H24Page = {
             </div>`;
         };
         el.innerHTML = solo ? list('w') : list('w') + list('b');
-        const bots = $('h24-bots');
-        if (bots) {
-            const n = s?.bots || 0;
-            bots.hidden = !n;
-            if (n) bots.innerHTML = `<span><i class="fas fa-robot"></i> ${esc(t('h24.botsIn', { n }, `${n} bots de test en jeu`))}</span>
-                <button type="button" class="btn btn--sm btn--ghost" data-h24-bots-off><i class="fas fa-times"></i> ${esc(t('h24.botsOff', null, 'Retirer les bots'))}</button>`;
-        }
+        this.renderSides();
+    },
+
+    /** Pendant la partie : équipe adverse au-dessus de l'échiquier, la sienne (ou les Blancs) en dessous */
+    renderSides() {
+        const s = this.state;
+        const top = $('h24-side-top'), bottom = $('h24-side-bottom');
+        if (!top || !bottom) return;
+        const on = s?.phase === 'play' && !!s.game;
+        top.hidden = bottom.hidden = !on;
+        if (!on) return;
+        const solo = s.mode === 'rush';
+        const low = this.orientation() === 'black' ? 'b' : 'w';
+        const login = this.me.login, team = this.me.team;
+        const action = !login
+            ? `<button type="button" class="btn btn--sm btn--twitch" data-h24-login><i class="fab fa-twitch"></i> ${esc(t('h24.login', null, 'Se connecter avec Twitch'))}</button>`
+            : !team ? `<button type="button" class="btn btn--sm btn--primary" data-h24-signup><i class="fas fa-user-plus"></i> ${esc(t('h24.join', null, 'Rejoindre'))}</button>`
+            : `<button type="button" class="h24-side__quit" data-h24-quit>${esc(t('h24.quit', null, 'Quitter la partie'))}</button>`;
+        const fill = (el, pos, side, withAction) => {
+            const n = (s.teams?.[side] || []).length;
+            const label = solo ? t('h24.players', null, 'Joueurs') : t(side === 'w' ? 'h24.white' : 'h24.black', null, side === 'w' ? 'Blancs' : 'Noirs');
+            const turn = !solo && s.game.turn === side;
+            const mine = !!team && (solo || team === side);
+            el.className = `h24-side h24-side--${pos} h24-side--${side}${turn ? ' is-turn' : ''}${mine ? ' is-mine' : ''}`;
+            el.innerHTML = `<span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span>${esc(label)}</span>
+                <span class="h24-side__count" title="${esc(t('h24.players', null, 'Joueurs'))}"><i class="fas fa-user"></i> ${n}</span>
+                ${mine ? `<span class="h24-side__mine">${esc(t('h24.yourTeam', null, 'Votre équipe'))}</span>` : ''}
+                ${turn ? `<span class="h24-side__turn">${esc(t('h24.toMove', null, 'Au trait'))}</span>` : ''}
+                <span class="h24-side__spacer"></span>${withAction ? action : ''}`;
+        };
+        if (solo) { top.hidden = true; fill(bottom, 'bottom', 'w', true); return; }
+        fill(top, 'top', low === 'w' ? 'b' : 'w', false);
+        fill(bottom, 'bottom', low, true);
     },
 
     renderAccount() {
