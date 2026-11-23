@@ -541,6 +541,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-next__san { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 800; color: #fde68a; }
 .h24-next__pct { font-size: 0.8rem; font-weight: 700; color: #ffd2b0; }
 .h24-next__voter { font-size: 0.75rem; color: rgba(255, 255, 255, 0.65); overflow: hidden; text-overflow: ellipsis; }
+.h24-next__via { color: rgba(255, 255, 255, 0.4); }
 .h24-next.is-in { animation: h24-next-in 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both; }
 .h24-next.is-in .h24-next__piece { animation: h24-next-piece 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) 0.1s both; }
 @keyframes h24-next-in { 0% { opacity: 0; transform: translateY(14px) scale(0.9); } 100% { opacity: 1; transform: none; } }

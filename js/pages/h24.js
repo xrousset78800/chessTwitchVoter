@@ -180,6 +180,16 @@ const H24Page = {
             const mv = e.target.closest('[data-h24-move]');
             if (mv && !mv.disabled) this.socket?.emit('h24:vote', { move: mv.dataset.h24Move });
         });
+        // Survol d'un coup cliquable : flèche d'aperçu sur l'échiquier
+        const movesList = $('h24-moves-list');
+        movesList?.addEventListener('pointerover', (e) => {
+            const btn = e.target.closest('[data-h24-move]');
+            const g = this.state?.game;
+            let m = null;
+            if (btn && !btn.disabled && g?.fen) { try { m = new Chess(g.fen).move(btn.dataset.h24Move); } catch {} }
+            this.annotations?.setHover?.(m);
+        });
+        movesList?.addEventListener('pointerleave', () => this.annotations?.setHover?.(null));
         $('h24-move-form')?.addEventListener('submit', (e) => {
             e.preventDefault();
             const input = $('h24-move-input');
@@ -287,9 +297,9 @@ const H24Page = {
             const votes = g.draw.votes || [];
             const total = votes.reduce((a, v) => a + (v.n || 0), 0);
             const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
-            next = { san: g.draw.winner, pct: g.draw.random || !total ? null : g.draw.pct ?? Math.round(n * 100 / total), random: !!g.draw.random || !total, voter: g.draw.voter };
+            next = { san: g.draw.winner, pct: g.draw.random || !total ? null : g.draw.pct ?? Math.round(n * 100 / total), random: !!g.draw.random || !total, voter: g.draw.voter, via: g.draw.via };
         } else if (g && !g.result && g.chosen) {
-            next = { san: g.chosen.move, pct: g.chosen.pct ?? null, voter: g.chosen.voter };
+            next = { san: g.chosen.move, pct: g.chosen.pct ?? null, voter: g.chosen.voter, via: g.chosen.via };
         }
         let card = sc.querySelector('.h24-next');
         const ply = (g?.history || []).length;
@@ -304,7 +314,7 @@ const H24Page = {
         const score = next.random ? `<span class="h24-next__pct">🎲</span>` : next.pct != null ? `<span class="h24-next__pct">${next.pct}%</span>` : '';
         card.innerHTML = `${piece ? `<img class="h24-next__piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png" alt="">` : ''}
             <span class="h24-next__body"><span class="h24-next__label">${esc(t('h24.nextMove', null, 'Coup retenu'))}</span>
-            <span class="h24-next__line"><span class="h24-next__san">${esc(next.san)}</span>${score}${next.voter ? `<span class="h24-next__voter">@${esc(next.voter)}</span>` : ''}</span></span>`;
+            <span class="h24-next__line"><span class="h24-next__san">${esc(next.san)}</span>${score}${next.voter ? `<span class="h24-next__voter">@${esc(next.voter)}${next.via ? ` <span class="h24-next__via">${esc(next.via.startsWith('#') ? next.via : '#' + next.via)}</span>` : ''}</span>` : ''}</span></span>`;
         card.classList.remove('is-in'); void card.offsetWidth; card.classList.add('is-in');
         this.historyToBottom();
     },
@@ -481,19 +491,20 @@ const H24Page = {
             const find = (san) => {
                 try { const c = new Chess(g.fen); return c.move(san); } catch { return null; }
             };
-            // Étiquette du coup retenu : coup · part des votes · viewer tiré parmi ceux qui l'ont voté
-            const label = (san, pct, voter) => [san, pct != null ? `${pct} %` : null, voter ? `@${voter}` : null].filter(Boolean).join(' · ');
+            // Étiquette du coup retenu : coup · part des votes, puis le viewer tiré parmi ceux qui l'ont voté (photo, pseudo, chaîne)
+            const label = (san, pct) => [san, pct != null ? `${pct} %` : null].filter(Boolean).join(' · ');
+            const who = (o) => o?.voter ? { name: o.voter, via: o.via || null, pic: o.pic || null } : null;
             if (g.draw) {
                 // Rien pendant que la roue tourne : le suspense reste entier
                 const m = !this.revealing && find(g.draw.winner);
                 const votes = g.draw.votes || [];
                 const total = votes.reduce((a, v) => a + (v.n || 0), 0);
                 const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
-                if (m) overlay = { kind: 'win', from: m.from, to: m.to,
-                    label: g.draw.random ? `🎲 ${m.san}` : label(m.san, g.draw.pct ?? (total ? Math.round(n / total * 100) : null), g.draw.voter) };
+                if (m) overlay = { kind: 'win', from: m.from, to: m.to, who: g.draw.random ? null : who(g.draw),
+                    label: g.draw.random ? `🎲 ${m.san}` : label(m.san, g.draw.pct ?? (total ? Math.round(n / total * 100) : null)) };
             } else if (g.chosen) {
                 const m = find(g.chosen.move);
-                if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: label(m.san, g.chosen.pct, g.chosen.voter) };
+                if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: label(m.san, g.chosen.pct), who: who(g.chosen) };
             } else {
                 const m = g.votes?.[0] && find(g.votes[0].move);
                 if (m) overlay = { kind: 'lead', from: m.from, to: m.to };
@@ -1140,6 +1151,7 @@ const H24Page = {
         const sig = `${g?.fen}|${mine}|${myVotes(this.me).join(',')}`;
         if (sig !== this.movesSig) {
             this.movesSig = sig;
+            this.annotations?.setHover?.(null);
             const groups = { P: [], N: [], B: [], R: [], Q: [], K: [], O: [] };
             moves.forEach(m => {
                 const c = clean(m);

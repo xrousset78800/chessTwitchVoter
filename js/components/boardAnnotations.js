@@ -178,10 +178,20 @@
         /** Flèche du coup en tête du vote ('lead') ou du coup gagnant avec son étiquette ('win') */
         setOverlay(overlay) {
             const o = overlay && overlay.from && overlay.to ? overlay : null;
-            const sig = o ? `${o.kind}${o.from}${o.to}${o.label || ''}` : '';
+            const sig = o ? `${o.kind}${o.from}${o.to}${o.label || ''}${o.who ? `${o.who.name}${o.who.via}${o.who.pic}` : ''}` : '';
             if (sig === (this.overlaySig || '')) return;
             this.overlaySig = sig;
             this.overlay = o;
+            this.render();
+        }
+
+        /** Aperçu au survol d'un coup de la liste : flèche légère, posée par-dessus le reste */
+        setHover(move) {
+            const h = move && move.from && move.to ? { from: move.from, to: move.to } : null;
+            const sig = h ? h.from + h.to : '';
+            if (sig === (this.hoverSig || '')) return;
+            this.hoverSig = sig;
+            this.hover = h;
             this.render();
         }
 
@@ -226,52 +236,89 @@
             }
             arrows.forEach(([key, color]) => this.drawArrow(key.slice(0, 2), key.slice(2), COLORS[color]));
             this.drawOverlay();
+            if (this.hover) this.drawArrow(this.hover.from, this.hover.to, 'rgb(244, 238, 232)', { opacity: 0.55, scale: 0.85 })
+                ?.classList.add('board-annotations__hover');
         }
 
         drawOverlay() {
             const o = this.overlay;
             if (!o) return;
             const win = o.kind === 'win';
-            const group = this.drawArrow(o.from, o.to, win ? 'rgb(34, 197, 94)' : 'rgb(168, 85, 247)', {
-                opacity: win ? 0.95 : 0.6, scale: win ? 1.4 : 0.85
+            // Coup retenu : orange posé, à peine plus épais qu'une flèche normale ; coup en tête : gris discret
+            const group = this.drawArrow(o.from, o.to, win ? 'rgb(255, 138, 61)' : 'rgb(185, 174, 166)', {
+                opacity: win ? 0.85 : 0.5, scale: win ? 1.1 : 0.85
             });
             if (!group) return;
             group.classList.add('board-annotations__vote', win ? 'is-win' : 'is-lead');
             if (!win || !o.label) return;
-            // Étiquette « Cf3 · 42 % » au-dessus de la case d'arrivée
+            // Étiquette sombre au-dessus de la case d'arrivée : « Cf3 · 42 % », puis photo, @pseudo et #chaîne du votant
             const b = this.geometry(o.to);
             const w = this.container.clientWidth;
-            const fs = Math.max(12, b.size * 0.28);
-            const label = document.createElementNS(SVG_NS, 'g');
+            const fs = Math.max(11, b.size * 0.22);
+            const pad = fs * 0.6, gap = fs * 0.35;
+            const el = (tag, attrs = {}) => {
+                const n = document.createElementNS(SVG_NS, tag);
+                for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+                return n;
+            };
+            const label = el('g');
             label.classList.add('board-annotations__label');
-            const rect = document.createElementNS(SVG_NS, 'rect');
-            const text = document.createElementNS(SVG_NS, 'text');
-            text.textContent = o.label;
-            text.setAttribute('font-size', fs);
-            text.setAttribute('font-weight', 800);
-            text.setAttribute('font-family', 'Inter, system-ui, sans-serif');
-            text.setAttribute('fill', '#fff');
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('dominant-baseline', 'central');
-            label.append(rect, text);
+            const rect = el('rect', { rx: 3, fill: 'rgba(16, 13, 11, 0.92)', stroke: 'rgba(255, 255, 255, 0.14)', 'stroke-width': 1 });
+            label.appendChild(rect);
             this.svg.appendChild(label);
-            let tw = 0;
-            try { tw = text.getComputedTextLength(); } catch {}
-            if (!tw) tw = o.label.length * fs * 0.6;
-            const pw = tw + fs * 1.1, ph = fs * 1.7;
+            const font = { 'font-family': "'IBM Plex Sans', system-ui, sans-serif", 'dominant-baseline': 'central' };
+            const measure = (t, fallback) => { let x = 0; try { x = t.getComputedTextLength(); } catch {} return x || fallback; };
+
+            const top = el('text', { ...font, 'font-size': fs, 'font-weight': 700, fill: '#f4eee8' });
+            top.textContent = o.label;
+            label.appendChild(top);
+            const topW = measure(top, o.label.length * fs * 0.6);
+
+            const who = o.who;
+            const fs2 = fs * 0.82, av = fs * 1.35;
+            let line2 = null, line2W = 0;
+            if (who) {
+                line2 = el('text', { ...font, 'font-size': fs2, 'font-weight': 600, fill: '#f4eee8' });
+                line2.appendChild(document.createTextNode(`@${who.name}`));
+                if (who.via) {
+                    const via = el('tspan', { fill: '#b9aea6', 'font-weight': 400 });
+                    via.textContent = `  ${who.via.startsWith('#') ? who.via : '#' + who.via}`;
+                    line2.appendChild(via);
+                }
+                label.appendChild(line2);
+                line2W = av + gap + measure(line2, (who.name.length + (who.via?.length || 0) + 3) * fs2 * 0.58);
+            }
+
+            const pw = Math.max(topW, line2W) + pad * 2;
+            const ph = who ? pad * 2 + fs * 1.2 + gap + av : fs * 1.9;
             const cx = Math.min(Math.max(b.x, pw / 2 + 2), w - pw / 2 - 2);
-            let cy = b.top - ph / 2 - 4;
-            if (cy - ph / 2 < 0) cy = b.top + b.size + ph / 2 + 4;
-            text.setAttribute('x', cx);
-            text.setAttribute('y', cy);
-            rect.setAttribute('x', cx - pw / 2);
-            rect.setAttribute('y', cy - ph / 2);
-            rect.setAttribute('width', pw);
-            rect.setAttribute('height', ph);
-            rect.setAttribute('rx', ph / 2);
-            rect.setAttribute('fill', 'rgb(22, 163, 74)');
-            rect.setAttribute('stroke', 'rgba(255, 255, 255, 0.85)');
-            rect.setAttribute('stroke-width', 2);
+            let y0 = b.top - ph - 4;
+            if (y0 < 0) y0 = b.top + b.size + 4;
+            const x0 = cx - pw / 2;
+            Object.entries({ x: x0, y: y0, width: pw, height: ph }).forEach(([k, v]) => rect.setAttribute(k, v));
+            top.setAttribute('x', x0 + pad);
+            top.setAttribute('y', who ? y0 + pad + fs * 0.6 : y0 + ph / 2);
+            if (who) {
+                const ay = y0 + pad + fs * 1.2 + gap;
+                // Photo Twitch (carré à angles nets), sinon initiale sur fond neutre
+                label.appendChild(el('rect', { x: x0 + pad, y: ay, width: av, height: av, rx: 2, fill: '#2b2420' }));
+                if (who.pic) {
+                    const clipId = `ba-av-${Math.random().toString(36).slice(2, 8)}`;
+                    const clip = el('clipPath', { id: clipId });
+                    clip.appendChild(el('rect', { x: x0 + pad, y: ay, width: av, height: av, rx: 2 }));
+                    label.appendChild(clip);
+                    const img = el('image', { x: x0 + pad, y: ay, width: av, height: av, 'clip-path': `url(#${clipId})`, preserveAspectRatio: 'xMidYMid slice' });
+                    img.setAttribute('href', who.pic);
+                    label.appendChild(img);
+                } else {
+                    const ini = el('text', { ...font, x: x0 + pad + av / 2, y: ay + av / 2, 'text-anchor': 'middle', 'font-size': fs2, 'font-weight': 700, fill: '#b9aea6' });
+                    ini.textContent = who.name.charAt(0).toUpperCase();
+                    label.appendChild(ini);
+                }
+                line2.setAttribute('x', x0 + pad + av + gap);
+                line2.setAttribute('y', ay + av / 2);
+                label.appendChild(line2);
+            }
         }
 
         drawArrow(from, to, color, opts = {}) {

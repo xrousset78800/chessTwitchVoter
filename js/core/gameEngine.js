@@ -924,6 +924,14 @@ updateAvailableMoves() {
         movesPanel.title = isLocked ? 'Tour de l\'adversaire — attendez...' : '';
     }
 
+    // Survol d'un coup : flèche d'aperçu (retirée quand la liste change)
+    this.annotations?.setHover?.(null);
+    const hoverOn = (move) => {
+        if (movesPanel?.classList.contains('is-locked')) return;
+        this.annotations?.setHover?.(this.resolveMove(move));
+    };
+    const hoverOff = () => this.annotations?.setHover?.(null);
+
     // Mettre à jour chaque liste avec l'icône de la bonne couleur
     ['P', 'N', 'B', 'R', 'Q', 'K', 'O'].forEach(piece => {
         const list = document.getElementById(`availableList${piece}`);
@@ -950,7 +958,9 @@ updateAvailableMoves() {
                 const btn = document.createElement('button');
                 btn.textContent = move;
                 btn.dataset.move = move;
-                btn.onclick = () => this.onMoveClick(move);  // ← Correction ici
+                btn.onclick = () => { hoverOff(); this.onMoveClick(move); };
+                btn.onpointerenter = () => hoverOn(move);
+                btn.onpointerleave = hoverOff;
                 li.appendChild(btn);
                 list.appendChild(li);
             });

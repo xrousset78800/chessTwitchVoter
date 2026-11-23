@@ -362,8 +362,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 // Bandeau des votes : pseudo et coup (coup caché en vote secret) ; recentN compte les votes du tour
                 recent: g.recent.slice(-20).map(r => tickerItem(r, { m: hidden ? null : r.m })),
                 recentN: g.recentN || 0,
-                draw: g.draw,
-                chosen: g.chosen || null,
+                // photo du votant mis en avant : relue à chaque envoi (elle arrive parfois après le tirage)
+                draw: withPic(g.draw),
+                chosen: withPic(g.chosen) || null,
                 random: g.random,
                 result: g.result,
                 // rush
@@ -493,7 +494,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         let total = 0, n = 0;
         const fans = [];
         for (const [login, list] of s.game.votes) for (const m of list) { total++; if (m === move) { n++; fans.push(login); } }
-        return { move, n, total, pct: total ? Math.round(n * 100 / total) : 0, voter: fans.length ? pick(fans) : null };
+        const voter = fans.length ? pick(fans) : null;
+        // Provenance de son vote (chat d'une chaîne ou site) et sa photo Twitch, pour l'étiquette de la flèche
+        const via = voter ? [...(s.game.recent || [])].reverse().find(r => r.u === voter && r.m === move)?.v || null : null;
+        return { move, n, total, pct: total ? Math.round(n * 100 / total) : 0, voter,
+            via: via === 'bot' ? null : via, bot: via === 'bot' };
     }
 
     /** Coup choisi à la fin du tour : majorité (ex æquo tirés au sort), tirage pondéré, ou hasard sans vote */
@@ -521,7 +526,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
             g.tally.wheel++;
-            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs(), ...(({ voter, pct }) => ({ voter, pct }))(chosenInfo(move)) };
+            g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs(), ...(({ voter, pct, via, bot }) => ({ voter, pct, via, bot }))(chosenInfo(move)) };
             s.endsAt = g.draw.endsAt;
             emit();
             return later(drawMs(), () => playMove(move));
@@ -532,7 +537,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             // Ex æquo : tirage au sort visible entre eux, à chances égales
             if (tied.length > 1) {
                 g.tally.ties++;
-                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs(), ...(({ voter, pct }) => ({ voter, pct }))(chosenInfo(move)) };
+                g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs(), ...(({ voter, pct, via, bot }) => ({ voter, pct, via, bot }))(chosenInfo(move)) };
                 s.endsAt = g.draw.endsAt;
                 emit();
                 return later(drawMs(), () => playMove(move));
@@ -776,6 +781,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     /** Provenance d'un vote pour le bandeau : '#chaîne' (chat Twitch), 'bot' (bots de test) ou null (site) */
     function viaOf(login, via) { return /^(bot_|sim_)/.test(login) ? 'bot' : via || null; }
     /** Bandeau des votes : photo Twitch (si connue ; sinon demandée, l'état repart quand elle arrive) et provenance */
+    function withPic(o) { return o && o.voter && !o.bot ? { ...o, pic: twitchApi.avatar(o.voter) } : o; }
     function tickerItem(r, extra) { return { u: r.u, ...extra, v: r.v || null, p: r.v === 'bot' ? null : twitchApi.avatar(r.u) }; }
     function voteMove(login, text, via) {
         const g = s.game;
