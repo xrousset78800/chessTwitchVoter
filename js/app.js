@@ -14,7 +14,7 @@ import problemsManager from './core/problemManager.js';
 import rushManager from './core/rushManager.js';
 import twitch from './managers/twitch.js';
 import twitchAuth from './core/twitchAuth.js';
-import { matchLegalMove } from './utils/moveMatch.js';
+import { matchLegalMove, fmtMove } from './utils/moveMatch.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import RecordsPage from './pages/records.js';
@@ -970,7 +970,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
         const moveEl = document.createElement('span');
         moveEl.className = player === 'bot' ? 'move-bot' : 'move-player';
-        moveEl.textContent = move.san + ' ';
+        moveEl.textContent = fmtMove(move.san) + ' ';
         historyEl.appendChild(moveEl);
     },
 

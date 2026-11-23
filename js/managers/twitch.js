@@ -291,26 +291,10 @@ class TwitchManager {
     }
 
     parseChessMove(message) {
-        // On conserve le texte tel que tapé ("Kh1", "e2-e4", "o-o") :
-        // la résolution contre les coups légaux (utils/moveMatch.js) gère la casse.
-        const raw   = message.trim();
-        const clean = raw.toLowerCase();
-
-        const patterns = [
-            // SAN: e4, Nf3, Qxd5, O-O, etc.
-            /^([KQRBN])?([a-h])?([1-8])?(x)?([a-h])([1-8])(=[QRBN])?(\+|#)?$/i,
-            // Roque
-            /^(o-o-o|o-o|0-0-0|0-0)$/i,
-            // UCI: e2e4, e2-e4
-            /^([a-h])([1-8])-?([a-h])([1-8])(=[qrbn])?$/i
-        ];
-
-        for (const pattern of patterns) {
-            if (pattern.test(clean)) {
-                return raw;
-            }
-        }
-        return null;
+        // On conserve le texte tel que tapé ("Cf3", "e2-e4", "o-o") : la résolution
+        // contre les coups légaux (utils/moveMatch.js) se fait dans la langue affichée.
+        const raw = message.trim();
+        return window.Notation?.looksLikeMove(raw, window.i18n?.currentLang || 'fr') ? raw : null;
     }
 
     checkVoteEligibility(tags) {

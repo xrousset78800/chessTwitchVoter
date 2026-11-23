@@ -8,7 +8,7 @@
  * - Mise à jour des coups disponibles
  */
 
-import { matchLegalMove } from '../utils/moveMatch.js';
+import { matchLegalMove, fmtMove } from '../utils/moveMatch.js';
 
 class ProblemsManager {
     constructor() {
@@ -635,7 +635,7 @@ resolveVotes() {
                 groups[piece].forEach(move => {
                     const li = document.createElement('li');
                     const btn = document.createElement('button');
-                    btn.textContent = move.replace("#", "");
+                    btn.textContent = fmtMove(move.replace("#", ""));
                     btn.onclick = () => {
                         if (this.config.timerEnabled && this.votingOpen) {
                             this.receiveVote(move);
@@ -693,7 +693,7 @@ resolveVotes() {
         }
 
         // SAN quelle que soit la casse ("kh1", "Kh1", "KH1") : coups légaux
-        const matched = matchLegalMove(this.chess, str);
+        const matched = matchLegalMove(this.chess, str, 'en');   // solutions stockées en notation internationale
         if (matched) return matched.uci;
 
         try {

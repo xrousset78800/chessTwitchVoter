@@ -12,6 +12,7 @@ import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
 import { renderHistory, paintMoveChips, clearWinner, nameColor, renderPodium, markPodiumWinner, pieceOf } from '../components/voteViews.js';
 import { PALETTES, PALETTE_IDS, isPalette } from '../components/votePalettes.js';
+import { fmtMove } from '../utils/moveMatch.js';
 import { CamSender, CamPlayer, CAM_QUALITIES, CAM_ZOOM, listCameras, camSupported } from '../components/liveCam.js';
 
 const t = (key, params, fallback) => {
@@ -195,7 +196,7 @@ const H24Page = {
             e.preventDefault();
             const input = $('h24-move-input');
             const move = input.value.trim();
-            if (move) this.socket?.emit('h24:vote', { move });
+            if (move) this.socket?.emit('h24:vote', { move, lang: window.i18n?.currentLang || 'fr' });
             input.value = '';
         });
         window.addEventListener('resize', () => { if (this.socket) this.board?.resize(); });
@@ -315,7 +316,7 @@ const H24Page = {
         const score = next.random ? `<span class="h24-next__pct">🎲</span>` : next.pct != null ? `<span class="h24-next__pct">${next.pct}%</span>` : '';
         card.innerHTML = `${piece ? `<img class="h24-next__piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png" alt="">` : ''}
             <span class="h24-next__body"><span class="h24-next__label">${esc(t('h24.nextMove', null, 'Coup retenu'))}</span>
-            <span class="h24-next__line"><span class="h24-next__san">${esc(next.san)}</span>${score}${next.voter ? `<span class="h24-next__voter">@${esc(next.voter)}${next.via ? ` <span class="h24-next__via">${esc(next.via.startsWith('#') ? next.via : '#' + next.via)}</span>` : ''}</span>` : ''}</span></span>`;
+            <span class="h24-next__line"><span class="h24-next__san">${esc(fmtMove(next.san))}</span>${score}${next.voter ? `<span class="h24-next__voter">@${esc(next.voter)}${next.via ? ` <span class="h24-next__via">${esc(next.via.startsWith('#') ? next.via : '#' + next.via)}</span>` : ''}</span>` : ''}</span></span>`;
         card.classList.remove('is-in'); void card.offsetWidth; card.classList.add('is-in');
         this.historyToBottom();
     },
@@ -411,7 +412,7 @@ const H24Page = {
             const item = document.createElement('span');
             item.className = 'vote-ticker__item vote-ticker__item--who';
             item.dataset.u = r.u;
-            item.innerHTML = `${pic(r)}<span class="vote-ticker__who"><span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span><span class="vote-ticker__via">${esc(r.v === 'bot' ? 'bot' : r.v === 'chat' ? 'chat' : r.v || site)}</span></span><span class="vote-ticker__move${r.m ? '' : ' is-hidden'}${r.choice ? ' is-choice' : ''}">${esc(r.m || voted)}</span>`;
+            item.innerHTML = `${pic(r)}<span class="vote-ticker__who"><span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span><span class="vote-ticker__via">${esc(r.v === 'bot' ? 'bot' : r.v === 'chat' ? 'chat' : r.v || site)}</span></span><span class="vote-ticker__move${r.m ? '' : ' is-hidden'}${r.choice ? ' is-choice' : ''}">${esc(r.m ? (r.choice ? r.m : fmtMove(r.m)) : voted)}</span>`;
             if (r.p) item.dataset.pic = '1';
             track.prepend(item);
         });
@@ -493,7 +494,7 @@ const H24Page = {
                 try { const c = new Chess(g.fen); return c.move(san); } catch { return null; }
             };
             // Étiquette du coup retenu : coup · part des votes, puis le viewer tiré parmi ceux qui l'ont voté (photo, pseudo, chaîne)
-            const label = (san, pct) => [san, pct != null ? `${pct} %` : null].filter(Boolean).join(' · ');
+            const label = (san, pct) => [fmtMove(san), pct != null ? `${pct} %` : null].filter(Boolean).join(' · ');
             const who = (o) => o?.voter ? { name: o.voter, via: o.via || null, pic: o.pic || null } : null;
             if (g.draw) {
                 // Rien pendant que la roue tourne : le suspense reste entier
@@ -502,7 +503,7 @@ const H24Page = {
                 const total = votes.reduce((a, v) => a + (v.n || 0), 0);
                 const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
                 if (m) overlay = { kind: 'win', from: m.from, to: m.to, who: g.draw.random ? null : who(g.draw),
-                    label: g.draw.random ? `🎲 ${m.san}` : label(m.san, g.draw.pct ?? (total ? Math.round(n / total * 100) : null)) };
+                    label: g.draw.random ? `🎲 ${fmtMove(m.san)}` : label(m.san, g.draw.pct ?? (total ? Math.round(n / total * 100) : null)) };
             } else if (g.chosen) {
                 const m = find(g.chosen.move);
                 if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: label(m.san, g.chosen.pct), who: who(g.chosen) };
@@ -1164,7 +1165,7 @@ const H24Page = {
             const picked = myVotes(this.me).map(clean);
             list.innerHTML = Object.entries(groups).filter(([, a]) => a.length).map(([piece, a]) => `
                 <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : PIECE_ICONS[turn][piece]}</span>${
-                    a.map(m => `<li><button type="button" ${mine ? '' : 'tabindex="-1" disabled'} class="${picked.includes(m) ? 'is-mine' : ''}" data-move="${esc(m)}" data-h24-move="${esc(m)}">${esc(m)}</button></li>`).join('')
+                    a.map(m => `<li><button type="button" ${mine ? '' : 'tabindex="-1" disabled'} class="${picked.includes(m) ? 'is-mine' : ''}" data-move="${esc(m)}" data-h24-move="${esc(m)}">${esc(fmtMove(m))}</button></li>`).join('')
                 }</ul>`).join('');
         }
         paintMoveChips($('h24-moves'), g?.votes || [], COLORS);

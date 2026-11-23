@@ -5,6 +5,7 @@
 
 import VotingWheel from './wheel.js';
 import { wheelTick } from './wheelTick.js';
+import { fmtMove } from '../utils/moveMatch.js';
 
 const MIN_CELL_WIDTH = 110;  // Assez large pour lire "exd8=Q+"
 const MIN_TRAVEL     = 3000; // Distance minimale parcourue par la bande pendant un tirage
@@ -118,11 +119,12 @@ class WheelBand extends VotingWheel {
         ctx.font = `800 ${Math.round(fontSize)}px "JetBrains Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const tw = ctx.measureText(move).width;
+        const label = fmtMove(move);
+        const tw = ctx.measureText(label).width;
         const gap = 6;
         const left = x + cellWidth / 2 - (pieceSize + gap + tw) / 2;
         this.drawPiece(ctx, move, this.currentTurn(), left + pieceSize / 2, height / 2, pieceSize);
-        this.drawMoveText(ctx, move, this.currentTurn(), left + pieceSize + gap + tw / 2, height / 2, fontSize);
+        this.drawMoveText(ctx, label, this.currentTurn(), left + pieceSize + gap + tw / 2, height / 2, fontSize);
         ctx.restore();
     }
 
@@ -217,7 +219,7 @@ class WheelBand extends VotingWheel {
         // L'hôte affiche le coup tiré en grand dans l'encart du podium ; les spectateurs gardent l'étiquette sur la bande
         if (this.showResultInside !== false) {
             this.centerEl.style.background = this.winnerColor;
-            this.centerEl.innerHTML = `${this.pieceHtml(this.winner)}<span class="winner-move">${this.winner}</span>`;
+            this.centerEl.innerHTML = `${this.pieceHtml(this.winner)}<span class="winner-move">${fmtMove(this.winner)}</span>`;
             this.centerEl.classList.add('is-revealed');
         }
         this.highlightWinner();

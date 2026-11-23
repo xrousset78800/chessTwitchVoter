@@ -6,6 +6,7 @@ import { paletteColors } from './votePalettes.js';
 import { renderPodium, markPodiumWinner, revealWinner } from './voteViews.js';
 import { secretVotes } from './voteAnonymity.js';
 import { wheelTick } from './wheelTick.js';
+import { fmtMove } from '../utils/moveMatch.js';
 
 const TAU = 2 * Math.PI;
 const LAMPS = 24;
@@ -269,7 +270,7 @@ getSortedVotes() {
             ctx.rotate(midAngle + Math.PI / 2);
 
             // Coup près du bord, pièce en dessous (vers le centre), tous deux à la couleur du camp
-            this.drawMoveText(ctx, vote.move, turn, 0, 0, fontSize);
+            this.drawMoveText(ctx, fmtMove(vote.move), turn, 0, 0, fontSize);
             this.drawPiece(ctx, vote.move, turn, 0, fontSize / 2 + 3 + pieceSize / 2, pieceSize);
 
             ctx.restore();
@@ -523,7 +524,7 @@ finishSpin() {
     // L'hôte affiche le coup tiré en grand dans l'encart du podium ; les spectateurs gardent le centre de la roue
     if (this.showResultInside !== false) {
         this.centerEl.style.setProperty('--winner-color', winnerColor);
-        this.centerEl.innerHTML = `${this.pieceHtml(this.winner)}<span class="winner-move">${this.winner}</span>`;
+        this.centerEl.innerHTML = `${this.pieceHtml(this.winner)}<span class="winner-move">${fmtMove(this.winner)}</span>`;
         this.centerEl.classList.add('winner-reveal');
         this.centerEl.style.background = winnerColor;
         this.centerEl.style.boxShadow = `0 0 30px ${winnerColor}99, 0 0 60px ${winnerColor}44, inset 0 2px 10px rgba(255,255,255,0.3)`;

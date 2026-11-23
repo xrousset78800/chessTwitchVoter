@@ -13,6 +13,7 @@ import VotingWheel from '../components/wheel.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
 import WheelBand from '../components/wheelBand.js';
 import { PALETTES, isPalette, paletteColors } from '../components/votePalettes.js';
+import { fmtMove } from '../utils/moveMatch.js';
 import { renderPodium, renderHistory, paintMoveChips, morphPodiumToWheel, markPodiumWinner, revealWinner, clearWinner } from '../components/voteViews.js';
 
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
@@ -196,7 +197,7 @@ const WatchPage = {
                     const random = votes.length > 1 && votes.every(v => v.n === 1);
                     const n = votes.find(v => v.m === s.draw.winner)?.n || 0;
                     if (m) overlay = { kind: 'win', from: m.from, to: m.to,
-                        label: random || !total ? `🎲 ${m.san}` : `${m.san} · ${Math.round(n / total * 100)} %` };
+                        label: random || !total ? `🎲 ${fmtMove(m.san)}` : `${fmtMove(m.san)} · ${Math.round(n / total * 100)} %` };
                 }
             } else if (s.votes?.length) {
                 const top = s.votes[0].n || 0;

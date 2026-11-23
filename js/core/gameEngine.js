@@ -13,6 +13,7 @@ import WheelBand from '../components/wheelBand.js';
 import { paletteColors } from '../components/votePalettes.js';
 import { secretVotes } from '../components/voteAnonymity.js';
 import { renderPodium, renderHistory, VoteTicker, paintMoveChips, morphPodiumToWheel, clearWinner } from '../components/voteViews.js';
+import { fmtMove } from '../utils/moveMatch.js';
 
 class GameEngine {
     constructor() {
@@ -562,7 +563,7 @@ highlightMostVoted() {
         const ann = this.annotations;
         const m = this.resolveMove(moveStr);
         if (!ann || !m) { play(); return; }
-        const label = percentage == null ? `🎲 ${m.san}` : `${m.san} · ${percentage} %`;
+        const label = percentage == null ? `🎲 ${fmtMove(m.san)}` : `${fmtMove(m.san)} · ${percentage} %`;
         ann.setOverlay({ kind: 'win', from: m.from, to: m.to, label });
         const fen = this.chess.fen();
         clearTimeout(this.previewTimer);
@@ -976,7 +977,7 @@ updateAvailableMoves() {
             groups[piece].forEach(move => {
                 const li = document.createElement('li');
                 const btn = document.createElement('button');
-                btn.textContent = move;
+                btn.textContent = fmtMove(move);
                 btn.dataset.move = move;
                 btn.onclick = () => { hoverOff(); this.onMoveClick(move); };
                 btn.onpointerenter = () => hoverOn(move);

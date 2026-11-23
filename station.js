@@ -14,6 +14,9 @@ const fs = require('fs');
 const path = require('path');
 const { Chess } = require('chess.js');
 const twitchApi = require('./twitchApi');
+const Notation = require('./js/utils/notation.js');
+// Langue de notation du chat Twitch du 24/24 (« Cf3 » en français) ; la page envoie celle du spectateur
+const H24_LANG = process.env.H24_LANG || 'fr';
 
 const ROOM = 'h24';
 const CAM_ROOM = 'h24-cam';
@@ -67,7 +70,6 @@ const RUSH = { startRating: 600, ratingStep: 60, ratingSpread: 120, maxStrikes: 
 
 const rand = (n) => Math.floor(Math.random() * n);
 const pick = (arr) => arr[rand(arr.length)];
-const clean = (s) => String(s || '').replace(/[+#!?]/g, '');
 /** chess.js 1.x lève une exception sur un coup illégal : null à la place */
 const tryMove = (chess, m) => { try { return chess.move(m); } catch { return null; } };
 
@@ -784,15 +786,14 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     /** Bandeau des votes : photo Twitch (si connue ; sinon demandée, l'état repart quand elle arrive) et provenance */
     function withPic(o) { return o && o.voter && !o.bot ? { ...o, pic: twitchApi.avatar(o.voter) } : o; }
     function tickerItem(r, extra) { return { u: r.u, ...extra, v: r.v || null, p: r.v === 'bot' ? null : twitchApi.avatar(r.u) }; }
-    function voteMove(login, text, via) {
+    /** `lang` : notation du texte (chat : H24_LANG ; page : langue du spectateur ; bots : 'en') */
+    function voteMove(login, text, via, lang = 'en') {
         const g = s.game;
         if (s.phase !== 'play' || !g?.turnEndsAt || g.result) return false;
         const side = g.chess.turn();
         const team = teamOf(login);
         if (s.mode === 'rush' ? !team : !canPlay(team, side)) return false;
-        const wanted = clean(text).toLowerCase();
-        const m = g.chess.moves({ verbose: true }).find(x =>
-            clean(x.san).toLowerCase() === wanted || x.from + x.to + (x.promotion || '') === wanted);
+        const m = Notation.match(g.chess.moves({ verbose: true }), text, Notation.PIECES[lang] ? lang : 'en');
         if (!m) return false;
         const max = Math.max(1, Number(s.options.votes) || 1);
         const mine = g.votes.get(login) || [];
@@ -970,7 +971,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             const l = me();
             if (l && REGIE.has(l) && ['play', 'recap', 'voteMode', 'voteOptions', 'signup'].includes(data.phase)) force(data.phase);
         });
-        socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 10)); });
+        socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 12), null, String(data.lang || 'en')); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
         // Bots de test : réglés depuis la régie (h24:regie { bots }) ; retrait réservé à la régie aussi
         socket.on('h24:botsOff', () => {
@@ -1108,7 +1109,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
     function chatHandle(login, text, via) {
         if (!LOGIN_RE.test(login)) return 'login invalide';
-        const word = (String(text || '').trim().split(/\s+/)[0] || '').replace(/^!/, '').toLowerCase();
+        const typed = (String(text || '').trim().split(/\s+/)[0] || '').replace(/^!/, '');
+        const word = typed.toLowerCase();
         if (!word) return;
         if (['join', 'rejoindre', 'jouer', 'play'].includes(word)) {
             s.optOut.delete(login);
@@ -1128,10 +1130,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             return `vote ${s.ballot.id} = ${c}`;
         }
         // Un coup tapé dans le chat : inscrit d'office s'il ne l'est pas encore (sauf s'il a quitté), puis vote
-        if (s.phase !== 'play' || word.length > 8 || !/^[a-h1-8nbrqkox=+#-]{2,8}$/i.test(word)) return s.phase !== 'play' ? `ignoré (phase ${s.phase})` : undefined;
+        if (s.phase !== 'play' || !Notation.looksLikeMove(typed, H24_LANG)) return s.phase !== 'play' ? `ignoré (phase ${s.phase})` : undefined;
         if (!teamOf(login) && !s.optOut.has(login)) join(login);
         const team = teamOf(login);
-        if (team && voteMove(login, word, via)) { chat.seen.set(login, Date.now()); return `coup ${word} compté (équipe ${team})`; }
+        if (team && voteMove(login, typed, via, H24_LANG)) { chat.seen.set(login, Date.now()); return `coup ${word} compté (équipe ${team})`; }
         const g = s.game;
         const why = !team ? 'pas inscrit (a quitté)' : !g?.turnEndsAt ? 'hors tour de vote'
             : s.mode !== 'rush' && team !== g.chess.turn() ? `équipe ${team === 'w' ? 'Blancs' : 'Noirs'}, trait aux ${g.chess.turn() === 'w' ? 'Blancs' : 'Noirs'}`

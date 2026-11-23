@@ -6,6 +6,7 @@
  */
 import { paletteColors } from './votePalettes.js';
 import { hideVoterNames, secretVotes } from './voteAnonymity.js';
+import { fmtMove } from '../utils/moveMatch.js';
 
 const t = (key, params, fallback) => {
     const s = window.i18n?.t(key, params);
@@ -90,7 +91,7 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
             if (src) img.setAttribute('src', src); else img.removeAttribute('src');
         }
         slot.querySelector('.podium__piece').hidden = !piece;
-        slot.querySelector('.podium__move').textContent = v.move;
+        slot.querySelector('.podium__move').textContent = fmtMove(v.move);
         slot.querySelector('.podium__pct').textContent = masked ? '' : `${pct}%`;
         slot.querySelector('.podium__count').textContent = masked ? '' : t(v.count > 1 ? 'podium.votesMany' : 'podium.votesOne', { n: v.count }, `${v.count} vote${v.count > 1 ? 's' : ''}`);
         // Hauteur de la marche : le 1er au maximum, les autres en proportion
@@ -105,7 +106,7 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
         restEl.innerHTML = `<span class="podium__hint">${esc(t('podium.none', null, 'Aucun vote pour l\'instant'))}</span>`;
     } else {
         const shown = rest.slice(0, 30);
-        restEl.innerHTML = shown.map((v, i) => `<span class="podium__chip" style="--c:${colors[(i + 3) % colors.length]}"><i>${i + 4}</i><b>${esc(v.move)}</b> ${v.count}${masked || !total ? '' : `<small>${Math.round(v.count / total * 100)}%</small>`}</span>`).join('')
+        restEl.innerHTML = shown.map((v, i) => `<span class="podium__chip" style="--c:${colors[(i + 3) % colors.length]}"><i>${i + 4}</i><b>${esc(fmtMove(v.move))}</b> ${v.count}${masked || !total ? '' : `<small>${Math.round(v.count / total * 100)}%</small>`}</span>`).join('')
             + (rest.length > shown.length ? `<span class="podium__chip podium__chip--more">+${rest.length - shown.length}</span>` : '');
     }
     if (totalEl) {
@@ -147,7 +148,7 @@ export function renderHistory(el, moves, firstColor = 'w') {
         // Pièce jouée, dans la couleur du camp (Blancs en colonne de gauche)
         const piece = pieceOf(m.san);
         const img = piece ? `<img class="hist-piece" src="${PIECE_IMG.replace('{piece}', (i % 2 ? 'b' : 'w') + piece)}" alt="" draggable="false">` : '';
-        return `<span class="hist-move${i === lastIndex ? ' is-last' : ''}" data-ply="${i}">${img}<span class="hist-san">${esc(m.san)}</span>${vote}</span>`;
+        return `<span class="hist-move${i === lastIndex ? ' is-last' : ''}" data-ply="${i}">${img}<span class="hist-san">${esc(fmtMove(m.san))}</span>${vote}</span>`;
     };
     let rows = '';
     for (let i = 0; i < cells.length; i += 2) {
@@ -191,7 +192,7 @@ export const VoteTicker = {
         const { user, move } = item.dataset;
         const anon = hideVoterNames();
         const name = anon ? t('anonymity.viewer', null, 'Anonyme') : user;
-        const shown = secretVotes() ? t('anonymity.voted', null, 'a voté') : move;
+        const shown = secretVotes() ? t('anonymity.voted', null, 'a voté') : fmtMove(move);
         item.classList.toggle('is-anon', anon);
         item.innerHTML = `<span class="vote-ticker__user"${anon ? '' : ` style="color:${nameColor(user)}"`}>${anon ? '<i class="fas fa-user-secret"></i> ' : ''}${esc(name)}</span> <span class="vote-ticker__move">${esc(shown)}</span>`;
     },
@@ -299,7 +300,7 @@ export function revealWinner(slot, { move, color, pct, turn = 'w' }) {
         ? `<span class="votes-slot__winner-pct">🎲 ${esc(t('podium.random', null, 'Tirage au sort'))}</span>`
         : `<span class="votes-slot__winner-pct">${pct}%</span>`;
     el.style.setProperty('--win', color || '#10b981');
-    el.innerHTML = `${img}<span class="votes-slot__winner-move">${esc(move)}</span>${score}`;
+    el.innerHTML = `${img}<span class="votes-slot__winner-move">${esc(fmtMove(move))}</span>${score}`;
     slot.classList.add('has-winner');
 }
 

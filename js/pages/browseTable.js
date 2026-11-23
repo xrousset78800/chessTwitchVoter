@@ -6,6 +6,7 @@
  * et les joueurs de la ligne choisie, sans compter comme spectateur (game:peek).
  */
 import { spectatorsLabel } from '../components/spectators.js';
+import { fmtMove } from '../utils/moveMatch.js';
 
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -279,7 +280,7 @@ const BrowseTable = {
             ? votes.slice(0, 5).map((v, i) => {
                 const pct = total ? Math.round(v.n * 100 / total) : 0;
                 const win = s?.draw && v.m === s.draw.winner && !s.draw.endsIn;
-                return `<div class="browse-preview__vote${win ? ' is-winner' : ''}"><span class="browse-preview__vote-bar" style="width:${pct}%;background:${VOTE_COLORS[i % VOTE_COLORS.length]}33"></span><span class="browse-preview__vote-move">${esc(v.m)}</span><span class="browse-preview__vote-n">${v.n} · ${pct}%</span></div>`;
+                return `<div class="browse-preview__vote${win ? ' is-winner' : ''}"><span class="browse-preview__vote-bar" style="width:${pct}%;background:${VOTE_COLORS[i % VOTE_COLORS.length]}33"></span><span class="browse-preview__vote-move">${esc(fmtMove(v.m))}</span><span class="browse-preview__vote-n">${v.n} · ${pct}%</span></div>`;
             }).join('')
             : `<p class="browse-preview__empty">${esc(t(g.status === 'playing' ? 'watch.noVotes' : 'browsePage.notStarted'))}</p>`;
 
