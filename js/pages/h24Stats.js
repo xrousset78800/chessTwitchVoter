@@ -8,7 +8,7 @@ const tr = (key, params, fb) => {
 };
 const t = (key, params, fb) => tr(`h24stats.${key}`, params, fb);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const lang = () => (window.i18n?.currentLang === 'en' ? 'en-US' : 'fr-FR');
+const lang = () => window.i18n?.locale?.() || 'fr-FR';
 const fmtNum = (n) => Number(n || 0).toLocaleString(lang());
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 const fmtDate = (ts) => (ts ? new Date(ts).toLocaleString(lang(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '');

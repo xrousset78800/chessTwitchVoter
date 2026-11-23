@@ -6,7 +6,7 @@ import H24Stats from './h24Stats.js';
 
 const t = (key, params) => window.i18n?.t(`records.${key}`, params) ?? key;
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const lang = () => (window.i18n?.currentLang === 'en' ? 'en-US' : 'fr-FR');
+const lang = () => window.i18n?.locale?.() || 'fr-FR';
 const fmtDate = (ts) => (ts ? new Date(ts).toLocaleDateString(lang(), { day: '2-digit', month: 'short' }) : '');
 const fmtNum = (n) => Number(n || 0).toLocaleString(lang());
 const me = () => (window.twitchAuth?.user?.login || '').toLowerCase();

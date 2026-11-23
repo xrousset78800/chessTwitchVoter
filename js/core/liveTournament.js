@@ -56,7 +56,7 @@ function formatElapsed(seconds) {
 }
 
 // ── Horaires des rondes (chess.com donne le début ; la fin = dernière partie terminée) ──
-const roundLocale = () => (window.i18n?.currentLang === 'en' ? 'en-GB' : 'fr-FR');
+const roundLocale = () => window.i18n?.locale?.() || 'fr-FR';
 
 /** "15:00" aujourd'hui, sinon "mar. 17, 15:00" */
 function formatRoundStart(iso) {
