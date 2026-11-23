@@ -722,7 +722,8 @@ async applyConfigAfterReload() {
         // 1. Charger les problèmes si nécessaire
         if (!problemsManager.isLoaded()) {
             try {
-                await problemsManager.loadProblems('js/problemsV2.csv');
+                await problemsManager.loadProblems(AppState.gameMode === 'rush'
+                    ? { around: AppState.config.rushStartRating || 100 } : {});
             } catch (error) {
                 console.error('Erreur chargement problèmes:', error);
                 Toast.error('Erreur chargement des problèmes');
@@ -1170,7 +1171,7 @@ problemsManager.onResolveWithWheel = (results, callback) => {
 
                 // Précharger les problèmes si mode problèmes sélectionné
                 if (isPuzzleMode(option.dataset.mode) && !problemsManager.isLoaded()) {
-                    problemsManager.loadProblems('js/problemsV2.csv').then(() => {
+                    problemsManager.loadProblems().then(() => {
                         this.populateThemesSelect();
                     });
                 }

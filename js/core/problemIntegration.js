@@ -20,7 +20,7 @@ async function initProblemsMode() {
     // 1. Charger les problèmes si pas encore fait
     if (!problemsManager.isLoaded()) {
         try {
-            await problemsManager.loadProblems('js/problemsV2.csv');
+            await problemsManager.loadProblems();
         } catch (error) {
             console.error('Erreur chargement problèmes:', error);
             Toast?.error('Erreur chargement des problèmes');

@@ -1,0 +1,147 @@
+{
+ "source": "Lichess puzzle database (CC0)",
+ "bandSize": 100,
+ "bands": [
+  {
+   "from": 300,
+   "file": "0300.csv",
+   "count": 2265
+  },
+  {
+   "from": 400,
+   "file": "0400.csv",
+   "count": 5000
+  },
+  {
+   "from": 500,
+   "file": "0500.csv",
+   "count": 5000
+  },
+  {
+   "from": 600,
+   "file": "0600.csv",
+   "count": 5000
+  },
+  {
+   "from": 700,
+   "file": "0700.csv",
+   "count": 5000
+  },
+  {
+   "from": 800,
+   "file": "0800.csv",
+   "count": 5000
+  },
+  {
+   "from": 900,
+   "file": "0900.csv",
+   "count": 5000
+  },
+  {
+   "from": 1000,
+   "file": "1000.csv",
+   "count": 5000
+  },
+  {
+   "from": 1100,
+   "file": "1100.csv",
+   "count": 5000
+  },
+  {
+   "from": 1200,
+   "file": "1200.csv",
+   "count": 5000
+  },
+  {
+   "from": 1300,
+   "file": "1300.csv",
+   "count": 5000
+  },
+  {
+   "from": 1400,
+   "file": "1400.csv",
+   "count": 5000
+  },
+  {
+   "from": 1500,
+   "file": "1500.csv",
+   "count": 5000
+  },
+  {
+   "from": 1600,
+   "file": "1600.csv",
+   "count": 5000
+  },
+  {
+   "from": 1700,
+   "file": "1700.csv",
+   "count": 5000
+  },
+  {
+   "from": 1800,
+   "file": "1800.csv",
+   "count": 5000
+  },
+  {
+   "from": 1900,
+   "file": "1900.csv",
+   "count": 5000
+  },
+  {
+   "from": 2000,
+   "file": "2000.csv",
+   "count": 5000
+  },
+  {
+   "from": 2100,
+   "file": "2100.csv",
+   "count": 5000
+  },
+  {
+   "from": 2200,
+   "file": "2200.csv",
+   "count": 5000
+  },
+  {
+   "from": 2300,
+   "file": "2300.csv",
+   "count": 5000
+  },
+  {
+   "from": 2400,
+   "file": "2400.csv",
+   "count": 5000
+  },
+  {
+   "from": 2500,
+   "file": "2500.csv",
+   "count": 5000
+  },
+  {
+   "from": 2600,
+   "file": "2600.csv",
+   "count": 5000
+  },
+  {
+   "from": 2700,
+   "file": "2700.csv",
+   "count": 5000
+  },
+  {
+   "from": 2800,
+   "file": "2800.csv",
+   "count": 4491
+  },
+  {
+   "from": 2900,
+   "file": "2900.csv",
+   "count": 1238
+  },
+  {
+   "from": 3000,
+   "file": "3000.csv",
+   "count": 124
+  }
+ ],
+ "total": 128118
+}

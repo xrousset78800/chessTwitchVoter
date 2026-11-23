@@ -91,25 +91,55 @@ class ProblemsManager {
 
     // ========== CHARGEMENT CSV ==========
 
-    async loadProblems(csvPath = null) {
-        const path = csvPath || this.config.csvPath;
-        console.log('🧩 Chargement:', path);
-
+    /**
+     * Puzzles Lichess découpés par tranche de 100 points (js/puzzles/index.json + un CSV par tranche).
+     * Sans option : toutes les tranches. Avec { around } (Puzzle Rush) : on attend seulement les tranches
+     * proches du rating visé, le reste arrive en arrière-plan (ensureRating() suit la montée du run).
+     */
+    async loadProblems({ around = null } = {}) {
         try {
-            const response = await fetch(path);
-            const data = await response.text();
-            const lines = data.split('\n').filter(line => line.trim());
-            const parsed = lines.map(line => this.parseCSVLine(line));
-
-            this.problems = parsed.slice(1).filter(row => row.length >= 3);
+            const bands = await this.bandIndex();
+            if (around == null) {
+                await Promise.all(bands.map(b => this.loadBand(b)));
+            } else {
+                await this.ensureRating(around);
+                Promise.all(bands.map(b => this.loadBand(b))).then(() => this.analyzeThemes());
+            }
             console.log(`✅ ${this.problems.length} problèmes chargés`);
-
             this.analyzeThemes();
             return this.problems.length;
         } catch (error) {
             console.error('❌ Erreur chargement:', error);
             throw error;
         }
+    }
+
+    async bandIndex() {
+        if (!this._bandIndex) {
+            this._bandIndex = fetch('js/puzzles/index.json').then(r => r.json()).then(j => j.bands)
+                .catch(e => { this._bandIndex = null; throw e; });
+        }
+        return this._bandIndex;
+    }
+
+    /** Charge une tranche une seule fois (les appels simultanés partagent la même requête) */
+    loadBand(band) {
+        this._bands ??= new Map();
+        if (!this._bands.has(band.file)) {
+            this._bands.set(band.file, fetch(`js/puzzles/${band.file}`).then(r => r.text()).then(text => {
+                const rows = text.split('\n').slice(1).filter(l => l.trim()).map(l => l.split(','));
+                for (const row of rows) if (row.length >= 3) this.problems.push(row);
+            }).catch(e => { this._bands.delete(band.file); throw e; }));
+        }
+        return this._bands.get(band.file);
+    }
+
+    /** Tranches autour d'un rating (un peu en dessous, nettement au-dessus : le Rush monte) */
+    async ensureRating(rating, below = 200, above = 600) {
+        const bands = await this.bandIndex();
+        let near = bands.filter(b => b.from + 100 > rating - below && b.from <= rating + above);
+        if (!near.length) near = [rating < bands[0].from ? bands[0] : bands[bands.length - 1]];
+        await Promise.all(near.map(b => this.loadBand(b)));
     }
 
     parseCSVLine(line) {
@@ -222,7 +252,7 @@ class ProblemsManager {
             moves: problem[2].trim().split(/\s+/),
             rating: parseInt(problem[3]) || 0,
             themes: problem[7] || '',
-            url: problem[8] || ''
+            url: !problem[8] ? '' : problem[8].startsWith('http') ? problem[8] : `https://lichess.org/${problem[8]}`
         };
 
         this.attemptIndex = 0;

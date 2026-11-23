@@ -127,6 +127,7 @@ class RushManager {
             if (!this.active) return;
             this.score++;
             this.maxRating = Math.max(this.maxRating, problem.rating || 0);
+            problemsManager.ensureRating?.(this.targetRating).catch(() => {});
             this._emitUpdate();
         };
 

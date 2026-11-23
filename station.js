@@ -79,11 +79,13 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function puzzleSource() {
         if (puzzleLines) return puzzleLines;
         try {
-            const raw = fs.readFileSync(path.join(__dirname, 'js', 'problemsV2.csv'), 'utf8');
-            puzzleLines = raw.split('\n').slice(1).filter(l => l.trim()).map(line => {
-                const c = line.split(',', 4);
-                return { id: c[0], rating: parseInt(c[3], 10) || 0, line };
-            });
+            const dir = path.join(__dirname, 'js', 'puzzles');
+            const { bands } = JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8'));
+            puzzleLines = bands.flatMap(b => fs.readFileSync(path.join(dir, b.file), 'utf8')
+                .split('\n').slice(1).filter(l => l.trim()).map(line => {
+                    const c = line.split(',', 4);
+                    return { id: c[0], rating: parseInt(c[3], 10) || 0, line };
+                }));
         } catch (e) {
             log('🧩 24/24 : puzzles introuvables', e.message);
             puzzleLines = [];
