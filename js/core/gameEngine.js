@@ -547,8 +547,9 @@ highlightMostVoted() {
     showLeadArrow(results) {
         const ann = this.annotations;
         if (!ann) return;
-        const m = results?.length && !secretVotes() ? this.resolveMove(results[0].move) : null;
-        ann.setOverlay(m ? { kind: 'lead', from: m.from, to: m.to } : null);
+        const top = !secretVotes() && results?.[0]?.count > 0 ? results[0].count : 0;
+        const moves = top ? results.filter(r => r.count === top).map(r => this.resolveMove(r.move)).filter(Boolean) : [];
+        ann.setOverlay(moves.length ? { kind: 'lead', moves } : null);
     }
 
     /**

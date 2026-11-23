@@ -199,8 +199,9 @@ const WatchPage = {
                         label: random || !total ? `🎲 ${m.san}` : `${m.san} · ${Math.round(n / total * 100)} %` };
                 }
             } else if (s.votes?.length) {
-                const m = find(s.votes[0].m);
-                if (m) overlay = { kind: 'lead', from: m.from, to: m.to };
+                const top = s.votes[0].n || 0;
+                const moves = top ? s.votes.filter(v => v.n === top).map(v => find(v.m)).filter(Boolean) : [];
+                if (moves.length) overlay = { kind: 'lead', moves };
             }
         }
         ann.setOverlay(overlay);

@@ -507,8 +507,9 @@ const H24Page = {
                 const m = find(g.chosen.move);
                 if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: label(m.san, g.chosen.pct), who: who(g.chosen) };
             } else {
-                const m = g.votes?.[0] && find(g.votes[0].move);
-                if (m) overlay = { kind: 'lead', from: m.from, to: m.to };
+                const top = g.votes?.[0]?.count || 0;
+                const moves = top ? g.votes.filter(v => v.count === top).map(v => find(v.move)).filter(Boolean) : [];
+                if (moves.length) overlay = { kind: 'lead', moves };
             }
         }
         this.annotations?.setOverlay?.(overlay);

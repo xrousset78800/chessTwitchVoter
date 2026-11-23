@@ -31,10 +31,19 @@ const newPublicId = () => crypto.randomBytes(6).toString('hex');
 
 
 
-// Servir les fichiers statiques (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname)));
-app.use('/js', express.static(path.join(__dirname, 'js')));
-app.use('/css', express.static(path.join(__dirname, 'css')));
+// Page de l'appli : chaque démarrage (donc chaque déploiement) estampille les liens CSS/JS d'une version,
+// pour qu'aucun navigateur ni proxy ne garde l'ancien code après une mise en ligne
+const BUILD = Date.now().toString(36);
+const INDEX_HTML = require('fs').readFileSync(path.join(__dirname, 'index.html'), 'utf8')
+    .replace(/((?:href|src)="\/?(?:css|js)\/[^"?]+\.(?:css|js))"/g, `$1?v=${BUILD}"`);
+const sendIndex = (req, res) => res.set('Cache-Control', 'no-cache').type('html').send(INDEX_HTML);
+app.get(['/', '/index.html'], sendIndex);
+
+// Servir les fichiers statiques (HTML, CSS, JS) : toujours revalidés auprès du serveur
+const noCache = { setHeaders: res => res.set('Cache-Control', 'no-cache') };
+app.use(express.static(path.join(__dirname), noCache));
+app.use('/js', express.static(path.join(__dirname, 'js'), noCache));
+app.use('/css', express.static(path.join(__dirname, 'css'), noCache));
 app.use('/mp3', express.static(path.join(__dirname, 'mp3')));
 
 // Route principale
@@ -49,9 +58,7 @@ app.get('/multiplayer', (req, res) => {
 
 // Adresses propres de l'appli (/24h, /records?c=x, /multi/hote/code…) : même page, le routeur côté client prend le relais
 const APP_ROUTES = /^\/(24h|sandbox|game|browse|records|watch|live|tournament|rush|mono|multi)(\/|$)/;
-app.get(APP_ROUTES, (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+app.get(APP_ROUTES, sendIndex);
 
 app.get('/proxy/chess/:gameId', async (req, res) => {
     try {

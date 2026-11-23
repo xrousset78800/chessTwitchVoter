@@ -177,8 +177,14 @@
 
         /** Flèche du coup en tête du vote ('lead') ou du coup gagnant avec son étiquette ('win') */
         setOverlay(overlay) {
-            const o = overlay && overlay.from && overlay.to ? overlay : null;
-            const sig = o ? `${o.kind}${o.from}${o.to}${o.label || ''}${o.who ? `${o.who.name}${o.who.via}${o.who.pic}` : ''}` : '';
+            let o = overlay || null;
+            // Coup en tête : plusieurs flèches possibles (ex aequo), la première sert de référence
+            if (o?.moves) {
+                const moves = o.moves.filter(m => m && m.from && m.to);
+                o = moves.length ? { ...o, moves, from: moves[0].from, to: moves[0].to } : null;
+            }
+            if (o && !(o.from && o.to)) o = null;
+            const sig = o ? `${o.kind}${(o.moves || [o]).map(m => m.from + m.to).join(',')}${o.label || ''}${o.who ? `${o.who.name}${o.who.via}${o.who.pic}` : ''}` : '';
             if (sig === (this.overlaySig || '')) return;
             this.overlaySig = sig;
             this.overlay = o;
@@ -236,7 +242,7 @@
             }
             arrows.forEach(([key, color]) => this.drawArrow(key.slice(0, 2), key.slice(2), COLORS[color]));
             this.drawOverlay();
-            if (this.hover) this.drawArrow(this.hover.from, this.hover.to, 'rgb(250, 246, 242)', { opacity: 0.95, scale: 1, dash: true })
+            if (this.hover) this.drawArrow(this.hover.from, this.hover.to, 'rgb(244, 238, 232)', { opacity: 0.55, scale: 0.85 })
                 ?.classList.add('board-annotations__hover');
         }
 
@@ -244,13 +250,17 @@
             const o = this.overlay;
             if (!o) return;
             const win = o.kind === 'win';
-            // Coup retenu : orange posé, à peine plus épais qu'une flèche normale ; coup en tête : gris discret
-            const group = this.drawArrow(o.from, o.to, win ? 'rgb(255, 138, 61)' : 'rgb(185, 174, 166)', {
-                opacity: win ? 0.85 : 0.5, scale: win ? 1.1 : 0.85
-            });
+            if (!win) {
+                // Coup(s) en tête : blanc en pointillés, une flèche par coup ex aequo
+                (o.moves || [o]).forEach(m => this.drawArrow(m.from, m.to, 'rgb(250, 246, 242)', { opacity: 0.92, scale: 0.95, dash: true })
+                    ?.classList.add('board-annotations__vote', 'is-lead'));
+                return;
+            }
+            // Coup retenu : orange posé, à peine plus épais qu'une flèche normale
+            const group = this.drawArrow(o.from, o.to, 'rgb(255, 138, 61)', { opacity: 0.85, scale: 1.1 });
             if (!group) return;
-            group.classList.add('board-annotations__vote', win ? 'is-win' : 'is-lead');
-            if (!win || !o.label) return;
+            group.classList.add('board-annotations__vote', 'is-win');
+            if (!o.label) return;
             // Étiquette sombre au-dessus de la case d'arrivée : « Cf3 · 42 % », puis photo, @pseudo et #chaîne du votant
             const b = this.geometry(o.to);
             const w = this.container.clientWidth;
