@@ -2110,8 +2110,10 @@ function setupPhantomModal() {
         btn.classList.toggle('btn--danger', on);
         btn.querySelector('span').textContent = on ? t('phantomModal.disconnect', 'Déconnecter') : t('phantomModal.connect', 'Connecter');
     };
-    const open = () => { render(); overlay.classList.add('is-active'); };
-    const close = () => overlay.classList.remove('is-active');
+    // Vidéo chargée seulement à l'ouverture, et coupée à la fermeture
+    const video = document.getElementById('pmVideo');
+    const open = () => { render(); if (video && !video.src) video.src = video.dataset.src; overlay.classList.add('is-active'); };
+    const close = () => { overlay.classList.remove('is-active'); video?.removeAttribute('src'); };
     window.openPhantomModal = open;
 
     overlay.addEventListener('click', e => {

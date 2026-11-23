@@ -1319,8 +1319,16 @@
                 <h2 class="modal__title"><i class="fas fa-chess-knight"></i> <span data-i18n="phantomModal.title">Échiquier Phantom</span></h2>
                 <button class="modal__close" data-close-modal>&times;</button>
             </div>
-            <div class="modal__body">
+            <div class="modal__body pm-grid">
+                <div class="pm-col pm-col--main">
+                <div class="pm-video"><iframe id="pmVideo" data-src="https://www.youtube-nocookie.com/embed/Uw0pNK9OprY?rel=0" title="Phantom" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
                 <p class="pm-intro" data-i18n="phantomModal.intro">Phantom est un vrai échiquier en bois qui déplace ses pièces tout seul. Connecté au site, il rejoue sous tes yeux les coups votés par le chat Twitch, ceux d'une partie Live Chess ou d'un tournoi suivi.</p>
+                <p class="pm-credits">
+                    <span data-i18n="phantomModal.credits">Pour en savoir plus sur l'échiquier et son équipe :</span>
+                    <a href="https://www.indiegogo.com/projects/phantom-the-robotic-chessboard-made-of-real-wood" target="_blank" rel="noopener"><span data-i18n="phantomModal.link">Le projet Phantom sur Indiegogo</span> <i class="fas fa-external-link-alt"></i></a>
+                </p>
+                </div>
+                <div class="pm-col">
                 <div class="pm-unlocks">
                     <p class="pm-unlocks__title"><i class="fas fa-unlock"></i> <span data-i18n="phantomModal.unlockTitle">Une fois connecté</span></p>
                     <ul>
@@ -1345,10 +1353,7 @@
                     <p>Si toutes les pièces ont le même décalage et que le journal montre des erreurs de capteurs en boucle, la mécanique est désynchronisée. La réparation remet le Phantom aux réglages d'usine (ce qui recentre le chariot), le reconnecte tout seul puis remet les pièces en place. Compter environ une minute.</p>
                     <button class="pm-repair__btn" id="pmFactoryReset"><i class="fas fa-exclamation-triangle"></i> Réparer le centrage</button>
                 </details>
-                <p class="pm-credits">
-                    <span data-i18n="phantomModal.credits">Pour en savoir plus sur l'échiquier et son équipe :</span>
-                    <a href="https://www.indiegogo.com/projects/phantom-the-robotic-chessboard-made-of-real-wood" target="_blank" rel="noopener"><span data-i18n="phantomModal.link">Le projet Phantom sur Indiegogo</span> <i class="fas fa-external-link-alt"></i></a>
-                </p>
+                </div>
             </div>
             <div class="modal__footer">
                 <button class="btn" data-close-modal data-i18n="phantomModal.close">Fermer</button>

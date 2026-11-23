@@ -30,7 +30,7 @@ body.is-dragging-piece * {
 /* La pièce saisie (ajoutée au body par chessboard.js) : plus grande, ombre portée,
    et elle suit la souris sans retard (sinon "transition: all" la fait traîner) */
 body > img.piece-417db {
-    z-index: 1000; /* sinon elle passe sous #app (z-index 1) et disparaît pendant le glisser */
+    z-index: calc(var(--z-modal) - 1); /* au-dessus de #app (z-index 1) pendant le glisser, mais jamais par-dessus une modale */
     transition: transform 0.12s ease, filter 0.12s ease !important;
     transform: scale(1.15);
     filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.45));
