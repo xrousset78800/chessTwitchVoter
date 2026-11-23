@@ -232,6 +232,12 @@ const H24Page = {
         this.applyFolds();
     },
 
+    /** Défile l'historique jusqu'au dernier coup (le panneau défile, pas la liste) */
+    historyToBottom() {
+        const sc = $('h24-history')?.closest('.panel__content');
+        if (sc) sc.scrollTop = sc.scrollHeight;
+    },
+
     applyFolds() {
         document.querySelectorAll('#page-h24 [data-h24-panel]').forEach(p => {
             const folded = !!this.folds[p.dataset.h24Panel];
@@ -240,6 +246,7 @@ const H24Page = {
             const chev = p.querySelector('.h24-fold__chev');
             if (chev) chev.className = `fas fa-chevron-${folded ? 'down' : 'up'} h24-fold__chev`;
         });
+        this.historyToBottom();
     },
 
     // ------------------------------------------------------------------ bandeau des votes (sous l'échiquier)
@@ -1138,7 +1145,13 @@ const H24Page = {
         this.renderDraw(g);
         this.liveWheel(g);
         const first = (g.startFen || '').split(' ')[1] === 'b' ? 'b' : 'w';
-        renderHistory($('h24-history'), (g.history || []).map((san, i) => ({ san, v: s.mode === 'teams' ? g.hv?.[i] ?? null : null })), first);
+        // L'historique reste calé en bas (dernier coup visible), sauf si on est remonté le relire entre deux coups
+        const histEl = $('h24-history'), histSc = histEl?.closest('.panel__content');
+        const histLen = (g.history || []).length;
+        const stick = !histSc || histLen !== this.histLen || histSc.scrollHeight - histSc.scrollTop - histSc.clientHeight < 40;
+        this.histLen = histLen;
+        renderHistory(histEl, (g.history || []).map((san, i) => ({ san, v: s.mode === 'teams' ? g.hv?.[i] ?? null : null })), first);
+        if (stick) this.historyToBottom();
         const score = $('h24-score');
         if (score) {
             score.hidden = s.mode !== 'rush';
