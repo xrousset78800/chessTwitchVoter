@@ -8,6 +8,7 @@ import { wheelTick } from './wheelTick.js';
 
 const MIN_CELL_WIDTH = 110;  // Assez large pour lire "exd8=Q+"
 const MIN_TRAVEL     = 3000; // Distance minimale parcourue par la bande pendant un tirage
+const PEG_GAP        = 40;   // Picots le long de la bande : un « tic » à chacun
 
 class WheelBand extends VotingWheel {
     init() {
@@ -87,6 +88,20 @@ class WheelBand extends VotingWheel {
                 x += cellWidth;
             });
         }
+
+        // Picots en haut et en bas, entraînés avec la bande
+        ctx.save();
+        ctx.fillStyle = 'rgba(244, 238, 232, 0.85)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 2;
+        for (let px = ((offset % PEG_GAP) + PEG_GAP) % PEG_GAP; px < width; px += PEG_GAP) {
+            for (const py of [4, height - 4]) {
+                ctx.beginPath();
+                ctx.arc(px, py, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        ctx.restore();
     }
 
     drawCell(move, color, x, cellWidth, height) {
@@ -159,16 +174,16 @@ class WheelBand extends VotingWheel {
         const totalDelta = turns * period + delta;
 
         const startTime = Date.now();
-        let lastCell = null;
+        let lastPeg = Math.floor(startPosition / PEG_GAP);
         const animate = () => {
             if (token !== this.spinToken) return;   // tirage annulé (abort)
             const progress = duration > 0 ? Math.min((Date.now() - startTime) / duration, 1) : 1;
             const eased = 1 - Math.pow(1 - progress, 3);
             this.position = startPosition + totalDelta * eased;
-            // Une case passe sous le curseur : « tic »
-            const cell = Math.floor(this.position / period) + ':' + this.moveAtPointer();
-            if (lastCell !== null && cell !== lastCell && duration > 0 && sortedVotes.length > 1) wheelTick();
-            lastCell = cell;
+            // Un picot passe sous le curseur : « tic »
+            const peg = Math.floor(this.position / PEG_GAP);
+            if (peg !== lastPeg && duration > 0) wheelTick();
+            lastPeg = peg;
             this.draw();
             if (progress < 1) {
                 requestAnimationFrame(animate);

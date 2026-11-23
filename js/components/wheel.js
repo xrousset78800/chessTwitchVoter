@@ -9,6 +9,8 @@ import { wheelTick } from './wheelTick.js';
 
 const TAU = 2 * Math.PI;
 const LAMPS = 24;
+const PEGS = 24;               // Picots sur le bord de la roue : un « tic » à chacun
+const PEG_STEP = TAU / PEGS;
 
 class VotingWheel {
     constructor(containerId) {
@@ -287,6 +289,19 @@ getSortedVotes() {
             startAngle = endAngle;
         });
 
+        // Picots tournant avec la roue
+        ctx.save();
+        ctx.fillStyle = '#f4eee8';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+        ctx.shadowBlur = 3;
+        for (let k = 0; k < PEGS; k++) {
+            const a = this.currentRotation + k * PEG_STEP;
+            ctx.beginPath();
+            ctx.arc(centerX + Math.cos(a) * (radius - 4), centerY + Math.sin(a) * (radius - 4), 2.4, 0, TAU);
+            ctx.fill();
+        }
+        ctx.restore();
+
         this.drawRim(ctx, centerX, centerY, radius);
 
         // Petit moyeu discret
@@ -427,7 +442,7 @@ spin(duration = 5000, forcedWinner = null) {
 
     const startRotation = this.currentRotation;
     const startTime = Date.now();
-    let lastSlice = this.sliceAtPointer(sortedVotes, totalVotes, startRotation);
+    let lastPeg = Math.floor(startRotation / PEG_STEP);
 
     const animate = () => {
         if (token !== this.spinToken) return;   // tirage annulé (abort)
@@ -436,10 +451,10 @@ spin(duration = 5000, forcedWinner = null) {
         const eased = 1 - Math.pow(1 - progress, 3);
         this.currentRotation = startRotation + totalDelta * eased;
         this.spinProgress = progress;
-        // Une part passe sous le curseur : la languette bascule et la roue fait « tic »
-        const slice = this.sliceAtPointer(sortedVotes, totalVotes, this.currentRotation);
-        if (slice !== lastSlice && sortedVotes.length > 1) {
-            lastSlice = slice;
+        // Un picot passe sous le curseur : la languette bascule et la roue fait « tic »
+        const peg = Math.floor(this.currentRotation / PEG_STEP);
+        if (peg !== lastPeg) {
+            lastPeg = peg;
             this.flap = -0.6;
             if (duration > 0) wheelTick();
         }
