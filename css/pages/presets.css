@@ -226,8 +226,8 @@ body.preset-multi #btn-reset {
 }
 
 .new-tab:hover {
-    color: var(--text-primary);
-    background: var(--bg-card-hover);
+    color: #ffe8d6;
+    background: rgba(255, 138, 61, 0.12);
 }
 
 .new-tab.is-active {

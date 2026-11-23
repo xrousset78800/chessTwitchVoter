@@ -489,13 +489,20 @@
 /* Lancement : la carte remplace l'échiquier et la barre d'outils */
 body.sandbox-launch .sandbox-setup {
     display: block;
-    max-width: 980px;
+    max-width: 1280px;
     margin: 0 auto;
 }
+/* Écran Nouveau : pas de titre « Nouvelle partie » (les onglets disent déjà où on est), tout remonte */
+body.sandbox-launch .sandbox-setup__header { display: none; }
+body.sandbox-launch #page-sandbox .sandbox { padding-top: calc(var(--nav-height) + 12px); }
+/* Configurations suggérées : trois par ligne */
+body.sandbox-launch .presets-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1100px) { body.sandbox-launch .presets-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { body.sandbox-launch .presets-list { grid-template-columns: minmax(0, 1fr); } }
 
 /* Écran Nouveau : les onglets suffisent, pas de titre « Sandbox » au-dessus */
 body.sandbox-launch #page-sandbox .sandbox__header { display: none; }
-body.sandbox-launch #page-sandbox .new-tabs { margin-bottom: 14px; }
+body.sandbox-launch #page-sandbox .new-tabs { margin-bottom: 10px; }
 body.sandbox-launch .sandbox-setup__card {
     padding: 18px 20px;
     background:

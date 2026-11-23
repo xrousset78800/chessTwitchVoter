@@ -318,11 +318,10 @@
     font-weight: 500;
 }
 
-.moves-group button:hover {
-    background: #4a5568;
-    border-color: #ffd700;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+.moves-group button:hover:not(:disabled) {
+    color: #fff;
+    background: rgba(255, 138, 61, 0.25);
+    border-color: #ff8a3d;
 }
 
 .moves-group button:active {

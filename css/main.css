@@ -219,7 +219,6 @@ img, video {
     display: block;
     opacity: 1;
     visibility: visible;
-    animation: pageIn 0.3s ease-out;
 }
 
 @keyframes pageIn {
@@ -1028,10 +1027,10 @@ body.showTimer .board-timer-container {
     font-family: 'Courier New', monospace;
 }
 
-.moves-group button:hover {
-    background: #4a5568;
-    border-color: #ffd700;
-    transform: translateY(-1px);
+.moves-group button:hover:not(:disabled) {
+    color: #fff;
+    background: rgba(255, 138, 61, 0.25);
+    border-color: #ff8a3d;
 }
 
 .moves-group li.most-voted button {
