@@ -108,6 +108,38 @@ class VotingWheel {
         return window.gameEngine?.chess?.turn() || 'w';
     }
 
+    /** Pièce jouée d'après le SAN (sensible à la casse : « b3 » est un pion, « Bb3 » un fou) ; roque : le roi */
+    pieceOf(move) {
+        const c = String(move || '').charAt(0);
+        if (c === 'O' || c === '0') return 'K';
+        return 'KQRBN'.includes(c) ? c : 'P';
+    }
+
+    /** Pièce dessinée à la couleur du camp : forme pleine, blanche à contour sombre ou noire à contour clair */
+    drawPiece(ctx, move, turn, x, y, size) {
+        const glyph = this.pieceIcons.b[this.pieceOf(move)] + '︎';
+        ctx.save();
+        ctx.font = `${Math.round(size)}px "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols2", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = Math.max(2, size / 8);
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+        ctx.shadowBlur = 4;
+        ctx.strokeStyle = turn === 'b' ? 'rgba(255, 255, 255, 0.92)' : 'rgba(10, 10, 15, 0.9)';
+        ctx.strokeText(glyph, x, y);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = turn === 'b' ? '#15151c' : '#ffffff';
+        ctx.fillText(glyph, x, y);
+        ctx.restore();
+    }
+
+    /** Même chose en HTML (coup tiré au centre de la roue / sur la bande) */
+    pieceHtml(move, turn = this.currentTurn()) {
+        const dark = turn === 'b';
+        return `<span class="winner-piece" style="color:${dark ? '#15151c' : '#fff'};-webkit-text-stroke:1.5px ${dark ? 'rgba(255,255,255,.9)' : 'rgba(10,10,15,.85)'};paint-order:stroke fill">${this.pieceIcons.b[this.pieceOf(move)]}︎</span>`;
+    }
+
     clear() {
         this.votes.clear();
         this.winner = null;
@@ -205,15 +237,14 @@ getSortedVotes() {
             const textX = centerX + Math.cos(midAngle) * textRadius;
             const textY = centerY + Math.sin(midAngle) * textRadius;
 
-            // Icône de pièce
-            const pieceKey = vote.move.charAt(0).toUpperCase();
-            const isNamedPiece = ['K', 'Q', 'R', 'B', 'N'].includes(pieceKey);
-            const piece = isNamedPiece ? pieceKey : 'P';
-            const pieceIcon = this.pieceIcons[turn][piece];
-            const firstChar = vote.move.charAt(0).toUpperCase();
+            // Tailles selon la place : largeur de la part et rayon de la roue
+            const arc = sliceAngle * radius * 0.8;
+            const fontSize = Math.max(11, Math.min(radius * 0.075, arc * 0.32, 20));
+            const pieceSize = Math.max(16, Math.min(radius * 0.2, arc * 0.62, 46));
+            const r0 = radius - 6 - fontSize / 2;
 
             ctx.save();
-            ctx.translate(textX, textY);
+            ctx.translate(centerX + Math.cos(midAngle) * r0, centerY + Math.sin(midAngle) * r0);
             ctx.rotate(midAngle + Math.PI / 2);
 
             ctx.shadowColor = 'rgba(0,0,0,0.7)';
@@ -222,13 +253,10 @@ getSortedVotes() {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Texte au-dessus (vers le bord)
-            ctx.font = 'bold 12px "JetBrains Mono", monospace';
-            ctx.fillText(vote.move, 0, -10);
-
-            // Pièce en dessous (vers le centre)
-            ctx.font = 'bold 18px sans-serif';
-            ctx.fillText(pieceIcon, 0, 10);
+            // Coup près du bord, pièce en dessous (vers le centre)
+            ctx.font = `bold ${Math.round(fontSize)}px "JetBrains Mono", monospace`;
+            ctx.fillText(vote.move, 0, 0);
+            this.drawPiece(ctx, vote.move, turn, 0, fontSize / 2 + 3 + pieceSize / 2, pieceSize);
 
             ctx.restore();
 
@@ -376,18 +404,13 @@ for (const v of sortedDbg) {
     }
 
     // Afficher la pièce + le coup au centre, couleur du segment gagnant
-    const turn = this.currentTurn();
-    const pieceKey = this.winner.charAt(0).toUpperCase();
-    const isNamedPiece = ['K', 'Q', 'R', 'B', 'N'].includes(pieceKey);
-    const piece = isNamedPiece ? pieceKey : 'P';
-    const pieceIcon = this.pieceIcons[turn][piece];
 
     this.winnerColor = winnerColor;
     this.winnerPct = this.computeWinnerPct(sortedVotes, totalVotes);
     // L'hôte affiche le coup tiré en grand dans l'encart du podium ; les spectateurs gardent le centre de la roue
     if (this.showResultInside !== false) {
         this.centerEl.style.setProperty('--winner-color', winnerColor);
-        this.centerEl.innerHTML = `<span class="winner-piece">${pieceIcon}</span><span class="winner-move">${this.winner}</span>`;
+        this.centerEl.innerHTML = `${this.pieceHtml(this.winner)}<span class="winner-move">${this.winner}</span>`;
         this.centerEl.classList.add('winner-reveal');
         this.centerEl.style.background = winnerColor;
         this.centerEl.style.boxShadow = `0 0 30px ${winnerColor}99, 0 0 60px ${winnerColor}44, inset 0 2px 10px rgba(255,255,255,0.3)`;

@@ -697,7 +697,7 @@ const H24Page = {
         return Math.max(0, Math.ceil((at - (Date.now() + (this.skew || 0))) / 1000));
     },
 
-    /** Chrono : anneau en haut à droite de l'échiquier pendant le tour, barre de la fenêtre centrale entre deux parties */
+    /** Chrono : anneau en tête de la barre d'outils (contre le coin haut droit de l'échiquier) pendant la partie, barre de la fenêtre centrale entre deux parties */
     renderClock() {
         const s = this.state;
         const box = $('h24-timer');
@@ -706,10 +706,17 @@ const H24Page = {
         const inPlay = s.phase === 'play' && !!g;
         const at = inPlay ? (g.draw || g.result ? null : g.turnEndsAt) : s.endsAt;
         const area = $('h24-wheel-area');
-        const wrap = $('h24-board-wrap');
-        const ring = inPlay && wrap ? this.ringEl(wrap) : null;
-        if (!ring) wrap?.querySelector(':scope > .h24-clock')?.remove();
-        if (!at && !s.paused) { box.hidden = true; if (ring) ring.hidden = true; area?.classList.remove('is-soon'); return; }
+        const bar = document.querySelector('#page-h24 .sandbox__actions');
+        const ring = inPlay && bar ? this.ringEl(bar) : null;
+        if (!ring) bar?.querySelector(':scope > .h24-clock')?.remove();
+        // Tirage ou fin de partie : l'anneau reste en place (rien ne bouge), en veille
+        if (!at && !s.paused) {
+            box.hidden = true;
+            if (ring) { ring.classList.add('is-idle'); ring.classList.remove('is-critical', 'is-paused'); ring.style.setProperty('--p', '0'); ring.querySelector('.h24-clock__num').textContent = '–'; }
+            area?.classList.remove('is-soon');
+            return;
+        }
+        ring?.classList.remove('is-idle');
         box.hidden = !!ring;
         const left = s.paused ? null : this.remaining(at);
         // Durée totale : la plus grande valeur vue pour cette échéance
@@ -739,14 +746,14 @@ const H24Page = {
         $('h24-wheel-area')?.classList.toggle('is-soon', inPlay && left != null && left <= 1);
     },
 
-    /** Anneau du chrono, posé en haut à droite de l'échiquier */
+    /** Anneau du chrono, en tête de la barre d'outils de la colonne de droite */
     ringEl(wrap) {
         let el = wrap.querySelector(':scope > .h24-clock');
         if (!el) {
             el = document.createElement('div');
             el.className = 'h24-clock';
             el.innerHTML = '<span class="h24-clock__num"></span>';
-            wrap.appendChild(el);
+            wrap.prepend(el);
         }
         return el;
     },

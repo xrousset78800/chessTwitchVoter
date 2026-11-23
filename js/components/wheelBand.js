@@ -43,10 +43,7 @@ class WheelBand extends VotingWheel {
     }
 
     getPieceIcon(move) {
-        const turn = this.currentTurn();
-        const pieceKey = move.charAt(0).toUpperCase();
-        const piece = ['K', 'Q', 'R', 'B', 'N'].includes(pieceKey) ? pieceKey : 'P';
-        return this.pieceIcons[turn][piece];
+        return this.pieceIcons[this.currentTurn()][this.pieceOf(move)];
     }
 
     draw() {
@@ -98,12 +95,21 @@ class WheelBand extends VotingWheel {
         ctx.fillStyle = '#0a0a0f';
         ctx.fillRect(x + cellWidth - 1, 0, 2, height);
 
+        // Pièce à la couleur du camp, plus grande quand la case le permet, puis le coup
+        const fontSize = Math.max(14, Math.min(height * 0.3, 20));
+        const pieceSize = Math.max(18, Math.min(height * 0.62, cellWidth * 0.3, 44));
         ctx.save();
+        ctx.font = `bold ${Math.round(fontSize)}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const tw = ctx.measureText(move).width;
+        const gap = 6;
+        const left = x + cellWidth / 2 - (pieceSize + gap + tw) / 2;
+        this.drawPiece(ctx, move, this.currentTurn(), left + pieceSize / 2, height / 2, pieceSize);
         ctx.shadowColor = 'rgba(0,0,0,0.7)';
         ctx.shadowBlur = 4;
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px "JetBrains Mono", monospace';
-        ctx.fillText(`${this.getPieceIcon(move)} ${move}`, x + cellWidth / 2, height / 2);
+        ctx.fillText(move, left + pieceSize + gap + tw / 2, height / 2);
         ctx.restore();
     }
 
@@ -193,7 +199,7 @@ class WheelBand extends VotingWheel {
         // L'hôte affiche le coup tiré en grand dans l'encart du podium ; les spectateurs gardent l'étiquette sur la bande
         if (this.showResultInside !== false) {
             this.centerEl.style.background = this.winnerColor;
-            this.centerEl.innerHTML = `<span class="winner-piece">${this.getPieceIcon(this.winner)}</span><span class="winner-move">${this.winner}</span>`;
+            this.centerEl.innerHTML = `${this.pieceHtml(this.winner)}<span class="winner-move">${this.winner}</span>`;
             this.centerEl.classList.add('is-revealed');
         }
         this.highlightWinner();

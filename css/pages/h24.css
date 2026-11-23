@@ -235,13 +235,12 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-clock.is-critical .h24-clock__num { color: #fbbf24; }
 .h24-clock.is-paused { --ring: #6b7280; }
 @keyframes h24-clockPulse { to { transform: scale(1.08); } }
-/* Le chrono du tour : en haut à droite de l'échiquier, à cheval sur le coin */
+/* Le chrono du tour : en tête de la barre d'outils, contre le coin haut droit de l'échiquier (sans le recouvrir) */
 #h24-board-wrap { position: relative; }
-#h24-board-wrap > .h24-clock {
-    position: absolute; top: -10px; right: -30px; z-index: 25; width: 56px; height: 56px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
-}
-#h24-board-wrap > .h24-clock .h24-clock__num { font-size: 1.3rem; }
+#page-h24 .sandbox__actions { min-height: 52px; align-items: center; }
+#page-h24 .sandbox__actions > .h24-clock { width: 52px; height: 52px; }
+#page-h24 .sandbox__actions > .h24-clock .h24-clock__num { font-size: 1.25rem; }
+#page-h24 .sandbox__actions > .h24-clock.is-idle { opacity: 0.35; }
 
 /* Entre deux parties : fenêtre discrète au milieu, sur l'échiquier (le reste reste cliquable) */
 #page-h24 .sandbox__main { position: relative; }
