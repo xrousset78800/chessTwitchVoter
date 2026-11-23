@@ -475,51 +475,6 @@ body.no-bg .board-wrapper {
     border: none !important;
 }
 
-/* ============================================
-   TOAST NOTIFICATIONS
-   ============================================ */
-
-.toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.toast {
-    padding: 12px 20px;
-    border-radius: var(--radius-sm);
-    color: white;
-    font-weight: 500;
-    opacity: 0;
-    transform: translateX(100%);
-    transition: all 0.3s ease;
-}
-
-.toast.is-visible {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-.toast--success {
-    background: var(--accent-green);
-}
-
-.toast--error {
-    background: var(--accent-red);
-}
-
-.toast--warning {
-    background: var(--accent-orange);
-}
-
-.toast--info {
-    background: var(--accent-blue);
-}
-
 body.randomWheel #chart {
     display: block;
     position: fixed;

@@ -694,7 +694,6 @@ async applyConfigAfterReload() {
         problemsManager.config.votesPerViewer = AppState.config.votesPerViewer;
         AppState.problems.isActive = true;
         problemsManager.loadRandomProblem();
-        Toast.success('🧩 Mode Problèmes activé !');
         return;
     }
 
@@ -711,7 +710,6 @@ async applyConfigAfterReload() {
 
     gameEngine.mode = AppState.gameMode;
     gameEngine.startGame();
-    Toast.success('✅ Configuration appliquée !');
 
     if (gameEngine.updateVotingIndicator) gameEngine.updateVotingIndicator();
 },
@@ -1624,6 +1622,9 @@ fullReset() {
             card.classList.toggle('is-active', on);
             card.setAttribute('aria-pressed', on);
         });
+        // Le choix du mode de jeu n'apparaît qu'avec « Personnaliser » (une suggestion fixe déjà le mode)
+        const modePanel = document.querySelector('#sandbox-setup .mode-selector')?.closest('.panel');
+        if (modePanel) modePanel.hidden = anyMatch;
     },
 
     /** Remplit l'écran avec une configuration suggérée (sans lancer : on peut encore ajuster) */
@@ -1643,7 +1644,6 @@ fullReset() {
             if (col && col.getBoundingClientRect().top > window.innerHeight * 0.6) col.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
         }
-        Toast.success(tr('suggested.applied', { name: tr(`suggested.${p.id}.name`) }));
     },
 
     renderConfigs() {
@@ -1708,7 +1708,6 @@ fullReset() {
         if (gameEngine.updateVotingIndicator) {
             gameEngine.updateVotingIndicator();
         }
-        Toast.success(`Config "${config.name}" chargée`);
     }
 };
 
@@ -2022,30 +2021,34 @@ const Toast = {
         }
     },
 
-    show(message, type = 'info', duration = 4000) {
+    ICONS: { success: 'fa-check', error: 'fa-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' },
+
+    /** Carte sombre avec liseré de couleur ; la barre du bas montre le temps restant, le survol met en pause */
+    show(message, type = 'info', duration = 6500) {
         const toast = document.createElement('div');
         toast.className = `toast toast--${type}`;
+        toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        toast.style.setProperty('--toast-life', `${duration}ms`);
         toast.innerHTML = `
+            <span class="toast__icon"><i class="fas ${this.ICONS[type] || this.ICONS.info}"></i></span>
             <span class="toast__message">${message}</span>
-            <button class="toast__close">&times;</button>
+            <button class="toast__close" aria-label="Fermer">&times;</button>
+            <span class="toast__life"></span>
         `;
-
-        toast.querySelector('.toast__close').addEventListener('click', () => {
-            toast.remove();
-        });
-
-        // is-visible : sans elle, main.css garde le toast à opacity 0 une fois l'animation d'entrée finie
-        toast.classList.add('is-visible');
-        this.container.appendChild(toast);
-
-        setTimeout(() => {
+        // Pas plus de 4 à la fois : le plus ancien laisse sa place
+        while (this.container.children.length >= 4) this.container.firstElementChild.remove();
+        const leave = () => {
+            if (toast.classList.contains('is-leaving')) return;
             toast.classList.add('is-leaving');
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
+            setTimeout(() => toast.remove(), 250);
+        };
+        toast.querySelector('.toast__close').addEventListener('click', leave);
+        toast.querySelector('.toast__life').addEventListener('animationend', leave);
+        this.container.appendChild(toast);
     },
 
     success(msg) { this.show(msg, 'success'); },
-    error(msg) { this.show(msg, 'error', 5000); },
+    error(msg) { this.show(msg, 'error', 9000); },
     warning(msg) { this.show(msg, 'warning'); },
     info(msg) { this.show(msg, 'info'); }
 };

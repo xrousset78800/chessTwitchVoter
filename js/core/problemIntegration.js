@@ -263,7 +263,6 @@ async function applyConfigWithProblems() {
         // Charger le premier problème
         problemsManager.loadRandomProblem();
         
-        Toast?.success('🧩 Mode Problèmes activé !');
         return;
     }
     
@@ -280,7 +279,6 @@ async function applyConfigWithProblems() {
     });
     
     gameEngine.startGame();
-    Toast?.success('✅ Configuration appliquée !');
 }
 
 // ========== EXPORTS ==========

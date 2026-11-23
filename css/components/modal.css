@@ -92,116 +92,112 @@
 
 /* ============================================
    TOAST NOTIFICATIONS
+   Carte sombre, liseré et icône de la couleur du type, barre de temps restant.
+   Elles restent ~6 s (9 s pour une erreur) et se figent au survol.
    ============================================ */
 
 .toast-container {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    top: calc(var(--nav-height, 70px) + 12px);
+    right: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    align-items: flex-end;
+    gap: 8px;
     z-index: var(--z-toast);
     pointer-events: none;
 }
 
 .toast {
+    --tone: #ff8a3d;
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
+    width: min(380px, calc(100vw - 32px));
+    padding: 12px 12px 14px 14px;
+    overflow: hidden;
     border-radius: var(--radius-md);
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-card);
-    animation: toast-in 0.3s ease;
+    background: rgba(26, 21, 18, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--tone);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    color: var(--text-primary);
     pointer-events: auto;
-    max-width: 400px;
+    animation: toast-in 0.22s ease-out both;
 }
 
 @keyframes toast-in {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
 }
 
-.toast.is-leaving {
-    animation: toast-out 0.3s ease forwards;
-}
+.toast.is-leaving { animation: toast-out 0.25s ease-in forwards; }
 
 @keyframes toast-out {
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
+    to { opacity: 0; transform: translateY(-4px); }
 }
 
 .toast__icon {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
     flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--tone) 16%, transparent);
+    color: var(--tone);
+    font-size: 14px;
 }
 
 .toast__message {
     flex: 1;
-    font-size: 0.95rem;
+    min-width: 0;
+    font-size: 0.92rem;
+    line-height: 1.35;
 }
 
 .toast__close {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    align-self: flex-start;
+    border-radius: var(--radius-sm);
     color: var(--text-muted);
+    font-size: 18px;
+    line-height: 1;
     cursor: pointer;
     transition: var(--transition-fast);
 }
 
-.toast__close:hover {
-    color: var(--text-primary);
+.toast__close:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
+
+/* Temps restant : la barre se vide, le toast part quand elle est vide */
+.toast__life {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--tone);
+    opacity: 0.55;
+    transform-origin: left;
+    animation: toast-life var(--toast-life, 6500ms) linear forwards;
 }
 
-/* Toast variants */
-.toast--success {
-    border-color: var(--accent-green);
-}
+.toast:hover .toast__life { animation-play-state: paused; }
 
-.toast--success .toast__icon {
-    color: var(--accent-green);
-}
+@keyframes toast-life { to { transform: scaleX(0); } }
 
-.toast--error {
-    border-color: var(--accent-red);
-}
+.toast--success { --tone: #22c55e; }
+.toast--error { --tone: #ef4444; }
+.toast--warning { --tone: #eab308; }
+.toast--info { --tone: #ff8a3d; }
 
-.toast--error .toast__icon {
-    color: var(--accent-red);
-}
-
-.toast--warning {
-    border-color: var(--accent-orange);
-}
-
-.toast--warning .toast__icon {
-    color: var(--accent-orange);
-}
-
-.toast--info {
-    border-color: var(--accent-blue);
-}
-
-.toast--info .toast__icon {
-    color: var(--accent-blue);
+@media (prefers-reduced-motion: reduce) {
+    .toast, .toast.is-leaving { animation-duration: 0.01s; }
 }
 
 /* ============================================
