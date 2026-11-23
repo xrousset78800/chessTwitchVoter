@@ -562,9 +562,8 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-palette__dots i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); }
 
 /* ---- Coups disponibles : au premier plan quand c'est ton tour, en retrait sinon ---- */
-#page-h24 #h24-moves { position: relative; transition: opacity 0.35s, filter 0.35s, box-shadow 0.35s, border-color 0.35s, transform 0.35s; }
-#page-h24 #h24-moves.is-idle { opacity: 0.5; filter: saturate(0.45); }
-#page-h24 #h24-moves.is-idle:hover { opacity: 0.75; }
+/* relative pour l'éclat (::after) ; top: auto sinon le top du panneau sticky générique le décale vers le bas */
+#page-h24 #h24-moves { position: relative; top: auto; transition: box-shadow 0.35s, border-color 0.35s, transform 0.35s; }
 #page-h24 #h24-moves.is-turn {
     border-color: var(--twitch-purple);
     box-shadow: 0 0 0 1px var(--twitch-purple), 0 0 22px rgba(255, 138, 61, 0.35);
