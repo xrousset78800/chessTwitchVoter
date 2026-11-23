@@ -862,6 +862,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         }
         return null;
     }
+    /** Rush : part des bots qui trouvent la solution, 90 % à 600 de classement, 40 % à 2000, puis 30 % au plus bas */
+    function botAccuracy(rating) {
+        const r = Number(rating) || RUSH.startRating;
+        return Math.max(0.3, Math.min(0.9, 0.9 - (r - 600) * 0.5 / 1400));
+    }
     function botCandidates(key) {
         if (bots.cands?.key === key) return bots.cands.moves;
         const g = s.game;
@@ -890,11 +895,13 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const side = g.chess.turn();
         if (s.mode === 'teams' && !canPlay(teamOf(login), side)) return;
         const c = botCandidates(key);
-        // Rush : la bonne réponse le plus souvent ; partie : coups pondérés 3/2/1. Plusieurs votes : 1 à N
+        // Rush : la bonne réponse d'autant moins souvent que le puzzle est dur ; partie : coups pondérés 3/2/1.
+        // Plusieurs votes : 1 à N
+        const acc = s.mode === 'rush' ? botAccuracy(g.puzzle?.rating) : 0;
         const n = 1 + rand(Math.max(1, Number(s.options.votes) || 1));
         for (let i = 0; i < n; i++) {
             const r = Math.random();
-            const m = s.mode === 'rush' ? (r < 0.7 ? c[0] : pick(c)) : c[r < 0.5 ? 0 : r < 0.83 ? 1 : 2] || c[0];
+            const m = s.mode === 'rush' ? (r < acc || c.length < 2 ? c[0] : pick(c.slice(1))) : c[r < 0.5 ? 0 : r < 0.83 ? 1 : 2] || c[0];
             voteMove(login, m);
         }
     }

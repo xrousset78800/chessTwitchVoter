@@ -393,6 +393,8 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 
 /* ------------------------------------------- Puzzle rush : pas d'historique (chaque puzzle repart de zéro) */
 #page-h24[data-mode="rush"] .h24-history { display: none; }
+/* …le podium remonte donc sous la régie au lieu de rester collé en bas de la colonne */
+@media (min-width: 1101px) { #page-h24[data-mode="rush"] .sandbox__sidebar > .votes-slot { margin-top: 0; } }
 
 /* ------------------------------------------- Colonne de gauche plus serrée : la liste des coups défile si besoin */
 #page-h24 .sandbox__left { gap: 8px; }
