@@ -61,8 +61,8 @@
 }
 
 .battle-setup__card--create {
-    border-color: rgba(34, 211, 238, 0.35);
-    background: rgba(34, 211, 238, 0.04);
+    border-color: rgba(255, 138, 61, 0.35);
+    background: rgba(255, 138, 61, 0.04);
 }
 
 .battle-setup__card--join {
@@ -387,7 +387,7 @@
     margin-left: 6px;
     padding: 1px 8px;
     border-radius: var(--radius-full);
-    background: rgba(163, 181, 187, 0.15);
+    background: rgba(185, 174, 166, 0.15);
     color: var(--text-secondary);
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 0.75rem;
@@ -474,7 +474,7 @@
     align-items: center;
     gap: 6px;
     padding: 5px 12px;
-    border-radius: 999px;
+    border-radius: 2px;
     border: 1px solid var(--border-subtle);
     background: transparent;
     color: var(--text-secondary);
@@ -484,18 +484,18 @@
     transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
-.browse-chip:hover { border-color: rgba(34, 211, 238, 0.5); color: var(--text-primary); }
+.browse-chip:hover { border-color: rgba(255, 138, 61, 0.5); color: var(--text-primary); }
 
 .browse-chip.is-active {
     border-color: var(--accent-purple);
-    background: rgba(34, 211, 238, 0.18);
+    background: rgba(255, 138, 61, 0.18);
     color: var(--text-primary);
 }
 
 .browse-chip__count {
     min-width: 18px;
     padding: 0 5px;
-    border-radius: 999px;
+    border-radius: 2px;
     background: rgba(255, 255, 255, 0.08);
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.72rem;
@@ -514,7 +514,7 @@
 .browse-table-wrap {
     min-width: 0;
     overflow-x: auto;
-    border-radius: var(--radius-md, 12px);
+    border-radius: var(--radius-md, 3px);
     border: 1px solid var(--border-subtle);
     background: var(--bg-card);
 }
@@ -554,7 +554,7 @@
 .game-row:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: -2px; }
 
 .game-row.is-selected {
-    background: rgba(34, 211, 238, 0.12);
+    background: rgba(255, 138, 61, 0.12);
     box-shadow: inset 3px 0 0 var(--accent-purple);
 }
 
@@ -581,21 +581,21 @@
     align-items: center;
     gap: 5px;
     padding: 2px 9px;
-    border-radius: 999px;
+    border-radius: 2px;
     font-size: 0.78rem;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.06);
 }
 
-.mode-pill--multi    { background: rgba(34, 211, 238, 0.18); color: #a5f3fc; }
-.mode-pill--mono     { background: rgba(6, 182, 212, 0.15);  color: #67e8f9; }
+.mode-pill--multi    { background: rgba(255, 138, 61, 0.18); color: #ffd2b0; }
+.mode-pill--mono     { background: rgba(242, 112, 15, 0.15);  color: #ffb27a; }
 .mode-pill--rush     { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
 .mode-pill--problems { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
 .mode-pill--sandbox  { background: rgba(236, 72, 153, 0.15); color: #f9a8d4; }
 
 .game-row__private { margin-left: 4px; font-size: 0.75rem; }
 
-.game-row__spectators { color: var(--accent-cyan, #06b6d4); }
+.game-row__spectators { color: var(--accent-cyan, #f2700f); }
 .game-row__spectators i { font-size: 0.75rem; }
 
 .status-dot {
@@ -670,7 +670,7 @@
     display: flex;
     justify-content: space-between;
     padding: 5px 10px;
-    border-radius: 6px;
+    border-radius: 2px;
     border: 1px solid var(--border-subtle);
     overflow: hidden;
     font-size: 0.82rem;
@@ -746,7 +746,7 @@
 #page-browse .browse__title .browse-toolbar__count {
     margin-left: 0;
     padding: 4px 12px;
-    border-radius: 999px;
+    border-radius: 2px;
     border: 1px solid var(--border-subtle);
     background: var(--bg-card);
     font-family: 'IBM Plex Sans', 'Inter', sans-serif;

@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
-    <meta name="theme-color" content="#091014">
+    <meta name="theme-color" content="#100d0b">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Chessboard.js CSS -->
@@ -51,7 +51,7 @@
         <!-- ==================== NAVIGATION ==================== -->
         <nav class="nav">
             <a class="nav__logo" data-navigate="/24h">
-                <svg class="nav__logo-icon" viewBox="0 0 100 100" aria-hidden="true"><path d="M26 10 H74 a16 16 0 0 1 16 16 V60 a16 16 0 0 1 -16 16 H46 L26 92 V76 a16 16 0 0 1 -16 -16 V26 a16 16 0 0 1 16 -16 z" fill="#22d3ee"/><rect x="28" y="24" width="22" height="22" fill="#e8f2f5"/><rect x="50" y="46" width="22" height="22" fill="#e8f2f5"/><rect x="50" y="24" width="22" height="22" fill="#091014"/><rect x="28" y="46" width="22" height="22" fill="#091014"/></svg>
+                <svg class="nav__logo-icon" viewBox="0 0 100 100" aria-hidden="true"><path d="M26 10 H74 a16 16 0 0 1 16 16 V60 a16 16 0 0 1 -16 16 H46 L26 92 V76 a16 16 0 0 1 -16 -16 V26 a16 16 0 0 1 16 -16 z" fill="#ff8a3d"/><rect x="28" y="24" width="22" height="22" fill="#f4eee8"/><rect x="50" y="46" width="22" height="22" fill="#f4eee8"/><rect x="50" y="24" width="22" height="22" fill="#100d0b"/><rect x="28" y="46" width="22" height="22" fill="#100d0b"/></svg>
                 <span class="nav__logo-text">Crowd <span>Gambit</span></span>
             </a>
             <!-- Partie en cours : son titre suit le logo (libère la colonne de gauche) -->
@@ -205,7 +205,7 @@
                                                 <i class="fas fa-clock"></i> <span data-i18n="gameMode.rush.pause">Pause entre puzzles</span>
                                             </label>
                                             <input type="number" id="rush-pause" class="input input--sm"
-                                                   style="width: 80px;" min="1" max="60" value="5">
+                                                   style="width: 80px;" min="1" max="60" value="15">
                                         </div>
                                         <p class="form-hint" data-i18n="gameMode.rush.recordHint" data-i18n-html>Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href="/records">Records</a>.</p>
                                     </div>
@@ -223,7 +223,7 @@
                                                 <i class="fas fa-clock"></i> <span data-i18n="gameMode.problems.pause">Pause</span>
                                             </label>
                                             <input type="number" id="problem-pause" class="input input--sm"
-                                                   style="width: 80px;" min="1" max="60" value="5">
+                                                   style="width: 80px;" min="1" max="60" value="15">
                                         </div>
                                     </div>
                                 </div>
@@ -526,16 +526,6 @@
                         <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
                     </div>
                     <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.</p>
-                    <div class="preset__row">
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="rushPage.rating" data-info="rushRating">Rating de départ</label>
-                            <input type="number" id="rush-page-rating" class="input input--sm" min="400" max="3000" step="50" value="600">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="rushPage.pause" data-info="rushPause">Pause (s)</label>
-                            <input type="number" id="rush-page-pause" class="input input--sm" min="1" max="60" value="5">
-                        </div>
-                    </div>
                     <button class="btn btn--primary btn--full" id="rush-page-start">
                         <i class="fas fa-play"></i> <span data-i18n="rushPage.start">Lancer un run</span>
                     </button>

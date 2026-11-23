@@ -108,10 +108,10 @@
     padding: 5px 8px;
     font-size: 0.95rem;
     font-weight: 600;
-    background: rgba(34, 211, 238, 0.14);
+    background: rgba(255, 138, 61, 0.14);
     color: var(--text-primary);
-    border: 1px solid rgba(34, 211, 238, 0.45);
-    border-radius: 4px;
+    border: 1px solid rgba(255, 138, 61, 0.45);
+    border-radius: 2px;
     cursor: pointer;
     transition: all 0.15s ease;
     font-family: 'JetBrains Mono', monospace;
@@ -255,7 +255,7 @@
 
 .mode-option.is-active {
     border-color: var(--accent-purple);
-    background: rgba(34, 211, 238, 0.1);
+    background: rgba(255, 138, 61, 0.1);
 }
 
 .mode-option__icon {
@@ -499,15 +499,15 @@ body.sandbox-launch #page-sandbox .new-tabs { margin-bottom: 14px; }
 body.sandbox-launch .sandbox-setup__card {
     padding: 18px 20px;
     background:
-        radial-gradient(120% 90px at 0 0, rgba(34, 211, 238, 0.14), transparent),
-        radial-gradient(90% 80px at 100% 0, rgba(6, 182, 212, 0.10), transparent),
+        radial-gradient(120% 90px at 0 0, rgba(255, 138, 61, 0.14), transparent),
+        radial-gradient(90% 80px at 100% 0, rgba(242, 112, 15, 0.10), transparent),
         var(--bg-card);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 body.sandbox-launch .sandbox-setup__header { margin-bottom: 14px; }
 body.sandbox-launch .sandbox-setup__title {
     font-size: 1.1rem;
-    background: linear-gradient(90deg, #67e8f9, #22d3ee);
+    background: linear-gradient(90deg, #ffb27a, #ff8a3d);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -515,7 +515,7 @@ body.sandbox-launch .sandbox-setup__title {
 body.sandbox-launch .sandbox-setup__grid,
 body.sandbox-launch .sandbox-setup__col { gap: 12px; }
 .sandbox-setup .panel__header { padding: 11px 16px; font-size: 0.85rem; }
-.sandbox-setup .panel__header i { color: var(--accent-purple, #22d3ee); }
+.sandbox-setup .panel__header i { color: var(--accent-purple, #ff8a3d); }
 .sandbox-setup .panel__content { padding: 12px 16px; }
 .sandbox-setup .form-row { padding: 8px 0; }
 body.sandbox-launch .sandbox-setup__footer { margin-top: 14px; padding-top: 14px; }
@@ -536,15 +536,15 @@ body.sandbox-launch .mode-option__icon {
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    border-radius: 8px;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.05);
     font-size: 18px;
 }
 body.sandbox-launch .mode-option.is-active {
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(6, 182, 212, 0.08));
-    box-shadow: 0 0 0 1px var(--accent-purple, #22d3ee), 0 4px 18px rgba(34, 211, 238, 0.25);
+    background: linear-gradient(135deg, rgba(255, 138, 61, 0.22), rgba(242, 112, 15, 0.08));
+    box-shadow: 0 0 0 1px var(--accent-purple, #ff8a3d), 0 4px 18px rgba(255, 138, 61, 0.25);
 }
-body.sandbox-launch .mode-option.is-active .mode-option__icon { background: rgba(34, 211, 238, 0.3); }
+body.sandbox-launch .mode-option.is-active .mode-option__icon { background: rgba(255, 138, 61, 0.3); }
 
 body.sandbox-launch .sandbox__actions,
 body.sandbox-launch .sandbox__content,
@@ -710,7 +710,7 @@ body.no-vote-timer .vote-timer--board > :not(.timer-instant) { display: none !im
 body.no-vote-timer .vote-timer--board {
     padding: 6px 14px;
     border: 1px solid rgba(245, 158, 11, 0.55);
-    border-radius: 10px;
+    border-radius: 3px;
     pointer-events: none;
 }
 
@@ -775,11 +775,11 @@ body.no-vote-timer #btn-wheel-style { display: none; }
 
 .preset-card:hover { background: rgba(255, 255, 255, 0.06); }
 
-.preset-card:focus-visible { outline: 2px solid var(--accent-purple, #22d3ee); outline-offset: 2px; }
+.preset-card:focus-visible { outline: 2px solid var(--accent-purple, #ff8a3d); outline-offset: 2px; }
 
 .preset-card.is-active {
-    border-color: var(--accent-purple, #22d3ee);
-    background: rgba(34, 211, 238, 0.1);
+    border-color: var(--accent-purple, #ff8a3d);
+    background: rgba(255, 138, 61, 0.1);
 }
 
 .preset-card__icon { font-size: 1.3rem; line-height: 1.3; }
@@ -798,7 +798,7 @@ body.no-vote-timer #btn-wheel-style { display: none; }
 
 .preset-card__chips span {
     padding: 1px 7px;
-    border-radius: 999px;
+    border-radius: 2px;
     font-size: 0.72rem;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.08);

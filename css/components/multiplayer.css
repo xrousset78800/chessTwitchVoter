@@ -24,14 +24,14 @@
 /* ==================== MULTIPLAYER PANEL ==================== */
 
 .panel--multi {
-    border-color: rgba(34, 211, 238, 0.4);
-    background: rgba(34, 211, 238, 0.04);
+    border-color: rgba(255, 138, 61, 0.4);
+    background: rgba(255, 138, 61, 0.04);
     order: -1;
 }
 
 .panel--multi .panel__header {
-    background: rgba(34, 211, 238, 0.12);
-    color: #67e8f9;
+    background: rgba(255, 138, 61, 0.12);
+    color: #ffb27a;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -42,7 +42,7 @@
     color: #f87171;
     border: 1px solid rgba(239, 68, 68, 0.4);
     padding: 2px 8px;
-    border-radius: 12px;
+    border-radius: 3px;
     font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 1px;
@@ -62,7 +62,7 @@
     padding: 6px 10px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
+    border-radius: 2px;
     color: var(--text-muted, #888);
     cursor: pointer;
     font-size: 0.8rem;
@@ -71,15 +71,15 @@
 }
 
 .multi-tab:hover {
-    background: rgba(34, 211, 238, 0.12);
-    border-color: rgba(34, 211, 238, 0.35);
-    color: #67e8f9;
+    background: rgba(255, 138, 61, 0.12);
+    border-color: rgba(255, 138, 61, 0.35);
+    color: #ffb27a;
 }
 
 .multi-tab.active {
-    background: rgba(34, 211, 238, 0.18);
-    border-color: #22d3ee;
-    color: #67e8f9;
+    background: rgba(255, 138, 61, 0.18);
+    border-color: #ff8a3d;
+    color: #ffb27a;
     font-weight: 600;
 }
 
@@ -100,15 +100,15 @@
     font-size: 2.2rem;
     font-weight: 700;
     letter-spacing: 10px;
-    color: #67e8f9;
-    text-shadow: 0 0 24px rgba(34, 211, 238, 0.6);
+    color: #ffb27a;
+    text-shadow: 0 0 24px rgba(255, 138, 61, 0.6);
 }
 
 /* ---- URL box ---- */
 .multi-url-box {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 8px 10px;
     margin-top: 8px;
 }
@@ -166,9 +166,9 @@
 
 /* ---- Banner partie active ---- */
 .multi-banner {
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(59, 130, 246, 0.12));
-    border: 1px solid rgba(34, 211, 238, 0.25);
-    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(255, 138, 61, 0.12), rgba(59, 130, 246, 0.12));
+    border: 1px solid rgba(255, 138, 61, 0.25);
+    border-radius: 3px;
     padding: 10px 12px;
     margin-bottom: 10px;
 }
@@ -186,7 +186,7 @@
 
 .multi-banner__team--white { color: #f9fafb; }
 .multi-banner__team--black { color: #9ca3af; }
-.multi-banner__vs { color: #22d3ee; font-size: 1rem; }
+.multi-banner__vs { color: #ff8a3d; font-size: 1rem; }
 
 .multi-banner__status {
     display: flex;
@@ -204,7 +204,7 @@
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.5px;
-    border-radius: 6px;
+    border-radius: 2px;
     transition: all 0.3s;
     display: none;
 }

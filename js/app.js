@@ -59,7 +59,7 @@ const AppState = {
         timerEnabled: false,
         timerDuration: 30,       // 10 à 120 s : en dessous, le délai du stream ne laisse pas le temps de voter
         wheelDuration: DEFAULT_SPIN,
-        pauseAfterEnd: 5,
+        pauseAfterEnd: 15,
         votesPerViewer: 1,       // votes par viewer et par coup (les stats n'en comptent qu'un)
         majorityMode: false,
 
@@ -735,7 +735,7 @@ async applyConfigAfterReload() {
             chess: gameEngine.chess,
             board: gameEngine.board,
             config: {
-                pauseAfterEnd: AppState.config.pauseAfterEnd || 5,
+                pauseAfterEnd: AppState.config.pauseAfterEnd || 15,
                 botMoveDelay: 1200,
                 timerEnabled: AppState.config.timerEnabled,
                 timerDuration: AppState.config.timerDuration,
@@ -1058,14 +1058,14 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         });
 
         document.getElementById('problem-pause')?.addEventListener('change', (e) => {
-            AppState.config.pauseAfterEnd = parseInt(e.target.value) || 5;
+            AppState.config.pauseAfterEnd = parseInt(e.target.value) || 15;
             if (window.problemsManager) {
                 window.problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
             }
         });
 
         document.getElementById('rush-pause')?.addEventListener('change', (e) => {
-            AppState.config.pauseAfterEnd = parseInt(e.target.value) || 5;
+            AppState.config.pauseAfterEnd = parseInt(e.target.value) || 15;
             if (window.problemsManager) {
                 window.problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
             }
@@ -1500,7 +1500,7 @@ fullReset() {
 
         ['problem-pause', 'rush-pause'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.value = AppState.config.pauseAfterEnd || 5;
+            if (el) el.value = AppState.config.pauseAfterEnd || 15;
         });
 
         // Inputs joueurs
@@ -2242,34 +2242,29 @@ const RushPage = {
     initialized: false,
 
     init() {
-        const rating = document.getElementById('rush-page-rating');
-        const pause  = document.getElementById('rush-page-pause');
         if (!this.initialized) {
-            rating.value = AppState.config.rushStartRating || 600;
-            pause.value  = AppState.config.pauseAfterEnd || 5;
             BrowsePage.rushModes['rush-page-records'] = rushMode();
             BrowsePage.bindRushModes(document.getElementById('page-rush'));
             document.getElementById('rush-page-start').addEventListener('click', () => {
-                this.launch('rush', parseInt(rating.value), parseInt(pause.value),
-                    BrowsePage.rushModes['rush-page-records']);
+                this.launch('rush', BrowsePage.rushModes['rush-page-records']);
             });
             this.initialized = true;
         }
         BrowsePage.loadRushRecords('rush-page-records');
     },
 
-    launch(route, rating, pause, mode = '0') {
+    launch(route, mode = '0') {
         if (!GameSession.confirmReplace()) return;
         GameSession.clear();
-        AppState.config.rushStartRating = Math.min(3000, Math.max(400, rating || 600));
-        AppState.config.pauseAfterEnd   = Math.min(60, Math.max(1, pause || 5));
-        AppState.config.rushTimer       = RUSH_MODES.includes(mode) ? mode : '0';
+        AppState.config.rushTimer = RUSH_MODES.includes(mode) ? mode : '0';
         Storage.saveConfig();
-        // Le temps pour voter vient du mode choisi, pas des réglages de la partie libre
+        // Règles figées pour que les records restent comparables : rating de départ 600, pause 15 s.
+        // Le temps pour voter vient du mode choisi. Rien de tout ça ne touche aux réglages de la partie libre.
         const seconds = parseInt(AppState.config.rushTimer, 10);
         GameSession.launch({
             route, gameMode: 'rush',
-            config: { rushTimer: AppState.config.rushTimer, timerEnabled: seconds > 0, timerDuration: seconds || 30 }
+            config: { rushTimer: AppState.config.rushTimer, timerEnabled: seconds > 0, timerDuration: seconds || 30,
+                      rushStartRating: 600, pauseAfterEnd: 15 }
         });
     }
 };

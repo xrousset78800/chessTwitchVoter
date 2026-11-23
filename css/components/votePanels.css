@@ -19,7 +19,7 @@
 }
 
 .podium__slot {
-    --c: #22d3ee;
+    --c: #ff8a3d;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -69,7 +69,7 @@
 .podium__step {
     width: 100%;
     height: 40px;
-    border-radius: 10px 10px 4px 4px;
+    border-radius: 3px 3px 2px 2px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -136,7 +136,7 @@
     align-items: center;
     gap: 4px;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: 2px;
     font-size: 0.78rem;
     color: rgba(255, 255, 255, 0.75);
     background: rgba(255, 255, 255, 0.05);
@@ -191,13 +191,13 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: rgba(255, 255, 255, 0.5);
-    background: var(--bg-panel, #101a1f);
+    background: var(--bg-panel, #1a1512);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .hist-row {
     padding: 2px 6px;
-    border-radius: 6px;
+    border-radius: 2px;
 }
 
 .hist-row:nth-child(odd) { background: rgba(255, 255, 255, 0.025); }
@@ -214,7 +214,7 @@
     position: relative;
     gap: 6px;
     padding: 2px 6px;
-    border-radius: 5px;
+    border-radius: 2px;
     min-width: 0;
 }
 
@@ -226,7 +226,7 @@
 
 .hist-vote {
     font-size: 0.72rem;
-    color: #a5f3fc;
+    color: #ffd2b0;
 }
 
 .hist-vote--random { font-size: 0.8rem; }
@@ -260,7 +260,7 @@
     max-width: var(--board-size, 100%);
     margin: 8px auto 0;
     padding: 6px 10px;
-    border-radius: 10px;
+    border-radius: 3px;
     background: rgba(22, 19, 31, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-sizing: border-box;
@@ -273,13 +273,13 @@
 .vote-ticker__label {
     flex: none;
     padding: 2px 8px;
-    border-radius: 6px;
+    border-radius: 2px;
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--on-accent);
-    background: #22d3ee;
+    background: #ff8a3d;
 }
 
 /* Une seule ligne : le dernier vote à gauche, les anciens défilent à droite.
@@ -349,7 +349,7 @@
     flex-direction: column;
     gap: 5px;
     padding: 6px 8px;
-    border-radius: 8px;
+    border-radius: 3px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.03);
     color: rgba(255, 255, 255, 0.8);
@@ -363,15 +363,15 @@
 .palette-option:hover { border-color: rgba(255, 255, 255, 0.3); }
 
 .palette-option.is-active {
-    border-color: #67e8f9;
-    background: rgba(34, 211, 238, 0.15);
+    border-color: #ffb27a;
+    background: rgba(255, 138, 61, 0.15);
     color: #fff;
 }
 
 .palette-option__swatches {
     display: flex;
     height: 10px;
-    border-radius: 4px;
+    border-radius: 2px;
     overflow: hidden;
 }
 
@@ -506,7 +506,7 @@ body:not(.no-vote-timer) .board-timer-container,
     justify-content: center;
     gap: 6px;
     padding: 7px 8px;
-    border-radius: 8px;
+    border-radius: 3px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.03);
     color: rgba(255, 255, 255, 0.8);
@@ -518,8 +518,8 @@ body:not(.no-vote-timer) .board-timer-container,
 .draw-menu__style:hover { border-color: rgba(255, 255, 255, 0.3); }
 
 .draw-menu__style.is-active {
-    border-color: #67e8f9;
-    background: rgba(34, 211, 238, 0.15);
+    border-color: #ffb27a;
+    background: rgba(255, 138, 61, 0.15);
     color: #fff;
 }
 
@@ -541,13 +541,13 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
     align-items: baseline;
     gap: 10px;
     padding: 6px 10px;
-    border-radius: 8px;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.04);
     font-size: 0.85rem;
 }
 
 .settings-summary__row dt { color: rgba(255, 255, 255, 0.65); }
-.settings-summary__row dt i { width: 1.1em; color: #67e8f9; }
+.settings-summary__row dt i { width: 1.1em; color: #ffb27a; }
 
 .settings-summary__row dd {
     margin: 0;
@@ -584,9 +584,9 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
 .moves-panel__ex code {
     font-family: 'JetBrains Mono', monospace;
     color: #fff;
-    background: rgba(34, 211, 238, 0.25);
+    background: rgba(255, 138, 61, 0.25);
     padding: 1px 6px;
-    border-radius: 5px;
+    border-radius: 2px;
 }
 
 /* Coups pas encore votés : discrets */
@@ -603,7 +603,7 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
 
 #page-sandbox .sandbox__moves-panel .moves-group button:hover {
     color: #fff;
-    background: rgba(34, 211, 238, 0.3);
+    background: rgba(255, 138, 61, 0.3);
     border-color: var(--accent-purple);
 }
 
@@ -618,7 +618,7 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
     font: 700 0.68rem 'Inter', sans-serif;
     color: #fff;
     background: var(--c);
-    border-radius: 4px;
+    border-radius: 2px;
     padding: 0 4px;
 }
 
@@ -772,7 +772,7 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
 
 .votes-slot__winner-pct {
     padding: 4px 14px;
-    border-radius: 999px;
+    border-radius: 2px;
     background: color-mix(in srgb, var(--win) 30%, rgba(0, 0, 0, 0.4));
     border: 1px solid color-mix(in srgb, var(--win) 70%, transparent);
     font-family: 'Chakra Petch', sans-serif;
@@ -806,7 +806,7 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
     align-items: center;
     gap: 4px;
     padding: 8px 4px;
-    border-radius: 10px;
+    border-radius: 3px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.04);
     color: inherit;
@@ -822,8 +822,8 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
 .anon-picker__option:hover { border-color: rgba(255, 255, 255, 0.3); }
 
 .anon-picker__option.is-active {
-    border-color: var(--color-primary, #22d3ee);
-    background: color-mix(in srgb, var(--color-primary, #22d3ee) 22%, transparent);
+    border-color: var(--color-primary, #ff8a3d);
+    background: color-mix(in srgb, var(--color-primary, #ff8a3d) 22%, transparent);
 }
 
 .anon-picker__hint { margin: 6px 0 0; }
@@ -863,7 +863,7 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
     min-height: 36px;
     gap: 8px;
     border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 8px;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.025);
 }
 .vote-options__grid > .timer-off-warning { grid-column: 1 / -1; margin: 0; }
@@ -879,10 +879,10 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
 .chroma-row__label { flex: 1; }
 .chroma-row__color {
     width: 34px; height: 26px; padding: 0; cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; background: none;
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 2px; background: none;
 }
 .chroma-row__color::-webkit-color-swatch-wrapper { padding: 2px; }
-.chroma-row__color::-webkit-color-swatch { border: none; border-radius: 4px; }
+.chroma-row__color::-webkit-color-swatch { border: none; border-radius: 2px; }
 .chroma-row__reset {
     border: none; background: none; color: inherit; opacity: 0.6; cursor: pointer; padding: 4px;
 }
@@ -901,7 +901,7 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
     flex: 1 1 auto;
     min-width: 0;
     height: 12px;
-    border-radius: 999px;
+    border-radius: 2px;
     background: rgba(255, 255, 255, 0.1);
     overflow: hidden;
 }
@@ -911,7 +911,7 @@ body :is(#votes-panel, #watch-votes-panel, #h24-votes-panel).is-drawing :is(#whe
     inset: 0 auto 0 0;
     width: calc(var(--p, 0) * 100%);
     border-radius: inherit;
-    background: linear-gradient(90deg, #22d3ee, #06b6d4);
+    background: linear-gradient(90deg, #ff8a3d, #f2700f);
     transition-property: width;
     transition-timing-function: linear;
 }
@@ -951,7 +951,7 @@ body:not(.showTimer) .vote-timer--board .vote-timer__row { visibility: hidden; }
     gap: 4px;
     padding: 4px 10px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
+    border-radius: 2px;
     background: rgba(255, 255, 255, 0.1);
     color: #fff;
     font-size: 0.75rem;

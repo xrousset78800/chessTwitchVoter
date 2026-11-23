@@ -18,8 +18,8 @@
 }
 
 .problem-end-modal__content {
-    background: var(--bg-card, #101a1f);
-    border-radius: 16px;
+    background: var(--bg-card, #1a1512);
+    border-radius: 4px;
     padding: 40px;
     text-align: center;
     max-width: 400px;
@@ -89,7 +89,7 @@
 .problem-end-modal__countdown {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--accent-purple, #67e8f9);
+    color: var(--accent-purple, #ffb27a);
     font-family: 'Chakra Petch', 'JetBrains Mono', monospace;
     min-width: 40px;
 }
@@ -109,7 +109,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     padding: 20px 40px;
-    border-radius: 12px;
+    border-radius: 3px;
     font-size: 1.5rem;
     font-weight: 700;
     z-index: 9999;
@@ -156,8 +156,8 @@
    ============================================ */
 
 .moves-panel {
-    background: linear-gradient(180deg, #101a1f, #16213e);
-    border-radius: 12px;
+    background: linear-gradient(180deg, #1a1512, #16213e);
+    border-radius: 3px;
     padding: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     overflow-y: auto;
@@ -179,7 +179,7 @@
 
 .voting-eligibility {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 8px 12px;
     margin-bottom: 12px;
 }
@@ -214,7 +214,7 @@
     flex: 1;
     padding: 8px 12px;
     border: 1px solid #333;
-    border-radius: 6px;
+    border-radius: 2px;
     background: #0d1117;
     color: #fff;
     font-size: 0.9rem;
@@ -229,7 +229,7 @@
 /* Timer dans le panneau */
 .moves-panel__timer {
     background: #0d1117;
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 12px;
     margin-bottom: 16px;
     text-align: center;
@@ -279,7 +279,7 @@
     margin: 0;
     list-style: none;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
+    border-radius: 3px;
     min-height: 36px;
     transition: background 0.2s;
 }
@@ -311,7 +311,7 @@
     background: #2d3748;
     color: #fff;
     border: 1px solid #4a5568;
-    border-radius: 6px;
+    border-radius: 2px;
     cursor: pointer;
     transition: all 0.2s;
     font-family: 'JetBrains Mono', 'Courier New', monospace;
@@ -357,7 +357,7 @@
     gap: 8px;
     padding: 6px 10px;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 6px;
+    border-radius: 2px;
     font-size: 0.85rem;
 }
 
@@ -371,7 +371,7 @@
 .vote-count {
     background: #4a5568;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 3px;
     font-size: 0.75rem;
 }
 
@@ -416,8 +416,8 @@
 }
 
 .highlight-bot {
-    background-color: rgba(34, 211, 238, 0.4) !important;
-    box-shadow: inset 0 0 0 3px #22d3ee !important;
+    background-color: rgba(255, 138, 61, 0.4) !important;
+    box-shadow: inset 0 0 0 3px #ff8a3d !important;
 }
 
 .highlight-correct {
@@ -538,8 +538,8 @@ body.problem-wrong .board-wrapper {
 }
 
 .highlight-bot {
-    background-color: rgba(34, 211, 238, 0.5) !important;
-    box-shadow: inset 0 0 0 3px #22d3ee !important;
+    background-color: rgba(255, 138, 61, 0.5) !important;
+    box-shadow: inset 0 0 0 3px #ff8a3d !important;
 }
 
 .highlight-correct {
@@ -578,7 +578,7 @@ body.problem-wrong .board-wrapper {
     flex: 1;
     padding: 8px 12px;
     border: 1px solid #333;
-    border-radius: 6px;
+    border-radius: 2px;
     background: #0d1117;
     color: #fff;
     font-size: 0.9rem;
@@ -596,7 +596,7 @@ body.problem-wrong .board-wrapper {
 
 .voting-eligibility {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 8px 12px;
     margin-bottom: 12px;
 }
@@ -637,7 +637,7 @@ body.problem-wrong .board-wrapper {
     gap: 8px;
     padding: 6px 10px;
     background: rgba(255, 255, 255, 0.03);
-    border-radius: 6px;
+    border-radius: 2px;
     font-size: 0.85rem;
 }
 
@@ -651,7 +651,7 @@ body.problem-wrong .board-wrapper {
 .vote-count {
     background: #4a5568;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 3px;
     font-size: 0.75rem;
 }
 

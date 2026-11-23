@@ -36,7 +36,7 @@ class ProblemsManager {
         // Configuration
         this.config = {
             csvPath: 'js/problemsV2.csv',
-            pauseAfterEnd: 5,
+            pauseAfterEnd: 15,
             botMoveDelay: 1200,
             timerEnabled: false,
             timerDuration: 25,
@@ -777,7 +777,7 @@ handleProblemFailed() {
     // ========== TIMER DE PAUSE INLINE ==========
 
 startPauseTimer(status) {
-    const pauseDuration = this.config.pauseAfterEnd || 5;
+    const pauseDuration = this.config.pauseAfterEnd || 15;
     this.showTimerMessage(status, pauseDuration);
 
     window.timer.onTick = null;

@@ -51,7 +51,7 @@
 
 .preset-choice.is-active {
     border-color: var(--twitch-purple);
-    background: rgba(34, 211, 238, 0.1);
+    background: rgba(255, 138, 61, 0.1);
 }
 
 .preset-choice__title {
@@ -80,7 +80,7 @@
     gap: 12px 20px;
     padding: 12px 16px;
     margin-bottom: 16px;
-    background: rgba(34, 211, 238, 0.1);
+    background: rgba(255, 138, 61, 0.1);
     border: 1px solid var(--twitch-purple);
     border-radius: var(--radius-lg);
 }
@@ -309,7 +309,7 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
     gap: 6px 10px;
     margin-bottom: 10px;
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: 3px;
     font-size: 0.82rem;
     line-height: 1.35;
 }
@@ -329,7 +329,7 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
     max-width: 260px;
     padding: 10px 12px;
     border: 1px dashed rgba(250, 204, 21, 0.6);
-    border-radius: 10px;
+    border-radius: 3px;
     background: rgba(15, 15, 25, 0.92);
     color: #e5e7eb;
     font-size: 0.8rem;
@@ -338,5 +338,5 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .test-tools[hidden] { display: none; }
 .test-tools__title { font-weight: 700; color: #facc15; }
 .test-tools__row { display: flex; gap: 6px; align-items: center; }
-.test-tools__row select { background: #1f2030; color: inherit; border: 1px solid #3a3b50; border-radius: 6px; padding: 3px 4px; }
+.test-tools__row select { background: #1f2030; color: inherit; border: 1px solid #3a3b50; border-radius: 2px; padding: 3px 4px; }
 .test-tools__info { color: #9ca3af; }

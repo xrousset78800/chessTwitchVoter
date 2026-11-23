@@ -33,7 +33,7 @@ async function initProblemsMode() {
         chess: gameEngine.chess,
         board: gameEngine.board,
         config: {
-            pauseAfterEnd: 5,
+            pauseAfterEnd: 15,
             botMoveDelay: 1500
         }
     });

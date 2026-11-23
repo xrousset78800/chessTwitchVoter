@@ -5,52 +5,52 @@
 
 :root {
     /* Colors - Dark Theme */
-    --bg-dark: #091014;
-    --bg-card: #101a1f;
-    --bg-card-hover: #15232a;
-    --bg-input: #0c151a;
+    --bg-dark: #100d0b;
+    --bg-card: #1a1512;
+    --bg-card-hover: #221c18;
+    --bg-input: #15110e;
 
     /* Borders */
-    --border-subtle: #1c2a30;
-    --border-glow: #22d3ee;
+    --border-subtle: #2b2420;
+    --border-glow: #ff8a3d;
 
     /* Text */
-    --text-primary: #e8f2f5;
-    --text-secondary: #a3b5bb;
-    --text-muted: #6b7f86;
+    --text-primary: #f4eee8;
+    --text-secondary: #b9aea6;
+    --text-muted: #7f736b;
 
     /* Accents */
-    --accent-purple: #22d3ee;
+    --accent-purple: #ff8a3d;
     --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
+    --accent-cyan: #f2700f;
     --accent-green: #10b981;
     --accent-orange: #f59e0b;
     --accent-red: #ef4444;
     --accent-pink: #ec4899;
 
     /* Brand Colors */
-    --twitch-purple: #22d3ee;     /* accent du site (nom historique) */
+    --twitch-purple: #ff8a3d;     /* accent du site (nom historique) */
     --twitch-brand: #9146ff;      /* vrai violet Twitch : connexion, chaîne */
-    --accent: #22d3ee;
-    --accent-light: #67e8f9;
-    --on-accent: #091014;         /* texte posé sur l'accent */
-    --phantom-blue: #00d4ff;
+    --accent: #ff8a3d;
+    --accent-light: #ffb27a;
+    --on-accent: #100d0b;         /* texte posé sur l'accent */
+    --phantom-blue: #ffb27a;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
-    --gradient-card: linear-gradient(180deg, rgba(34, 211, 238, 0.1) 0%, transparent 100%);
+    --gradient-hero: linear-gradient(135deg, #ff8a3d 0%, #f2700f 100%);
+    --gradient-card: linear-gradient(180deg, rgba(255, 138, 61, 0.1) 0%, transparent 100%);
 
     /* Shadows */
-    --shadow-glow: 0 0 30px rgba(34, 211, 238, 0.3);
+    --shadow-glow: 0 0 30px rgba(255, 138, 61, 0.3);
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
 
     /* Radius */
-    --radius-xs: 4px;
-    --radius-sm: 6px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
-    --radius-full: 9999px;
+    --radius-xs: 2px;
+    --radius-sm: 2px;
+    --radius-md: 3px;
+    --radius-lg: 4px;
+    --radius-full: 2px;
 
     /* Transitions */
     --transition-fast: 0.15s ease;
@@ -163,8 +163,8 @@ img, video {
     width: 100%;
     height: 100%;
     background-image:
-        linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(255, 138, 61, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 138, 61, 0.03) 1px, transparent 1px);
     background-size: 50px 50px;
     pointer-events: none;
     z-index: 0;
@@ -302,7 +302,7 @@ img, video {
     font-size: 1.5rem;
     font-weight: bold;
     color: #fff;
-    text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+    text-shadow: 0 0 10px rgba(255, 138, 61, 0.8);
 }
 
 /* ============================================
@@ -440,13 +440,13 @@ img, video {
 
 .btn--primary.btn--lg {
     background: var(--gradient-hero);
-    box-shadow: 0 4px 15px rgba(34, 211, 238, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 138, 61, 0.4);
     color: var(--on-accent);
 }
 
 .btn--primary.btn--lg:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(34, 211, 238, 0.5);
+    box-shadow: 0 6px 20px rgba(255, 138, 61, 0.5);
 }
 
 .sandbox__actions-separator {
@@ -594,8 +594,8 @@ body[data-turn="b"] .sandbox__title::after {
 
 
 .history-row.is-selected {
-    background: rgba(34, 211, 238, 0.2);
-    border-left: 3px solid #22d3ee;
+    background: rgba(255, 138, 61, 0.2);
+    border-left: 3px solid #ff8a3d;
 }
 
 /* Indicateur de coup spécial (échec, mat, roque) */
@@ -612,7 +612,7 @@ body[data-turn="b"] .sandbox__title::after {
 }
 
 .history-row__move.is-castle {
-    color: #67e8f9;
+    color: #ffb27a;
 }
 
 /* Responsive */
@@ -629,7 +629,7 @@ body[data-turn="b"] .sandbox__title::after {
 }
 .voting-eligibility {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 12px;
     margin: 12px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -687,7 +687,7 @@ body[data-turn="b"] .sandbox__title::after {
 }
 
 #voting-indicator.mode-chatVsChat {
-    color: #67e8f9;
+    color: #ffb27a;
 }
 
 #voting-indicator.mode-chatVsChat::before {
@@ -746,7 +746,7 @@ body[data-turn="b"] .sandbox__title::after {
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
     padding: 12px;
-    border-radius: 12px;
+    border-radius: 3px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
@@ -829,7 +829,7 @@ body.showTimer .board-timer-container .countdown {
     font-size: 1.2rem;
     font-weight: bold;
     color: #fff;
-    text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+    text-shadow: 0 0 10px rgba(255, 138, 61, 0.8);
     text-align: center;
     min-width: 60px;
     margin-top: 4px;
@@ -847,7 +847,7 @@ body.showTimer .board-timer-container .countdown {
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 2px;
     cursor: pointer;
     font-size: 0.85rem;
     transition: all 0.2s ease;
@@ -907,8 +907,8 @@ body.showTimer .board-timer-container {
     top: 100px;
     width: 280px;
     max-height: calc(100vh - 120px);
-    background: linear-gradient(145deg, #101a1f, #16213e);
-    border-radius: 12px;
+    background: linear-gradient(145deg, #1a1512, #16213e);
+    border-radius: 3px;
     padding: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     overflow-y: auto;
@@ -939,7 +939,7 @@ body.showTimer .board-timer-container {
     flex: 1;
     padding: 6px 10px;
     border: 1px solid #333;
-    border-radius: 6px;
+    border-radius: 2px;
     background: #0d1117;
     color: #fff;
     font-size: 0.9rem;
@@ -947,7 +947,7 @@ body.showTimer .board-timer-container {
 
 .moves-panel__timer {
     background: #0d1117;
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 12px;
     margin-bottom: 12px;
     text-align: center;
@@ -997,7 +997,7 @@ body.showTimer .board-timer-container {
     margin: 0;
     list-style: none;
     background: rgba(255,255,255,0.03);
-    border-radius: 6px;
+    border-radius: 2px;
     min-height: 32px;
 }
 
@@ -1022,7 +1022,7 @@ body.showTimer .board-timer-container {
     background: #2d3748;
     color: #fff;
     border: 1px solid #4a5568;
-    border-radius: 4px;
+    border-radius: 2px;
     cursor: pointer;
     transition: all 0.2s;
     font-family: 'Courier New', monospace;
@@ -1067,7 +1067,7 @@ body.showTimer .board-timer-container {
     gap: 8px;
     padding: 6px 8px;
     background: rgba(255,255,255,0.05);
-    border-radius: 4px;
+    border-radius: 2px;
     position: relative;
     overflow: hidden;
 }
@@ -1113,7 +1113,7 @@ body.showTimer .board-timer-container {
 }
 .voting-eligibility {
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 3px;
     padding: 12px;
     margin: 12px 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1153,7 +1153,7 @@ body.showTimer .board-timer-container {
 #voting-indicator.mode-problems { color: #4ecdc4; }
 #voting-indicator.mode-problems::before { content: '🧩'; }
 
-#voting-indicator.mode-chatVsChat { color: #67e8f9; }
+#voting-indicator.mode-chatVsChat { color: #ffb27a; }
 #voting-indicator.mode-chatVsChat::before { content: '🎭'; }
 /* ============================================
    SCROLLBAR
@@ -1246,7 +1246,7 @@ body:not(.phantom-connected) .nav__link--phantom:not(.is-active) { display: none
     font-size: 0.85rem;
     color: var(--text-secondary, #a0a0b8);
 }
-.restrict-row__label .fa-twitch { color: #22d3ee; }
+.restrict-row__label .fa-twitch { color: #ff8a3d; }
 .toggle.toggle--chip {
     display: inline-flex;
     align-items: center;
@@ -1255,7 +1255,7 @@ body:not(.phantom-connected) .nav__link--phantom:not(.is-active) { display: none
     height: 28px;
     padding: 0 12px;
     border: 1px solid var(--border-subtle);
-    border-radius: 14px;
+    border-radius: 4px;
     background: transparent;
     color: var(--text-muted, #6b6b80);
     font: inherit;
@@ -1264,9 +1264,9 @@ body:not(.phantom-connected) .nav__link--phantom:not(.is-active) { display: none
 }
 .toggle.toggle--chip::after { display: none; }
 .toggle.toggle--chip:hover { color: var(--text-primary, #fff); }
-.toggle--follow.is-active { background: rgba(34, 211, 238, 0.18); border-color: #22d3ee; color: #c4a5ff; }
+.toggle--follow.is-active { background: rgba(255, 138, 61, 0.18); border-color: #ff8a3d; color: #c4a5ff; }
 .toggle--sub.is-active    { background: rgba(245, 158, 11, 0.16); border-color: #f59e0b; color: #fbbf24; }
-.toggle--follow.is-active .fa-heart { color: #22d3ee; }
+.toggle--follow.is-active .fa-heart { color: #ff8a3d; }
 .toggle--sub.is-active .fa-star { color: #f59e0b; }
 
 /* Fond vert : couleur unie derrière le jeu, à découper dans OBS (clé de chrominance) */
