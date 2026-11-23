@@ -4,6 +4,7 @@
  */
 
 import VotingWheel from './wheel.js';
+import { wheelTick } from './wheelTick.js';
 
 const MIN_CELL_WIDTH = 110;  // Assez large pour lire "exd8=Q+"
 const MIN_TRAVEL     = 3000; // Distance minimale parcourue par la bande pendant un tirage
@@ -158,11 +159,16 @@ class WheelBand extends VotingWheel {
         const totalDelta = turns * period + delta;
 
         const startTime = Date.now();
+        let lastCell = null;
         const animate = () => {
             if (token !== this.spinToken) return;   // tirage annulé (abort)
             const progress = duration > 0 ? Math.min((Date.now() - startTime) / duration, 1) : 1;
             const eased = 1 - Math.pow(1 - progress, 3);
             this.position = startPosition + totalDelta * eased;
+            // Une case passe sous le curseur : « tic »
+            const cell = Math.floor(this.position / period) + ':' + this.moveAtPointer();
+            if (lastCell !== null && cell !== lastCell && duration > 0 && sortedVotes.length > 1) wheelTick();
+            lastCell = cell;
             this.draw();
             if (progress < 1) {
                 requestAnimationFrame(animate);

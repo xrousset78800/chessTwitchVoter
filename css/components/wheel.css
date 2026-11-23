@@ -409,3 +409,8 @@ body.showTimer.wheel-mode:not(.wheel-soon):not(.randomWheel) #wheel-area:not(.is
     transform: scale(0.8) translateY(20px);
 }
 body #wheel-area { transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+/* Jante lumineuse : curseur (languette) et moyeu sont dessinés dans le canvas */
+.wheel-container .wheel-pointer,
+.wheel-container .wheel-center { display: none !important; }
+.wheel-container .wheel-canvas { box-shadow: none; }

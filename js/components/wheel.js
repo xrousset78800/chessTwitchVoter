@@ -5,6 +5,10 @@
 import { paletteColors } from './votePalettes.js';
 import { renderPodium, markPodiumWinner, revealWinner } from './voteViews.js';
 import { secretVotes } from './voteAnonymity.js';
+import { wheelTick } from './wheelTick.js';
+
+const TAU = 2 * Math.PI;
+const LAMPS = 24;
 
 class VotingWheel {
     constructor(containerId) {
@@ -162,6 +166,8 @@ class VotingWheel {
         this.votes.clear();
         this.winner = null;
         this.currentRotation = 0;
+        this.revealMove = null;
+        this.revealAt = 0;
         this.centerEl.textContent = '?';
         this.draw();
         this.updateVoteList();
@@ -195,13 +201,13 @@ getSortedVotes() {
      * Dessiner la roue
      */
     draw() {
-    console.log('🎨 DRAW called - isSpinning:', this.isSpinning, '- spinVotes exists:', !!this.spinVotes);
         const ctx = this.ctx;
         const width = this.canvas.width;
         const height = this.canvas.height;
         const centerX = width / 2;
         const centerY = height / 2;
-        const radius = Math.min(width, height) / 2 - 10;
+        // Parts, puis la jante (lampes) et la languette du curseur à droite
+        const radius = Math.min(width, height) / 2 - 32;
 
 
         const turn = this.currentTurn();
@@ -218,14 +224,13 @@ getSortedVotes() {
     const totalVotes = this.isSpinning && this.spinTotalVotes ? this.spinTotalVotes : this.getTotalVotes();
 
         if (sortedVotes.length === 0) {
-            // Dessiner un cercle vide
+            // Roue vide
             ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.arc(centerX, centerY, radius, 0, TAU);
             ctx.fillStyle = '#1a1a25';
             ctx.fill();
-            ctx.strokeStyle = '#2a2a3a';
-            ctx.lineWidth = 3;
-            ctx.stroke();
+            this.drawRim(ctx, centerX, centerY, radius);
+            this.drawFlapper(ctx, centerX, centerY, radius);
             return;
         }
 
@@ -267,14 +272,99 @@ getSortedVotes() {
 
             ctx.restore();
 
+            // Coup tiré : part cerclée de clair
+            if (!this.isSpinning && this.revealMove === vote.move) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius - 2, startAngle, endAngle);
+                ctx.closePath();
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#fff3ea';
+                ctx.stroke();
+            }
+
             startAngle = endAngle;
         });
 
-        // Cercle central (sera couvert par l'élément HTML)
+        this.drawRim(ctx, centerX, centerY, radius);
+
+        // Petit moyeu discret
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI);
-        ctx.fillStyle = '#12121a';
+        ctx.arc(centerX, centerY, radius * 0.07, 0, TAU);
+        ctx.fillStyle = '#14100e';
         ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255, 138, 61, 0.6)';
+        ctx.stroke();
+
+        this.drawFlapper(ctx, centerX, centerY, radius);
+    }
+
+    /** Jante sombre et ses lampes : défilent pendant le tirage, clignotent à l'arrêt, puis restent allumées */
+    drawRim(ctx, cx, cy, radius) {
+        const rim = radius + 11;
+        const now = performance.now();
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, rim, 0, TAU);
+        ctx.lineWidth = 18;
+        ctx.strokeStyle = '#2b211b';
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, rim + 9, 0, TAU);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255, 138, 61, 0.35)';
+        ctx.stroke();
+        for (let i = 0; i < LAMPS; i++) {
+            const a = (i / LAMPS) * TAU;
+            let on;
+            if (this.isSpinning) on = (i + Math.floor(now / (60 + 260 * (this.spinProgress || 0)))) % 3 === 0 ? 1 : 0.18;
+            else if (this.revealMove && now - this.revealAt < 2200) on = Math.floor((now - this.revealAt) / 220) % 2 ? 1 : 0.2;
+            else if (this.revealMove) on = 1;
+            else on = 0.4;
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(a) * rim, cy + Math.sin(a) * rim, 3.6, 0, TAU);
+            ctx.fillStyle = `rgba(255, 196, 140, ${on})`;
+            if (on > 0.9) { ctx.shadowColor = '#ff8a3d'; ctx.shadowBlur = 10; }
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+        ctx.restore();
+    }
+
+    /** Languette du curseur, à droite (angle 0), pointe vers le centre ; bascule à chaque part qui passe */
+    drawFlapper(ctx, cx, cy, radius) {
+        ctx.save();
+        ctx.translate(cx + radius + 26, cy);
+        ctx.rotate(Math.PI / 2 + (this.flap || 0));
+        ctx.beginPath();
+        ctx.moveTo(-9, 0);
+        ctx.lineTo(9, 0);
+        ctx.lineTo(1.5, 34);
+        ctx.lineTo(-1.5, 34);
+        ctx.closePath();
+        ctx.fillStyle = '#f4eee8';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        ctx.shadowBlur = 6;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(0, 0, 5.5, 0, TAU);
+        ctx.fillStyle = '#ff8a3d';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    /** Part sous le curseur (angle 0) pour une rotation donnée */
+    sliceAtPointer(votes, total, rotation) {
+        const a = ((-rotation % TAU) + TAU) % TAU;
+        let acc = 0;
+        for (let i = 0; i < votes.length; i++) {
+            acc += (votes[i].count / total) * TAU;
+            if (a < acc) return i;
+        }
+        return votes.length - 1;
     }
 
     /**
@@ -284,6 +374,9 @@ spin(duration = 5000, forcedWinner = null) {
     if (this.isSpinning || this.votes.size === 0) return null;
 
     this.isSpinning = true;
+    this.revealMove = null;
+    this.spinProgress = 0;
+    this.flap = 0;
     const token = this.spinToken = (this.spinToken || 0) + 1;
     this.container.querySelector('.wheel-container').classList.add('is-spinning');
 
@@ -334,6 +427,7 @@ spin(duration = 5000, forcedWinner = null) {
 
     const startRotation = this.currentRotation;
     const startTime = Date.now();
+    let lastSlice = this.sliceAtPointer(sortedVotes, totalVotes, startRotation);
 
     const animate = () => {
         if (token !== this.spinToken) return;   // tirage annulé (abort)
@@ -341,6 +435,15 @@ spin(duration = 5000, forcedWinner = null) {
         const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1;
         const eased = 1 - Math.pow(1 - progress, 3);
         this.currentRotation = startRotation + totalDelta * eased;
+        this.spinProgress = progress;
+        // Une part passe sous le curseur : la languette bascule et la roue fait « tic »
+        const slice = this.sliceAtPointer(sortedVotes, totalVotes, this.currentRotation);
+        if (slice !== lastSlice && sortedVotes.length > 1) {
+            lastSlice = slice;
+            this.flap = -0.6;
+            if (duration > 0) wheelTick();
+        }
+        this.flap = (this.flap || 0) * 0.84;
         this.draw();
         if (progress < 1) {
             requestAnimationFrame(animate);
@@ -368,32 +471,20 @@ abort() {
      * Fin du spin
      */
 finishSpin() {
-
-console.log('🔬 DEBUG FINISH:');
-console.log('  this.winner:', this.winner);
-console.log('  currentRotation final (deg):', (this.currentRotation * 180 / Math.PI).toFixed(1));
-console.log('  currentRotation % 360:', ((this.currentRotation * 180 / Math.PI) % 360).toFixed(1));
-
-// Recalculer quel segment est à droite (angle 0) avec la rotation finale
-const rot = ((this.currentRotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-const sortedDbg = this.spinVotes || this.getSortedVotes();
-const totalDbg = sortedDbg.reduce((s,v) => s + v.count, 0);
-let angleDbg = 0;
-for (const v of sortedDbg) {
-    const slice = (v.count / totalDbg) * 2 * Math.PI;
-    const start = angleDbg;
-    const end = angleDbg + slice;
-    // Le curseur (angle 0) correspond à -rot dans le repère des segments
-    const cursorAngle = ((-rot) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-    if (cursorAngle >= start && cursorAngle < end) {
-        console.log('  ➡️ Segment visuellement sous le curseur:', v.move);
-    }
-    angleDbg += slice;
-}
-
-
     this.isSpinning = false;
+    this.flap = 0;
     this.container.querySelector('.wheel-container').classList.remove('is-spinning');
+
+    // Lampes qui clignotent ~2 s autour de la part gagnante cerclée
+    this.revealMove = this.winner;
+    this.revealAt = performance.now();
+    const blinkToken = this.spinToken;
+    const blink = () => {
+        if (blinkToken !== this.spinToken || this.revealMove !== this.winner) return;
+        this.draw();
+        if (performance.now() - this.revealAt < 2300) requestAnimationFrame(blink);
+    };
+    requestAnimationFrame(blink);
 
     // Déterminer la couleur du segment gagnant pour le rond central
     const sortedVotes = this.spinVotes || this.getSortedVotes();
