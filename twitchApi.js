@@ -15,7 +15,7 @@ const OK_MS = 24 * 3600 * 1000;
 const MISS_MS = 6 * 3600 * 1000;
 const MAX_CACHE = 5000;
 
-let token = null, tokenExp = 0, tokenWait = null;
+let token = null, tokenExp = 0, tokenWait = null, lastError = null;
 
 /** Jeton d'application (client credentials), renouvelé une minute avant expiration */
 async function appToken() {
@@ -30,9 +30,11 @@ async function appToken() {
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const d = await r.json();
             token = d.access_token;
+            lastError = null;
             tokenExp = Date.now() + (Number(d.expires_in) || 3600) * 1000;
             return token;
         } catch (e) {
+            lastError = `jeton : ${e?.message || e}`;
             console.warn('🟣 Twitch : jeton d\'application refusé', e?.message || e);
             token = null;
             return null;
@@ -97,6 +99,7 @@ async function flush() {
         }
         while (avatars.size > MAX_CACHE) avatars.delete(avatars.keys().next().value);
     } catch (e) {
+        lastError = `photos : ${e?.message || e}`;
         console.warn('🟣 Twitch : photos indisponibles', e?.message || e);
         return;
     }
@@ -106,4 +109,11 @@ async function flush() {
 /** Appelé quand de nouvelles photos sont arrivées */
 function onAvatars(fn) { listeners.add(fn); }
 
-module.exports = { enabled: !!SECRET, clientId: CLIENT_ID, appToken, helix, avatar, onAvatars };
+/** Diagnostic (sim-cli h24-status) : clé présente, jeton obtenu, photos en cache ; relance le jeton au besoin */
+function status() {
+    if (SECRET && !token) appToken();
+    const known = [...avatars.values()].filter(e => e.url).length;
+    return { secret: !!SECRET, token: !!token, avatars: known, misses: avatars.size - known, lastError };
+}
+
+module.exports = { enabled: !!SECRET, clientId: CLIENT_ID, appToken, helix, avatar, onAvatars, status };

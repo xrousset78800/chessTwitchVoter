@@ -1134,6 +1134,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function diag(o = {}) {
         const login = String(o.login || '').toLowerCase();
         return {
+            twitchApi: twitchApi.status(),
             regieChannel: regie.channel, chat: { client: !!chat.client, connected: chat.connected, joined: [...chat.joined], queue: chat.queue, received: chat.received, events: chat.events },
             phase: s.phase, mode: s.mode, turn: s.game?.chess.turn() || null, turnOpen: !!s.game?.turnEndsAt,
             teams: { w: s.teams.w.length, b: s.teams.b.length }, login: login ? { login, team: teamOf(login), optOut: s.optOut.has(login) } : undefined,
