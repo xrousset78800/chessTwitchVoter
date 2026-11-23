@@ -251,8 +251,8 @@
             if (!o) return;
             const win = o.kind === 'win';
             if (!win) {
-                // Coup(s) en tête : blanc en pointillés, une flèche par coup ex aequo
-                (o.moves || [o]).forEach(m => this.drawArrow(m.from, m.to, 'rgb(250, 246, 242)', { opacity: 0.92, scale: 0.95, dash: true })
+                // Coup(s) en tête : orange pâle plein (le coup retenu est orange vif), une flèche par coup ex aequo
+                (o.moves || [o]).forEach(m => this.drawArrow(m.from, m.to, 'rgb(255, 196, 150)', { opacity: 0.85, scale: 0.95 })
                     ?.classList.add('board-annotations__vote', 'is-lead'));
                 return;
             }

@@ -71,7 +71,7 @@ body > img.piece-417db {
 /* Aperçu au survol d'un coup : pas d'animation, il suit la souris */
 .board-annotations__hover { pointer-events: none; }
 
-/* Coup(s) en tête du vote : pointillés blancs avec contour sombre, lisibles sur les cases claires */
+/* Coup(s) en tête du vote : orange pâle avec contour sombre, lisible sur les cases claires */
 .board-annotations__vote.is-lead {
     filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.85)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
