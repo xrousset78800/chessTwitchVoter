@@ -1154,7 +1154,15 @@ const H24Page = {
                 }</ul>`).join('');
         }
         paintMoveChips($('h24-moves'), g?.votes || [], COLORS);
-        $('h24-moves').classList.toggle('is-empty', !moves.length);
+        const panel = $('h24-moves');
+        panel.classList.toggle('is-empty', !moves.length);
+        // À toi de jouer : le bloc passe au premier plan (avec un éclat au début du tour) ; sinon il s'efface un peu
+        const live = !!g && !g.result;
+        panel.classList.toggle('is-turn', live && mine);
+        panel.classList.toggle('is-idle', live && !mine);
+        const wake = live && mine ? `${g.fen}` : null;
+        if (wake && wake !== this.wakeKey && this.wakeKey !== undefined) this.animate(panel, 'is-wake', 1700);
+        this.wakeKey = wake;
     },
 
     // ------------------------------------------------------------------ style du tirage
