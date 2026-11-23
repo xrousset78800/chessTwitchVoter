@@ -2,6 +2,8 @@
  * Page Records : Puzzle Rush (podium, fiche de la chaîne, progression),
  * batailles Multi (classement, duels) et viewers les plus actifs de chaque chat.
  */
+import H24Stats from './h24Stats.js';
+
 const t = (key, params) => window.i18n?.t(`records.${key}`, params) ?? key;
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const lang = () => (window.i18n?.currentLang === 'en' ? 'en-US' : 'fr-FR');
@@ -331,7 +333,7 @@ const RecordsPage = {
     },
 
     showTab(tab) {
-        if (!['rush', 'multi', 'viewers'].includes(tab)) tab = 'rush';
+        if (!['rush', 'multi', 'viewers', 'h24'].includes(tab)) tab = 'rush';
         this.tab = tab;
         try { localStorage.setItem(STORE_TAB, tab); } catch {}
         document.querySelectorAll('#page-records [data-records-tab]').forEach(b => {
@@ -341,6 +343,7 @@ const RecordsPage = {
         });
         document.querySelectorAll('#page-records [data-records-panel]').forEach(p =>
             p.classList.toggle('is-active', p.dataset.recordsPanel === tab));
+        if (tab === 'h24' && this.initialized) H24Stats.load();
     },
 
     load() {
@@ -348,6 +351,7 @@ const RecordsPage = {
         this.loadRush();
         this.loadMulti();
         this.loadViewers();
+        if (this.tab === 'h24') H24Stats.load();
     },
 
     // ========== VUE D'ENSEMBLE ==========

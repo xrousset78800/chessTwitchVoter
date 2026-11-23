@@ -1019,6 +1019,15 @@ const station = require('./station')({
     durations: process.env.STATION_FAST ? { recap: 5000, voteMode: 6000, voteOption: 5000, signup: 8000, turn: 6000 } : {}
 });
 
+// Stats globales du 24/24 (page Records, onglet 24/24)
+app.get('/api/h24/stats', (req, res) => {
+    res.json(station.stats({
+        bots: req.query.bots !== '0',
+        tz: Math.max(-840, Math.min(840, Number(req.query.tz) || 0)),
+        days: Math.max(0, Math.min(3650, Number(req.query.days) || 0))
+    }));
+});
+
 // Simulation d'activité (chaînes sim_*), pilotée depuis la machine : voir sim.js et sim-cli.js
 require('./sim')({
     app, io, games, multiRooms, stats, emitSpectate, broadcastGamesList, newPublicId, dataDir: DATA_DIR, station,

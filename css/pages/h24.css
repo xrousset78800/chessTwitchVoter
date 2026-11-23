@@ -3,12 +3,12 @@
    avec le déroulé du cycle en une ligne au-dessus, et les votes du mode / des options
    à la place du podium entre deux parties. */
 
-#page-h24 .sandbox { padding-top: calc(var(--nav-height) + 8px); padding-bottom: 12px; }
+#page-h24 .sandbox { padding-top: calc(var(--nav-height) + 2px); padding-bottom: 12px; }
 
 /* ---- Déroulé du cycle : une ligne discrète sous l'en-tête ---- */
 .h24-steps {
     list-style: none;
-    margin: 0 auto 10px;
+    margin: 0 auto 4px;
     padding: 0;
     max-width: 1600px;
     display: flex;
@@ -200,9 +200,10 @@
 #page-h24 .h24-history.is-folded { flex: none; }
 
 /* Plus de podium : la roue (style roue) ou le nombre de votes (style bande) tiennent sa place, sans bouger */
-#h24-votes { display: none; }
+/* Tirage au sort : roue ou bande en direct, sans podium ; majorité : podium, roue ou bande seulement en cas d'égalité */
+#h24-votes-panel.is-live #h24-votes { display: none; }
 #h24-votes-panel.votes-slot--wheel.is-live { min-height: calc(var(--dock-size) + 20px); }
-#h24-votes-panel.votes-slot--wheel .votes-slot__podium { visibility: hidden; }
+#h24-votes-panel.votes-slot--wheel.is-live .votes-slot__podium { visibility: hidden; }
 #h24-votes-panel.is-live:not(.votes-slot--wheel) { min-height: 84px; display: grid; place-items: center; }
 #h24-votes-panel.is-live:not(.votes-slot--wheel) .vote-total { font-size: 1rem; font-weight: 700; color: rgba(255, 255, 255, 0.75); }
 body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opacity: 1; pointer-events: auto; }
@@ -334,6 +335,12 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 #page-h24 .watch-head { gap: 4px; padding: 8px 10px; }
 #page-h24 .watch-head .watch-bar__mode { font-size: 0.98rem; }
 #page-h24 .h24-options { font-size: 0.76rem; }
+/* Récap des options : une petite grille intitulé / valeur */
+#page-h24 .h24-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 3px 10px; margin-top: 2px; }
+.h24-opt { display: flex; align-items: baseline; gap: 5px; min-width: 0; white-space: nowrap; }
+.h24-opt i { width: 12px; text-align: center; color: var(--twitch-purple); font-size: 0.72rem; }
+.h24-opt__label { color: var(--text-secondary); }
+.h24-opt__value { color: var(--text-primary); font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
 #page-h24 .h24-turn { font-size: 0.82rem; }
 #page-h24 #h24-moves { padding: 8px; }
 #page-h24 #h24-moves .moves-panel__content { gap: 4px; }

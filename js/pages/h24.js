@@ -10,7 +10,7 @@ import twitchAuth from '../core/twitchAuth.js';
 import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
-import { renderHistory, paintMoveChips, revealWinner, clearWinner, nameColor } from '../components/voteViews.js';
+import { renderHistory, paintMoveChips, revealWinner, clearWinner, nameColor, renderPodium, markPodiumWinner } from '../components/voteViews.js';
 import { paletteColors } from '../components/votePalettes.js';
 import { CamSender, CamPlayer, CAM_QUALITIES, listCameras, camSupported } from '../components/liveCam.js';
 
@@ -764,14 +764,17 @@ const H24Page = {
         if (title) title.textContent = s?.mode ? t(`h24.mode.${s.mode}`, null, s.mode) : '24/24';
         const opts = $('h24-options');
         if (opts) {
+            // Récap des options en vigueur : intitulé court, valeur, icône
             const o = s?.options || {};
-            const parts = [];
-            if (o.turn) parts.push(choiceLabel('turn', o.turn));
-            if (s?.mode === 'teams' && o.decision) parts.push(choiceLabel('decision', o.decision));
-            if (s?.mode === 'teams' && o.decision === 'draw' && o.spin) parts.push(choiceLabel('spin', o.spin));
-            if (o.votes > 1) parts.push(choiceLabel('votes', o.votes));
-            if (o.anonymity === 'secret') parts.push(choiceLabel('anonymity', o.anonymity));
-            opts.textContent = parts.join(' · ');
+            const rows = [];
+            const row = (key, label, value, icon) => rows.push(`<div class="h24-opt" data-opt="${key}"><i class="fas ${icon}"></i>
+                <span class="h24-opt__label">${esc(label)}</span><span class="h24-opt__value">${esc(value)}</span></div>`);
+            if (o.turn) row('turn', t('h24.opt.turn', null, 'Tour'), choiceLabel('turn', o.turn), 'fa-stopwatch');
+            if (s?.mode === 'teams' && o.decision) row('decision', t('h24.opt.decision', null, 'Décision'), choiceLabel('decision', o.decision), CHOICE_ICON[o.decision] || 'fa-check');
+            if (s?.mode === 'teams' && o.spin) row('spin', t('h24.opt.spin', null, 'Tirage'), choiceLabel('spin', o.spin), CHOICE_ICON[o.spin] || 'fa-play');
+            if (o.votes) row('votes', t('h24.opt.votes', null, 'Votes'), t('h24.opt.perTurn', { n: o.votes }, `${o.votes} / tour`), 'fa-hand-pointer');
+            if (o.anonymity) row('anonymity', t('h24.opt.anonymity', null, 'Votes'), t(`h24.opt.anon.${o.anonymity}`, null, o.anonymity), CHOICE_ICON[o.anonymity] || 'fa-eye');
+            opts.innerHTML = s?.mode ? rows.join('') : '';
         }
         const viewers = $('h24-viewers');
         if (viewers) viewers.textContent = String(s?.viewers || 0);
@@ -850,6 +853,8 @@ const H24Page = {
             $('h24-score').hidden = true;
             this.hideDraw();
             this.clearLive();
+            this.podiumKey = null;
+            $('h24-votes')?.querySelector('.podium')?.remove();
         }
     },
 
@@ -904,12 +909,27 @@ const H24Page = {
         if (g) { this.liveSig = null; this.liveWheel(g); }
     },
 
-    /** Roue ou bande toujours affichée pendant la partie : elle se remplit au fil des votes, puis tourne au tirage */
+    /** Majorité (et rush) : podium des coups en tête ; roue ou bande seulement pour départager une égalité */
+    podiumMode() {
+        const s = this.state;
+        return s?.mode === 'rush' || (s?.options?.decision || 'majority') === 'majority';
+    },
+
+    /** Tirage au sort : roue ou bande toujours affichée pendant la partie, remplie au fil des votes, puis elle tourne */
     liveWheel(g) {
         const slot = $('h24-votes-panel');
         const area = $('h24-wheel-area');
         if (!slot || !area || g.draw || g.result) return;
         if (this.wheel?.isSpinning || this.revealing) return;
+        if (this.podiumMode()) {
+            if (slot.classList.contains('is-live')) { this.clearLive(); this.wheel = null; area.innerHTML = ''; }
+            const list = $('h24-votes');
+            // Nouveau tour : le podium repart de zéro (pas de coup fantôme du tour précédent)
+            if (this.podiumKey !== g.fen) { this.podiumKey = g.fen; list?.querySelector('.podium')?.remove(); }
+            renderPodium(list, $('h24-votes-total'), g.votes || [], { turn: g.turn, colors: COLORS, secret: g.secret, masked: g.masked });
+            return;
+        }
+        $('h24-votes')?.querySelector('.podium')?.remove();
         // Nouveau coup à jouer : roue neuve (plus de coup gagnant affiché au centre)
         if (this.liveKey !== g.fen) {
             this.liveKey = g.fen;
@@ -1089,8 +1109,8 @@ const H24Page = {
         const votes = g.draw.votes || [];
         const total = votes.reduce((a, v) => a + v.n, 0);
         const left = (g.draw.endsAt || 0) - (Date.now() + (this.skew || 0));
-        // Personne n'a voté, un seul coup proposé ou arrivé trop tard : le coup tiré directement
-        if (g.draw.random || votes.length < 2 || left < 1500) {
+        // Un seul coup proposé ou arrivé trop tard : le coup tiré directement
+        if (votes.length < 2 || left < 1500) {
             const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
             revealWinner(slot, { move: g.draw.winner, color: COLORS[0], pct: g.draw.random || !total ? null : Math.round(n * 100 / total), turn: g.turn });
             return;
@@ -1100,12 +1120,21 @@ const H24Page = {
         wheel.votes = new Map(votes.map(v => [v.m, { count: v.n, voters: new Map() }]));
         area.classList.add('is-visible', 'is-spinning');
         wheel.draw();
+        // Roue de départage sous l'écran (colonne de droite chargée) : on l'amène en vue
+        requestAnimationFrame(() => {
+            const col = area.closest('.sandbox__sidebar');
+            if (!col) return;
+            const r = area.getBoundingClientRect(), c = col.getBoundingClientRect();
+            const bottom = Math.min(c.bottom, window.innerHeight);
+            if (r.height && r.bottom > bottom) col.scrollBy({ top: Math.min(r.bottom - bottom + 8, r.top - c.top), behavior: 'smooth' });
+        });
         // La roue est déjà en place (remplie pendant le vote) : elle tourne sans changer de place
         if (area.classList.contains('wheel-area--docked') && !slot.classList.contains('is-live')) slot.classList.add('is-drawing');
         this.revealing = true;
         wheel.onSpinEnd = () => {
             this.revealing = false;
             area.classList.remove('is-spinning');
+            markPodiumWinner($('h24-votes'), g.draw?.winner);
             this.renderBoard();
         };
         // La roue s'arrête un peu avant que le coup soit joué
@@ -1125,7 +1154,8 @@ const H24Page = {
         wheel.currentTurn = () => (this.state?.game?.turn === 'b' ? 'b' : 'w');
         wheel.highlightWinner = () => {
             if (!this.drawSig) return;   // tirage déjà terminé côté serveur
-            revealWinner($('h24-votes-panel'), { move: wheel.winner, color: wheel.winnerColor, pct: wheel.winnerPct, turn: wheel.currentTurn() });
+            const random = !!this.state?.game?.draw?.random;
+            revealWinner($('h24-votes-panel'), { move: wheel.winner, color: wheel.winnerColor, pct: random ? null : wheel.winnerPct, turn: wheel.currentTurn() });
         };
         // La page tient sans scroll : pas de défilement vers la bande
         if (wheel.container) wheel.container.scrollIntoView = () => {};

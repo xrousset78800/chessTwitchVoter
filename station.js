@@ -140,6 +140,145 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const regie = { socket: null, phantom: 'off', paused: false, channel: '' };
     try { if (regieFile) regie.channel = String(JSON.parse(fs.readFileSync(regieFile, 'utf8')).channel || ''); } catch {}
     const drawMs = () => SPIN_REVEAL_MS[s.options.spin] || SPIN_REVEAL_MS.normal;
+    // ------------------------------------------------------------------ statistiques (parties et votes d'options, gardés sur disque)
+    const statsFile = dataDir ? path.join(dataDir, 'h24-stats.json') : null;
+    const statsDb = { games: [], ballots: [] };
+    try {
+        if (statsFile) {
+            const raw = JSON.parse(fs.readFileSync(statsFile, 'utf8'));
+            if (Array.isArray(raw.games)) statsDb.games = raw.games;
+            if (Array.isArray(raw.ballots)) statsDb.ballots = raw.ballots;
+        }
+    } catch {}
+    const STATS_KEEP = 5000;
+    let statsTimer = null;
+    function saveStats() {
+        if (!statsFile || statsTimer) return;
+        statsTimer = setTimeout(() => {
+            statsTimer = null;
+            const tmp = statsFile + '.tmp';
+            fs.writeFile(tmp, JSON.stringify(statsDb), (err) => {
+                if (err) return log('📊 24/24 : stats non enregistrées', err.message);
+                fs.rename(tmp, statsFile, () => {});
+            });
+        }, 1500);
+    }
+    function recordGame(g, result) {
+        const teams = s.mode === 'teams';
+        statsDb.games.push({
+            at: Date.now(),
+            mode: s.mode,
+            opts: { ...s.options },
+            result,
+            plies: teams ? g.history.length : 0,
+            ms: Date.now() - g.startedAt,
+            moves: teams ? g.history.slice(0, 600) : undefined,
+            hv: teams ? g.hv.slice(0, 600) : undefined,
+            rush: teams ? undefined : { solved: g.score.solved, maxRating: g.score.maxRating, strikes: g.score.strikes, puzzles: g.puzzleIndex || 0 },
+            tally: g.tally,
+            teams: { w: [...s.teams.w], b: [...s.teams.b] },
+            votes: { w: Object.fromEntries(g.voteCount.w), b: Object.fromEntries(g.voteCount.b) },
+            bots: botCount()
+        });
+        if (statsDb.games.length > STATS_KEEP) statsDb.games.splice(0, statsDb.games.length - STATS_KEEP);
+        saveStats();
+    }
+    function recordBallot(b) {
+        statsDb.ballots.push({ at: Date.now(), id: b.id, mode: b.id === 'mode' ? null : s.mode, winner: b.winner, how: b.how, n: b.votes.size, bots: botCount() });
+        if (statsDb.ballots.length > STATS_KEEP) statsDb.ballots.splice(0, statsDb.ballots.length - STATS_KEEP);
+        saveStats();
+    }
+
+    /** Stats globales : bots = inclure les parties jouées avec des bots de test ; tz = décalage horaire du viewer (min) ; days = période */
+    function stats({ bots = true, tz = 0, days = 0 } = {}) {
+        const now = Date.now();
+        const keep = (x) => (bots || !x.bots) && (!days || x.at >= now - days * 86400000);
+        const games = statsDb.games.filter(keep);
+        const ballots = statsDb.ballots.filter(keep);
+        const human = (l) => !!l && !/^(bot_|sim_)/.test(l);
+        const top = (map, n = 10) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => ({ k, n: v }));
+        const inc = (map, k, n = 1) => map.set(k, (map.get(k) || 0) + n);
+
+        const teamGames = games.filter(x => x.mode === 'teams');
+        const rushGames = games.filter(x => x.mode === 'rush');
+        const players = new Set(), voters = new Map(), winners = new Map(), played = new Map();
+        const firstMoves = new Map(), openings = new Map(), moves = new Map(), reasons = {};
+        const hours = Array(24).fill(0);
+        const dayMs = 86400000;
+        const today = Math.floor((now - tz * 60000) / dayMs);
+        const perDay = Array(14).fill(0);
+        let votes = 0, playMs = 0, peak = 0, random = 0, wheel = 0, ties = 0, consSum = 0, consN = 0;
+        const res = { w: 0, b: 0, draw: 0 };
+        let longest = null, fastestMate = null, plies = 0;
+        const decision = { majority: 0, draw: 0 };
+        for (const x of games) {
+            playMs += x.ms || 0;
+            peak = Math.max(peak, x.tally?.peak || 0);
+            const local = x.at - tz * 60000;
+            hours[new Date(local).getUTCHours()]++;
+            const d = today - Math.floor(local / dayMs);
+            if (d >= 0 && d < 14) perDay[13 - d]++;
+            const inGame = new Set();
+            for (const side of ['w', 'b']) {
+                for (const [l, n] of Object.entries(x.votes?.[side] || {})) {
+                    votes += n;
+                    if (human(l)) { inc(voters, l, n); inGame.add(l); }
+                }
+                for (const l of x.teams?.[side] || []) if (human(l)) inGame.add(l);
+            }
+            for (const l of inGame) { players.add(l); inc(played, l); }
+            if (x.mode !== 'teams') continue;
+            plies += x.plies || 0;
+            random += x.tally?.random || 0;
+            wheel += x.tally?.wheel || 0;
+            ties += x.tally?.ties || 0;
+            decision[x.opts?.decision === 'draw' ? 'draw' : 'majority']++;
+            for (const v of x.hv || []) if (typeof v === 'number') { consSum += v; consN++; }
+            const r = x.result || {};
+            if (r.kind === 'mate') {
+                res[r.winner === 'b' ? 'b' : 'w']++;
+                for (const l of x.teams?.[r.winner] || []) if (human(l)) inc(winners, l);
+                if (!fastestMate || x.plies < fastestMate.plies) fastestMate = { plies: x.plies, at: x.at, winner: r.winner };
+            } else {
+                res.draw++;
+                reasons[r.reason || 'draw'] = (reasons[r.reason || 'draw'] || 0) + 1;
+            }
+            if (!longest || x.plies > longest.plies) longest = { plies: x.plies, at: x.at, result: r };
+            const mv = x.moves || [];
+            if (mv[0]) inc(firstMoves, mv[0]);
+            if (mv[1]) inc(openings, `${mv[0]} ${mv[1]}`);
+            for (const m of mv) inc(moves, m);
+        }
+        let bestRush = null, rushSolved = 0;
+        for (const x of rushGames) {
+            const r = x.rush || x.result || {};
+            rushSolved += r.solved || 0;
+            if (!bestRush || (r.solved || 0) > bestRush.solved || ((r.solved || 0) === bestRush.solved && (r.maxRating || 0) > bestRush.maxRating))
+                bestRush = { solved: r.solved || 0, maxRating: r.maxRating || 0, at: x.at };
+        }
+        const ballotStats = {};
+        for (const b of ballots) {
+            const o = ballotStats[b.id] ||= { total: 0, none: 0, counts: {} };
+            o.total++;
+            if (b.how === 'default') o.none++;
+            o.counts[b.winner] = (o.counts[b.winner] || 0) + 1;
+        }
+        return {
+            since: statsDb.games[0]?.at || null,
+            overview: { games: games.length, teams: teamGames.length, rush: rushGames.length, plies, votes, players: players.size, playMs, peak },
+            results: { ...res, reasons, avgPlies: teamGames.length ? Math.round(plies / teamGames.length) : 0,
+                avgMs: teamGames.length ? Math.round(teamGames.reduce((a, x) => a + (x.ms || 0), 0) / teamGames.length) : 0, longest, fastestMate },
+            decisions: { ...decision, turns: plies, random, wheel, ties, consensus: consN ? Math.round(consSum / consN) : null },
+            openings: { first: top(firstMoves, 8), pairs: top(openings, 8), moves: top(moves, 10) },
+            rush: { games: rushGames.length, best: bestRush, avgSolved: rushGames.length ? Math.round(rushSolved * 10 / rushGames.length) / 10 : 0,
+                bestRating: Math.max(0, ...rushGames.map(x => (x.rush || x.result || {}).maxRating || 0)) },
+            ballots: ballotStats,
+            players: { voters: top(voters), winners: top(winners), played: top(played) },
+            activity: { hours, days: perDay },
+            recent: games.slice(-12).reverse().map(x => ({ at: x.at, mode: x.mode, result: x.result, plies: x.plies, ms: x.ms,
+                players: (x.teams?.w?.length || 0) + (x.teams?.b?.length || 0), bots: x.bots || 0, decision: x.opts?.decision }))
+        };
+    }
     // Chat Twitch de chaque compte connecté à la page (sa propre chaîne), lu en anonyme : join, coups et votes (1, 2, 3…)
     const chat = { client: null, connected: false, joined: new Set(), queue: [], lastWanted: new Map(), seen: new Map(), recent: [], received: 0, events: [] };
     const CHAT_LINGER_MS = 2 * 60 * 1000;   // chaîne gardée 2 min après le départ (rechargement de page)
@@ -270,6 +409,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         // Résultat affiché quelques secondes, comme pour un coup, avant le vote suivant
         b.winner = winner;
         b.how = best === 0 ? 'default' : tied.length > 1 ? 'tie' : 'votes';
+        try { recordBallot(b); } catch {}
         s.endsAt = null;
         emit();
         later(BALLOT_REVEAL_MS, () => {
@@ -322,7 +462,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function newGameState(chess) {
         return { chess, startFen: chess.fen(), history: [], hv: [], lastMove: null, votes: new Map(), recent: [],
             turnEndsAt: null, draw: null, random: false, result: null, startedAt: Date.now(),
-            voteCount: { w: new Map(), b: new Map() } };
+            voteCount: { w: new Map(), b: new Map() },
+            tally: { random: 0, wheel: 0, ties: 0, peak: viewers() } };   // pour les stats
     }
 
     function startTurn() {
@@ -334,6 +475,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         // Même durée pour les deux camps (une équipe vide est jouée par l'autre)
         g.turnEndsAt = Date.now() + (DUR.turn || s.options.turn * 1000);
         s.endsAt = g.turnEndsAt;
+        if (g.tally) g.tally.peak = Math.max(g.tally.peak, viewers());
         emit();
         emitMeAll();
     }
@@ -350,15 +492,19 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!entries.length) {
             g.random = true;
             if (s.mode === 'rush') return failPuzzle('timeout');
-            move = pick(g.chess.moves());
-            g.draw = { winner: move, votes: [], random: true, endsAt: Date.now() + RANDOM_REVEAL_MS };
+            g.tally.random++;
+            // Personne n'a voté : tirage à la roue (ou à la bande) entre tous les coups légaux, à chances égales
+            const legal = g.chess.moves();
+            move = pick(legal);
+            g.draw = { winner: move, votes: legal.map(m => ({ m, n: 1 })), random: true, endsAt: Date.now() + drawMs() };
             s.endsAt = g.draw.endsAt;
             emit();
-            return later(RANDOM_REVEAL_MS, () => playMove(move));
+            return later(drawMs(), () => playMove(move));
         } else if (s.options.decision !== 'majority' && s.mode === 'teams' && entries.length > 1) {
             const total = entries.reduce((a, [, n]) => a + n, 0);
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
+            g.tally.wheel++;
             g.draw = { winner: move, votes: entries.map(([m, n]) => ({ m, n })), endsAt: Date.now() + drawMs() };
             s.endsAt = g.draw.endsAt;
             emit();
@@ -369,6 +515,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             move = pick(tied.map(([m]) => m));
             // Ex æquo : tirage au sort visible entre eux, à chances égales
             if (tied.length > 1) {
+                g.tally.ties++;
                 g.draw = { winner: move, votes: tied.map(([m, n]) => ({ m, n })), tie: true, endsAt: Date.now() + drawMs() };
                 s.endsAt = g.draw.endsAt;
                 emit();
@@ -512,6 +659,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             top: { w: top('w'), b: top('b') }
         };
         s.lastResult = result;
+        try { recordGame(g, result); } catch (e) { log('📊 24/24 : partie non comptée', e.message); }
         setPhase('recap', DUR.recap);
     }
 
@@ -977,5 +1125,5 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }, 60 * 1000).unref?.();
 
     log('📺 Station 24/24 prête');
-    return { state: s, join, leave, voteMove, voteBallot, publicState, setBots, chatMessage, diag, isRegie: (login) => !!login && REGIE.has(login) };
+    return { state: s, stats, join, leave, voteMove, voteBallot, publicState, setBots, chatMessage, diag, isRegie: (login) => !!login && REGIE.has(login) };
 };
