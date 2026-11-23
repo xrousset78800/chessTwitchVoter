@@ -39,7 +39,7 @@ const CHOSEN_MS = 2200;           // coup choisi (flèche, part des votes, viewe
 const DUR = {
     recap: 15000,
     voteMode: 20000,
-    voteOption: 15000,
+    voteOption: 30000,
     signup: 30000
 };
 
