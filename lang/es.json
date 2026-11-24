@@ -60,6 +60,15 @@
       "player1": "Jugador 1 ⬜",
       "player2": "Jugador 2 ⬛"
     },
+    "vsBot": {
+      "label": "Contra Stockfish",
+      "level": "Nivel de Stockfish",
+      "side": "El chat juega con",
+      "random": "Al azar",
+      "white": "Blancas",
+      "black": "Negras",
+      "thinking": "pensando…"
+    },
     "chatvchat": {
       "streamer1": "Chat 1 ⬜",
       "streamer2": "Chat 2 ⬛"
@@ -185,6 +194,10 @@
     "wheel": {
       "name": "Ruleta del caos",
       "desc": "Hasta 3 jugadas por espectador, la ruleta sortea entre los votos."
+    },
+    "vsBot": {
+      "name": "El chat contra Stockfish",
+      "desc": "El chat vota sus jugadas (30 s, mayoría) contra Stockfish al nivel elegido (300 a 2400+)."
     },
     "vsChat": {
       "name": "Tú contra el chat",

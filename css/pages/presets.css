@@ -350,3 +350,28 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .test-tools__bot { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 7px; border: 1px solid #3a3b50; border-radius: 999px; font-size: 0.72rem; white-space: nowrap; }
 .test-tools__bot button { border: 0; background: none; color: inherit; opacity: .6; cursor: pointer; padding: 0 4px; font-size: 0.85rem; line-height: 1; }
 .test-tools__bot button:hover { opacity: 1; color: #f87171; }
+
+/* Ecran Nouveau : bots de test dans le panneau des modes (meme contenu que le panneau flottant) */
+.setup-test-bots {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px dashed rgba(250, 204, 21, 0.6);
+    border-radius: 3px;
+    font-size: 0.8rem;
+}
+.setup-test-bots[hidden] { display: none; }
+
+/* Etiquettes (stockfish) / (todo) des modes : regie seulement */
+.sf-tag { display: none; margin-left: 4px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
+body.is-tester .sf-tag { display: inline; }
+.sf-tag--ok { color: #34d399; }
+.sf-tag--todo { color: #9ca3af; font-style: italic; }
+/* Tuiles de mode : etiquette dans le coin, sans pousser le libelle */
+.mode-option { position: relative; }
+.mode-option .sf-tag { position: absolute; top: 2px; right: 5px; margin: 0; font-size: 0.6rem; }
+
+/* Contre Stockfish : reflexion du moteur dans le bandeau des votes */
+.vote-ticker__item.engine-thinking { color: #facc15; font-style: italic; }

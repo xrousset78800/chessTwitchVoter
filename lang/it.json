@@ -60,6 +60,15 @@
       "player1": "Giocatore 1 ⬜",
       "player2": "Giocatore 2 ⬛"
     },
+    "vsBot": {
+      "label": "Contro Stockfish",
+      "level": "Livello di Stockfish",
+      "side": "La chat gioca con",
+      "random": "A caso",
+      "white": "Bianco",
+      "black": "Nero",
+      "thinking": "sta pensando…"
+    },
     "chatvchat": {
       "streamer1": "Chat 1 ⬜",
       "streamer2": "Chat 2 ⬛"
@@ -185,6 +194,10 @@
     "wheel": {
       "name": "Ruota del caos",
       "desc": "Fino a 3 mosse per viewer, la ruota estrae tra i voti."
+    },
+    "vsBot": {
+      "name": "La chat contro Stockfish",
+      "desc": "La chat vota le sue mosse (30 s, maggioranza) contro Stockfish al livello scelto (da 300 a 2400+)."
     },
     "vsChat": {
       "name": "Tu contro la chat",

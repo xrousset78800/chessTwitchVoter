@@ -37,6 +37,8 @@ class GameEngine {
         this.mode = 'sandbox';       // sandbox, problems, oneVsAll, oneVsOne, chatVsChat
         this.modeHandler = null;     // Handler spécifique au mode
         this.session = null;         // Partie à joueurs inscrits : { humanColor: 'w' | 'b' | null }
+        this.vsBot = null;           // Contre Stockfish : { color: camp de Stockfish ('w' | 'b'), elo }
+        this.engineKey = null;       // Position où Stockfish réfléchit (coup ignoré si elle a changé)
 
         // Historique
         this.moveHistory = [];
@@ -151,6 +153,8 @@ class GameEngine {
         }
 
         // ========== MODE NORMAL ==========
+        // Contre Stockfish : pas de pièce à toucher pendant son tour
+        if (this.engineToMove()) return false;
         // Ne pas autoriser de bouger les pièces adverses
         const turn = this.chess.turn();
         if ((turn === 'w' && piece.search(/^b/) !== -1) ||
@@ -168,6 +172,47 @@ class GameEngine {
     dropIsVote() {
         const pm = window.problemsManager;
         return !!pm?.isActive && !!(pm.config?.timerEnabled ?? this.config.timerEnabled);
+    }
+
+    /** Contre Stockfish : c'est à lui de jouer */
+    engineToMove() {
+        return !!this.vsBot && this.isRunning && !this.chess.game_over() && this.chess.turn() === this.vsBot.color;
+    }
+
+    /**
+     * Coup de Stockfish (Worker de la page, au niveau choisi). Pas de vote ni de chrono pendant ce temps ;
+     * au moins ~1,2 s pour que le coup ne tombe pas instantanément. Sans moteur : coup au hasard.
+     */
+    async engineTurn() {
+        timer.stop();
+        voting.reset();
+        voting.close();
+        if (this.votingWheel) this.votingWheel.clear();
+        const BE = window.BotEngine;
+        const level = BE?.levelLabel(this.vsBot.elo) || String(this.vsBot.elo);
+        const track = document.getElementById('vote-ticker-track');
+        if (track) {
+            const t = window.i18n?.t('gameMode.vsBot.thinking') || 'Stockfish réfléchit…';
+            track.innerHTML = `<span class="vote-ticker__item engine-thinking"><i class="fas fa-robot"></i> Stockfish ${level} · ${t}</span>`;
+        }
+        const fen = this.chess.fen();
+        const key = this.engineKey = `${fen}|${this.moveHistory.length}`;
+        const started = Date.now();
+        let uci = null;
+        try {
+            const legal = BE.legalUci(this.chess);
+            const engine = BE.browserEngine();
+            uci = engine ? await engine.botMove(fen, this.vsBot.elo, legal) : legal[Math.floor(Math.random() * legal.length)];
+        } catch (e) {
+            console.warn('Stockfish :', e);
+        }
+        const wait = 1200 - (Date.now() - started);
+        if (wait > 0) await new Promise(r => setTimeout(r, wait));
+        // Partie arrêtée, relancée ou position changée pendant la réflexion
+        if (this.engineKey !== key || !this.engineToMove() || `${this.chess.fen()}|${this.moveHistory.length}` !== key) return;
+        this.engineKey = null;
+        const san = BE?.uciToSan(this.chess, uci) || this.chess.moves()[0];
+        if (san) this.executeMove(san);
     }
 
     canHumanPlay() {
@@ -210,6 +255,7 @@ class GameEngine {
         }
 
         // ========== MODE NORMAL ==========
+        if (this.engineToMove()) return 'snapback';
         // Vote en cours (timer actif, hors partie à inscrits) : le coup posé par le streamer
         // compte comme un vote, comme un clic dans la liste des coups ; il n'est pas joué
         if (!this.session && this.config.timerEnabled) {
@@ -388,6 +434,14 @@ startTurn() {
     VoteTicker.clear();
     // Mode problèmes : le timer est géré par problemsManager
     if (window.problemsManager?.isActive) {
+        this.updateAvailableMoves();
+        if (this.onTurnChange) this.onTurnChange(this.currentTurn);
+        return;
+    }
+
+    // Contre Stockfish : son tour, pas de vote
+    if (this.engineToMove()) {
+        this.engineTurn();
         this.updateAvailableMoves();
         if (this.onTurnChange) this.onTurnChange(this.currentTurn);
         return;
@@ -1077,7 +1131,8 @@ onMoveClick(move) {
         return;
     }
 
-    // Sans timer : jouer directement
+    // Sans timer : jouer directement (pas pendant le tour de Stockfish)
+    if (this.engineToMove()) return;
     this.executeMove(move);
     this.updateAvailableMoves();
 }

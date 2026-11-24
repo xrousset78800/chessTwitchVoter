@@ -60,6 +60,15 @@
       "player1": "Speler 1 ⬜",
       "player2": "Speler 2 ⬛"
     },
+    "vsBot": {
+      "label": "Tegen Stockfish",
+      "level": "Niveau van Stockfish",
+      "side": "De chat speelt",
+      "random": "Willekeurig",
+      "white": "Wit",
+      "black": "Zwart",
+      "thinking": "denkt na…"
+    },
     "chatvchat": {
       "streamer1": "Chat 1 ⬜",
       "streamer2": "Chat 2 ⬛"
@@ -185,6 +194,10 @@
     "wheel": {
       "name": "Chaosrad",
       "desc": "Tot 3 zetten per kijker, het rad trekt uit de stemmen."
+    },
+    "vsBot": {
+      "name": "Chat tegen Stockfish",
+      "desc": "De chat stemt op zijn zetten (30 s, meerderheid) tegen Stockfish op het gekozen niveau (300 tot 2400+)."
     },
     "vsChat": {
       "name": "Jij tegen de chat",

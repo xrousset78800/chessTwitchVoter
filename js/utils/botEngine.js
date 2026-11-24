@@ -104,7 +104,26 @@
         return m ? m.san : null;
     }
 
-    const api = { LEVELS, DEFAULT_LEVEL, snapLevel, levelLabel, createEngine, legalUci, uciToSan };
+    /** Page : un seul Stockfish (Worker) pour toute la page, lance au premier besoin ; null si impossible */
+    let shared = null;
+    function browserEngine() {
+        if (shared) return shared;
+        if (typeof Worker !== 'function') return null;
+        let worker;
+        try {
+            worker = new Worker('/vendor/stockfish/stockfish-19-lite-single.js');
+        } catch (e) {
+            console.warn('Stockfish indisponible :', e);
+            return null;
+        }
+        const engine = createEngine((cmd) => worker.postMessage(cmd));
+        worker.onmessage = (e) => String(e.data ?? '').split('\n').forEach(l => engine.onLine(l));
+        worker.onerror = (e) => { console.warn('Stockfish :', e.message || e); };
+        shared = engine;
+        return engine;
+    }
+
+    const api = { LEVELS, DEFAULT_LEVEL, snapLevel, levelLabel, createEngine, legalUci, uciToSan, browserEngine };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.BotEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

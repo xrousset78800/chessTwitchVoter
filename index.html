@@ -91,9 +91,9 @@
                 <!-- Onglets de Nouveau (déplacés par le router vers /rush, /mono, /multi) -->
                 <nav class="new-tabs" id="new-tabs">
                     <a class="new-tab" data-navigate="/sandbox" data-new-tab="sandbox">🧪 <span data-i18n="newTabs.free">Partie libre</span></a>
-                    <a class="new-tab" data-navigate="/mono" data-new-tab="mono">👥 Mono</a>
-                    <a class="new-tab" data-navigate="/multi" data-new-tab="multi">⚔ Multi</a>
-                    <a class="new-tab" data-navigate="/rush" data-new-tab="rush">🔥 Puzzle Rush</a>
+                    <a class="new-tab" data-navigate="/mono" data-new-tab="mono">👥 Mono <span class="sf-tag sf-tag--ok">(stockfish)</span></a>
+                    <a class="new-tab" data-navigate="/multi" data-new-tab="multi">⚔ Multi <span class="sf-tag sf-tag--ok">(stockfish)</span></a>
+                    <a class="new-tab" data-navigate="/rush" data-new-tab="rush">🔥 Puzzle Rush <span class="sf-tag sf-tag--ok">(stockfish)</span></a>
                 </nav>
 
                 <!-- Lancement (Nouveau) ; pendant la partie, la même carte sert de modale ⚙ -->
@@ -120,6 +120,8 @@
                                         <div class="empty-state"><p data-i18n="game.configuration.no-config">Aucune configuration</p></div>
                                     </div>
                                 </div>
+                                <!-- Bots de test (régie seulement) : faux viewers joués par Stockfish, gardés pour la partie -->
+                                <div class="setup-test-bots" id="setup-test-bots" hidden></div>
                             </div>
                             <div class="sandbox-setup__col">
                             <!-- Mode selector -->
@@ -129,11 +131,11 @@
                                     <div class="mode-selector">
                                         <div class="mode-option is-active" data-mode="sandbox">
                                             <span class="mode-option__icon">🎲</span>
-                                            <span class="mode-option__label">YOLO</span>
+                                            <span class="mode-option__label">YOLO</span><span class="sf-tag sf-tag--ok">(stockfish)</span>
                                         </div>
                                         <div class="mode-option" data-mode="problems">
                                             <span class="mode-option__icon">🧩</span>
-                                            <span class="mode-option__label" data-i18n="gameMode.problems.label">Problèmes</span>
+                                            <span class="mode-option__label" data-i18n="gameMode.problems.label">Problèmes</span><span class="sf-tag sf-tag--ok">(stockfish)</span>
                                         </div>
                                         <div class="mode-option" data-mode="rush" style="display:none;">
                                             <span class="mode-option__icon">🔥</span>
@@ -141,15 +143,19 @@
                                         </div>
                                         <div class="mode-option" data-mode="oneVsAll">
                                             <span class="mode-option__icon">👤</span>
-                                            <span class="mode-option__label">1 vs All</span>
+                                            <span class="mode-option__label">1 vs All</span><span class="sf-tag sf-tag--todo">(todo)</span>
                                         </div>
                                         <div class="mode-option" data-mode="oneVsOne">
                                             <span class="mode-option__icon">⚔️</span>
-                                            <span class="mode-option__label">1 vs 1</span>
+                                            <span class="mode-option__label">1 vs 1</span><span class="sf-tag sf-tag--todo">(todo)</span>
                                         </div>
                                         <div class="mode-option" data-mode="chatVsChat">
                                             <span class="mode-option__icon">🎭</span>
-                                            <span class="mode-option__label">Chat vs Chat</span>
+                                            <span class="mode-option__label">Chat vs Chat</span><span class="sf-tag sf-tag--todo">(todo)</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="vsBot">
+                                            <span class="mode-option__icon">🤖</span>
+                                            <span class="mode-option__label" data-i18n="gameMode.vsBot.label">Contre Stockfish</span><span class="sf-tag sf-tag--ok">(stockfish)</span>
                                         </div>
                                     </div>
                                     <!-- Mode: 1vsAll options -->
@@ -181,6 +187,22 @@
                                         <div class="player-input">
                                             <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer2">Chat 2 ⬛</span>
                                             <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Channel...">
+                                        </div>
+                                    </div>
+
+                                    <!-- Mode: Contre Stockfish (le chat vote ses coups, Stockfish joue l'autre camp) -->
+                                    <div class="mode-options" id="options-vsBot">
+                                        <div class="form-row">
+                                            <label class="form-label" for="bot-elo"><i class="fas fa-robot"></i> <span data-i18n="gameMode.vsBot.level">Niveau de Stockfish</span></label>
+                                            <select class="input input--sm input--inline" id="bot-elo"></select>
+                                        </div>
+                                        <div class="form-row">
+                                            <label class="form-label" for="bot-side"><i class="fas fa-chess"></i> <span data-i18n="gameMode.vsBot.side">Le chat joue</span></label>
+                                            <select class="input input--sm input--inline" id="bot-side">
+                                                <option value="random" data-i18n="gameMode.vsBot.random">Au hasard</option>
+                                                <option value="w" data-i18n="gameMode.vsBot.white">Blancs</option>
+                                                <option value="b" data-i18n="gameMode.vsBot.black">Noirs</option>
+                                            </select>
                                         </div>
                                     </div>
 

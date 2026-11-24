@@ -67,6 +67,10 @@ const AppState = {
         followersOnly: false,
         subsOnly: false,
 
+        // Contre Stockfish : niveau, camp du chat ('w', 'b' ou 'random')
+        botElo: 1200,
+        botSide: 'random',
+
         // Affichage
         noBg: false,
 
@@ -248,6 +252,8 @@ const GameSession = {
         SpectatorsUI.render(null);
         if (window.gameEngine) {
             gameEngine.session = null;
+            gameEngine.vsBot = null;
+            gameEngine.engineKey = null;
             gameEngine.onGameEnd = null;
             gameEngine.board?.orientation('white');
             gameEngine.hideWheel?.();
@@ -579,7 +585,8 @@ const SETUP_PRESETS = [
     { id: 'instant',   icon: '⚡', mode: 'sandbox',  config: { timerEnabled: false } },
     { id: 'democracy', icon: '🗳️', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
     { id: 'wheel',     icon: '🎡', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: false, votesPerViewer: 3 } },
-    { id: 'vsChat',    icon: '👤', mode: 'oneVsAll', config: { timerEnabled: true, timerDuration: 45, majorityMode: true,  votesPerViewer: 1 } },
+    { id: 'vsChat',    icon: '👤', mode: 'oneVsAll', config: { timerEnabled: true, timerDuration: 45, majorityMode: true,  votesPerViewer: 1 }, tag: 'todo' },
+    { id: 'vsBot',     icon: '🤖', mode: 'vsBot',    config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
     { id: 'puzzles',   icon: '🧩', mode: 'problems', config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } }
 ];
 
@@ -612,7 +619,7 @@ const SandboxPage = {
         const titleEl = document.getElementById('nav-page-title');
         const backBtn = document.getElementById('sandbox-back');
         if (pageName === 'game') {
-            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi', sandbox: '🧪 Partie libre' };
+            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi', sandbox: '🧪 Partie libre', vsBot: '🤖 Stockfish' };
             const route = GameSession.current?.route;
             if (titleEl) titleEl.textContent = titles[AppState.gameMode] || '♟ Partie';
             // La flèche ramène aux réglages sans arrêter la partie (lien "Partie en cours" pour revenir)
@@ -708,6 +715,15 @@ async applyConfigAfterReload() {
     gameEngine.config.votesPerViewer = AppState.config.votesPerViewer;
 
     gameEngine.mode = AppState.gameMode;
+    // Contre Stockfish : le chat joue un camp (choisi ou tiré au sort), Stockfish l'autre
+    gameEngine.vsBot = null;
+    gameEngine.engineKey = null;
+    if (AppState.gameMode === 'vsBot') {
+        const side = AppState.config.botSide;
+        const chat = side === 'w' || side === 'b' ? side : (Math.random() < 0.5 ? 'w' : 'b');
+        gameEngine.vsBot = { color: chat === 'w' ? 'b' : 'w', elo: window.BotEngine?.snapLevel(AppState.config.botElo || 1200) ?? 1200 };
+        gameEngine.board?.orientation(chat === 'w' ? 'white' : 'black');
+    }
     gameEngine.startGame();
 
     if (gameEngine.updateVotingIndicator) gameEngine.updateVotingIndicator();
@@ -1230,6 +1246,14 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             AppState.config.wheelDuration = snapSpin(e.target.value);
         });
 
+        // ========== CONTRE STOCKFISH ==========
+        document.getElementById('bot-elo')?.addEventListener('change', (e) => {
+            AppState.config.botElo = Number(e.target.value) || 1200;
+        });
+        document.getElementById('bot-side')?.addEventListener('change', (e) => {
+            AppState.config.botSide = e.target.value;
+        });
+
         // ========== INPUTS JOUEURS ==========
         document.getElementById('player-solo')?.addEventListener('blur', (e) => {
             AppState.players.solo = e.target.value;
@@ -1340,7 +1364,9 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         const c = gameEngine.config || {};
         const yes = tr('settingsSummary.on'), no = tr('settingsSummary.off');
         const restrictions = [twitch.settings?.followersOnly && 'Followers', twitch.settings?.subsOnly && 'Subs'].filter(Boolean).join(' + ') || tr('settingsSummary.none');
+        const vs = gameEngine.vsBot;
         const rows = [
+            ...(vs ? [['fa-robot', 'Stockfish', `${window.BotEngine?.levelLabel(vs.elo) || vs.elo} (${tr(vs.color === 'w' ? 'gameMode.vsBot.white' : 'gameMode.vsBot.black')})`]] : []),
             ['fa-stopwatch', tr('settingsSummary.timer'), c.timerEnabled ? `${c.timerDuration} s` : tr('timerOff.badge')],
             ['fa-scale-balanced', tr('gameMode.voteOptions.voteMajority'), c.majorityMode ? yes : no],
             ...(c.timerEnabled && !c.majorityMode ? [['fa-dharmachakra', tr('gameMode.voteOptions.wheelAnimation'), tr(`presets.spinSpeed.${spinId(c.wheelDuration)}`)]] : []),
@@ -1512,6 +1538,18 @@ fullReset() {
             if (el) el.value = AppState.config.pauseAfterEnd || 15;
         });
 
+        // Contre Stockfish
+        const botElo = document.getElementById('bot-elo');
+        if (botElo) {
+            if (!botElo.options.length) {
+                botElo.innerHTML = (window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400])
+                    .map(v => `<option value="${v}">${v >= 2400 ? '2400+' : v}</option>`).join('');
+            }
+            botElo.value = String(window.BotEngine?.snapLevel(AppState.config.botElo || 1200) ?? 1200);
+        }
+        const botSide = document.getElementById('bot-side');
+        if (botSide) botSide.value = AppState.config.botSide || 'random';
+
         // Inputs joueurs
         const playerSolo = document.getElementById('player-solo');
         if (playerSolo) playerSolo.value = AppState.players.solo || '';
@@ -1612,7 +1650,8 @@ fullReset() {
             <button type="button" class="preset-card" data-preset="${p.id}">
                 <span class="preset-card__icon" aria-hidden="true">${p.icon}</span>
                 <span class="preset-card__body">
-                    <span class="preset-card__name">${escapeHtml(tr(`suggested.${p.id}.name`))}</span>
+                    <span class="preset-card__name">${escapeHtml(tr(`suggested.${p.id}.name`))}${p.custom ? '' : p.tag === 'todo'
+                        ? ' <span class="sf-tag sf-tag--todo">(todo)</span>' : ' <span class="sf-tag sf-tag--ok">(stockfish)</span>'}</span>
                     <span class="preset-card__desc">${escapeHtml(tr(`suggested.${p.id}.desc`))}</span>
                     <span class="preset-card__chips">${(p.custom ? [tr('suggested.custom.chip')] : this.presetChips(p.mode, { votesPerViewer: 1, ...p.config })).map(c => `<span>${escapeHtml(c)}</span>`).join('')}</span>
                 </span>
@@ -1634,7 +1673,8 @@ fullReset() {
         });
         // Le choix du mode de jeu n'apparaît qu'avec « Personnaliser » (une suggestion fixe déjà le mode)
         const modePanel = document.querySelector('#sandbox-setup .mode-selector')?.closest('.panel');
-        if (modePanel) modePanel.hidden = anyMatch;
+        // Contre Stockfish : le niveau et le camp restent réglables avec la suggestion
+        if (modePanel) modePanel.hidden = anyMatch && AppState.gameMode !== 'vsBot';
     },
 
     /** Remplit l'écran avec une configuration suggérée (sans lancer : on peut encore ajuster) */
@@ -2882,6 +2922,7 @@ async function initApp() {
             if (!gameEngine.config.timerEnabled && !voting.isOpen) {
                 if (!['sandbox', 'game'].includes(AppState.currentPage) || gameEngine.chess.game_over()) return;
                 if (gameEngine.session && gameEngine.canHumanPlay()) return; // tour du streamer
+                if (gameEngine.engineToMove()) return;                         // tour de Stockfish
                 // Une rafale de messages ne joue pas deux coups d'affilée
                 if (Date.now() < (twitch.instantCooldownUntil || 0)) return;
                 const resolved = matchLegalMove(gameEngine.chess, voteContext.move);

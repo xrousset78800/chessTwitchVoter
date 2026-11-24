@@ -60,6 +60,15 @@
       "player1": "Player 1 ⬜",
       "player2": "Player 2 ⬛"
     },
+    "vsBot": {
+      "label": "Vs Stockfish",
+      "level": "Stockfish level",
+      "side": "Chat plays",
+      "random": "Random",
+      "white": "White",
+      "black": "Black",
+      "thinking": "thinking…"
+    },
     "chatvchat": {
       "streamer1": "Chat 1 ⬜",
       "streamer2": "Chat 2 ⬛"
@@ -185,6 +194,10 @@
     "wheel": {
       "name": "Chaos wheel",
       "desc": "Up to 3 moves per viewer, the wheel draws among the votes."
+    },
+    "vsBot": {
+      "name": "Chat vs Stockfish",
+      "desc": "Chat votes its moves (30s, majority) against Stockfish at the chosen level (300 to 2400+)."
     },
     "vsChat": {
       "name": "You vs chat",

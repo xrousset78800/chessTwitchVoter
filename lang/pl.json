@@ -60,6 +60,15 @@
       "player1": "Gracz 1 ⬜",
       "player2": "Gracz 2 ⬛"
     },
+    "vsBot": {
+      "label": "Przeciw Stockfishowi",
+      "level": "Poziom Stockfisha",
+      "side": "Czat gra",
+      "random": "Losowo",
+      "white": "Białe",
+      "black": "Czarne",
+      "thinking": "myśli…"
+    },
     "chatvchat": {
       "streamer1": "Czat 1 ⬜",
       "streamer2": "Czat 2 ⬛"
@@ -185,6 +194,10 @@
     "wheel": {
       "name": "Koło chaosu",
       "desc": "Do 3 ruchów na widza, koło losuje spośród głosów."
+    },
+    "vsBot": {
+      "name": "Czat kontra Stockfish",
+      "desc": "Czat głosuje na ruchy (30 s, większość) przeciw Stockfishowi na wybranym poziomie (300 do 2400+)."
     },
     "vsChat": {
       "name": "Ty kontra czat",

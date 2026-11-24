@@ -60,6 +60,15 @@
       "player1": "Oyuncu 1 ⬜",
       "player2": "Oyuncu 2 ⬛"
     },
+    "vsBot": {
+      "label": "Stockfish'e karşı",
+      "level": "Stockfish seviyesi",
+      "side": "Sohbet oynar",
+      "random": "Rastgele",
+      "white": "Beyaz",
+      "black": "Siyah",
+      "thinking": "düşünüyor…"
+    },
     "chatvchat": {
       "streamer1": "Chat 1 ⬜",
       "streamer2": "Chat 2 ⬛"
@@ -185,6 +194,10 @@
     "wheel": {
       "name": "Kaos çarkı",
       "desc": "İzleyici başına en fazla 3 hamle, çark oylar arasından çeker."
+    },
+    "vsBot": {
+      "name": "Chat Stockfish'e karşı",
+      "desc": "Chat hamlelerini oylar (30 sn, çoğunluk), seçilen seviyedeki Stockfish'e karşı (300 ile 2400+ arası)."
     },
     "vsChat": {
       "name": "Sen chat'e karşı",

@@ -23,7 +23,6 @@ const NAMES = ['Pixel', 'Lynx', 'Kappa', 'Fourchette', 'Roquette', 'Zugzwang', '
 const CHATTER = ['gg', 'pog', 'allez !', 'bien joué', 'hmm', 'non pas ça', 'KEKW', 'on gagne ça', 'fourchette ?', 'easy'];
 const TICK_MS = 400;
 const MAX_BOTS = 30;
-const ENGINE_URL = '/vendor/stockfish/stockfish-19-lite-single.js';
 // Remplissage rapide : un mélange de niveaux
 const MIX = [1200, 1500, 900, 1800, 600, 2100, 1500, 300, 1200, 2400];
 // Pages de jeu (partie, problèmes, rush, Mono, Multi)
@@ -44,7 +43,6 @@ const TestTools = {
     plans: new Map(),    // login → { key, at, done }
     turnKey: null,
     engine: null,
-    worker: null,
     canBot: false,
     botAsked: false,
     el: null,
@@ -79,12 +77,17 @@ const TestTools = {
     },
 
     tick() {
-        if (!this.relevant()) {
+        // Écran Nouveau : les bots se préparent avant de lancer la partie
+        const onSetup = window.AppState?.currentPage === 'sandbox';
+        const relevant = this.relevant();
+        if ((relevant || onSetup) && (this.allowed === null || this.checkedFor !== twitchAuth.user?.login)) this.check();
+        // Étiquettes (stockfish) / (todo) de l'écran Nouveau : régie seulement
+        document.body.classList.toggle('is-tester', !!this.allowed);
+        this.renderSetup(onSetup && !!this.allowed);
+        if (!relevant || !this.allowed) {
             if (this.el) this.el.hidden = true;
             return;
         }
-        if (this.allowed === null || this.checkedFor !== twitchAuth.user?.login) this.check();
-        if (!this.allowed) { if (this.el) this.el.hidden = true; return; }
         this.render();
         if (this.bots.length) this.play();
     },
@@ -92,19 +95,8 @@ const TestTools = {
     // ---------- Moteur (Stockfish dans un Worker, lancé au premier bot) ----------
 
     getEngine() {
-        if (this.engine) return this.engine;
-        if (!window.BotEngine || typeof Worker !== 'function') return null;
-        try {
-            this.worker = new Worker(ENGINE_URL);
-        } catch (e) {
-            console.warn('🧪 Stockfish indisponible :', e);
-            return null;
-        }
-        const engine = window.BotEngine.createEngine((cmd) => this.worker?.postMessage(cmd));
-        this.worker.onmessage = (e) => String(e.data ?? '').split('\n').forEach(l => engine.onLine(l));
-        this.worker.onerror = (e) => { console.warn('🧪 Stockfish :', e.message || e); };
-        this.engine = engine;
-        return engine;
+        if (!this.engine) this.engine = window.BotEngine?.browserEngine() || null;
+        return this.engine;
     },
 
     // ---------- Bots ----------
@@ -225,34 +217,58 @@ const TestTools = {
 
     // ---------- Panneau ----------
 
+    /** Boutons du panneau (flottant ou dans Nouveau) */
+    bind(el) {
+        el.addEventListener('click', (e) => {
+            const a = e.target.closest('[data-test-action]');
+            if (!a) return;
+            const action = a.dataset.testAction;
+            if (action === 'add') this.addBot(this.level);
+            if (action === 'fill') this.fill(8);
+            if (action === 'clear') this.clear();
+            if (action === 'remove') this.removeBot(a.dataset.login);
+            if (action === 'bot') this.callBot();
+        });
+        el.addEventListener('change', (e) => {
+            if (e.target.matches('[data-test-level]')) this.level = Number(e.target.value) || 1500;
+        });
+    },
+
+    /** Écran Nouveau : bots à ajouter avant de lancer (ils restent pour la partie) */
+    renderSetup(show) {
+        const box = document.getElementById('setup-test-bots');
+        if (!box) return;
+        box.hidden = !show;
+        if (!show) return;
+        if (!box.dataset.bound) { box.dataset.bound = '1'; this.bind(box); }
+        const sig = this.bots.map(b => b.login).join();
+        if (box.dataset.sig === sig && box.childElementCount) return;
+        box.dataset.sig = sig;
+        box.innerHTML = this.html('🧪 Bots de test (régie)', false);
+    },
+
     render(force = false) {
         if (!this.allowed) return;
+        this.renderSetup(window.AppState?.currentPage === 'sandbox');
         if (!this.el) {
             this.el = document.createElement('div');
             this.el.className = 'test-tools';
-            this.el.addEventListener('click', (e) => {
-                const a = e.target.closest('[data-test-action]');
-                if (!a) return;
-                const action = a.dataset.testAction;
-                if (action === 'add') this.addBot(this.level);
-                if (action === 'fill') this.fill(8);
-                if (action === 'clear') this.clear();
-                if (action === 'remove') this.removeBot(a.dataset.login);
-                if (action === 'bot') this.callBot();
-            });
-            this.el.addEventListener('change', (e) => {
-                if (e.target.matches('[data-test-level]')) this.level = Number(e.target.value) || 1500;
-            });
+            this.bind(this.el);
             document.body.appendChild(this.el);
             force = true;
         }
-        this.el.hidden = false;
+        this.el.hidden = !this.relevant();
         const joined = this.bots.filter(b => lobby.players.has(b.login)).length;
         const sig = [this.bots.map(b => b.login).join(), this.canBot, this.botAsked, joined, lobby.active].join('|');
         if (!force && sig === this.sig) return;
         this.sig = sig;
-        this.el.innerHTML = `
-            <div class="test-tools__title">🧪 Test (régie)</div>
+        this.el.innerHTML = this.html('🧪 Test (régie)', true);
+    },
+
+    html(title, live) {
+        const joined = this.bots.filter(b => lobby.players.has(b.login)).length;
+        return `
+            <div class="test-tools__title">${title}</div>
             <div class="test-tools__row">
                 <select data-test-level title="Niveau du bot (Stockfish)">
                     ${levels().map(v => `<option value="${v}"${v === this.level ? ' selected' : ''}>${label(v)}</option>`).join('')}
@@ -265,8 +281,8 @@ const TestTools = {
             <div class="test-tools__row">
                 <button type="button" class="btn btn--sm btn--danger" data-test-action="clear">Retirer les bots</button>
             </div>
-            <div class="test-tools__info">${lobby.active ? `${joined}/${this.bots.length} inscrits · ` : ''}chacun vote une fois par tour (Stockfish à son niveau)</div>` : ''}
-            ${this.canBot ? `<div class="test-tools__row">
+            <div class="test-tools__info">${live && lobby.active ? `${joined}/${this.bots.length} inscrits · ` : ''}chacun vote une fois par tour (Stockfish à son niveau)</div>` : (live ? '' : '<div class="test-tools__info">Faux viewers joués par Stockfish : ils votent dans la partie que tu lances.</div>')}
+            ${live && this.canBot ? `<div class="test-tools__row">
                 <button type="button" class="btn btn--sm btn--secondary" data-test-action="bot"${this.botAsked ? ' disabled' : ''}>
                     ${this.botAsked ? 'Adversaire en route…' : `Adversaire fictif (Noirs, ${label(this.level)})`}
                 </button>

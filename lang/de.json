@@ -60,6 +60,15 @@
       "player1": "Spieler 1 ⬜",
       "player2": "Spieler 2 ⬛"
     },
+    "vsBot": {
+      "label": "Gegen Stockfish",
+      "level": "Stockfish-Stärke",
+      "side": "Der Chat spielt",
+      "random": "Zufällig",
+      "white": "Weiß",
+      "black": "Schwarz",
+      "thinking": "denkt nach…"
+    },
     "chatvchat": {
       "streamer1": "Chat 1 ⬜",
       "streamer2": "Chat 2 ⬛"
@@ -185,6 +194,10 @@
     "wheel": {
       "name": "Chaos-Rad",
       "desc": "Bis zu 3 Züge pro Zuschauer, das Rad lost unter den Stimmen aus."
+    },
+    "vsBot": {
+      "name": "Chat gegen Stockfish",
+      "desc": "Der Chat wählt seine Züge (30 s, Mehrheit) gegen Stockfish in der gewählten Stärke (300 bis 2400+)."
     },
     "vsChat": {
       "name": "Du gegen den Chat",
