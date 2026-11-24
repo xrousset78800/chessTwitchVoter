@@ -925,20 +925,20 @@ const H24Page = {
         const inPlay = s.phase === 'play' && !!g;
         const at = inPlay ? (g.draw || g.result ? null : g.turnEndsAt) : s.endsAt;
         const area = $('h24-wheel-area');
-        // Pendant la partie : grand chrono dans la colonne de gauche, avec le camp au trait
-        const big = $('h24-bigclock');
-        if (big) big.hidden = !inPlay;
-        const ring = inPlay && big ? big.querySelector('.h24-clock') : null;
-        if (ring) this.renderBigClockInfo(at);
-        // Tirage ou fin de partie : l'anneau reste en place (rien ne bouge), en veille
+        // Pendant la partie : pendules au bout des bandeaux des deux camps
+        if (inPlay) {
+            box.hidden = true;
+            area?.classList.toggle('is-soon', !!at && !s.paused && (this.remaining(at) ?? 99) <= 1);
+            this.paintPclocks();
+            return;
+        }
+        cancelAnimationFrame(this.pclockRaf); this.pclockRaf = 0;
         if (!at && !s.paused) {
             box.hidden = true;
-            if (ring) { ring.classList.add('is-idle'); ring.classList.remove('is-critical', 'is-paused'); ring.style.setProperty('--p', '0'); ring.querySelector('.h24-clock__num').textContent = '–'; }
             area?.classList.remove('is-soon');
             return;
         }
-        ring?.classList.remove('is-idle');
-        box.hidden = !!ring;
+        box.hidden = false;
         const left = s.paused ? null : this.remaining(at);
         // Durée totale : la plus grande valeur vue pour cette échéance
         const key = `${s.phase}:${at}`;
@@ -947,20 +947,6 @@ const H24Page = {
         const txt = left == null ? '--'
             : left >= 60 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : String(left);
         const critical = inPlay && left != null && left <= 5;
-        if (ring) {
-            const exactLeft = s.paused || !at ? left : Math.max(0, (at - (Date.now() + (this.skew || 0))) / 1000);
-            ring.hidden = false;
-            ring.style.setProperty('--p', String(Math.max(0, Math.min(1, (exactLeft || 0) / this.clockTotal))));
-            ring.classList.toggle('is-critical', critical);
-            ring.classList.toggle('is-paused', !!s.paused);
-            // Pendule : toujours m:ss, dixièmes sous 10 s
-            const ex = exactLeft ?? 0;
-            const mmss = ex < 10 ? `0:0${(Math.floor(ex * 10) / 10).toFixed(1)}`
-                : `${Math.floor(Math.ceil(ex) / 60)}:${String(Math.ceil(ex) % 60).padStart(2, '0')}`;
-            ring.querySelector('.h24-clock__num').innerHTML = s.paused ? '<i class="fas fa-pause"></i>' : esc(left == null ? '--' : mmss);
-            area.classList.toggle('is-soon', left != null && left <= 1);
-            return;
-        }
         $('h24-timer-value').textContent = txt;
         $('h24-timer-label').textContent = s.paused ? (s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'))
             : critical ? t('timerRing.hurry', null, 'votez !') : t('timerRing.seconds', null, 'secondes');
@@ -971,25 +957,35 @@ const H24Page = {
         $('h24-wheel-area')?.classList.toggle('is-soon', inPlay && left != null && left <= 1);
     },
 
-    /** Grand chrono : camp au trait (couleur) et consigne sous l'anneau */
-    renderBigClockInfo(at) {
-        const s = this.state, g = s.game;
-        const big = $('h24-bigclock'), sideEl = $('h24-bigclock-side'), lbl = $('h24-bigclock-label');
-        const solo = s.mode === 'rush';
-        const side = g.turn === 'b' ? 'b' : 'w';
-        const engine = s.mode === 'bot' && side !== s.vs?.side;
-        big.dataset.side = solo ? '' : side;
-        const name = solo ? t('h24.players', null, 'Joueurs')
-            : engine ? `Stockfish ${choiceLabel('elo', s.vs?.elo)}`
-            : t(side === 'w' ? 'h24.white' : 'h24.black', null, side === 'w' ? 'Blancs' : 'Noirs');
-        sideEl.innerHTML = `<span class="h24-team__swatch"></span>${engine ? '<i class="fas fa-robot"></i> ' : ''}${esc(name)}`;
-        const left = this.remaining(at);
-        lbl.textContent = g.result ? t('h24.gameOver', null, 'Partie terminée')
-            : s.paused ? (s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'))
-            : engine ? t('h24.botThinking', null, 'Stockfish réfléchit…')
-            : !at ? t('h24.toMove', null, 'Au trait')
-            : left != null && left <= 5 ? t('timerRing.hurry', null, 'votez !')
-            : t('h24.toMove', null, 'Au trait');
+    /**
+     * Pendules des bandeaux : le camp au trait décompte (blanc, dixièmes sous 10 s, rouge à 5 s),
+     * l'autre attend en gris avec la durée d'un tour. Rafraîchies à chaque image pour un défilement régulier.
+     */
+    paintPclocks() {
+        const s = this.state, g = s?.game;
+        const els = document.querySelectorAll('#page-h24 [data-pclock]');
+        if (!g || s.phase !== 'play' || !els.length) { cancelAnimationFrame(this.pclockRaf); this.pclockRaf = 0; return; }
+        const at = g.draw || g.result ? null : g.turnEndsAt;
+        const fmt = (sec) => sec < 10 ? `0:0${(Math.floor(sec * 10) / 10).toFixed(1)}`
+            : `${Math.floor(Math.ceil(sec) / 60)}:${String(Math.ceil(sec) % 60).padStart(2, '0')}`;
+        const full = fmt(Number(s.options?.turn) || 30);
+        let running = false;
+        for (const el of els) {
+            const side = el.dataset.pclock;
+            const active = !g.result && (side === 'all' || g.turn === side);
+            let html = full, critical = false;
+            if (active && s.paused) html = '<i class="fas fa-pause"></i>';
+            else if (active && at) {
+                const sec = Math.max(0, (at - (Date.now() + (this.skew || 0))) / 1000);
+                html = fmt(sec); critical = sec <= 5; running = sec > 0;
+            } else if (active) html = '–';
+            if (el.innerHTML !== html) el.innerHTML = html;
+            el.classList.toggle('is-active', active);
+            el.classList.toggle('is-paused', active && !!s.paused);
+            el.classList.toggle('is-critical', critical && !s.paused);
+        }
+        if (!running) { cancelAnimationFrame(this.pclockRaf); this.pclockRaf = 0; }
+        else if (!this.pclockRaf) this.pclockRaf = requestAnimationFrame(() => { this.pclockRaf = 0; this.paintPclocks(); });
     },
 
     renderSteps() {
@@ -1117,6 +1113,7 @@ const H24Page = {
             ? `<button type="button" class="btn btn--sm btn--twitch" data-h24-login><i class="fab fa-twitch"></i> ${esc(t('h24.login', null, 'Se connecter avec Twitch'))}</button>`
             : !team ? `<button type="button" class="btn btn--sm btn--primary" data-h24-signup><i class="fas fa-user-plus"></i> ${esc(t('h24.join', null, 'Rejoindre'))}</button>`
             : `<button type="button" class="h24-side__quit" data-h24-quit>${esc(t('h24.quit', null, 'Quitter la partie'))}</button>`;
+        const pclock = (side) => `<span class="h24-pclock" data-pclock="${side}"></span>`;
         const fill = (el, pos, side, withAction) => {
             // Contre Stockfish : la bande du moteur (niveau, « réfléchit… »)
             if (s.mode === 'bot' && side !== s.vs?.side) {
@@ -1124,7 +1121,7 @@ const H24Page = {
                 el.className = `h24-side h24-side--${pos} h24-side--${side} h24-side--engine${turn ? ' is-turn' : ''}`;
                 el.innerHTML = `<span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span><i class="fas fa-robot"></i> Stockfish ${esc(choiceLabel('elo', s.vs?.elo))}</span>
                     ${turn && s.vs?.thinking ? `<span class="h24-side__turn">${esc(t('h24.botThinking', null, 'Stockfish réfléchit…'))}</span>` : ''}
-                    <span class="h24-side__spacer"></span>`;
+                    <span class="h24-side__spacer"></span>${pclock(side)}`;
                 return;
             }
             const n = (s.teams?.[side] || []).length;
@@ -1136,7 +1133,7 @@ const H24Page = {
                 <span class="h24-side__count" title="${esc(t('h24.players', null, 'Joueurs'))}"><i class="fas fa-user"></i> ${n}</span>
                 ${mine ? `<span class="h24-side__mine">${esc(t('h24.yourTeam', null, 'Votre équipe'))}</span>` : ''}
                 ${turn ? `<span class="h24-side__turn">${esc(t('h24.toMove', null, 'Au trait'))}</span>` : ''}
-                <span class="h24-side__spacer"></span>${withAction ? action : ''}`;
+                <span class="h24-side__spacer"></span>${withAction ? action : ''}${pclock(solo ? 'all' : side)}`;
         };
         if (solo) { top.hidden = true; fill(bottom, 'bottom', 'w', true); }
         else {
