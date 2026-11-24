@@ -14,31 +14,28 @@
 
 /* ----- Bannière HUD (sandbox) ----- */
 
+/* En tête de la colonne de gauche, même style que le bloc « Tape ton coup dans le chat » */
 .rush-banner {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: baseline;
     flex-wrap: wrap;
-    gap: 18px;
-    padding: 10px 14px;
+    gap: 4px 14px;
     margin-bottom: 10px;
-    border-radius: 3px;
-    border: 1px solid rgba(245, 158, 11, 0.35);
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.10));
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
     font-family: 'JetBrains Mono', monospace;
 }
 
 .rush-banner--ended {
-    border-color: rgba(239, 68, 68, 0.45);
-    opacity: 0.85;
+    opacity: 0.7;
 }
 
 .rush-banner__title {
+    flex-basis: 100%;
     font-family: 'Chakra Petch', sans-serif;
     font-weight: 700;
     font-size: 0.9rem;
-    color: var(--accent-orange);
-    letter-spacing: 1px;
+    color: var(--text-primary);
 }
 
 .rush-banner__stat {
@@ -350,9 +347,6 @@
 }
 
 @media (max-width: 768px) {
-    .rush-banner {
-        gap: 10px 14px;
-    }
     .rush-end__stats {
         gap: 20px;
     }

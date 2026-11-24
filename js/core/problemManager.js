@@ -9,6 +9,8 @@
  */
 
 import { matchLegalMove, fmtMove } from '../utils/moveMatch.js';
+import { paintMoveChips } from '../components/voteViews.js';
+import { paletteColors } from '../components/votePalettes.js';
 
 class ProblemsManager {
     constructor() {
@@ -415,7 +417,8 @@ receiveVote(voteData) {
         console.log('🗳️ Vote rejeté : coup illégal', rawMove);
         return false;
     }
-    const move = resolved.san;
+    // Sans « + » / « # » : le suffixe trahirait l'échec ou le mat (podium, journal des votes)
+    const move = resolved.san.replace(/[+#]/g, '');
 
     // Au plus N votes par viewer Twitch pour ce coup
     const login = typeof voteData === 'object' ? String(voteData.username || '').toLowerCase() : '';
@@ -470,6 +473,9 @@ syncWheelDisplay() {
 }
 /** Flèche « coup en tête » (ou rien sans vote) ; ne touche pas à la flèche du coup joué */
 showLeadArrow(counts = {}) {
+    // Compteurs sur les boutons de la colonne « Coups disponibles » (vidés quand les votes repartent à zéro)
+    paintMoveChips(document.getElementById('moves-panel'),
+        Object.entries(counts).map(([move, count]) => ({ move, count })), paletteColors());
     const ge = window.gameEngine;
     if (!ge?.showLeadArrow) return;
     const results = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([move, count]) => ({ move, count }));
