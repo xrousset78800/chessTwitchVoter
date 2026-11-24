@@ -192,6 +192,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             tally: g.tally,
             teams: { w: [...s.teams.w], b: [...s.teams.b] },
             votes: { w: Object.fromEntries(g.voteCount.w), b: Object.fromEntries(g.voteCount.b) },
+            hits: teams ? Object.fromEntries(g.hits) : undefined,
+            key: teams ? g.key || undefined : undefined,
             vs: s.mode === 'bot' ? { elo: s.options.elo, side: s.vsSide } : undefined,
             bots: botCount()
         });
@@ -216,7 +218,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
 
         const teamGames = games.filter(x => x.mode === 'teams');
         const rushGames = games.filter(x => x.mode === 'rush');
-        const players = new Set(), voters = new Map(), winners = new Map(), played = new Map();
+        const players = new Set(), voters = new Map(), winners = new Map(), played = new Map(), hits = new Map();
+        const vsLevels = {};
+        let bestBeaten = null;
         const firstMoves = new Map(), openings = new Map(), moves = new Map(), reasons = {};
         const hours = Array(24).fill(0);
         const dayMs = 86400000;
@@ -242,6 +246,15 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 for (const l of x.teams?.[side] || []) if (human(l)) inGame.add(l);
             }
             for (const l of inGame) { players.add(l); inc(played, l); }
+            for (const [l, n] of Object.entries(x.hits || {})) if (human(l)) inc(hits, l, n);
+            if (x.mode === 'bot' && x.vs) {
+                const r = x.result || {};
+                const lv = vsLevels[x.vs.elo] ||= { elo: x.vs.elo, games: 0, win: 0, draw: 0, loss: 0 };
+                lv.games++;
+                if (r.kind !== 'mate') lv.draw++;
+                else if (r.winner === x.vs.side) { lv.win++; if (!bestBeaten || x.vs.elo > bestBeaten.elo) bestBeaten = { elo: x.vs.elo, at: x.at, plies: x.plies }; }
+                else lv.loss++;
+            }
             if (x.mode !== 'teams') continue;
             plies += x.plies || 0;
             random += x.tally?.random || 0;
@@ -288,10 +301,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             rush: { games: rushGames.length, best: bestRush, avgSolved: rushGames.length ? Math.round(rushSolved * 10 / rushGames.length) / 10 : 0,
                 bestRating: Math.max(0, ...rushGames.map(x => (x.rush || x.result || {}).maxRating || 0)) },
             ballots: ballotStats,
-            players: { voters: top(voters), winners: top(winners), played: top(played) },
+            players: { voters: top(voters), winners: top(winners), played: top(played), hits: top(hits) },
+            vsBot: { games: games.filter(x => x.mode === 'bot').length, levels: Object.values(vsLevels).sort((a, b) => a.elo - b.elo), bestBeaten },
             activity: { hours, days: perDay },
             recent: games.slice(-12).reverse().map(x => ({ at: x.at, mode: x.mode, result: x.result, plies: x.plies, ms: x.ms,
-                players: (x.teams?.w?.length || 0) + (x.teams?.b?.length || 0), bots: x.bots || 0, decision: x.opts?.decision }))
+                players: (x.teams?.w?.length || 0) + (x.teams?.b?.length || 0), bots: x.bots || 0, decision: x.opts?.decision, vs: x.vs }))
         };
     }
     // Chat Twitch de chaque compte connecté à la page (sa propre chaîne), lu en anonyme : join, coups et votes (1, 2, 3…)
@@ -486,6 +500,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         return { chess, startFen: chess.fen(), history: [], hv: [], lastMove: null, votes: new Map(), recent: [],
             turnEndsAt: null, draw: null, random: false, result: null, startedAt: Date.now(),
             voteCount: { w: new Map(), b: new Map() },
+            hits: new Map(),      // login → nombre de ses coups joués (MVP)
+            key: null,            // coup du match : le plus disputé { san, ply, pct, total, side }
             tally: { random: 0, wheel: 0, ties: 0, peak: viewers() } };   // pour les stats
     }
 
@@ -603,8 +619,16 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!m) return startTurn();
         // Pour l'historique : part des votes du coup joué, ou « r » (hasard, personne n'a voté)
         let total = 0, mine = 0;
-        for (const list of g.votes.values()) for (const x of list) { total++; if (x === m.san) mine++; }
+        const options = new Set();
+        for (const list of g.votes.values()) for (const x of list) { total++; options.add(x); if (x === m.san) mine++; }
         g.hv.push(g.engine ? null : g.random || !total ? 'r' : Math.round(mine * 100 / total));
+        if (!g.engine && !g.random && total) {
+            // MVP : chaque votant du coup joué marque un point
+            for (const [login, list] of g.votes) if (list.includes(m.san)) g.hits.set(login, (g.hits.get(login) || 0) + 1);
+            // Coup du match : le plus disputé (part la plus faible, au moins deux coups en lice)
+            const pct = Math.round(mine * 100 / total);
+            if (options.size > 1 && (!g.key || pct <= g.key.pct)) g.key = { san: m.san, ply: g.history.length, pct, total, side: m.color };
+        }
         g.engine = false;
         g.history.push(m.san);
         g.lastMove = { from: m.from, to: m.to };
@@ -716,6 +740,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.result = result;
         g.turnEndsAt = null;
         const top = (side) => [...g.voteCount[side].entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([login, n]) => ({ login, n }));
+        // MVP : le plus de coups retenus, puis le moins de votes pour y arriver
+        const votesOf = (l) => (g.voteCount.w.get(l) || 0) + (g.voteCount.b.get(l) || 0);
+        const mvpEntry = [...g.hits.entries()].sort((a, b) => b[1] - a[1] || votesOf(a[0]) - votesOf(b[0]))[0];
+        const mvp = mvpEntry ? { login: mvpEntry[0], n: mvpEntry[1], votes: votesOf(mvpEntry[0]), side: teamOf(mvpEntry[0]) } : null;
         s.recap = {
             mode: s.mode,
             result,
@@ -723,6 +751,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             durationMs: Date.now() - g.startedAt,
             players: { w: s.teams.w.length, b: s.teams.b.length },
             top: { w: top('w'), b: top('b') },
+            mvp,
+            key: g.key,
             vs: s.mode === 'bot' ? { elo: s.options.elo, side: s.vsSide } : null
         };
         s.lastResult = result;

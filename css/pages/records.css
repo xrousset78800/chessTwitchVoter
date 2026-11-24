@@ -789,7 +789,14 @@ a.rec-link:hover { text-decoration: underline; }
 .h24s-ballot { min-width: 0; }
 .h24s-card--wide:has(.h24s-ballot) { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); column-gap: 24px; }
 .h24s-card--wide:has(.h24s-ballot) > .h24s-card__title { grid-column: 1 / -1; }
-.h24s-ranks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.h24s-ranks { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 20px; }
+.h24s-vs { width: 100%; margin-top: 8px; border-collapse: collapse; font-size: 0.85rem; }
+.h24s-vs th { padding: 4px 6px; text-align: right; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
+.h24s-vs td { padding: 5px 6px; text-align: right; border-top: 1px solid var(--border-subtle); font-variant-numeric: tabular-nums; }
+.h24s-vs th:first-child, .h24s-vs td:first-child { text-align: left; font-weight: 700; }
+.h24s-vs td small { color: var(--text-secondary); }
+.h24s-vs td.h24s-vs__w { color: #34d399; }
+.h24s-vs td.h24s-vs__l { color: #f87171; }
 .h24s-rank { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; }
 .h24s-rank li { display: flex; align-items: center; gap: 8px; }
 .h24s-rank__i { width: 22px; text-align: center; color: var(--text-muted); font-weight: 700; }

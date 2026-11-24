@@ -27,6 +27,7 @@ function choiceLabel(id, c) {
     if (id === 'votes') return tr(Number(c) === 1 ? 'h24.votesOne' : 'h24.votesN', { n: c }, `${c}`);
     if (id === 'anonymity') return tr(`h24.anonymity.${c}`, null, c);
     if (id === 'spin') return tr(`h24.spin.${c}`, null, c);
+    if (id === 'elo') return `Stockfish ${Number(c) >= 2400 ? '2400+' : c}`;
     return String(c);
 }
 function resultLabel(r) {
@@ -157,9 +158,20 @@ const H24Stats = {
             ${ru.bestRating ? kv(t('rushRating', null, 'Puzzle le plus dur résolu'), fmtNum(ru.bestRating)) : ''}`
             : `<p class="h24s-none">${esc(t('noRush', null, 'Aucun rush terminé'))}</p>`);
 
+        // Contre Stockfish : bilan par niveau
+        const vs = d.vsBot || { games: 0, levels: [] };
+        const lvl = (elo) => (Number(elo) >= 2400 ? '2400+' : String(elo));
+        const vsCard = card(`<i class="fas fa-robot"></i> ${esc(t('vsBot', null, 'Contre Stockfish'))}`, vs.levels.length ? `
+            ${vs.bestBeaten ? kv(t('vsBest', null, 'Plus haut niveau battu'), `Stockfish ${esc(lvl(vs.bestBeaten.elo))}`) : kv(t('vsBest', null, 'Plus haut niveau battu'), esc(t('vsNoWin', null, 'Aucun pour l\'instant')))}
+            <table class="h24s-vs"><thead><tr><th>${esc(t('vsLevel', null, 'Niveau'))}</th><th>${esc(t('games', null, 'Parties'))}</th>
+                <th class="h24s-vs__w">${esc(t('vsWin', null, 'Victoires'))}</th><th>${esc(t('draws', null, 'Nulles'))}</th><th class="h24s-vs__l">${esc(t('vsLoss', null, 'Défaites'))}</th></tr></thead>
+            <tbody>${vs.levels.map(l => `<tr><td>${esc(lvl(l.elo))}</td><td>${fmtNum(l.games)}</td>
+                <td class="h24s-vs__w">${fmtNum(l.win)} <small>${pct(l.win, l.games)} %</small></td><td>${fmtNum(l.draw)}</td><td class="h24s-vs__l">${fmtNum(l.loss)}</td></tr>`).join('')}</tbody></table>`
+            : `<p class="h24s-none">${esc(t('vsNone', null, 'Aucune partie contre Stockfish terminée'))}</p>`);
+
         // Votes d'options
-        const order = ['mode', 'turn', 'decision', 'spin', 'votes', 'anonymity'];
-        const titles = { mode: tr('h24.ballot.mode', null, 'Mode'), turn: tr('h24.ballot.turn', null, 'Temps par coup'), decision: tr('h24.ballot.decision', null, 'Décision'),
+        const order = ['mode', 'elo', 'turn', 'decision', 'spin', 'votes', 'anonymity'];
+        const titles = { elo: tr('h24.ballot.elo', null, 'Niveau de Stockfish'), mode: tr('h24.ballot.mode', null, 'Mode'), turn: tr('h24.ballot.turn', null, 'Temps par coup'), decision: tr('h24.ballot.decision', null, 'Décision'),
             spin: tr('h24.ballot.spin', null, 'Roue'), votes: tr('h24.ballot.votes', null, 'Votes par joueur'), anonymity: tr('h24.ballot.anonymity', null, 'Votes') };
         const ballots = order.filter(id => d.ballots?.[id]).map(id => {
             const b = d.ballots[id];
@@ -177,6 +189,7 @@ const H24Stats = {
             <div><p class="h24s-sub">${esc(t('topVoters', null, 'Plus gros votants'))}</p>${rank(pl.voters)}</div>
             <div><p class="h24s-sub">${esc(t('topWinners', null, 'Le plus de victoires'))}</p>${rank(pl.winners)}</div>
             <div><p class="h24s-sub">${esc(t('topPlayed', null, 'Le plus de parties'))}</p>${rank(pl.played)}</div>
+            <div><p class="h24s-sub">${esc(t('topHits', null, 'Meilleur flair (coups retenus)'))}</p>${rank(pl.hits || [])}</div>
         </div><p class="h24s-note">${esc(t('botsExcluded', null, 'Les bots de test ne sont jamais classés.'))}</p>`, 'h24s-card--wide');
 
         // Activité
@@ -191,14 +204,14 @@ const H24Stats = {
         // Dernières parties
         const recent = card(`<i class="fas fa-history"></i> ${esc(t('recent', null, 'Dernières parties'))}`, d.recent.length ? `<div class="h24s-recent">${d.recent.map(g => `
             <div class="h24s-game h24s-game--${g.result?.kind === 'mate' ? g.result.winner : g.result?.kind || 'draw'}">
-                <span class="h24s-game__mode"><i class="fas ${g.mode === 'rush' ? 'fa-bolt' : 'fa-chess'}"></i></span>
+                <span class="h24s-game__mode"><i class="fas ${g.mode === 'rush' ? 'fa-bolt' : g.mode === 'bot' ? 'fa-robot' : 'fa-chess'}"></i></span>
                 <span class="h24s-game__res">${esc(resultLabel(g.result))}</span>
-                <span class="h24s-game__meta">${g.mode === 'teams' ? `${fmtNum(Math.ceil(g.plies / 2))} ${esc(t('movesShort', null, 'coups'))} · ` : ''}${fmtDur(g.ms)} · ${fmtNum(g.players)} ${esc(t('playersShort', null, 'joueurs'))}${g.bots ? ` · <i class="fas fa-robot" title="${esc(t('withBots', null, 'Parties avec bots'))}"></i>` : ''}</span>
+                <span class="h24s-game__meta">${g.vs ? `Stockfish ${Number(g.vs.elo) >= 2400 ? '2400+' : g.vs.elo} · ` : ''}${g.mode === 'teams' ? `${fmtNum(Math.ceil(g.plies / 2))} ${esc(t('movesShort', null, 'coups'))} · ` : ''}${fmtDur(g.ms)} · ${fmtNum(g.players)} ${esc(t('playersShort', null, 'joueurs'))}${g.bots ? ` · <i class="fas fa-robot" title="${esc(t('withBots', null, 'Parties avec bots'))}"></i>` : ''}</span>
                 <span class="h24s-game__at">${esc(fmtDate(g.at))}</span>
             </div>`).join('')}</div>` : `<p class="h24s-none">${esc(t('none', null, 'Pas encore de données'))}</p>`, 'h24s-card--wide');
 
         const since = d.since ? `<p class="rec-hint">${esc(t('since', { d: new Date(d.since).toLocaleDateString(lang()) }, `Depuis le ${new Date(d.since).toLocaleDateString(lang())}`))}</p>` : '';
-        return `${head}${since}<div class="h24s-grid">${results}${decisions}${rush}${ballotCard}${playersCard}${activity}${recent}</div>`;
+        return `${head}${since}<div class="h24s-grid">${results}${decisions}${vsCard}${rush}${ballotCard}${playersCard}${activity}${recent}</div>`;
     }
 };
 

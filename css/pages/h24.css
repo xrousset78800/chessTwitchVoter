@@ -135,6 +135,14 @@
 .h24-recap__top { display: flex; gap: 8px; align-items: flex-start; }
 .h24-recap__top ol { margin: 0; padding-left: 18px; font-size: 0.85rem; }
 .h24-recap__top small { color: var(--text-secondary); }
+.h24-recap__hls { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.h24-recap__hl { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border: 1px solid rgba(255, 138, 61, 0.35); border-radius: 4px; background: rgba(255, 138, 61, 0.08); min-width: 0; }
+.h24-recap__hl-k { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #ffb27a; }
+.h24-recap__hl-v { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 1.05rem; color: #fff; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h24-recap__san { font-family: 'JetBrains Mono', monospace; }
+.h24-recap__hl small { font-size: 0.75rem; color: var(--text-secondary); }
+.h24-recap__sw--w { background: #f5f5f5; }
+.h24-recap__sw--b { background: #1a1a1a; }
 
 
 /* ---- Colonne de droite compacte : tient dans l'écran, l'historique défile ---- */

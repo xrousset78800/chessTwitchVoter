@@ -1397,6 +1397,23 @@ const H24Page = {
         return `${clock}<p class="h24-card__sub">${esc(t('h24.loading', null, 'Chargement…'))}</p>`;
     },
 
+    /** Récap : MVP (le plus de coups retenus) et coup du match (le plus disputé) */
+    recapHighlights(r) {
+        const items = [];
+        if (r.mvp) items.push(`<div class="h24-recap__hl">
+            <span class="h24-recap__hl-k"><i class="fas fa-crown"></i> ${esc(t('h24.mvp', null, 'MVP'))}</span>
+            <span class="h24-recap__hl-v">${r.mvp.side ? `<span class="h24-team__swatch h24-recap__sw--${r.mvp.side}"></span>` : ''}${esc(r.mvp.login)}</span>
+            <small>${esc(t('h24.mvpLine', { n: r.mvp.n, v: r.mvp.votes }, `${r.mvp.n} coup(s) retenu(s) sur ${r.mvp.votes} vote(s)`))}</small></div>`);
+        if (r.key) {
+            const num = `${Math.floor(r.key.ply / 2) + 1}${r.key.side === 'b' ? '…' : '.'}`;
+            items.push(`<div class="h24-recap__hl">
+            <span class="h24-recap__hl-k"><i class="fas fa-bolt"></i> ${esc(t('h24.keyMove', null, 'Coup du match'))}</span>
+            <span class="h24-recap__hl-v"><span class="h24-team__swatch h24-recap__sw--${r.key.side}"></span><span class="h24-recap__san">${esc(num)} ${esc(r.key.san)}</span></span>
+            <small>${esc(t('h24.keyMoveLine', { pct: r.key.pct, n: r.key.total }, `le plus disputé : ${r.key.pct} % des ${r.key.total} votes`))}</small></div>`);
+        }
+        return items.length ? `<div class="h24-recap__hls">${items.join('')}</div>` : '';
+    },
+
     recapHtml(r) {
         const info = this.resultInfo(r.result || { kind: 'draw' });
         const headline = [info.title, info.sub].filter(Boolean).join(' · ');
@@ -1410,6 +1427,7 @@ const H24Page = {
                 <span><strong>${mins}</strong> min</span>
                 <span><strong>${(r.players?.w || 0) + (r.players?.b || 0)}</strong> ${esc(t('h24.playersShort', null, 'joueurs'))}</span>
             </div>
+            ${this.recapHighlights(r)}
             ${tops ? `<p class="h24-recap__label">${esc(t('h24.topVoters', null, 'Plus gros votants'))}</p><div class="h24-recap__tops">${tops}</div>` : ''}
             <p class="h24-card__next">${esc(t('h24.nextSoon', null, 'Vote du prochain mode juste après.'))}</p>`;
     },
