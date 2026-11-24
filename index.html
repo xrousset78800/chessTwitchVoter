@@ -761,6 +761,11 @@
                                 <ol class="h24-steps" id="h24-steps"></ol>
                             </div>
                             <div class="h24-options" id="h24-options"></div>
+                            <!-- Chrono du tour, bien visible : anneau, camp au trait, consigne -->
+                            <div class="h24-bigclock" id="h24-bigclock" hidden>
+                                <div class="h24-clock h24-clock--big"><span class="h24-clock__num"></span></div>
+                                <div class="h24-bigclock__info"><span class="h24-bigclock__side" id="h24-bigclock-side"></span><span class="h24-bigclock__label" id="h24-bigclock-label"></span></div>
+                            </div>
                             <div class="watch__status h24-turn" id="h24-turn"></div>
                             <div class="h24-score" id="h24-score" hidden></div>
                         </div>
@@ -812,17 +817,15 @@
                     <div class="sandbox__sidebar">
                         <div class="sandbox__actions game-toolbar">
                             <span class="spectators-badge"><i class="fas fa-eye"></i> <span id="h24-viewers">0</span></span>
-                            <!-- Réglages du viewer (son, tirage, couleurs) regroupés derrière la roue crantée -->
+                            <!-- Son : directement accessible -->
+                            <div class="h24-volume h24-volume--bar">
+                                <button type="button" class="h24-volume__btn" data-h24-mute title="Couper le son"><i class="fas fa-volume-up"></i></button>
+                                <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" title="Volume">
+                            </div>
+                            <!-- Réglages du viewer (tirage, couleurs) regroupés derrière la roue crantée -->
                             <div class="h24-settings">
                                 <button type="button" class="h24-settings__btn" data-h24-settings aria-expanded="false" aria-haspopup="true"><i class="fas fa-cog"></i> <span data-i18n="h24.settings">Paramètres</span></button>
                                 <div class="h24-settings__pop" id="h24-settings" hidden>
-                                    <div class="h24-settings__row">
-                                        <span class="h24-settings__label" data-i18n="h24.settingsSound">Son</span>
-                                        <div class="h24-volume">
-                                            <button type="button" class="h24-volume__btn" data-h24-mute title="Couper le son"><i class="fas fa-volume-up"></i></button>
-                                            <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" title="Volume">
-                                        </div>
-                                    </div>
                                     <div class="h24-settings__row">
                                         <span class="h24-settings__label" data-i18n="h24.settingsDraw">Tirage</span>
                                         <div class="h24-style" role="group">

@@ -735,6 +735,10 @@ const H24Page = {
                 ${this.regie.live && p?.isConnected ? `<button type="button" class="btn btn--sm" data-h24-regie="sync" title="${esc(t('h24.regie.syncHint', null, 'Renvoyer la position au Phantom'))}"><i class="fas fa-sync-alt"></i></button>` : ''}
                 <button type="button" class="btn btn--sm${server.paused ? ' btn--primary' : ''}" data-h24-regie="pause"><i class="fas fa-${server.paused ? 'play' : 'pause'}"></i> ${esc(server.paused ? t('h24.regie.resume', null, 'Reprendre') : t('h24.regie.pause', null, 'Pause'))}</button>
             </div>
+            ${p?.isConnected ? `<div class="h24-regie__row">
+                <span class="h24-regie__status"><i class="fas fa-tachometer-alt"></i> ${esc(t('setup.phantomSpeed', null, 'Vitesse'))}</span>
+                <div class="ph-speed" data-ph-speed role="group" aria-label="${esc(t('setup.phantomSpeed', null, 'Vitesse'))}">${[1, 2, 3, 4, 5].map(v => `<button type="button" data-speed="${v}"${v === p.currentSpeed ? ' class="is-active"' : ''}>${v}</button>`).join('')}</div>
+            </div>` : ''}
             <form class="h24-regie__row h24-regie__channel" data-h24-regie-form>
                 <input type="text" id="h24-regie-channel" maxlength="60" autocomplete="off" placeholder="${esc(t('h24.regie.channelPh', null, 'Chaîne Twitch de la vue réelle'))}" value="${esc(this.regie.channel || shown || this.me.login || '')}">
                 <button type="submit" class="btn btn--sm${(this.regie.channel || '').toLowerCase() !== shown ? ' btn--primary' : ''}" title="${esc(t('h24.regie.channelSet', null, 'Afficher cette chaîne'))}"><i class="fas fa-check"></i></button>
@@ -921,10 +925,11 @@ const H24Page = {
         const inPlay = s.phase === 'play' && !!g;
         const at = inPlay ? (g.draw || g.result ? null : g.turnEndsAt) : s.endsAt;
         const area = $('h24-wheel-area');
-        // L'anneau vit dans la bande de l'équipe au trait (rush : la seule bande), devant son nom
-        const bar = inPlay ? (s.mode === 'rush' ? $('h24-side-bottom') : document.querySelector('#page-h24 .h24-side.is-turn')) : null;
-        document.querySelectorAll('#page-h24 .h24-clock').forEach(c => { if (c.parentElement !== bar) c.remove(); });
-        const ring = bar && !bar.hidden ? this.ringEl(bar) : null;
+        // Pendant la partie : grand chrono dans la colonne de gauche, avec le camp au trait
+        const big = $('h24-bigclock');
+        if (big) big.hidden = !inPlay;
+        const ring = inPlay && big ? big.querySelector('.h24-clock') : null;
+        if (ring) this.renderBigClockInfo(at);
         // Tirage ou fin de partie : l'anneau reste en place (rien ne bouge), en veille
         if (!at && !s.paused) {
             box.hidden = true;
@@ -962,16 +967,25 @@ const H24Page = {
         $('h24-wheel-area')?.classList.toggle('is-soon', inPlay && left != null && left <= 1);
     },
 
-    /** Anneau du chrono, en tête de la bande de l'équipe au trait */
-    ringEl(wrap) {
-        let el = wrap.querySelector(':scope > .h24-clock');
-        if (!el) {
-            el = document.createElement('div');
-            el.className = 'h24-clock';
-            el.innerHTML = '<span class="h24-clock__num"></span>';
-            wrap.prepend(el);
-        }
-        return el;
+    /** Grand chrono : camp au trait (couleur) et consigne sous l'anneau */
+    renderBigClockInfo(at) {
+        const s = this.state, g = s.game;
+        const big = $('h24-bigclock'), sideEl = $('h24-bigclock-side'), lbl = $('h24-bigclock-label');
+        const solo = s.mode === 'rush';
+        const side = g.turn === 'b' ? 'b' : 'w';
+        const engine = s.mode === 'bot' && side !== s.vs?.side;
+        big.dataset.side = solo ? '' : side;
+        const name = solo ? t('h24.players', null, 'Joueurs')
+            : engine ? `Stockfish ${choiceLabel('elo', s.vs?.elo)}`
+            : t(side === 'w' ? 'h24.white' : 'h24.black', null, side === 'w' ? 'Blancs' : 'Noirs');
+        sideEl.innerHTML = `<span class="h24-team__swatch"></span>${engine ? '<i class="fas fa-robot"></i> ' : ''}${esc(name)}`;
+        const left = this.remaining(at);
+        lbl.textContent = g.result ? t('h24.gameOver', null, 'Partie terminée')
+            : s.paused ? (s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'))
+            : engine ? t('h24.botThinking', null, 'Stockfish réfléchit…')
+            : !at ? t('h24.toMove', null, 'Au trait')
+            : left != null && left <= 5 ? t('timerRing.hurry', null, 'votez !')
+            : t('h24.toMove', null, 'Au trait');
     },
 
     renderSteps() {
