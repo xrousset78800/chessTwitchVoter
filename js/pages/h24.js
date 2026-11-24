@@ -913,9 +913,10 @@ const H24Page = {
         const inPlay = s.phase === 'play' && !!g;
         const at = inPlay ? (g.draw || g.result ? null : g.turnEndsAt) : s.endsAt;
         const area = $('h24-wheel-area');
-        const bar = document.querySelector('#page-h24 .sandbox__actions');
-        const ring = inPlay && bar ? this.ringEl(bar) : null;
-        if (!ring) bar?.querySelector(':scope > .h24-clock')?.remove();
+        // L'anneau vit dans la bande de l'équipe au trait (rush : la seule bande), devant son nom
+        const bar = inPlay ? (s.mode === 'rush' ? $('h24-side-bottom') : document.querySelector('#page-h24 .h24-side.is-turn')) : null;
+        document.querySelectorAll('#page-h24 .h24-clock').forEach(c => { if (c.parentElement !== bar) c.remove(); });
+        const ring = bar && !bar.hidden ? this.ringEl(bar) : null;
         // Tirage ou fin de partie : l'anneau reste en place (rien ne bouge), en veille
         if (!at && !s.paused) {
             box.hidden = true;
@@ -953,7 +954,7 @@ const H24Page = {
         $('h24-wheel-area')?.classList.toggle('is-soon', inPlay && left != null && left <= 1);
     },
 
-    /** Anneau du chrono, en tête de la barre d'outils de la colonne de droite */
+    /** Anneau du chrono, en tête de la bande de l'équipe au trait */
     ringEl(wrap) {
         let el = wrap.querySelector(':scope > .h24-clock');
         if (!el) {
@@ -1101,9 +1102,13 @@ const H24Page = {
                 ${turn ? `<span class="h24-side__turn">${esc(t('h24.toMove', null, 'Au trait'))}</span>` : ''}
                 <span class="h24-side__spacer"></span>${withAction ? action : ''}`;
         };
-        if (solo) { top.hidden = true; fill(bottom, 'bottom', 'w', true); return; }
-        fill(top, 'top', low === 'w' ? 'b' : 'w', false);
-        fill(bottom, 'bottom', low, true);
+        if (solo) { top.hidden = true; fill(bottom, 'bottom', 'w', true); }
+        else {
+            fill(top, 'top', low === 'w' ? 'b' : 'w', false);
+            fill(bottom, 'bottom', low, true);
+        }
+        // Les bandes viennent d'être réécrites : le chrono y reprend sa place tout de suite
+        this.renderClock();
     },
 
     renderAccount() {
@@ -1237,6 +1242,7 @@ const H24Page = {
             // Nouveau tour : le podium repart de zéro (pas de coup fantôme du tour précédent)
             if (this.podiumKey !== g.fen) { this.podiumKey = g.fen; list?.querySelector('.podium')?.remove(); }
             renderPodium(list, $('h24-votes-total'), g.votes || [], { turn: g.turn, colors: COLORS, secret: g.secret, masked: g.masked });
+            this.tickerTotal((g.votes || []).reduce((a, v) => a + (v.count || 0), 0) || (typeof g.secret === 'number' ? g.secret : 0));
             return;
         }
         $('h24-votes')?.querySelector('.podium')?.remove();
@@ -1261,11 +1267,23 @@ const H24Page = {
         const total = entries.reduce((a, [, n]) => a + n, 0) || (typeof g.secret === 'number' ? g.secret : 0);
         const tot = $('h24-votes-total');
         if (tot) tot.textContent = total ? t(total > 1 ? 'watch.totalMany' : 'watch.totalOne', { n: total }, `${total} vote${total > 1 ? 's' : ''}`) : t('wheelStyle.waiting', null, '');
+        this.tickerTotal(total);
+    },
+
+    /** Mode bande : le total des votes du tour dans l'étiquette « Votes » (et plus en bas de la colonne de droite) */
+    tickerTotal(total) {
+        const band = this.style === 'band';
+        $('h24-votes-panel')?.classList.toggle('is-band', band);
+        const cnt = $('h24-ticker-count');
+        if (cnt) cnt.textContent = band && total ? String(total) : '';
     },
 
     clearLive() {
         this.liveKey = null;
         this.liveSig = null;
+        const cnt = $('h24-ticker-count');
+        if (cnt) cnt.textContent = '';
+        $('h24-votes-panel')?.classList.remove('is-band');
         $('h24-votes-panel')?.classList.remove('is-live');
         $('h24-wheel-area')?.classList.remove('is-visible', 'is-live');
     },

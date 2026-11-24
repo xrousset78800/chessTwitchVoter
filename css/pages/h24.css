@@ -50,7 +50,6 @@
 
 /* ---- Échiquier ---- */
 #h24-board-wrap { border-radius: 2px; transition: box-shadow 0.2s; }
-#h24-board-wrap.is-my-turn { box-shadow: 0 0 0 3px var(--twitch-purple), 0 0 24px rgba(255, 138, 61, 0.45); }
 #h24-board .h24-last { box-shadow: inset 0 0 0 100px rgba(255, 214, 10, 0.35); }
 
 /* ---- Barre d'outils : style du tirage ---- */
@@ -222,6 +221,10 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 
 /* Bandeau des votes sous l'échiquier */
 #page-h24 .h24-ticker { margin-top: 8px; }
+/* Mode bande : le total des votes du tour dans l'étiquette « Votes » (plus en bas de la colonne de droite) */
+.h24-ticker__count { margin-left: 6px; padding-left: 6px; border-left: 1px solid rgba(255, 255, 255, 0.35); font-variant-numeric: tabular-nums; }
+.h24-ticker__count:empty { display: none; }
+#page-h24 #h24-votes-panel.is-band #h24-votes-total { display: none; }
 /* Un vote : photo Twitch, pseudo avec la provenance dessous (#chaîne, site, bot), puis le coup — compact */
 .vote-ticker__item--who { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border-radius: 2px; background: rgba(255, 255, 255, 0.05); }
 .vote-ticker__pic {
@@ -252,9 +255,13 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 /* Le chrono du tour : en tête de la barre d'outils, contre le coin haut droit de l'échiquier (sans le recouvrir) */
 #h24-board-wrap { position: relative; }
 #page-h24 .sandbox__actions { min-height: 52px; align-items: center; }
-#page-h24 .sandbox__actions > .h24-clock { width: 52px; height: 52px; }
-#page-h24 .sandbox__actions > .h24-clock .h24-clock__num { font-size: 1.25rem; }
-#page-h24 .sandbox__actions > .h24-clock.is-idle { opacity: 0.35; }
+/* Chrono du tour : petit anneau en tête de la bande de l'équipe au trait (à gauche de « Blancs » / « Noirs ») */
+.h24-side > .h24-clock { width: 30px; height: 30px; margin: 2px 0 2px -6px; }
+.h24-side > .h24-clock::before { inset: 3px; }
+.h24-side > .h24-clock .h24-clock__num { font-size: 0.78rem; }
+.h24-side > .h24-clock.is-idle { opacity: 0.35; }
+.h24-side > .h24-clock.is-critical { animation-name: h24-clockPulseSm; }
+@keyframes h24-clockPulseSm { to { transform: scale(1.12); } }
 
 /* Entre deux parties : fenêtre discrète au milieu, sur l'échiquier (le reste reste cliquable) */
 #page-h24 .sandbox__main { position: relative; }

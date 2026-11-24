@@ -273,7 +273,8 @@
             };
             const label = el('g');
             label.classList.add('board-annotations__label');
-            const rect = el('rect', { rx: 3, fill: 'rgba(16, 13, 11, 0.92)', stroke: 'rgba(255, 255, 255, 0.14)', 'stroke-width': 1 });
+            // Assez transparente pour laisser voir l'échiquier derrière
+            const rect = el('rect', { rx: 3, fill: 'rgba(16, 13, 11, 0.6)', stroke: 'rgba(255, 255, 255, 0.14)', 'stroke-width': 1 });
             label.appendChild(rect);
             this.svg.appendChild(label);
             const font = { 'font-family': "'IBM Plex Sans', system-ui, sans-serif", 'dominant-baseline': 'central' };

@@ -614,12 +614,22 @@ body:not(.sandbox-launch) #sandbox-setup .config-only { display: none !important
     background: color-mix(in srgb, var(--c) 18%, transparent);
 }
 
+/* Nombre de votes : pastille calée dans le coin haut droit du bouton (n'élargit pas le bouton) */
+.sandbox__moves-panel .moves-group button { position: relative; }
 .sandbox__moves-panel .moves-group button b {
-    font: 700 0.68rem 'Inter', sans-serif;
+    position: absolute;
+    top: -7px;
+    right: -6px;
+    z-index: 1;
+    min-width: 16px;
+    padding: 0 4px;
+    font: 700 0.62rem/15px 'Inter', sans-serif;
+    text-align: center;
     color: #fff;
     background: var(--c);
-    border-radius: 2px;
-    padding: 0 4px;
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px var(--bg-card, #1a1512);
+    pointer-events: none;
 }
 
 /* ------------------------------------------------ Emplacement du podium / de la roue classique */
