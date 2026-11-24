@@ -27,6 +27,10 @@
         return LEVELS.reduce((a, b) => (Math.abs(b - n) < Math.abs(a - n) ? b : a));
     }
     const levelLabel = (elo) => (snapLevel(elo) >= 2400 ? '2400+' : String(snapLevel(elo)));
+    /** Niveau joué par Stockfish lui-même (stockfish), ou simulé sous son plancher par des coups au hasard (todo) */
+    const levelTag = (elo) => (snapLevel(elo) >= MIN_ENGINE_ELO ? '(stockfish)' : '(todo)');
+    /** Libellé d'un choix de niveau : « 1500 (stockfish) », « 600 (todo) » */
+    const levelOption = (elo) => `${levelLabel(elo)} ${levelTag(elo)}`;
 
     /**
      * Moteur UCI : une recherche à la fois (file d'attente), chaque recherche à son propre niveau.
@@ -123,7 +127,7 @@
         return engine;
     }
 
-    const api = { LEVELS, DEFAULT_LEVEL, snapLevel, levelLabel, createEngine, legalUci, uciToSan, browserEngine };
+    const api = { LEVELS, DEFAULT_LEVEL, snapLevel, levelLabel, levelTag, levelOption, createEngine, legalUci, uciToSan, browserEngine };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.BotEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -343,6 +343,8 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 }
 .test-tools[hidden] { display: none; }
 .test-tools__title { font-weight: 700; color: #facc15; }
+.test-tools__toggle { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: #facc15; text-align: left; cursor: pointer; }
+.test-tools.is-collapsed { padding: 6px 10px; }
 .test-tools__row { display: flex; gap: 6px; align-items: center; }
 .test-tools__row select { background: #1f2030; color: inherit; border: 1px solid #3a3b50; border-radius: 2px; padding: 3px 4px; }
 .test-tools__info { color: #9ca3af; }
@@ -364,14 +366,10 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 }
 .setup-test-bots[hidden] { display: none; }
 
-/* Etiquettes (stockfish) / (todo) des modes : regie seulement */
-.sf-tag { display: none; margin-left: 4px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
-body.is-tester .sf-tag { display: inline; }
+/* Choix de niveau : (stockfish) = joue par Stockfish, (todo) = simule sous son plancher */
+.sf-tag { margin-left: 4px; font-size: 0.7em; font-weight: 600; white-space: nowrap; }
 .sf-tag--ok { color: #34d399; }
 .sf-tag--todo { color: #9ca3af; font-style: italic; }
-/* Tuiles de mode : etiquette dans le coin, sans pousser le libelle */
-.mode-option { position: relative; }
-.mode-option .sf-tag { position: absolute; top: 2px; right: 5px; margin: 0; font-size: 0.6rem; }
 
 /* Contre Stockfish : reflexion du moteur dans le bandeau des votes */
 .vote-ticker__item.engine-thinking { color: #facc15; font-style: italic; }

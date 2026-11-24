@@ -1,5 +1,7 @@
 /**
- * Outils de test de la régie (partie, problèmes, rush, Mono, Multi) : jamais visibles des autres streamers.
+ * Bots Stockfish : faux viewers qui votent dans la partie.
+ * - Tous les streamers (une chaîne choisie) : écran Nouveau, partie, problèmes, Mono.
+ * - Régie en plus (tests) : rush, Multi, adversaire fictif, bavardage, pseudos variés.
  *
  * - Bots : faux viewers ajoutés un par un, chacun avec un niveau (300 à 2400+). Leurs coups sont ceux de
  *   Stockfish (vendor/stockfish, dans un Worker) bridé à ce niveau. Ils parlent dans un chat fictif,
@@ -9,7 +11,7 @@
  * - Adversaire fictif : une chaîne sim_adversaire rejoint le salon Multi et joue les Noirs
  *   (Stockfish au niveau choisi, côté serveur). La purge de sim.js retire ses batailles des stats.
  *
- * Le serveur décide qui y a droit (logins de la régie, H24_REGIE) : la page ne fait qu'afficher.
+ * Le serveur décide qui a droit aux extras de la régie (logins de la régie, H24_REGIE).
  */
 import twitch from '../managers/twitch.js';
 import twitchAuth from '../core/twitchAuth.js';
@@ -27,11 +29,17 @@ const MAX_BOTS = 30;
 const MIX = [1200, 1500, 900, 1800, 600, 2100, 1500, 300, 1200, 2400];
 // Pages de jeu (partie, problèmes, rush, Mono, Multi)
 const PAGES = new Set(['game', 'rush', 'mono', 'multi']);
+// Pour tous les streamers : partie et problèmes (page game), Mono. Pas de rush (records de chaîne)
+// ni de Multi (bataille contre un vrai streamer) : réservés aux tests de la régie.
+const PUBLIC_PAGES = new Set(['game', 'mono']);
+const COLLAPSED_KEY = 'sfBotsCollapsed';
 
 const rand = (n) => Math.floor(Math.random() * n);
 const pick = (arr) => arr[rand(arr.length)];
 const levels = () => window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400];
-const label = (elo) => (elo >= 2400 ? '2400+' : String(elo));
+const label = (elo) => window.BotEngine?.levelLabel(elo) || String(elo);
+const option = (elo) => window.BotEngine?.levelOption(elo) || label(elo);
+const readCollapsed = () => { try { return localStorage.getItem(COLLAPSED_KEY) === '1'; } catch { return false; } };
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const TestTools = {
@@ -45,6 +53,7 @@ const TestTools = {
     engine: null,
     canBot: false,
     botAsked: false,
+    collapsed: readCollapsed(),
     el: null,
 
     init() {
@@ -59,7 +68,18 @@ const TestTools = {
     /** Page où ces outils servent : une page de jeu, un salon Multi, ou une partie avec inscriptions */
     relevant() {
         const route = location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search;
-        return route.startsWith('#/multi/') || PAGES.has(window.AppState?.currentPage) || lobby.active;
+        const page = window.AppState?.currentPage;
+        if (!this.allowed) {
+            // Tout le monde : partie, problèmes, Mono (pas de rush ni de Multi)
+            if (route.startsWith('#/multi/') || window.AppState?.gameMode === 'rush') return false;
+            return PUBLIC_PAGES.has(page) || lobby.active;
+        }
+        return route.startsWith('#/multi/') || PAGES.has(page) || lobby.active;
+    },
+
+    /** Une chaîne où parler : connecté à Twitch ou chaîne choisie */
+    available() {
+        return !!(twitchAuth.user?.login || twitch.channel);
     },
 
     check() {
@@ -81,10 +101,9 @@ const TestTools = {
         const onSetup = window.AppState?.currentPage === 'sandbox';
         const relevant = this.relevant();
         if ((relevant || onSetup) && (this.allowed === null || this.checkedFor !== twitchAuth.user?.login)) this.check();
-        // Étiquettes (stockfish) / (todo) de l'écran Nouveau : régie seulement
-        document.body.classList.toggle('is-tester', !!this.allowed);
-        this.renderSetup(onSetup && !!this.allowed);
-        if (!relevant || !this.allowed) {
+        const available = this.available();
+        this.renderSetup(onSetup && available);
+        if (!relevant || !available) {
             if (this.el) this.el.hidden = true;
             return;
         }
@@ -104,11 +123,18 @@ const TestTools = {
     addBot(elo = this.level) {
         if (this.bots.length >= MAX_BOTS) return;
         const used = new Set(this.bots.map(b => b.login));
+        const level = window.BotEngine?.snapLevel(elo) ?? elo;
+        // Régie : des pseudos variés ; sinon « Stockfish1500 », « Stockfish1500b »…
         let name;
-        do { name = pick(NAMES) + (rand(3) ? rand(99) : ''); } while (used.has(`sim_${name.toLowerCase()}`));
+        if (this.allowed) {
+            do { name = pick(NAMES) + (rand(3) ? rand(99) : ''); } while (used.has(`sim_${name.toLowerCase()}`));
+        } else {
+            let i = 0;
+            do { name = `Stockfish${level}${i ? String.fromCharCode(97 + i) : ''}`; i++; } while (used.has(`sim_${name.toLowerCase()}`));
+        }
         this.bots.push({
-            login: `sim_${name.toLowerCase()}`, name: `Sim_${name}`, id: `sim-${Date.now()}-${rand(1e6)}`,
-            elo: window.BotEngine?.snapLevel(elo) ?? elo, joinAt: Date.now() + 300 + rand(lobby.active ? 6000 : 1000)
+            login: `sim_${name.toLowerCase()}`, name: this.allowed ? `Sim_${name}` : name, id: `sim-${Date.now()}-${rand(1e6)}`,
+            elo: level, joinAt: Date.now() + 300 + rand(lobby.active ? 6000 : 1000)
         });
         this.getEngine();
         this.render(true);
@@ -172,8 +198,8 @@ const TestTools = {
                 }
             }
         }
-        // Un peu de bavardage
-        if (Math.random() < 0.015) this.say(pick(this.bots), pick(CHATTER));
+        // Un peu de bavardage (régie : test du chat)
+        if (this.allowed && Math.random() < 0.015) this.say(pick(this.bots), pick(CHATTER));
 
         const sit = this.situation();
         if (!sit) return;
@@ -228,6 +254,11 @@ const TestTools = {
             if (action === 'clear') this.clear();
             if (action === 'remove') this.removeBot(a.dataset.login);
             if (action === 'bot') this.callBot();
+            if (action === 'toggle') {
+                this.collapsed = !this.collapsed;
+                try { localStorage.setItem(COLLAPSED_KEY, this.collapsed ? '1' : '0'); } catch { /* stockage indisponible */ }
+                this.render(true);
+            }
         });
         el.addEventListener('change', (e) => {
             if (e.target.matches('[data-test-level]')) this.level = Number(e.target.value) || 1500;
@@ -241,14 +272,14 @@ const TestTools = {
         box.hidden = !show;
         if (!show) return;
         if (!box.dataset.bound) { box.dataset.bound = '1'; this.bind(box); }
-        const sig = this.bots.map(b => b.login).join();
+        const sig = [this.bots.map(b => b.login).join(), this.allowed].join('|');
         if (box.dataset.sig === sig && box.childElementCount) return;
         box.dataset.sig = sig;
-        box.innerHTML = this.html('🧪 Bots de test (régie)', false);
+        box.innerHTML = this.html(this.allowed ? '🧪 Bots Stockfish (régie)' : '🤖 Bots Stockfish', false);
     },
 
     render(force = false) {
-        if (!this.allowed) return;
+        if (!this.available()) return;
         this.renderSetup(window.AppState?.currentPage === 'sandbox');
         if (!this.el) {
             this.el = document.createElement('div');
@@ -259,30 +290,36 @@ const TestTools = {
         }
         this.el.hidden = !this.relevant();
         const joined = this.bots.filter(b => lobby.players.has(b.login)).length;
-        const sig = [this.bots.map(b => b.login).join(), this.canBot, this.botAsked, joined, lobby.active].join('|');
+        const sig = [this.bots.map(b => b.login).join(), this.canBot, this.botAsked, joined, lobby.active, this.allowed, this.collapsed].join('|');
         if (!force && sig === this.sig) return;
         this.sig = sig;
-        this.el.innerHTML = this.html('🧪 Test (régie)', true);
+        this.el.classList.toggle('is-collapsed', !!this.collapsed);
+        this.el.innerHTML = this.html(this.allowed ? '🧪 Test (régie)' : '🤖 Bots Stockfish', true);
     },
 
     html(title, live) {
         const joined = this.bots.filter(b => lobby.players.has(b.login)).length;
+        // Panneau flottant repliable (il ne gêne pas le stream)
+        const head = live
+            ? `<button type="button" class="test-tools__title test-tools__toggle" data-test-action="toggle" title="${this.collapsed ? 'Déplier' : 'Replier'}">${title}${this.bots.length ? ` (${this.bots.length})` : ''} <span>${this.collapsed ? '▸' : '▾'}</span></button>`
+            : `<div class="test-tools__title">${title}</div>`;
+        if (live && this.collapsed) return head;
         return `
-            <div class="test-tools__title">${title}</div>
+            ${head}
             <div class="test-tools__row">
                 <select data-test-level title="Niveau du bot (Stockfish)">
-                    ${levels().map(v => `<option value="${v}"${v === this.level ? ' selected' : ''}>${label(v)}</option>`).join('')}
+                    ${levels().map(v => `<option value="${v}"${v === this.level ? ' selected' : ''}>${option(v)}</option>`).join('')}
                 </select>
                 <button type="button" class="btn btn--sm btn--secondary" data-test-action="add" title="Ajouter un bot de ce niveau"${this.bots.length >= MAX_BOTS ? ' disabled' : ''}>+ Bot</button>
                 <button type="button" class="btn btn--sm btn--ghost" data-test-action="fill" title="Ajouter 8 bots de niveaux variés"${this.bots.length >= MAX_BOTS ? ' disabled' : ''}>+8</button>
             </div>
             ${this.bots.length ? `<div class="test-tools__bots">${this.bots.map(b =>
-                `<span class="test-tools__bot">${esc(b.name.replace(/^Sim_/, ''))} · ${label(b.elo)}<button type="button" data-test-action="remove" data-login="${esc(b.login)}" title="Retirer ce bot">×</button></span>`).join('')}</div>
+                `<span class="test-tools__bot">${this.allowed ? `${esc(b.name.replace(/^Sim_/, ''))} · ${label(b.elo)}` : esc(b.name)}<button type="button" data-test-action="remove" data-login="${esc(b.login)}" title="Retirer ce bot">×</button></span>`).join('')}</div>
             <div class="test-tools__row">
                 <button type="button" class="btn btn--sm btn--danger" data-test-action="clear">Retirer les bots</button>
             </div>
             <div class="test-tools__info">${live && lobby.active ? `${joined}/${this.bots.length} inscrits · ` : ''}chacun vote une fois par tour (Stockfish à son niveau)</div>` : (live ? '' : '<div class="test-tools__info">Faux viewers joués par Stockfish : ils votent dans la partie que tu lances.</div>')}
-            ${live && this.canBot ? `<div class="test-tools__row">
+            ${live && this.canBot && this.allowed ? `<div class="test-tools__row">
                 <button type="button" class="btn btn--sm btn--secondary" data-test-action="bot"${this.botAsked ? ' disabled' : ''}>
                     ${this.botAsked ? 'Adversaire en route…' : `Adversaire fictif (Noirs, ${label(this.level)})`}
                 </button>

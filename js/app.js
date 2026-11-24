@@ -585,7 +585,7 @@ const SETUP_PRESETS = [
     { id: 'instant',   icon: '⚡', mode: 'sandbox',  config: { timerEnabled: false } },
     { id: 'democracy', icon: '🗳️', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
     { id: 'wheel',     icon: '🎡', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: false, votesPerViewer: 3 } },
-    { id: 'vsChat',    icon: '👤', mode: 'oneVsAll', config: { timerEnabled: true, timerDuration: 45, majorityMode: true,  votesPerViewer: 1 }, tag: 'todo' },
+    { id: 'vsChat',    icon: '👤', mode: 'oneVsAll', config: { timerEnabled: true, timerDuration: 45, majorityMode: true,  votesPerViewer: 1 } },
     { id: 'vsBot',     icon: '🤖', mode: 'vsBot',    config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
     { id: 'puzzles',   icon: '🧩', mode: 'problems', config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } }
 ];
@@ -1543,7 +1543,7 @@ fullReset() {
         if (botElo) {
             if (!botElo.options.length) {
                 botElo.innerHTML = (window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400])
-                    .map(v => `<option value="${v}">${v >= 2400 ? '2400+' : v}</option>`).join('');
+                    .map(v => `<option value="${v}">${window.BotEngine?.levelOption(v) || v}</option>`).join('');
             }
             botElo.value = String(window.BotEngine?.snapLevel(AppState.config.botElo || 1200) ?? 1200);
         }
@@ -1650,8 +1650,7 @@ fullReset() {
             <button type="button" class="preset-card" data-preset="${p.id}">
                 <span class="preset-card__icon" aria-hidden="true">${p.icon}</span>
                 <span class="preset-card__body">
-                    <span class="preset-card__name">${escapeHtml(tr(`suggested.${p.id}.name`))}${p.custom ? '' : p.tag === 'todo'
-                        ? ' <span class="sf-tag sf-tag--todo">(todo)</span>' : ' <span class="sf-tag sf-tag--ok">(stockfish)</span>'}</span>
+                    <span class="preset-card__name">${escapeHtml(tr(`suggested.${p.id}.name`))}</span>
                     <span class="preset-card__desc">${escapeHtml(tr(`suggested.${p.id}.desc`))}</span>
                     <span class="preset-card__chips">${(p.custom ? [tr('suggested.custom.chip')] : this.presetChips(p.mode, { votesPerViewer: 1, ...p.config })).map(c => `<span>${escapeHtml(c)}</span>`).join('')}</span>
                 </span>
