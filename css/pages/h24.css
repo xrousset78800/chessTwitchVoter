@@ -30,7 +30,7 @@
 .h24-options:empty, .h24-turn:empty { display: none; }
 .h24-score { display: flex; gap: 14px; font-weight: 700; }
 .h24-score[hidden] { display: none; }
-.h24-score__ok { color: var(--accent-green); }
+.h24-score__ok { color: var(--accent); }
 .h24-score__ko { color: #ef4444; }
 
 /* ---- Coups disponibles : cliquables quand c'est à toi ---- */
@@ -96,7 +96,7 @@
 .h24-card__title { margin: 0; font-size: 1.15rem; }
 .h24-card__sub, .h24-card__total, .h24-card__next { margin: 0; color: var(--text-secondary); font-size: 0.85rem; }
 .h24-card__cta { justify-content: center; padding: 12px; font-size: 1rem; }
-.h24-card__ok { margin: 0; color: var(--accent-green); font-weight: 700; }
+.h24-card__ok { margin: 0; color: var(--accent); font-weight: 700; }
 
 .h24-choices { display: flex; flex-direction: column; gap: 8px; }
 .h24-choice {
@@ -273,7 +273,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 
 /* Pendules façon partie en ligne : au bout du bandeau de chaque camp, au-dessus et en dessous de l'échiquier */
 .h24-pclock {
-    flex: none; display: inline-flex; align-items: center; justify-content: flex-end; min-width: 104px; margin: 3px -6px 3px 4px;
+    flex: none; display: inline-flex; align-items: center; justify-content: flex-end; min-width: 104px; margin: 3px 4px 3px -6px;
     padding: 4px 12px; border-radius: 4px; background: #3a3733; color: #9b9893;
     font-family: 'Roboto Mono', 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.45rem; line-height: 1.2; font-variant-numeric: tabular-nums;
 }
@@ -341,9 +341,9 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-side__count { font-weight: 700; font-variant-numeric: tabular-nums; }
 .h24-side__count i { font-size: 0.75em; opacity: 0.7; }
 .h24-side__mine { padding: 1px 8px; border-radius: 2px; font-size: 0.72rem; font-weight: 800; color: var(--on-accent); background: var(--twitch-purple, #ff8a3d); }
-.h24-side__turn { padding: 1px 8px; border-radius: 2px; font-size: 0.72rem; font-weight: 800; color: #0b0b10; background: #22c55e; }
+.h24-side__turn { padding: 1px 8px; border-radius: 2px; font-size: 0.72rem; font-weight: 800; color: #fff; background: rgba(255, 255, 255, 0.14); }
 .h24-side__spacer { flex: 1; }
-.h24-side.is-turn { border-color: rgba(34, 197, 94, 0.55); background: rgba(34, 197, 94, 0.08); }
+.h24-side.is-turn { border-color: rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.07); }
 /* Ton équipe : repère orange seulement quand c'est à elle de jouer ; sinon la bande reste neutre */
 .h24-side.is-mine.is-turn { box-shadow: inset 3px 0 0 var(--twitch-purple, #ff8a3d); }
 .h24-side.is-mine:not(.is-turn) .h24-side__mine { color: var(--text-secondary); background: none; box-shadow: inset 0 0 0 1px var(--border-subtle); }
@@ -357,7 +357,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-regie__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .h24-regie__status { font-size: 0.8rem; font-weight: 600; }
 .h24-regie__dot { width: 10px; height: 10px; border-radius: 50%; background: #6b7280; flex: none; }
-.h24-regie__dot--ok { background: #22c55e; }
+.h24-regie__dot--ok { background: var(--accent); }
 .h24-regie__dot--busy { background: #f59e0b; animation: h24-blink 0.8s infinite alternate; }
 .h24-regie__dot--error { background: #ef4444; animation: h24-blink 0.5s infinite alternate; }
 @keyframes h24-blink { to { opacity: 0.35; } }
@@ -394,18 +394,6 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-live.is-folded .h24-live__frame { display: none; }
 .h24-live__frame iframe { display: block; width: 100%; height: 100%; border: 0; }
 
-/* ------------------------------------------- Résultat d'un vote (mode, option) */
-.h24-ballot-result {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-    margin-bottom: 10px; padding: 10px 14px;
-    border-radius: 3px;
-    background: rgba(34, 197, 94, 0.14);
-    border: 1px solid rgba(34, 197, 94, 0.5);
-    font-size: 1.15rem; font-weight: 800;
-    animation: h24-pop 0.35s ease-out;
-}
-.h24-ballot-result i { color: #22c55e; }
-.h24-ballot-result small { flex-basis: 100%; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); }
 .h24-choices.is-decided .h24-choice.is-winner { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .h24-choices.is-decided .h24-choice.is-winner::before { background: rgba(255, 138, 61, 0.22); }
 .h24-choices.is-decided .h24-choice.is-loser { opacity: 0.45; }

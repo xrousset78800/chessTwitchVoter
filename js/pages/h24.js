@@ -1119,9 +1119,9 @@ const H24Page = {
             if (s.mode === 'bot' && side !== s.vs?.side) {
                 const turn = s.game.turn === side;
                 el.className = `h24-side h24-side--${pos} h24-side--${side} h24-side--engine${turn ? ' is-turn' : ''}`;
-                el.innerHTML = `<span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span><i class="fas fa-robot"></i> Stockfish ${esc(choiceLabel('elo', s.vs?.elo))}</span>
+                el.innerHTML = `${pclock(side)}<span class="h24-side__spacer"></span><span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span><i class="fas fa-robot"></i> Stockfish ${esc(choiceLabel('elo', s.vs?.elo))}</span>
                     ${turn && s.vs?.thinking ? `<span class="h24-side__turn">${esc(t('h24.botThinking', null, 'Stockfish réfléchit…'))}</span>` : ''}
-                    <span class="h24-side__spacer"></span>${pclock(side)}`;
+                    `;
                 return;
             }
             const n = (s.teams?.[side] || []).length;
@@ -1129,11 +1129,11 @@ const H24Page = {
             const turn = !solo && s.game.turn === side;
             const mine = !!team && (solo || team === side);
             el.className = `h24-side h24-side--${pos} h24-side--${side}${turn ? ' is-turn' : ''}${mine ? ' is-mine' : ''}`;
-            el.innerHTML = `<span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span>${esc(label)}</span>
+            el.innerHTML = `${pclock(solo ? 'all' : side)}<span class="h24-side__spacer"></span><span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span>${esc(label)}</span>
                 <span class="h24-side__count" title="${esc(t('h24.players', null, 'Joueurs'))}"><i class="fas fa-user"></i> ${n}</span>
                 ${mine ? `<span class="h24-side__mine">${esc(t('h24.yourTeam', null, 'Votre équipe'))}</span>` : ''}
                 ${turn ? `<span class="h24-side__turn">${esc(t('h24.toMove', null, 'Au trait'))}</span>` : ''}
-                <span class="h24-side__spacer"></span>${withAction ? action : ''}${pclock(solo ? 'all' : side)}`;
+                ${withAction ? action : ''}`;
         };
         if (solo) { top.hidden = true; fill(bottom, 'bottom', 'w', true); }
         else {
