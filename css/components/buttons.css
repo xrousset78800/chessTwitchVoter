@@ -38,8 +38,11 @@
     color: var(--on-accent);
 }
 
+/* Survol : le même orange, un peu plus lumineux (le survol générique de .btn le remplaçait par un voile marron) */
 .btn--primary:hover:not(:disabled) {
-    opacity: 0.9;
+    background: linear-gradient(135deg, #ffa05c 0%, #ff8124 100%);
+    color: var(--on-accent);
+    box-shadow: 0 4px 14px rgba(255, 138, 61, 0.35);
     transform: translateY(-1px);
 }
 

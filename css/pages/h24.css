@@ -142,7 +142,7 @@
 #page-h24 .sandbox__sidebar > :is(.sandbox__actions, .votes-slot, .h24-teams-panel) { flex: none; }
 #page-h24 .sandbox__sidebar .panel__header { padding: 10px 14px; font-size: 0.85rem; }
 #page-h24 .sandbox__sidebar .panel__content { padding: 10px 14px; }
-@media (min-width: 1101px) {
+@media (min-width: 901px) {
     /* La colonne a la hauteur de la fenêtre et ne défile jamais : l'historique prend la place qui reste
        (et défile seul), le podium / la roue reste toujours entier en bas, sans que rien ne monte ni ne descende */
     #page-h24 .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 36px); max-height: none; overflow: hidden; }
@@ -191,7 +191,7 @@
 #page-h24 [data-h24-panel].is-folded > .panel__content { display: none; }
 #page-h24 [data-h24-panel].is-folded > .h24-fold { border-bottom-width: 0; }
 #page-h24 .h24-history.is-folded { flex: none; }
-@media (min-width: 1101px) { #page-h24 .sandbox__sidebar > .votes-slot { margin-top: auto; } }
+@media (min-width: 901px) { #page-h24 .sandbox__sidebar > .votes-slot { margin-top: auto; } }
 
 /* Plus de podium : la roue (style roue) ou le nombre de votes (style bande) tiennent sa place, sans bouger */
 /* Tirage au sort : roue ou bande en direct, sans podium ; majorité : podium, roue ou bande seulement en cas d'égalité */
@@ -406,7 +406,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 /* ------------------------------------------- Puzzle rush : pas d'historique (chaque puzzle repart de zéro) */
 #page-h24[data-mode="rush"] .h24-history { display: none; }
 /* …le podium remonte donc sous la régie au lieu de rester collé en bas de la colonne */
-@media (min-width: 1101px) { #page-h24[data-mode="rush"] .sandbox__sidebar > .votes-slot { margin-top: 0; } }
+@media (min-width: 901px) { #page-h24[data-mode="rush"] .sandbox__sidebar > .votes-slot { margin-top: 0; } }
 
 /* ------------------------------------------- Colonne de gauche plus serrée : la liste des coups défile si besoin */
 #page-h24 .sandbox__left { gap: 8px; }
@@ -463,7 +463,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 #page-h24 .h24-turn { font-size: 0.82rem; }
 #page-h24 #h24-moves { padding: 8px; }
 #page-h24 #h24-moves .moves-panel__content { gap: 4px; }
-@media (min-width: 1101px) {
+@media (min-width: 901px) {
     #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 36px); }
     #page-h24 .sandbox__left { top: calc(var(--nav-height) + 8px); }
     #page-h24 #h24-moves { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }

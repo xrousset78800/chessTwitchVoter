@@ -244,6 +244,7 @@ const GameSession = {
         problemsManager.reset?.();
         PresetGame.stopCountdown();
         PresetGame.setBanner(null);
+        document.getElementById('game-recap')?.setAttribute('hidden', '');
         Object.assign(lobby, new lobby.constructor());
         const roster = document.getElementById('roster-panel');
         if (roster) roster.style.display = 'none';
@@ -659,7 +660,12 @@ const SandboxPage = {
         this.updateConditionalUI();
     },
 
+/** Lance la partie avec la config, puis met à jour le récap de la colonne de gauche */
 async applyConfigAfterReload() {
+    try { await this.startConfiguredGame(); } finally { GameRecap.render(); }
+},
+
+async startConfiguredGame() {
     document.body.classList.toggle('no-bg', AppState.config.noBg);
     syncWheelModeClass();
     twitch.settings.subsOnly = !!AppState.config.subsOnly;
@@ -1361,6 +1367,11 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
     renderSettingsSummary() {
         const el = document.getElementById('settings-summary');
         if (!el) return;
+        el.innerHTML = this.settingsRows().map(([icon, k, v]) => `<div class="settings-summary__row"><dt><i class="fas ${icon}"></i> ${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd></div>`).join('');
+    },
+
+    /** Réglages appliqués à la partie en cours : [icône, intitulé, valeur] */
+    settingsRows() {
         const c = gameEngine.config || {};
         const yes = tr('settingsSummary.on'), no = tr('settingsSummary.off');
         const restrictions = [twitch.settings?.followersOnly && 'Followers', twitch.settings?.subsOnly && 'Subs'].filter(Boolean).join(' + ') || tr('settingsSummary.none');
@@ -1373,7 +1384,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             ['fa-user-check', tr('gameMode.voteOptions.votesPerViewer'), String(c.votesPerViewer || 1)],
             ['fa-lock', tr('gameMode.twitchOptions.restrictions'), restrictions]
         ];
-        el.innerHTML = rows.map(([icon, k, v]) => `<div class="settings-summary__row"><dt><i class="fas ${icon}"></i> ${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd></div>`).join('');
+        return rows;
     },
 
     applyLiveSettings() {
@@ -1389,6 +1400,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             syncWheelModeClass();
             gameEngine.updateVotingIndicator?.();
             Storage.saveConfig();
+            GameRecap.render();
         }
     },
 
@@ -2391,6 +2403,44 @@ const MultiPage = {
 // ============================================
 // ROUTES PRÉCONFIGURÉES : SALON ET PARTIE
 // ============================================
+/** Récap en tête de la colonne de gauche : mode de la partie et ses réglages (même présentation qu'au 24/24) */
+const GameRecap = {
+    title() {
+        const route = GameSession.current?.route;
+        if (route === 'mono') {
+            const format = GameSession.current?.format;
+            return `Mono · ${tr(`mono.${format === 'teams' || format === 'vsBot' ? format : 'vsStreamer'}`)}`;
+        }
+        if (route === 'multi') return `⚔ ${tr('nav.multi')}`;
+        const mode = GameSession.liveMode || AppState.gameMode;
+        const names = {
+            sandbox: '🎲 YOLO',
+            problems: `🧩 ${tr('gameMode.problems.label')}`,
+            oneVsAll: '👤 1 vs All',
+            oneVsOne: '⚔️ 1 vs 1',
+            chatVsChat: '🎭 Chat vs Chat',
+            vsBot: `🤖 ${tr('gameMode.vsBot.label')}`
+        };
+        return names[mode] || null;
+    },
+
+    render() {
+        const el = document.getElementById('game-recap');
+        if (!el) return;
+        const mode = GameSession.liveMode || AppState.gameMode;
+        // Le Puzzle Rush a déjà son bloc (score, vies, rating)
+        const title = GameSession.running && mode !== 'rush' ? this.title() : null;
+        el.hidden = !title;
+        if (!title) return;
+        document.getElementById('game-recap-title').textContent = title;
+        const none = tr('settingsSummary.none');
+        const rows = SandboxPage.settingsRows().filter(([icon, , v]) => !(icon === 'fa-lock' && v === none));
+        document.getElementById('game-recap-opts').innerHTML = rows.map(([icon, k, v]) =>
+            `<div class="h24-opt"><i class="fas ${icon}"></i><span class="h24-opt__label">${escapeHtml(k)}</span><span class="h24-opt__value">${escapeHtml(v)}</span></div>`).join('');
+    }
+};
+window.addEventListener('languageChanged', () => GameRecap.render());
+
 const PresetGame = {
     countdownId: null,
     endsAt: null,
@@ -3013,6 +3063,7 @@ async function initApp() {
 
         if (MultiRoom.room) MultiRoom.onGameReady();
         gameEngine.startGame();
+        GameRecap.render();
 
         // Rendre le Toast accessible au multiplayerManager
         window.AppToast = Toast;

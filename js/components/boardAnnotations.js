@@ -242,7 +242,7 @@
             }
             arrows.forEach(([key, color]) => this.drawArrow(key.slice(0, 2), key.slice(2), COLORS[color]));
             this.drawOverlay();
-            if (this.hover) this.drawArrow(this.hover.from, this.hover.to, 'rgb(244, 238, 232)', { opacity: 0.55, scale: 0.85 })
+            if (this.hover) this.drawArrow(this.hover.from, this.hover.to, 'rgb(255, 255, 255)', { opacity: 0.9, scale: 0.95 })
                 ?.classList.add('board-annotations__hover');
         }
 

@@ -71,6 +71,31 @@
     }
 }
 
+/* ===== Récap de la partie (mode et réglages), en tête de la colonne de gauche ===== */
+.game-recap {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.game-recap[hidden] { display: none; }
+
+.game-recap__title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.game-recap__opts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 3px 10px;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+}
+
 /* ===== Bandeau du salon ===== */
 
 /* Inscriptions : en tête de la colonne de gauche, même style que le bloc « Tape ton coup dans le chat » */

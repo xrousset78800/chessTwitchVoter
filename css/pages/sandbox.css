@@ -861,9 +861,19 @@ body:not(.wheel-mode) .draw-tools { display: none; }
 
 /* ================================================ RESPONSIVE DE LA PARTIE
    > 1100px : 3 colonnes (coups | échiquier | boutons + votes + historique)
-   761–1100 : coups en bandeau au-dessus, échiquier et colonne de droite côte à côte
+   901–1100 : toujours 3 colonnes, colonne de gauche plus étroite (pas de bandeau horizontal)
+   761–900  : coups en bandeau au-dessus, échiquier et colonne de droite côte à côte
    ≤ 760    : une colonne ; boutons en haut, puis coups, échiquier, votes, historique */
 @media (max-width: 1100px) {
+    #page-sandbox { --sidebar-width: clamp(280px, 30vw, 330px); }
+
+    .sandbox__content {
+        grid-template-columns: clamp(180px, 19vw, 220px) minmax(0, 1fr) var(--sidebar-width);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 900px) {
     #page-sandbox { --sidebar-width: clamp(300px, 36vw, 360px); }
 
     .sandbox__content {
