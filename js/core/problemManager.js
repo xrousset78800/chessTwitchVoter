@@ -293,12 +293,26 @@ class ProblemsManager {
         // Mettre à jour les coups disponibles
         this.updateAvailableMoves();
 
-        // Jouer le premier coup (bot) après un délai
-        setTimeout(() => {
+        // Jouer le premier coup (bot) après un délai, une fois le Phantom en place
+        const loaded = this.currentProblem;
+        setTimeout(async () => {
+            await this.waitPhantomIdle();
+            if (this.currentProblem !== loaded || this.attemptIndex !== 0) return;
             this.playBotMove();
         }, 800);
 
         return this.currentProblem;
+    }
+
+    /**
+     * Attend que le Phantom ait fini de déplacer les pièces (mise en place d'un
+     * nouveau problème, coup en cours). Rend la main tout de suite sans Phantom.
+     */
+    async waitPhantomIdle(maxMs = 180000) {
+        const p = window.phantomChessboard;
+        const busy = () => p && p.isConnected && p.enabled !== false && (p.recalibrating || p.isBusy?.());
+        const t0 = Date.now();
+        while (busy() && Date.now() - t0 < maxMs) await new Promise(r => setTimeout(r, 200));
     }
 
     // ========== LOGIQUE DE JEU ==========
@@ -355,8 +369,11 @@ class ProblemsManager {
 if (this.attemptIndex >= this.currentProblem.moves.length) {
     this.handleProblemSolved();
 } else if (this.attemptIndex % 2 === 1) {
-    // Tour du joueur : ouvrir les votes/timer
-    setTimeout(() => {
+    // Tour du joueur : ouvrir les votes/timer une fois le Phantom au repos
+    const prob = this.currentProblem, idx = this.attemptIndex;
+    setTimeout(async () => {
+        await this.waitPhantomIdle();
+        if (this.currentProblem !== prob || this.attemptIndex !== idx) return;
         this.startPlayerTurn();
     }, 300);
 }
@@ -606,7 +623,10 @@ resolveVotes() {
             if (this.attemptIndex >= this.currentProblem.moves.length) {
                 this.handleProblemSolved();
             } else {
-                setTimeout(() => {
+                const prob = this.currentProblem, idx = this.attemptIndex;
+                setTimeout(async () => {
+                    await this.waitPhantomIdle();
+                    if (this.currentProblem !== prob || this.attemptIndex !== idx) return;
                     this.playBotMove();
                 }, this.config.botMoveDelay);
             }
