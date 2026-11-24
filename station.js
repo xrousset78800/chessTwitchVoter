@@ -49,32 +49,23 @@ const DUR = {
 };
 
 const MODES = ['teams', 'rush', 'bot'];
-// Contre Stockfish : niveaux proposés au vote (le premier est celui par défaut)
-const VS_LEVELS = [1320, 300, 600, 900, 1500, 1800, 2100, 2400];
+// Contre Stockfish : niveaux proposés au vote, dans l'ordre (1320 par défaut)
+const VS_LEVELS = [300, 600, 900, 1320, 1500, 1800, 2100, 2400];
+const VS_DEFAULT = 1320;
 const VS_MIN_MS = 1500;           // Stockfish joue au plus tôt après ce délai (coup lisible)
-// Options votées après le mode, une à une ; la première valeur est celle par défaut
+// Options votées après le mode, une à une, choix dans l'ordre logique ; def = valeur si personne ne vote
+const OPT = {
+    elo: { id: 'elo', choices: VS_LEVELS, def: VS_DEFAULT },
+    turn: { id: 'turn', choices: [20, 30, 45], def: 30 },
+    decision: { id: 'decision', choices: ['majority', 'draw'], def: 'majority' },
+    spin: { id: 'spin', choices: ['slow', 'normal', 'fast'], def: 'normal' },
+    votes: { id: 'votes', choices: [1, 2, 3, 4, 5], def: 1 },
+    anonymity: { id: 'anonymity', choices: ['none', 'secret'], def: 'none' }
+};
 const BALLOTS = {
-    teams: [
-        { id: 'turn', choices: [30, 20, 45] },
-        { id: 'decision', choices: ['majority', 'draw'] },
-        { id: 'spin', choices: ['normal', 'fast', 'slow'] },
-        { id: 'votes', choices: [1, 2, 3, 4, 5] },
-        { id: 'anonymity', choices: ['none', 'secret'] }
-    ],
-    bot: [
-        { id: 'elo', choices: VS_LEVELS },
-        { id: 'turn', choices: [30, 20, 45] },
-        { id: 'decision', choices: ['majority', 'draw'] },
-        { id: 'spin', choices: ['normal', 'fast', 'slow'] },
-        { id: 'votes', choices: [1, 2, 3, 4, 5] },
-        { id: 'anonymity', choices: ['none', 'secret'] }
-    ],
-    rush: [
-        { id: 'turn', choices: [30, 20, 45] },
-        { id: 'spin', choices: ['normal', 'fast', 'slow'] },
-        { id: 'votes', choices: [1, 2, 3, 4, 5] },
-        { id: 'anonymity', choices: ['none', 'secret'] }
-    ]
+    teams: [OPT.turn, OPT.decision, OPT.spin, OPT.votes, OPT.anonymity],
+    bot: [OPT.elo, OPT.turn, OPT.decision, OPT.spin, OPT.votes, OPT.anonymity],
+    rush: [OPT.turn, OPT.spin, OPT.votes, OPT.anonymity]
 };
 const BOT_NAMES = ['bot_fou', 'bot_tour', 'bot_pion', 'bot_dame', 'bot_roque', 'bot_gambit', 'bot_zugzwang',
     'bot_cavalier', 'bot_echec', 'bot_fianchetto', 'bot_sicilienne', 'bot_pat', 'bot_mat', 'bot_prise', 'bot_clouage', 'bot_fourchette'];
@@ -142,7 +133,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         endsAt: Date.now() + DUR.voteMode,
         paused: false,
         mode: 'teams',
-        options: { turn: 30, decision: 'majority', spin: 'normal', votes: 1, anonymity: 'none', elo: VS_LEVELS[0] },
+        options: { turn: 30, decision: 'majority', spin: 'normal', votes: 1, anonymity: 'none', elo: VS_DEFAULT },
         vsSide: 'w',           // contre Stockfish : camp des viewers (tiré au sort à chaque partie)
         teams: { w: [], b: [] },
         ballot: { id: 'mode', choices: [...MODES], votes: new Map() },   // { id, choices, votes: Map(login → choix) }
@@ -434,9 +425,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const counts = {};
         for (const v of b.votes.values()) counts[v] = (counts[v] || 0) + 1;
         const best = Math.max(0, ...Object.values(counts));
-        // Personne n'a voté : valeur par défaut (la première) ; égalité : tirage parmi les ex æquo
+        // Personne n'a voté : valeur par défaut ; égalité : tirage parmi les ex æquo
         const tied = b.choices.filter(c => counts[c] === best);
-        const winner = best === 0 ? b.choices[0] : pick(tied);
+        const winner = best === 0 ? (b.def ?? b.choices[0]) : pick(tied);
         // Résultat affiché quelques secondes, comme pour un coup, avant le vote suivant
         b.winner = winner;
         b.how = best === 0 ? 'default' : tied.length > 1 ? 'tie' : 'votes';
@@ -466,7 +457,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             emitMeAll();
             return;
         }
-        s.ballot = { id: b.id, choices: b.choices, votes: new Map() };
+        s.ballot = { id: b.id, choices: b.choices, def: b.def, votes: new Map() };
         setPhase('voteOptions', DUR.voteOption);
         emitMeAll();
     }
