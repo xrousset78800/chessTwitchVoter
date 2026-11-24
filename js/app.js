@@ -770,7 +770,7 @@ async applyConfigAfterReload() {
             this.syncPhantom();
         };
 
-problemsManager.onResolveWithWheel = (results, callback) => {
+problemsManager.onResolveWithWheel = (results, callback, seconds) => {
     if (!gameEngine.votingWheel) {
         // Pas de roue : pondéré direct
         const total = results.reduce((s, r) => s + r.count, 0);
@@ -795,7 +795,8 @@ problemsManager.onResolveWithWheel = (results, callback) => {
     gameEngine.showWheel();
     document.body.classList.add('randomWheel');
 
-    const wheelDuration = snapSpin(AppState.config.wheelDuration) * 1000;
+    // Durée imposée (égalité en problèmes : version lente), sinon le réglage du streamer
+    const wheelDuration = (seconds ?? snapSpin(AppState.config.wheelDuration)) * 1000;
     gameEngine.votingWheel.onSpinEnd = (winner) => {
         document.body.classList.remove('randomWheel');
         gameEngine.hideWheel();

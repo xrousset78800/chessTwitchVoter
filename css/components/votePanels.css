@@ -30,6 +30,8 @@
 
 .podium__slot.is-empty { opacity: 0.25; }
 .podium__slot.is-empty .podium__piece { visibility: hidden; }
+/* Marche vide : pas de reste du dernier coup affiché (coup, %, votes) */
+.podium__slot.is-empty :is(.podium__move, .podium__pct, .podium__count) { visibility: hidden; }
 
 .podium__piece {
     width: 40px;

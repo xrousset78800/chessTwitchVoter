@@ -373,18 +373,11 @@ startPlayerTurn() {
         window.timer.onTick = null;
         window.timer.onComplete = () => {
             this.votingOpen = false;
-            const winner = this.resolveVotes();
-            if (winner) {
-                const result = this.validateAndPlayMove(winner);
-                if (result && result.valid === false) {
-                    this.failCurrentProblem(`Coup non jouable : ${winner}`);
-                }
-            } else if (this.onNoVote) {
-                this.onNoVote();
-            } else {
-                // Personne n'a voté : on rouvre le tour
-                this.startPlayerTurn();
-            }
+            const tied = this.leadingMoves();
+            if (tied.length === 1) this.playResolved(tied[0]);
+            else if (tied.length > 1) this.drawAmong(tied);
+            else if (this.onNoVote) this.onNoVote();
+            else this.startPlayerTurn();
         };
         window.timer.start(this.config.timerDuration);
     } else {
@@ -482,6 +475,44 @@ showLeadArrow(counts = {}) {
     const results = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([move, count]) => ({ move, count }));
     if (!results.length && ge.annotations?.overlay?.kind !== 'lead') return;
     ge.showLeadArrow(results);
+}
+
+/**
+ * Coups en tête à la fin du chrono : le plus voté, ou les ex æquo.
+ * Personne n'a voté : tous les coups légaux sont à égalité (à zéro).
+ */
+leadingMoves() {
+    const counts = {};
+    this.votesForCurrentTurn.forEach(v => {
+        const mv = typeof v === 'string' ? v : v.move;
+        counts[mv] = (counts[mv] || 0) + 1;
+    });
+    const entries = Object.entries(counts);
+    if (!entries.length) {
+        let legal = [];
+        try { legal = this.chess?.moves() || []; } catch {}
+        return legal.map(m => m.replace(/[+#]/g, ''));   // sans « + » / « # » : ne pas trahir le mat
+    }
+    const top = Math.max(...entries.map(([, c]) => c));
+    return entries.filter(([, c]) => c === top).map(([m]) => m);
+}
+
+/** Joue le coup retenu ; un coup injouable fait échouer le problème */
+playResolved(winner) {
+    const result = this.validateAndPlayMove(winner);
+    if (result && result.valid === false) this.failCurrentProblem(`Coup non jouable : ${winner}`);
+}
+
+/** Égalité : tirage au sort entre les ex æquo, chances égales, animation lente (10 s) */
+drawAmong(moves) {
+    console.log('🎲 Égalité entre', moves.length, 'coups : tirage au sort');
+    const results = moves.map(move => ({ move, count: 1 }));
+    const done = (winner) => {
+        if (!this.isActive || this.attemptIndex % 2 !== 1) return;   // problème arrêté pendant le tirage
+        this.playResolved(winner);
+    };
+    if (this.onResolveWithWheel) this.onResolveWithWheel(results, done, 10);
+    else done(moves[Math.floor(Math.random() * moves.length)]);
 }
 
 resolveVotes() {
