@@ -171,7 +171,7 @@ const H24Page = {
         const page = $('page-h24');
         page.addEventListener('click', (e) => {
             const choice = e.target.closest('[data-h24-choice]');
-            if (choice) { this.socket?.emit('h24:ballot', { choice: choice.dataset.h24Choice }); return; }
+            if (choice) { this.socket?.emit(this.me.regie ? 'h24:pick' : 'h24:ballot', { choice: choice.dataset.h24Choice }); return; }
             if (e.target.closest('[data-h24-signup]')) { this.socket?.emit('h24:signup'); return; }
             const fp = e.target.closest('[data-h24-force]');
             if (fp) { this.socket?.emit('h24:force', { phase: fp.dataset.h24Force }); return; }
@@ -1374,12 +1374,12 @@ const H24Page = {
             if (decided) {
                 const how = t(`h24.ballotHow.${b.how}`, null, '');
                 return `${clock}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
-                    <div class="h24-ballot-result"><i class="fas fa-check-circle"></i> ${esc(choiceLabel(b.id, b.winner))}${how ? `<small>${esc(how)}</small>` : ''}</div>
                     <div class="h24-choices is-decided">${buttons}</div>
-                    <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}</p>${next}`;
+                    <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}${how ? ' · ' + esc(how) : ''}</p>${next}`;
             }
             return `${clock}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
                 <div class="h24-choices">${buttons}</div>
+                ${this.me.regie ? `<p class="h24-chat-hint h24-regie-hint"><i class="fas fa-sliders-h"></i> ${esc(t('h24.regiePick', null, 'Régie : clique sur une option pour la choisir tout de suite'))}</p>` : ''}
                 ${chat ? chatHint('h24.chatVote', { nums: numList(b.choices.length) }, `Dans le chat Twitch : tape ${numList(b.choices.length)}`) : ''}
                 <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}${canVote ? '' : ' · ' + esc(t('h24.loginToVote', null, 'connecte-toi pour voter'))}</p>${next}`;
         }

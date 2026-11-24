@@ -434,17 +434,18 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emitMeAll();
     }
 
-    function closeBallot() {
+    /** Ferme le vote en cours ; forced = choix imposé par la régie (clic sur une option) */
+    function closeBallot(forced) {
         const b = s.ballot;
         const counts = {};
         for (const v of b.votes.values()) counts[v] = (counts[v] || 0) + 1;
         const best = Math.max(0, ...Object.values(counts));
         // Personne n'a voté : valeur par défaut ; égalité : tirage parmi les ex æquo
         const tied = b.choices.filter(c => counts[c] === best);
-        const winner = best === 0 ? (b.def ?? b.choices[0]) : pick(tied);
+        const winner = forced !== undefined ? forced : best === 0 ? (b.def ?? b.choices[0]) : pick(tied);
         // Résultat affiché quelques secondes, comme pour un coup, avant le vote suivant
         b.winner = winner;
-        b.how = best === 0 ? 'default' : tied.length > 1 ? 'tie' : 'votes';
+        b.how = forced !== undefined ? 'regie' : best === 0 ? 'default' : tied.length > 1 ? 'tie' : 'votes';
         try { recordBallot(b); } catch {}
         s.endsAt = null;
         emit();
@@ -1048,6 +1049,15 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
         socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 12), null, String(data.lang || 'en')); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
+        // Régie : un clic sur une option la choisit tout de suite
+        socket.on('h24:pick', (data = {}) => {
+            const l = me(), b = s.ballot;
+            if (!l || !REGIE.has(l) || !b || b.winner !== undefined || !['voteMode', 'voteOptions'].includes(s.phase)) return;
+            const c = b.choices.find(x => String(x) === String(data.choice ?? ''));
+            if (c === undefined) return;
+            log(`🎛️ 24/24 : ${b.id} = ${c} choisi par la régie (${l})`);
+            closeBallot(c);
+        });
         // Bots de test : réglés depuis la régie (h24:regie { bots }) ; retrait réservé à la régie aussi
         socket.on('h24:botsOff', () => {
             if (!bots.list.length || !REGIE.has(me())) return;

@@ -414,8 +414,8 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 }
 .h24-ballot-result i { color: #22c55e; }
 .h24-ballot-result small { flex-basis: 100%; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); }
-.h24-choices.is-decided .h24-choice.is-winner { border-color: #22c55e; box-shadow: 0 0 0 1px #22c55e inset; }
-.h24-choices.is-decided .h24-choice.is-winner::before { background: rgba(34, 197, 94, 0.25); }
+.h24-choices.is-decided .h24-choice.is-winner { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.h24-choices.is-decided .h24-choice.is-winner::before { background: rgba(255, 138, 61, 0.22); }
 .h24-choices.is-decided .h24-choice.is-loser { opacity: 0.45; }
 @keyframes h24-pop { from { transform: scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
 
