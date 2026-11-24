@@ -346,3 +346,7 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .test-tools__row { display: flex; gap: 6px; align-items: center; }
 .test-tools__row select { background: #1f2030; color: inherit; border: 1px solid #3a3b50; border-radius: 2px; padding: 3px 4px; }
 .test-tools__info { color: #9ca3af; }
+.test-tools__bots { display: flex; flex-wrap: wrap; gap: 4px; max-height: 120px; overflow-y: auto; }
+.test-tools__bot { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 7px; border: 1px solid #3a3b50; border-radius: 999px; font-size: 0.72rem; white-space: nowrap; }
+.test-tools__bot button { border: 0; background: none; color: inherit; opacity: .6; cursor: pointer; padding: 0 4px; font-size: 0.85rem; line-height: 1; }
+.test-tools__bot button:hover { opacity: 1; color: #f87171; }

@@ -483,10 +483,15 @@ function scheduleBotMove(game) {
     const delay  = Math.min(25000, Math.max(2500, turnMs * (0.3 + Math.random() * 0.45)));
     const fen    = game.lastFen;
     clearTimeout(game.botTimer);
-    game.botTimer = setTimeout(() => {
+    game.botTimer = setTimeout(async () => {
+        if (games[game.gameId] !== game || game.status !== 'playing' || game.lastFen !== fen) return;
+        // Stockfish au niveau choisi ; à défaut, le choix simple de sim.js
+        let san = null;
+        try { san = await require('./stockfish').botMove(fen, game.botElo || 1500); } catch {}
         if (games[game.gameId] !== game || game.status !== 'playing' || game.lastFen !== fen) return;
         const c = new Chess(fen);
-        const move = c.move(require('./sim').chooseMove(c));
+        let move = null;
+        try { move = c.move(san || require('./sim').chooseMove(c)); } catch {}
         if (!move) return;
         applyMultiMove(game, { player: 'black', move: move.san, fen: c.fen() });
     }, delay);
@@ -539,6 +544,7 @@ function launchMultiRoom(room) {
         guest:       room.b,
         guestSocket: room.bot ? null : room.sockets[room.b],
         bot:         !!room.bot,
+        botElo:      room.botElo || 1500,
         status:      'playing',
         moveCount:   0,
         startedAt:   Date.now(),
@@ -939,11 +945,12 @@ io.on('connection', (socket) => {
         if (!room || room.a !== login || room.b || room.sockets[login] !== socket.id || !station?.isRegie(login)) return;
         room.b   = 'sim_adversaire';
         room.bot = true;
+        room.botElo = require('./stockfish').snapLevel(data.elo ?? 1500);
         room.sockets[room.b] = 'bot:' + room.gameId;
         clearTimeout(room.timeout);
         room.endsAt  = Date.now() + BOT_LOBBY_MS;
         room.timeout = setTimeout(() => launchMultiRoom(room), BOT_LOBBY_MS);
-        console.log(`🧪 Adversaire fictif dans le salon ${room.gameId}`);
+        console.log(`🧪 Adversaire fictif (${room.botElo}) dans le salon ${room.gameId}`);
         emitMultiRoom(room);
         emitSpectate(room);
         broadcastGamesList();

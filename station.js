@@ -5,6 +5,7 @@
  * - Deux équipes (« teams ») : les inscrits sont répartis entre Blancs et Noirs, chaque équipe vote ses coups.
  * - Puzzle rush (« rush ») : tous les inscrits forment une équipe ; puzzles de plus en plus durs, 3 erreurs et c'est fini
  *   (même modèle que js/core/rushManager.js : départ 600, +60 par puzzle résolu).
+ * - Contre Stockfish (« bot ») : tous les inscrits dans un camp tiré au sort, contre Stockfish au niveau voté (300 à 2400+).
  *
  * Tous les votes (coups, mode, options, inscription) passent par les mêmes fonctions, quelle que soit
  * leur source : la page web aujourd'hui, le chat Twitch de la chaîne 24/24 demain.
@@ -15,6 +16,7 @@ const path = require('path');
 const { Chess } = require('chess.js');
 const twitchApi = require('./twitchApi');
 const Notation = require('./js/utils/notation.js');
+const Stockfish = require('./stockfish');
 // Langue de notation du chat Twitch du 24/24 (« Cf3 » en français) ; la page envoie celle du spectateur
 const H24_LANG = process.env.H24_LANG || 'fr';
 
@@ -46,10 +48,21 @@ const DUR = {
     signup: 30000
 };
 
-const MODES = ['teams', 'rush'];
+const MODES = ['teams', 'rush', 'bot'];
+// Contre Stockfish : niveaux proposés au vote (le premier est celui par défaut)
+const VS_LEVELS = [1200, 300, 600, 900, 1500, 1800, 2100, 2400];
+const VS_MIN_MS = 1500;           // Stockfish joue au plus tôt après ce délai (coup lisible)
 // Options votées après le mode, une à une ; la première valeur est celle par défaut
 const BALLOTS = {
     teams: [
+        { id: 'turn', choices: [30, 20, 45] },
+        { id: 'decision', choices: ['majority', 'draw'] },
+        { id: 'spin', choices: ['normal', 'fast', 'slow'] },
+        { id: 'votes', choices: [1, 2, 3, 4, 5] },
+        { id: 'anonymity', choices: ['none', 'secret'] }
+    ],
+    bot: [
+        { id: 'elo', choices: VS_LEVELS },
         { id: 'turn', choices: [30, 20, 45] },
         { id: 'decision', choices: ['majority', 'draw'] },
         { id: 'spin', choices: ['normal', 'fast', 'slow'] },
@@ -65,6 +78,8 @@ const BALLOTS = {
 };
 const BOT_NAMES = ['bot_fou', 'bot_tour', 'bot_pion', 'bot_dame', 'bot_roque', 'bot_gambit', 'bot_zugzwang',
     'bot_cavalier', 'bot_echec', 'bot_fianchetto', 'bot_sicilienne', 'bot_pat', 'bot_mat', 'bot_prise', 'bot_clouage', 'bot_fourchette'];
+// Niveaux des bots ajoutés en nombre (sim.js h24-bots, + / - de la régie) : un mélange, du plus courant au plus rare
+const BOT_MIX = [1200, 1500, 900, 1800, 600, 2100, 1500, 1200, 300, 2400, 900, 1800, 1500, 600, 2100, 1200];
 // Puzzle rush : mêmes réglages que rushManager (partie du streamer)
 const RUSH = { startRating: 600, ratingStep: 60, ratingSpread: 120, maxStrikes: 3 };
 
@@ -127,7 +142,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         endsAt: Date.now() + DUR.voteMode,
         paused: false,
         mode: 'teams',
-        options: { turn: 30, decision: 'majority', spin: 'normal', votes: 1, anonymity: 'none' },
+        options: { turn: 30, decision: 'majority', spin: 'normal', votes: 1, anonymity: 'none', elo: VS_LEVELS[0] },
+        vsSide: 'w',           // contre Stockfish : camp des viewers (tiré au sort à chaque partie)
         teams: { w: [], b: [] },
         ballot: { id: 'mode', choices: [...MODES], votes: new Map() },   // { id, choices, votes: Map(login → choix) }
         ballotQueue: [],
@@ -171,7 +187,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         }, 1500);
     }
     function recordGame(g, result) {
-        const teams = s.mode === 'teams';
+        const teams = s.mode !== 'rush';
         statsDb.games.push({
             at: Date.now(),
             mode: s.mode,
@@ -185,6 +201,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             tally: g.tally,
             teams: { w: [...s.teams.w], b: [...s.teams.b] },
             votes: { w: Object.fromEntries(g.voteCount.w), b: Object.fromEntries(g.voteCount.b) },
+            vs: s.mode === 'bot' ? { elo: s.options.elo, side: s.vsSide } : undefined,
             bots: botCount()
         });
         if (statsDb.games.length > STATS_KEEP) statsDb.games.splice(0, statsDb.games.length - STATS_KEEP);
@@ -309,7 +326,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
 
     const allPlayers = () => [...s.teams.w, ...s.teams.b];
     /** Une équipe joue son camp, et aussi l'autre tant qu'il n'a aucun joueur */
-    const canPlay = (team, side) => !!team && (team === side || !s.teams[side].length);
+    // Camp sans joueur : l'autre équipe le joue aussi (sauf contre Stockfish : c'est le sien)
+    const canPlay = (team, side) => !!team && (team === side || (s.mode !== 'bot' && !s.teams[side].length));
     const teamOf = (login) => s.teams.w.includes(login) ? 'w' : s.teams.b.includes(login) ? 'b' : null;
     const viewers = () => sockets.size;
 
@@ -347,6 +365,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how,
                 recent: (s.ballot.recent || []).slice(-20).map(r => tickerItem(r, { c: r.c })), recentN: s.ballot.recentN || 0 },
             bots: botCount(),
+            botList: botList(),
+            vs: s.mode === 'bot' ? { side: s.vsSide, elo: s.options.elo, thinking: !!g?.engine && !g?.result } : null,
             next: s.ballotQueue.map(b => b.id),
             recap: s.recap,
             game: g && {
@@ -440,6 +460,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!b) {
             s.teams = { w: [], b: [] };
             s.optOut.clear();
+            if (s.mode === 'bot') s.vsSide = pick(['w', 'b']);
             setPhase('signup', DUR.signup);
             autoJoin();
             emitMeAll();
@@ -455,6 +476,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         s.cycle++;
         s.ballot = null;
         s.recap = null;
+        if (s.mode === 'bot' && !['w', 'b'].includes(s.vsSide)) s.vsSide = 'w';
         if (s.mode === 'rush') {
             s.game = newGameState(new Chess());
             s.game.score = { solved: 0, strikes: 0, maxRating: 0 };
@@ -479,6 +501,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
 
     function startTurn() {
         const g = s.game;
+        if (s.mode === 'bot' && g.chess.turn() !== s.vsSide) return engineTurn();
+        g.engine = false;
         g.votes = new Map();
         g.recent = [];
         g.recentN = 0;
@@ -490,6 +514,33 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (g.tally) g.tally.peak = Math.max(g.tally.peak, viewers());
         emit();
         emitMeAll();
+    }
+
+    /** Contre Stockfish : le moteur joue son coup (au niveau voté), pas avant VS_MIN_MS, jamais pendant une pause */
+    function engineTurn() {
+        const g = s.game;
+        g.engine = true;
+        g.votes = new Map();
+        g.recent = [];
+        g.recentN = 0;
+        g.draw = null;
+        g.chosen = null;
+        g.turnEndsAt = null;
+        s.endsAt = null;
+        emit();
+        emitMeAll();
+        const fen = g.chess.fen();
+        const t0 = Date.now();
+        const fallback = () => pick(g.chess.moves());
+        Stockfish.botMove(fen, s.options.elo).catch(() => null).then((san) => {
+            const play = () => {
+                if (s.game !== g || g.result || g.chess.fen() !== fen) return;
+                if (s.paused) return later(1000, play);
+                playMove(san || fallback());
+            };
+            if (s.game !== g) return;
+            later(Math.max(0, VS_MIN_MS - (Date.now() - t0)), play);
+        });
     }
 
     /** Coup retenu : part des votes et un viewer tiré parmi ceux qui l'ont voté (mis en avant sur l'échiquier) */
@@ -524,7 +575,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             s.endsAt = g.draw.endsAt;
             emit();
             return later(drawMs(), () => playMove(move));
-        } else if (s.options.decision !== 'majority' && s.mode === 'teams' && entries.length > 1) {
+        } else if (s.options.decision !== 'majority' && s.mode !== 'rush' && entries.length > 1) {
             const total = entries.reduce((a, [, n]) => a + n, 0);
             let r = Math.random() * total;
             move = entries.find(([, n]) => (r -= n) < 0)?.[0] || entries[0][0];
@@ -563,7 +614,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         // Pour l'historique : part des votes du coup joué, ou « r » (hasard, personne n'a voté)
         let total = 0, mine = 0;
         for (const list of g.votes.values()) for (const x of list) { total++; if (x === m.san) mine++; }
-        g.hv.push(g.random || !total ? 'r' : Math.round(mine * 100 / total));
+        g.hv.push(g.engine ? null : g.random || !total ? 'r' : Math.round(mine * 100 / total));
+        g.engine = false;
         g.history.push(m.san);
         g.lastMove = { from: m.from, to: m.to };
         g.draw = null;
@@ -680,7 +732,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             plies: g.history.length,
             durationMs: Date.now() - g.startedAt,
             players: { w: s.teams.w.length, b: s.teams.b.length },
-            top: { w: top('w'), b: top('b') }
+            top: { w: top('w'), b: top('b') },
+            vs: s.mode === 'bot' ? { elo: s.options.elo, side: s.vsSide } : null
         };
         s.lastResult = result;
         try { recordGame(g, result); } catch (e) { log('📊 24/24 : partie non comptée', e.message); }
@@ -727,7 +780,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     /** Inscription : l'équipe la moins nombreuse (rush : une seule équipe) ; possible en pleine partie */
     function join(login) {
         if (!LOGIN_RE.test(login || '') || teamOf(login)) return false;
-        const side = s.mode === 'rush' ? 'w'
+        const side = s.mode === 'rush' ? 'w' : s.mode === 'bot' ? s.vsSide
             : s.teams.w.length === s.teams.b.length ? pick(['w', 'b'])
             : s.teams.w.length < s.teams.b.length ? 'w' : 'b';
         s.teams[side].push(login);
@@ -839,18 +892,41 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // Faux joueurs pour suivre un cycle complet : ils s'inscrivent, votent le mode et les options,
     // et votent les coups à des moments aléatoires, répartis sur 2-3 coups (tirage au sort lisible).
     // Ils ne comptent pas comme spectateurs : sans vrai viewer, la station reste en pause.
-    const bots = { list: [], turn: 0, plans: new Map(), cands: null };
+    // Chaque bot a un niveau (elo) : ses coups sont ceux de Stockfish bridé à ce niveau.
+    const bots = { list: [], elo: new Map(), turn: 0, plans: new Map(), cands: null };
     function botCount() { try { return bots.list.length; } catch { return 0; } }
+    const botList = () => bots.list.map(l => ({ l, elo: bots.elo.get(l) || 1500 }));
     function setBots(count = 0, { turn = 0 } = {}) {
         const n = Math.max(0, Math.min(BOT_NAMES.length, Number(count) || 0));
-        for (const l of bots.list.slice(n)) leave(l);
-        bots.list = BOT_NAMES.slice(0, n);
-        bots.turn = n ? Math.max(5, Math.min(60, Number(turn) || 0)) || 0 : 0;
+        for (const l of bots.list.slice(n)) { leave(l); bots.elo.delete(l); }
+        bots.list = bots.list.slice(0, n);
+        while (bots.list.length < n) addBot(BOT_MIX[bots.list.length % BOT_MIX.length], { quiet: true });
+        bots.turn = n ? Math.max(5, Math.min(60, Number(turn) || bots.turn || 0)) || 0 : 0;
         bots.plans.clear();
-        // Ajoutés en pleine partie : ils rejoignent tout de suite
-        if (s.phase === 'play') for (const l of bots.list) if (!teamOf(l)) join(l);
         emit();
-        return { bots: bots.list, turn: bots.turn || null };
+        return { bots: botList(), turn: bots.turn || null };
+    }
+    /** Un bot de plus, à ce niveau (nom libre suivant) ; null si complet */
+    function addBot(elo, { quiet = false } = {}) {
+        const l = BOT_NAMES.find(n => !bots.list.includes(n));
+        if (!l) return null;
+        bots.list.push(l);
+        bots.elo.set(l, Stockfish.snapLevel(elo));
+        if (!bots.turn) bots.turn = 10;
+        // Ajouté en pleine partie : il rejoint tout de suite
+        if (s.phase === 'play' && !teamOf(l)) join(l);
+        if (!quiet) emit();
+        return l;
+    }
+    function removeBot(login) {
+        if (!bots.list.includes(login)) return false;
+        bots.list = bots.list.filter(l => l !== login);
+        bots.elo.delete(login);
+        bots.plans.delete(login);
+        leave(login);
+        if (!bots.list.length) bots.turn = 0;
+        emit();
+        return true;
     }
     /** Ce que le bot ferait maintenant (clé stable tant que la situation ne change pas) */
     function botSituation() {
@@ -862,48 +938,23 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         }
         return null;
     }
-    /** Rush : part des bots qui trouvent la solution, 90 % à 600 de classement, 40 % à 2000, puis 30 % au plus bas */
-    function botAccuracy(rating) {
-        const r = Number(rating) || RUSH.startRating;
-        return Math.max(0.3, Math.min(0.9, 0.9 - (r - 600) * 0.5 / 1400));
-    }
-    function botCandidates(key) {
-        if (bots.cands?.key === key) return bots.cands.moves;
-        const g = s.game;
-        const legal = g.chess.moves();
-        const moves = [];
-        if (s.mode === 'rush') {
-            const uci = g.puzzle.moves[g.step] || '';
-            const sol = g.chess.moves({ verbose: true }).find(m => m.from + m.to + (m.promotion || '') === uci);
-            if (sol) moves.push(sol.san);
-        }
-        while (moves.length < 3 && moves.length < legal.length) {
-            const m = pick(legal);
-            if (!moves.includes(m)) moves.push(m);
-        }
-        bots.cands = { key, moves };
-        return moves;
-    }
     function botAct(login, key) {
         if (key.startsWith('signup')) return join(login);
         if (key.startsWith('ballot')) {
             const b = s.ballot;
-            const prefer = { mode: ['teams', 'teams', 'rush'], decision: ['draw'], turn: bots.turn ? [bots.turn] : b.choices };
+            const prefer = { mode: ['teams', 'teams', 'rush', 'bot'], decision: ['draw'], turn: bots.turn ? [bots.turn] : b.choices };
             return voteBallot(login, pick(prefer[b.id] || b.choices));
         }
         const g = s.game;
         const side = g.chess.turn();
-        if (s.mode === 'teams' && !canPlay(teamOf(login), side)) return;
-        const c = botCandidates(key);
-        // Rush : la bonne réponse d'autant moins souvent que le puzzle est dur ; partie : coups pondérés 3/2/1.
-        // Plusieurs votes : 1 à N
-        const acc = s.mode === 'rush' ? botAccuracy(g.puzzle?.rating) : 0;
+        if (s.mode !== 'rush' && !canPlay(teamOf(login), side)) return;
+        // Coup de Stockfish au niveau du bot (partie comme rush) ; voté seulement si le tour n'a pas changé entre-temps.
+        // Plusieurs votes (option) : 1 à N fois ce coup
         const n = 1 + rand(Math.max(1, Number(s.options.votes) || 1));
-        for (let i = 0; i < n; i++) {
-            const r = Math.random();
-            const m = s.mode === 'rush' ? (r < acc || c.length < 2 ? c[0] : pick(c.slice(1))) : c[r < 0.5 ? 0 : r < 0.83 ? 1 : 2] || c[0];
-            voteMove(login, m);
-        }
+        Stockfish.botMove(g.chess.fen(), bots.elo.get(login) || 1500).then((san) => {
+            if (!san || botSituation()?.key !== key || !bots.list.includes(login)) return;
+            for (let i = 0; i < n; i++) voteMove(login, san);
+        }).catch(() => {});
     }
     function botTick(now) {
         if (!bots.list.length) return;
@@ -1001,6 +1052,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 log(`🤖 24/24 : ${data.bots} bot(s) depuis la régie (${l})`);
                 setBots(data.bots, { turn: bots.turn || 10 });
             }
+            if (Number.isFinite(Number(data.addBot)) && data.addBot !== null && data.addBot !== '') {
+                const b = addBot(Number(data.addBot));
+                if (b) log(`🤖 24/24 : ${b} (${Stockfish.levelLabel(data.addBot)}) ajouté depuis la régie (${l})`);
+            }
+            if (typeof data.removeBot === 'string' && removeBot(data.removeBot)) log(`🤖 24/24 : ${data.removeBot} retiré depuis la régie (${l})`);
             if (typeof data.channel === 'string') {
                 const c = data.channel.trim().toLowerCase().replace(/^.*twitch\.tv\//, '').replace(/[/?#].*$/, '');
                 if (c === '' || LOGIN_RE.test(c)) {

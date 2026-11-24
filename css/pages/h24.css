@@ -302,6 +302,11 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 /* Bots de test : retirables par tout le monde */
 /* Régie : bots de test */
 .h24-regie__bots .h24-regie__status { margin-right: auto; }
+.h24-regie__bots select { width: auto; }
+.h24-regie__botlist { display: flex; flex-wrap: wrap; gap: 4px; }
+.h24-regie__bot { display: inline-flex; align-items: center; gap: 4px; padding: 1px 2px 1px 8px; border: 1px solid var(--border-color, rgba(255,255,255,.15)); border-radius: 999px; font-size: 0.75rem; font-family: var(--font-mono, monospace); }
+.h24-regie__bot button { border: 0; background: none; color: inherit; opacity: .6; cursor: pointer; padding: 0 4px; font-size: 0.9rem; line-height: 1; }
+.h24-regie__bot button:hover { opacity: 1; color: var(--danger, #e5534b); }
 
 /* Pendant la partie, le bloc Équipes laisse la place aux bandeaux autour de l'échiquier */
 #page-h24[data-phase="play"] .h24-teams-panel { display: none; }

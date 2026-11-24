@@ -51,9 +51,10 @@ function choiceLabel(ballot, c) {
     if (ballot === 'votes') return t(Number(c) === 1 ? 'h24.votesOne' : 'h24.votesN', { n: c }, `${c} vote(s)`);
     if (ballot === 'anonymity') return t(`h24.anonymity.${c}`, null, c);
     if (ballot === 'spin') return t(`h24.spin.${c}`, null, c);
+    if (ballot === 'elo') return Number(c) >= 2400 ? '2400+' : String(c);
     return String(c);
 }
-const CHOICE_ICON = { teams: 'fa-chess', rush: 'fa-bolt', majority: 'fa-check-double', draw: 'fa-dice', none: 'fa-eye', secret: 'fa-eye-slash',
+const CHOICE_ICON = { teams: 'fa-chess', rush: 'fa-bolt', bot: 'fa-robot', majority: 'fa-check-double', draw: 'fa-dice', none: 'fa-eye', secret: 'fa-eye-slash',
     fast: 'fa-forward', normal: 'fa-play', slow: 'fa-hourglass-half' };
 /** « 1, 2 ou 3 » */
 const numList = (n) => {
@@ -185,8 +186,9 @@ const H24Page = {
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
             if (e.target.closest('[data-h24-mute]')) { this.setVolume(this.muted && !this.volume ? 0.6 : this.volume, !this.muted); return; }
-            const bt = e.target.closest('[data-h24-bots]');
-            if (bt) { this.socket?.emit('h24:regie', { bots: Math.max(0, (this.state?.bots || 0) + Number(bt.dataset.h24Bots)) }); return; }
+            if (e.target.closest('[data-h24-bot-add]')) { this.socket?.emit('h24:regie', { addBot: this.botLevel || 1500 }); return; }
+            const rb = e.target.closest('[data-h24-bot-remove]');
+            if (rb) { this.socket?.emit('h24:regie', { removeBot: rb.dataset.h24BotRemove }); return; }
             if (e.target.closest('[data-h24-bots-off]')) { this.socket?.emit('h24:regie', { bots: 0 }); return; }
             const fd = e.target.closest('[data-h24-fold]');
             if (fd) { this.toggleFold(fd.dataset.h24Fold); return; }
@@ -453,6 +455,8 @@ const H24Page = {
     orientation() {
         const s = this.state;
         if (s?.mode === 'rush') return s.game?.puzzle?.side === 'b' ? 'black' : 'white';
+        // Contre Stockfish : toujours du côté des viewers
+        if (s?.mode === 'bot') return s.vs?.side === 'b' ? 'black' : 'white';
         return this.me.team === 'b' ? 'black' : 'white';
     },
 
@@ -704,7 +708,7 @@ const H24Page = {
         const server = this.state?.regie || {};
         if (this.cam.devices === null) { this.cam.devices = []; listCameras().then(d => { this.cam.devices = d; this.renderRegie(true); }); }
         const camLive = !!this.camSender?.active;
-        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!this.me.chat, this.state?.bots || 0].join('|');
+        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!this.me.chat, (this.state?.botList || []).map(b => b.l + b.elo).join()].join('|');
         if (!force && key === this.regieKey) return;
         this.regieKey = key;
         const typing = document.activeElement?.id === 'h24-regie-channel';
@@ -741,12 +745,16 @@ const H24Page = {
             ${this.camPanelHtml(camLive)}
             <div class="h24-regie__row h24-regie__bots">
                 <span class="h24-regie__status"><i class="fas fa-robot"></i> ${esc(t('h24.regie.bots', { n: this.state?.bots || 0 }, `Bots de test : ${this.state?.bots || 0}`))}</span>
-                <button type="button" class="btn btn--sm" data-h24-bots="-2" title="${esc(t('h24.regie.botsLess', null, 'Retirer 2 bots'))}"${this.state?.bots ? '' : ' disabled'}><i class="fas fa-minus"></i></button>
-                <button type="button" class="btn btn--sm" data-h24-bots="2" title="${esc(t('h24.regie.botsMore', null, 'Ajouter 2 bots'))}"><i class="fas fa-plus"></i></button>
+                <select class="input input--sm" data-h24-bot-level title="${esc(t('h24.regie.botsMore', null, 'Ajouter un bot de ce niveau'))}">
+                    ${(window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400]).map(v => `<option value="${v}"${v === (this.botLevel || 1500) ? ' selected' : ''}>${v >= 2400 ? '2400+' : v}</option>`).join('')}
+                </select>
+                <button type="button" class="btn btn--sm" data-h24-bot-add title="${esc(t('h24.regie.botsMore', null, 'Ajouter un bot de ce niveau'))}"><i class="fas fa-plus"></i></button>
                 ${this.state?.bots ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-bots-off><i class="fas fa-times"></i> ${esc(t('h24.botsOff', null, 'Retirer les bots'))}</button>` : ''}
             </div>
+            ${(this.state?.botList || []).length ? `<div class="h24-regie__botlist">${this.state.botList.map(b => `<span class="h24-regie__bot">${esc(b.l.replace(/^bot_/, ''))} · ${b.elo >= 2400 ? '2400+' : b.elo}<button type="button" data-h24-bot-remove="${esc(b.l)}" title="${esc(t('h24.regie.botsLess', null, 'Retirer ce bot'))}">×</button></span>`).join('')}</div>` : ''}
             </div>`;
         el.querySelectorAll('[data-h24-cam-pref]').forEach(sel => sel.addEventListener('change', () => this.setCamPref(sel.dataset.h24CamPref, sel.value)));
+        el.querySelector('[data-h24-bot-level]')?.addEventListener('change', (e) => { this.botLevel = Number(e.target.value) || 1500; });
         // Zoom : appliqué en direct pendant qu'on fait glisser, enregistré au relâchement
         const zoom = el.querySelector('[data-h24-cam-zoom]');
         zoom?.addEventListener('input', () => this.setCamZoom(zoom.value, false));
@@ -981,7 +989,7 @@ const H24Page = {
         const b = s?.ballot;
         const voting = s?.phase === 'voteMode' || s?.phase === 'voteOptions';
         const pending = new Set(voting ? [...(s?.next || []), ...(b && b.winner == null ? [b.id] : [])] : []);
-        if (s?.phase === 'voteMode') ['turn', 'decision', 'spin', 'votes', 'anonymity'].forEach(k => pending.add(k));
+        if (s?.phase === 'voteMode') ['elo', 'turn', 'decision', 'spin', 'votes', 'anonymity'].forEach(k => pending.add(k));
         const mode = s?.phase === 'voteMode' ? (b?.winner != null ? b.winner : null) : s?.mode;
         const title = $('h24-mode');
         if (title) {
@@ -999,6 +1007,7 @@ const H24Page = {
             const o = { ...(s?.options || {}) };
             if (b?.winner != null && b.id !== 'mode') o[b.id] = b.winner;   // résultat montré dès qu'il est connu
             const defs = {
+                elo: [t('h24.opt.elo', null, 'Niveau'), () => `Stockfish ${choiceLabel('elo', o.elo)}`, () => 'fa-robot'],
                 turn: [t('h24.opt.turn', null, 'Tour'), () => choiceLabel('turn', o.turn), () => 'fa-stopwatch'],
                 decision: [t('h24.opt.decision', null, 'Décision'), () => choiceLabel('decision', o.decision), () => CHOICE_ICON[o.decision] || 'fa-check'],
                 spin: [t('h24.opt.spin', null, 'Tirage'), () => choiceLabel('spin', o.spin), () => CHOICE_ICON[o.spin] || 'fa-play'],
@@ -1006,7 +1015,7 @@ const H24Page = {
                 anonymity: [t('h24.opt.anonymity', null, 'Visibilité'), () => t(`h24.opt.anon.${o.anonymity}`, null, o.anonymity), () => CHOICE_ICON[o.anonymity] || 'fa-eye']
             };
             // Options du mode (toutes tant que le mode n'est pas choisi)
-            const keys = Object.keys(defs).filter(k => (!mode || mode === 'teams' || (k !== 'decision' && k !== 'spin')) && (o[k] != null || pending.has(k)));
+            const keys = Object.keys(defs).filter(k => (!mode || (k === 'elo' ? mode === 'bot' : mode !== 'rush' || (k !== 'decision' && k !== 'spin'))) && (o[k] != null || pending.has(k)));
             const live = voting && b && b.winner == null ? b.id : null;
             const shown = s?.mode || voting ? keys : [];
             const els = new Map([...opts.querySelectorAll('[data-opt]')].map(e => [e.dataset.opt, e]));
@@ -1071,7 +1080,7 @@ const H24Page = {
                 <ul class="h24-team__list">${items || `<li class="h24-team__empty">${esc(t('h24.nobody', null, 'Personne'))}</li>`}${more}</ul>
             </div>`;
         };
-        el.innerHTML = solo ? list('w') : list('w') + list('b');
+        el.innerHTML = solo ? list('w') : s?.mode === 'bot' ? list(s.vs?.side || 'w') : list('w') + list('b');
         this.renderSides();
     },
 
@@ -1091,6 +1100,15 @@ const H24Page = {
             : !team ? `<button type="button" class="btn btn--sm btn--primary" data-h24-signup><i class="fas fa-user-plus"></i> ${esc(t('h24.join', null, 'Rejoindre'))}</button>`
             : `<button type="button" class="h24-side__quit" data-h24-quit>${esc(t('h24.quit', null, 'Quitter la partie'))}</button>`;
         const fill = (el, pos, side, withAction) => {
+            // Contre Stockfish : la bande du moteur (niveau, « réfléchit… »)
+            if (s.mode === 'bot' && side !== s.vs?.side) {
+                const turn = s.game.turn === side;
+                el.className = `h24-side h24-side--${pos} h24-side--${side} h24-side--engine${turn ? ' is-turn' : ''}`;
+                el.innerHTML = `<span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span><i class="fas fa-robot"></i> Stockfish ${esc(choiceLabel('elo', s.vs?.elo))}</span>
+                    ${turn && s.vs?.thinking ? `<span class="h24-side__turn">${esc(t('h24.botThinking', null, 'Stockfish réfléchit…'))}</span>` : ''}
+                    <span class="h24-side__spacer"></span>`;
+                return;
+            }
             const n = (s.teams?.[side] || []).length;
             const label = solo ? t('h24.players', null, 'Joueurs') : t(side === 'w' ? 'h24.white' : 'h24.black', null, side === 'w' ? 'Blancs' : 'Noirs');
             const turn = !solo && s.game.turn === side;
@@ -1405,6 +1423,7 @@ const H24Page = {
             }
             else if (this.myTurn() && g.turn !== this.me.team && s.mode === 'teams') msg = t('h24.bothSides', { side: t(g.turn === 'w' ? 'h24.sideW' : 'h24.sideB') }, 'Ton équipe joue aussi ce camp.');
             else if (this.myTurn()) msg = t('h24.clickToVote', null, 'Clique un coup ou déplace une pièce');
+            else if (s.mode === 'bot') msg = t('h24.botThinking', null, 'Stockfish réfléchit…');
             else msg = t('h24.waitTurn', null, 'L\'autre équipe réfléchit…');
             hint.textContent = msg;
             hint.classList.toggle('is-active', this.myTurn());
@@ -1422,7 +1441,7 @@ const H24Page = {
         const card = histSc?.querySelector('.h24-next');
         const from = card && histLen > Number(card.dataset.ply) ? card.getBoundingClientRect() : null;
         if (from) card.remove();
-        renderHistory(histEl, (g.history || []).map((san, i) => ({ san, v: s.mode === 'teams' ? g.hv?.[i] ?? null : null })), first);
+        renderHistory(histEl, (g.history || []).map((san, i) => ({ san, v: s.mode !== 'rush' ? g.hv?.[i] ?? null : null })), first);
         this.renderNextMove(g);
         if (stick || from) this.historyToBottom();
         if (from) this.flyIntoHistory(card, from);
