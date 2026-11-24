@@ -26,7 +26,7 @@ const CHATTER = ['gg', 'pog', 'allez !', 'bien joué', 'hmm', 'non pas ça', 'KE
 const TICK_MS = 400;
 const MAX_BOTS = 30;
 // Remplissage rapide : un mélange de niveaux
-const MIX = [1200, 1500, 900, 1800, 600, 2100, 1500, 300, 1200, 2400];
+const MIX = [1320, 1500, 900, 1800, 600, 2100, 1500, 300, 1320, 2400];
 // Pages de jeu (partie, problèmes, rush, Mono, Multi)
 const PAGES = new Set(['game', 'rush', 'mono', 'multi']);
 // Pour tous les streamers : partie et problèmes (page game), Mono. Pas de rush (records de chaîne)
@@ -36,7 +36,7 @@ const COLLAPSED_KEY = 'sfBotsCollapsed';
 
 const rand = (n) => Math.floor(Math.random() * n);
 const pick = (arr) => arr[rand(arr.length)];
-const levels = () => window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400];
+const levels = () => window.BotEngine?.LEVELS || [300, 600, 900, 1320, 1500, 1800, 2100, 2400];
 const label = (elo) => window.BotEngine?.levelLabel(elo) || String(elo);
 const option = (elo) => window.BotEngine?.levelOption(elo) || label(elo);
 const readCollapsed = () => { try { return localStorage.getItem(COLLAPSED_KEY) === '1'; } catch { return false; } };

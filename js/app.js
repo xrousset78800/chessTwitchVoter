@@ -68,7 +68,7 @@ const AppState = {
         subsOnly: false,
 
         // Contre Stockfish : niveau, camp du chat ('w', 'b' ou 'random')
-        botElo: 1200,
+        botElo: 1320,
         botSide: 'random',
 
         // Affichage
@@ -721,7 +721,7 @@ async applyConfigAfterReload() {
     if (AppState.gameMode === 'vsBot') {
         const side = AppState.config.botSide;
         const chat = side === 'w' || side === 'b' ? side : (Math.random() < 0.5 ? 'w' : 'b');
-        gameEngine.vsBot = { color: chat === 'w' ? 'b' : 'w', elo: window.BotEngine?.snapLevel(AppState.config.botElo || 1200) ?? 1200 };
+        gameEngine.vsBot = { color: chat === 'w' ? 'b' : 'w', elo: window.BotEngine?.snapLevel(AppState.config.botElo || 1320) ?? 1320 };
         gameEngine.board?.orientation(chat === 'w' ? 'white' : 'black');
     }
     gameEngine.startGame();
@@ -1248,7 +1248,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
 
         // ========== CONTRE STOCKFISH ==========
         document.getElementById('bot-elo')?.addEventListener('change', (e) => {
-            AppState.config.botElo = Number(e.target.value) || 1200;
+            AppState.config.botElo = Number(e.target.value) || 1320;
         });
         document.getElementById('bot-side')?.addEventListener('change', (e) => {
             AppState.config.botSide = e.target.value;
@@ -1542,10 +1542,10 @@ fullReset() {
         const botElo = document.getElementById('bot-elo');
         if (botElo) {
             if (!botElo.options.length) {
-                botElo.innerHTML = (window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400])
+                botElo.innerHTML = (window.BotEngine?.LEVELS || [300, 600, 900, 1320, 1500, 1800, 2100, 2400])
                     .map(v => `<option value="${v}">${window.BotEngine?.levelOption(v) || v}</option>`).join('');
             }
-            botElo.value = String(window.BotEngine?.snapLevel(AppState.config.botElo || 1200) ?? 1200);
+            botElo.value = String(window.BotEngine?.snapLevel(AppState.config.botElo || 1320) ?? 1320);
         }
         const botSide = document.getElementById('bot-side');
         if (botSide) botSide.value = AppState.config.botSide || 'random';
@@ -2344,8 +2344,8 @@ const MonoPage = {
         });
         // Stockfish contre les inscrits : niveaux étiquetés (stockfish) / (todo)
         const elo = document.getElementById('mono-bot-elo');
-        elo.innerHTML = (window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400])
-            .map(v => `<option value="${v}"${v === 1200 ? ' selected' : ''}>${window.BotEngine?.levelOption(v) || v}</option>`).join('');
+        elo.innerHTML = (window.BotEngine?.LEVELS || [300, 600, 900, 1320, 1500, 1800, 2100, 2400])
+            .map(v => `<option value="${v}"${v === 1320 ? ' selected' : ''}>${window.BotEngine?.levelOption(v) || v}</option>`).join('');
         document.getElementById('mono-start').addEventListener('click', () => {
             const config = PresetForm.read('mono');
             if (PresetForm.needsLogin(config)) { twitchAuth.login(); return; }
@@ -2355,7 +2355,7 @@ const MonoPage = {
                 gameMode: 'mono',
                 format: this.format,
                 streamerColor: document.getElementById('mono-color').value,
-                botElo: Number(document.getElementById('mono-bot-elo').value) || 1200,
+                botElo: Number(document.getElementById('mono-bot-elo').value) || 1320,
                 botSide: document.getElementById('mono-bot-side').value,
                 config
             });
@@ -2492,7 +2492,7 @@ const PresetGame = {
             // Stockfish contre les inscrits : ils votent pour un camp, Stockfish joue l'autre
             const chat = botSide === 'w' || botSide === 'b' ? botSide : (Math.random() < 0.5 ? 'w' : 'b');
             gameEngine.session = { humanColor: null };
-            gameEngine.vsBot = { color: chat === 'w' ? 'b' : 'w', elo: window.BotEngine?.snapLevel(botElo || 1200) ?? 1200 };
+            gameEngine.vsBot = { color: chat === 'w' ? 'b' : 'w', elo: window.BotEngine?.snapLevel(botElo || 1320) ?? 1320 };
             gameEngine.board.orientation(chat === 'w' ? 'white' : 'black');
             this.startLobby({ format, channel: login, streamer: login, color: chat });
         } else if (format === 'vsStreamer') {

@@ -50,7 +50,7 @@ const DUR = {
 
 const MODES = ['teams', 'rush', 'bot'];
 // Contre Stockfish : niveaux proposés au vote (le premier est celui par défaut)
-const VS_LEVELS = [1200, 300, 600, 900, 1500, 1800, 2100, 2400];
+const VS_LEVELS = [1320, 300, 600, 900, 1500, 1800, 2100, 2400];
 const VS_MIN_MS = 1500;           // Stockfish joue au plus tôt après ce délai (coup lisible)
 // Options votées après le mode, une à une ; la première valeur est celle par défaut
 const BALLOTS = {
@@ -79,7 +79,7 @@ const BALLOTS = {
 const BOT_NAMES = ['bot_fou', 'bot_tour', 'bot_pion', 'bot_dame', 'bot_roque', 'bot_gambit', 'bot_zugzwang',
     'bot_cavalier', 'bot_echec', 'bot_fianchetto', 'bot_sicilienne', 'bot_pat', 'bot_mat', 'bot_prise', 'bot_clouage', 'bot_fourchette'];
 // Niveaux des bots ajoutés en nombre (sim.js h24-bots, + / - de la régie) : un mélange, du plus courant au plus rare
-const BOT_MIX = [1200, 1500, 900, 1800, 600, 2100, 1500, 1200, 300, 2400, 900, 1800, 1500, 600, 2100, 1200];
+const BOT_MIX = [1320, 1500, 900, 1800, 600, 2100, 1500, 1320, 300, 2400, 900, 1800, 1500, 600, 2100, 1320];
 // Puzzle rush : mêmes réglages que rushManager (partie du streamer)
 const RUSH = { startRating: 600, ratingStep: 60, ratingSpread: 120, maxStrikes: 3 };
 
@@ -466,8 +466,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             emitMeAll();
             return;
         }
-        const choices = b.id === 'turn' && bots.turn ? [bots.turn, ...b.choices.filter(c => c !== bots.turn)] : b.choices;
-        s.ballot = { id: b.id, choices, votes: new Map() };
+        s.ballot = { id: b.id, choices: b.choices, votes: new Map() };
         setPhase('voteOptions', DUR.voteOption);
         emitMeAll();
     }
@@ -893,18 +892,17 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // et votent les coups à des moments aléatoires, répartis sur 2-3 coups (tirage au sort lisible).
     // Ils ne comptent pas comme spectateurs : sans vrai viewer, la station reste en pause.
     // Chaque bot a un niveau (elo) : ses coups sont ceux de Stockfish bridé à ce niveau.
-    const bots = { list: [], elo: new Map(), turn: 0, plans: new Map(), cands: null };
+    const bots = { list: [], elo: new Map(), plans: new Map(), cands: null };
     function botCount() { try { return bots.list.length; } catch { return 0; } }
     const botList = () => bots.list.map(l => ({ l, elo: bots.elo.get(l) || 1500 }));
-    function setBots(count = 0, { turn = 0 } = {}) {
+    function setBots(count = 0) {
         const n = Math.max(0, Math.min(BOT_NAMES.length, Number(count) || 0));
         for (const l of bots.list.slice(n)) { leave(l); bots.elo.delete(l); }
         bots.list = bots.list.slice(0, n);
         while (bots.list.length < n) addBot(BOT_MIX[bots.list.length % BOT_MIX.length], { quiet: true });
-        bots.turn = n ? Math.max(5, Math.min(60, Number(turn) || bots.turn || 0)) || 0 : 0;
         bots.plans.clear();
         emit();
-        return { bots: botList(), turn: bots.turn || null };
+        return { bots: botList() };
     }
     /** Un bot de plus, à ce niveau (nom libre suivant) ; null si complet */
     function addBot(elo, { quiet = false } = {}) {
@@ -912,7 +910,6 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!l) return null;
         bots.list.push(l);
         bots.elo.set(l, Stockfish.snapLevel(elo));
-        if (!bots.turn) bots.turn = 10;
         // Ajouté en pleine partie : il rejoint tout de suite
         if (s.phase === 'play' && !teamOf(l)) join(l);
         if (!quiet) emit();
@@ -924,7 +921,6 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         bots.elo.delete(login);
         bots.plans.delete(login);
         leave(login);
-        if (!bots.list.length) bots.turn = 0;
         emit();
         return true;
     }
@@ -942,7 +938,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (key.startsWith('signup')) return join(login);
         if (key.startsWith('ballot')) {
             const b = s.ballot;
-            const prefer = { mode: ['teams', 'teams', 'rush', 'bot'], decision: ['draw'], turn: bots.turn ? [bots.turn] : b.choices };
+            const prefer = { mode: ['teams', 'teams', 'rush', 'bot'], decision: ['draw'] };
             return voteBallot(login, pick(prefer[b.id] || b.choices));
         }
         const g = s.game;
@@ -1050,7 +1046,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             if (typeof data.paused === 'boolean') regie.paused = data.paused;
             if (Number.isInteger(data.bots) && data.bots !== bots.list.length) {
                 log(`🤖 24/24 : ${data.bots} bot(s) depuis la régie (${l})`);
-                setBots(data.bots, { turn: bots.turn || 10 });
+                setBots(data.bots);
             }
             if (Number.isFinite(Number(data.addBot)) && data.addBot !== null && data.addBot !== '') {
                 const b = addBot(Number(data.addBot));

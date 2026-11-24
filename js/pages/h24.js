@@ -746,7 +746,7 @@ const H24Page = {
             <div class="h24-regie__row h24-regie__bots">
                 <span class="h24-regie__status"><i class="fas fa-robot"></i> ${esc(t('h24.regie.bots', { n: this.state?.bots || 0 }, `Bots de test : ${this.state?.bots || 0}`))}</span>
                 <select class="input input--sm" data-h24-bot-level title="${esc(t('h24.regie.botsMore', null, 'Ajouter un bot de ce niveau'))}">
-                    ${(window.BotEngine?.LEVELS || [300, 600, 900, 1200, 1500, 1800, 2100, 2400]).map(v => `<option value="${v}"${v === (this.botLevel || 1500) ? ' selected' : ''}>${window.BotEngine?.levelOption(v) || v}</option>`).join('')}
+                    ${(window.BotEngine?.LEVELS || [300, 600, 900, 1320, 1500, 1800, 2100, 2400]).map(v => `<option value="${v}"${v === (this.botLevel || 1500) ? ' selected' : ''}>${window.BotEngine?.levelOption(v) || v}</option>`).join('')}
                 </select>
                 <button type="button" class="btn btn--sm" data-h24-bot-add title="${esc(t('h24.regie.botsMore', null, 'Ajouter un bot de ce niveau'))}"><i class="fas fa-plus"></i></button>
                 ${this.state?.bots ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-bots-off><i class="fas fa-times"></i> ${esc(t('h24.botsOff', null, 'Retirer les bots'))}</button>` : ''}
