@@ -996,7 +996,8 @@ updateAvailableMoves() {
         const pieces = ['N', 'B', 'Q', 'R', 'K', 'O'].flatMap(p => groups[p]);
         const a = pick(groups.P, ['e4', 'd4', 'e5', 'd5', 'c4', 'c5']) || moves[0];
         const b = pick(pieces, ['Nf3', 'Nf6', 'Nc3', 'Nc6', 'O-O']);
-        const code = m => `<code>${String(m).replace(/[<>&]/g, '')}</code>`;
+        // Dans la notation du chat (Qxf8 -> Dxf8 en français)
+        const code = m => `<code>${String(fmtMove(m)).replace(/[<>&]/g, '')}</code>`;
         ex.innerHTML = a ? `${window.i18n?.t('moves.example') || ''} ${code(a)}${b && b !== a ? ` ${window.i18n?.t('moves.or') || '/'} ${code(b)}` : ''}` : '';
     }
     paintMoveChips(movesPanel, (voting.getSortedResults?.() || []).map(r => ({ move: r.move, count: r.count || 0 })), paletteColors());

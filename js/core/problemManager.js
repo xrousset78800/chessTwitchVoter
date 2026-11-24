@@ -588,7 +588,7 @@ resolveVotes() {
             const expectedSAN = this.uciToSAN(expectedUCI);
 
             if (this.onWrongMove) {
-                this.onWrongMove(expectedSAN, expectedUCI);
+                this.onWrongMove(expectedSAN, expectedUCI, playedUCI);
             }
 
             const correctMove = this.uciToMoveObject(expectedUCI);

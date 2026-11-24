@@ -103,24 +103,31 @@
    FEEDBACK VISUEL PROBLÈME
    ============================================ */
 
-.problem-feedback {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px 40px;
-    border-radius: 3px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    z-index: 9999;
-    animation: feedbackPop 0.3s ease;
+/* Pastille de statut dans le coin haut droit de la case d'arrivée (left/top = ce coin) */
+.problem-badge {
+    position: absolute;
+    z-index: 6;
+    width: 24px;
+    height: 24px;
+    margin: -9px 0 0 -15px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font: 700 0.85rem/1 'Inter', sans-serif;
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.9);
     pointer-events: none;
+    animation: problemBadgeIn 0.22s ease-out;
+    transition: opacity 0.3s, transform 0.3s;
 }
+.problem-badge.is-leaving { opacity: 0; transform: scale(0.6); }
+.problem-badge--correct { background: #22a55a; }
+.problem-badge--wrong { background: #dc3c3c; }
+.problem-badge--solved { background: linear-gradient(135deg, #ffd23f, #f59e0b); color: #3a2400; }
 
-@keyframes feedbackPop {
-    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-    50% { transform: translate(-50%, -50%) scale(1.1); }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+@keyframes problemBadgeIn {
+    from { opacity: 0; transform: scale(0.4); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .problem-feedback--correct {

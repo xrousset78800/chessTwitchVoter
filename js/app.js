@@ -808,15 +808,16 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         // Joueur correct
         problemsManager.onCorrectMove = (move) => {
             console.log('✅ Correct:', move.san);
-            this.showProblemFeedback('correct');
+            this.showProblemFeedback('correct', move.to);
             this.addMoveToHistory(move, 'player');
             this.syncPhantom();
         };
 
         // Joueur erreur
-        problemsManager.onWrongMove = (expectedSAN, expectedUCI) => {
+        problemsManager.onWrongMove = (expectedSAN, expectedUCI, playedUCI) => {
             console.log('❌ Erreur! Attendu:', expectedSAN);
-            this.showProblemFeedback('wrong', expectedSAN);
+            // ✗ sur la case visée (sans coup joué : sur celle de la solution), puis la solution en flèche
+            this.showProblemFeedback('wrong', (playedUCI || expectedUCI || '').slice(2, 4), expectedUCI);
         };
 
         // Problème résolu
@@ -974,42 +975,51 @@ problemsManager.onResolveWithWheel = (results, callback) => {
         historyEl.appendChild(moveEl);
     },
 
-    showProblemFeedback(type, message = '') {
-        // Retirer les anciens feedbacks
+    /**
+     * Statut d'un coup de problème : pastille discrète dans le coin de la case d'arrivée
+     * ✓ bon coup, ✗ mauvais coup (+ flèche verte de la solution), ★ problème résolu.
+     * « Résolu » / « raté » reprennent la case du dernier coup ; « raté » garde le ✗ déjà posé.
+     */
+    showProblemFeedback(type, square = '', solutionUCI = '') {
         document.body.classList.remove('problem-correct', 'problem-wrong', 'problem-solved', 'problem-failed');
-
-        // Ajouter le nouveau
         document.body.classList.add(`problem-${type}`);
+        clearTimeout(this.feedbackBodyTimer);
+        this.feedbackBodyTimer = setTimeout(() => document.body.classList.remove(`problem-${type}`), 1200);
 
-        // Créer un élément de feedback temporaire
-        const existing = document.getElementById('problem-feedback');
-        if (existing) existing.remove();
+        if (type === 'failed') return;
+        const sq = square || this.feedbackSquare;
+        const boardEl = document.getElementById('myBoard');
+        const cell = sq && boardEl?.querySelector(`[data-square="${sq}"]`);
+        const host = boardEl?.parentElement;
+        document.getElementById('problem-feedback')?.remove();
+        clearTimeout(this.feedbackTimer);
+        if (!cell || !host) return;
+        this.feedbackSquare = sq;
 
-        const feedback = document.createElement('div');
-        feedback.id = 'problem-feedback';
-        feedback.className = `problem-feedback problem-feedback--${type}`;
+        const badge = document.createElement('div');
+        badge.id = 'problem-feedback';
+        badge.className = `problem-badge problem-badge--${type}`;
+        badge.textContent = type === 'correct' ? '✓' : type === 'wrong' ? '✗' : '★';
+        const hb = host.getBoundingClientRect();
+        const r = cell.getBoundingClientRect();
+        badge.style.left = `${r.right - hb.left}px`;
+        badge.style.top = `${r.top - hb.top}px`;
+        host.appendChild(badge);
+        // Bon coup : bref ; erreur / résolu : reste pendant la pause avant le problème suivant
+        this.feedbackTimer = setTimeout(() => {
+            badge.classList.add('is-leaving');
+            setTimeout(() => badge.remove(), 300);
+        }, type === 'correct' ? 1400 : 5000);
 
-        switch (type) {
-            case 'correct':
-                feedback.innerHTML = '<span class="feedback-icon">✓</span>';
-                break;
-            case 'wrong':
-                feedback.innerHTML = `<span class="feedback-icon">✗</span><span class="feedback-text">${message}</span>`;
-                break;
-            case 'solved':
-                feedback.innerHTML = '<span class="feedback-icon">🎉</span><span class="feedback-text">Résolu !</span>';
-                break;
-            case 'failed':
-                feedback.innerHTML = '<span class="feedback-icon">💔</span>';
-                break;
+        // Erreur : la solution en flèche verte (après le retour de la pièce, sinon effacée avec la position)
+        if (type === 'wrong' && /^[a-h][1-8][a-h][1-8]/.test(solutionUCI)) {
+            setTimeout(() => {
+                const ann = gameEngine.annotations;
+                if (!ann) return;
+                ann.arrows.set(solutionUCI.slice(0, 4), 'shift');
+                ann.render();
+            }, 450);
         }
-
-        document.body.appendChild(feedback);
-
-        setTimeout(() => {
-            feedback.remove();
-            document.body.classList.remove(`problem-${type}`);
-        }, 2000);
     },
 
     syncPhantom() {
