@@ -31,7 +31,7 @@
 
 .preset__choices {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
 }
 
@@ -345,7 +345,7 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .test-tools__title { font-weight: 700; color: #facc15; }
 .test-tools__toggle { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: #facc15; text-align: left; cursor: pointer; }
 .test-tools.is-collapsed { padding: 6px 10px; }
-.test-tools__row { display: flex; gap: 6px; align-items: center; }
+.test-tools__row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .test-tools__row select { background: #1f2030; color: inherit; border: 1px solid #3a3b50; border-radius: 2px; padding: 3px 4px; }
 .test-tools__info { color: #9ca3af; }
 .test-tools__bots { display: flex; flex-wrap: wrap; gap: 4px; max-height: 120px; overflow-y: auto; }

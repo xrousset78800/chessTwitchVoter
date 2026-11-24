@@ -566,6 +566,24 @@
                             <span class="preset-choice__title" data-i18n="mono.teams">Les inscrits entre eux</span>
                             <span class="preset-choice__desc" data-i18n="mono.teamsDesc">Les inscrits sont répartis au hasard en deux équipes, Blancs et Noirs.</span>
                         </button>
+                        <button class="preset-choice" type="button" data-format="vsBot">
+                            <span class="preset-choice__title" data-i18n="mono.vsBot">Stockfish contre les inscrits</span>
+                            <span class="preset-choice__desc" data-i18n="mono.vsBotDesc">Les inscrits votent leurs coups face à Stockfish, au niveau choisi.</span>
+                        </button>
+                    </div>
+                    <div class="preset__row" id="mono-bot-group" style="display: none">
+                        <div class="form-group">
+                            <label class="form-label" for="mono-bot-elo"><i class="fas fa-robot"></i> <span data-i18n="gameMode.vsBot.level">Niveau de Stockfish</span></label>
+                            <select class="input input--sm" id="mono-bot-elo"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="mono-bot-side"><i class="fas fa-chess"></i> <span data-i18n="mono.botSide">Les inscrits jouent</span></label>
+                            <select class="input input--sm" id="mono-bot-side">
+                                <option value="random" data-i18n="gameMode.vsBot.random">Au hasard</option>
+                                <option value="w" data-i18n="gameMode.vsBot.white">Blancs</option>
+                                <option value="b" data-i18n="gameMode.vsBot.black">Noirs</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group" id="mono-color-group">
                         <label class="form-label" data-i18n="mono.color" data-info="monoColor">Ta couleur</label>

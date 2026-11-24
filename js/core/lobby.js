@@ -6,6 +6,7 @@
  *  - vsStreamer : les inscrits jouent contre le streamer, dans la couleur qu'il leur laisse
  *  - teams      : les inscrits sont répartis au hasard entre Blancs et Noirs
  *  - multi      : les inscrits de la chaîne jouent la couleur de cette chaîne
+ *  - vsBot      : les inscrits jouent contre Stockfish (gameEngine.vsBot), dans la couleur choisie
  *
  * Le streamer peut retirer ou ajouter un joueur à tout moment, partie comprise.
  * Le chat peut aussi taper join pendant la partie : l'inscrit rejoint son camp
