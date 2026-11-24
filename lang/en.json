@@ -160,7 +160,7 @@
     "multiCard": "Two channels face off",
     "voteTime": "Voting time (s)",
     "choice": "Move selection",
-    "wheel": "🎡 Wheel",
+    "wheel": "🎲 Random",
     "majority": "📊 Majority",
     "spin": "Draw animation",
     "spinSpeed": { "none": "No animation", "fast": "Fast", "normal": "Normal", "slow": "Slow" },
@@ -575,7 +575,7 @@
     "problemPause": "Wait between two puzzles.",
     "monoColor": "The side you play on the board; registered viewers vote for the other one.",
     "voteTime": "How long chat has to vote on each move.",
-    "choice": "Wheel: random draw weighted by votes. Majority: the most voted move is played.",
+    "choice": "Random: random draw weighted by votes. Majority: the most voted move is played.",
     "multiPublic": "Public: listed in Browse, any channel can join. Private: anyone can watch, but only the channel with your link can join."
   },
   "timerOff": {

@@ -46,8 +46,6 @@ class GameEngine {
         this.onGameEnd = null;
         this.onTurnChange = null;
 
-        // Nom du votant pour les tests
-        this.currentVoterName = 'TestPlayer';
 
         // Sons
         this.sounds = {
@@ -216,7 +214,7 @@ class GameEngine {
         // compte comme un vote, comme un clic dans la liste des coups ; il n'est pas joué
         if (!this.session && this.config.timerEnabled) {
             const probe = new Chess(this.chess.fen()).move({ from: source, to: target, promotion: 'q' });
-            if (probe && voting.isOpen) voting.addVote(this.currentVoterName, probe.san);
+            if (probe && voting.isOpen) this.voteAsStreamer(probe.san);
             return 'snapback';
         }
 
@@ -746,6 +744,16 @@ showWheelAnimation(results) {
 
     this.updateVotesUI(results);
 
+    // Aucune animation : pas de roue ni de bande, le coup tiré s'affiche (flèche 🎲) puis il est joué
+    if (wheelDuration <= 0) {
+        const winner = this.selectRandomWeighted(results);
+        if (!winner) return;
+        const random = results.length > 1 && results.every(r => r.count === 1);
+        const pct = random ? null : (results.find(r => r.move === winner)?.percentage ?? null);
+        this.previewWinner(winner, pct, () => this.executeMove(winner));
+        return;
+    }
+
     if (this.votingWheel) {
         // Synchroniser la roue
         this.votingWheel.clear();
@@ -1014,6 +1022,18 @@ isMyTurnInMulti() {
            (window.playerColor === 'black' && turn === 'b');
 }
 
+/** Le streamer : son login Twitch (connecté, sinon la chaîne), pour partager le quota de son vote dans le chat */
+streamerVoter() {
+    const login = String(window.twitchAuth?.user?.login || window.twitch?.channel || 'streamer').toLowerCase();
+    return { username: login, displayName: window.twitchAuth?.user?.display_name || window.twitchAuth?.user?.displayName || login };
+}
+
+/** Coup cliqué ou posé pendant le vote : compte comme le vote du streamer (même limite que le chat) */
+voteAsStreamer(move) {
+    const me = this.streamerVoter();
+    return voting.addVote(me.username, move, { twitch: true, name: me.displayName });
+}
+
 onMoveClick(move) {
     // Mode multi : bloquer complètement si ce n'est pas notre tour
     if (!this.isMyTurnInMulti()) {
@@ -1037,7 +1057,8 @@ onMoveClick(move) {
     // Mode problemsManager (gameEngine natif) avec timer
     if (window.problemsManager?.isActive) {
         if (this.config.timerEnabled) {
-            window.problemsManager.receiveVote(move, 'en');   // bouton : SAN international, pas la langue du chat
+            // bouton : SAN international, pas la langue du chat ; vote du streamer, même quota que le chat
+            window.problemsManager.receiveVote({ move, ...this.streamerVoter() }, 'en');
         } else {
             window.problemsManager.validateAndPlayMove(move);
         }
@@ -1052,9 +1073,7 @@ onMoveClick(move) {
 
     // Mode normal avec timer : voter
     if (this.config.timerEnabled) {
-        if (voting.isOpen) {
-            voting.addVote(this.currentVoterName, move);
-        }
+        if (voting.isOpen) this.voteAsStreamer(move);
         return;
     }
 

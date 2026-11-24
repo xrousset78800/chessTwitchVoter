@@ -771,7 +771,10 @@ async applyConfigAfterReload() {
         };
 
 problemsManager.onResolveWithWheel = (results, callback, seconds) => {
-    if (!gameEngine.votingWheel) {
+    // Durée imposée (égalité en problèmes : version lente), sinon le réglage du streamer
+    const wheelDuration = (seconds ?? snapSpin(AppState.config.wheelDuration)) * 1000;
+    // Pas de roue, ou « aucune animation » : tirage pondéré direct
+    if (!gameEngine.votingWheel || wheelDuration <= 0) {
         // Pas de roue : pondéré direct
         const total = results.reduce((s, r) => s + r.count, 0);
         let rand = Math.random() * total;
@@ -795,8 +798,6 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
     gameEngine.showWheel();
     document.body.classList.add('randomWheel');
 
-    // Durée imposée (égalité en problèmes : version lente), sinon le réglage du streamer
-    const wheelDuration = (seconds ?? snapSpin(AppState.config.wheelDuration)) * 1000;
     gameEngine.votingWheel.onSpinEnd = (winner) => {
         document.body.classList.remove('randomWheel');
         gameEngine.hideWheel();

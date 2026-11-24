@@ -160,7 +160,7 @@
     "multiCard": "İki kanal karşı karşıya",
     "voteTime": "Oylama süresi (sn)",
     "choice": "Hamle seçimi",
-    "wheel": "🎡 Çark",
+    "wheel": "🎲 Rastgele",
     "majority": "📊 Çoğunluk",
     "spin": "Çekiliş animasyonu",
     "spinSpeed": { "none": "Animasyon yok", "fast": "Hızlı", "normal": "Normal", "slow": "Yavaş" },
@@ -575,7 +575,7 @@
     "problemPause": "İki bulmaca arasındaki bekleme.",
     "monoColor": "Tahtada oynadığın taraf; kayıtlı izleyiciler diğeri için oy verir.",
     "voteTime": "Chat'in her hamle için oy verme süresi.",
-    "choice": "Çark: oylara göre ağırlıklı rastgele çekiliş. Çoğunluk: en çok oy alan hamle oynanır.",
+    "choice": "Rastgele: oylara göre ağırlıklı rastgele çekiliş. Çoğunluk: en çok oy alan hamle oynanır.",
     "multiPublic": "Herkese açık: Göz at'ta listelenir, her kanal katılabilir. Özel: herkes izleyebilir ama yalnızca bağlantına sahip kanal katılabilir."
   },
   "timerOff": {

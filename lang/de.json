@@ -160,7 +160,7 @@
     "multiCard": "Zwei Kanäle treten gegeneinander an",
     "voteTime": "Abstimmungszeit (s)",
     "choice": "Zugauswahl",
-    "wheel": "🎡 Rad",
+    "wheel": "🎲 Zufall",
     "majority": "📊 Mehrheit",
     "spin": "Auslosungs-Animation",
     "spinSpeed": { "none": "Keine Animation", "fast": "Schnell", "normal": "Normal", "slow": "Langsam" },
@@ -575,7 +575,7 @@
     "problemPause": "Wartezeit zwischen zwei Puzzles.",
     "monoColor": "Die Seite, die du am Brett spielst; die angemeldeten Zuschauer stimmen für die andere ab.",
     "voteTime": "Wie lange der Chat pro Zug abstimmen kann.",
-    "choice": "Rad: Zufallsauslosung, gewichtet nach Stimmen. Mehrheit: Der Zug mit den meisten Stimmen wird gespielt.",
+    "choice": "Zufall: Zufallsauslosung, gewichtet nach Stimmen. Mehrheit: Der Zug mit den meisten Stimmen wird gespielt.",
     "multiPublic": "Öffentlich: unter Entdecken gelistet, jeder Kanal kann beitreten. Privat: Jeder kann zuschauen, aber nur der Kanal mit deinem Link kann beitreten."
   },
   "timerOff": {

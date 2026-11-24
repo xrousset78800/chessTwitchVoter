@@ -160,7 +160,7 @@
     "multiCard": "Dwa kanały kontra siebie",
     "voteTime": "Czas głosowania (s)",
     "choice": "Wybór ruchu",
-    "wheel": "🎡 Koło",
+    "wheel": "🎲 Losowo",
     "majority": "📊 Większość",
     "spin": "Animacja losowania",
     "spinSpeed": { "none": "Bez animacji", "fast": "Szybka", "normal": "Normalna", "slow": "Wolna" },
@@ -575,7 +575,7 @@
     "problemPause": "Przerwa między zadaniami.",
     "monoColor": "Strona, którą grasz na szachownicy; zapisani widzowie głosują za drugą.",
     "voteTime": "Ile czasu czat ma na głosowanie nad każdym ruchem.",
-    "choice": "Koło: losowanie ważone głosami. Większość: gra ruch z największą liczbą głosów.",
+    "choice": "Losowo: losowanie ważone głosami. Większość: gra ruch z największą liczbą głosów.",
     "multiPublic": "Publiczna: widoczna w Przeglądaj, każdy kanał może dołączyć. Prywatna: każdy może oglądać, ale dołączyć może tylko kanał z twoim linkiem."
   },
   "timerOff": {

@@ -165,12 +165,11 @@
 }
 
 /* ---- Banner partie active ---- */
+/* En tête de la colonne de gauche, même style que le bloc « Tape ton coup dans le chat » */
 .multi-banner {
-    background: linear-gradient(135deg, rgba(255, 138, 61, 0.12), rgba(59, 130, 246, 0.12));
-    border: 1px solid rgba(255, 138, 61, 0.25);
-    border-radius: 3px;
-    padding: 10px 12px;
     margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .multi-banner__teams {

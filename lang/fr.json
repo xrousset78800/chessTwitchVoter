@@ -160,7 +160,7 @@
     "multiCard": "Deux chaînes s'affrontent",
     "voteTime": "Temps de vote (s)",
     "choice": "Choix du coup",
-    "wheel": "🎡 Roue",
+    "wheel": "🎲 Aléatoire",
     "majority": "📊 Majorité",
     "spin": "Animation du tirage",
     "spinSpeed": { "none": "Aucune animation", "fast": "Rapide", "normal": "Normale", "slow": "Lente" },
@@ -575,7 +575,7 @@
     "problemPause": "Temps d'attente entre deux puzzles.",
     "monoColor": "Le camp que tu joues sur l'échiquier ; les inscrits votent pour l'autre.",
     "voteTime": "Temps laissé au chat pour voter à chaque coup.",
-    "choice": "Roue : tirage au sort pondéré par les votes. Majorité : le coup le plus voté est joué.",
+    "choice": "Aléatoire : tirage au sort pondéré par les votes. Majorité : le coup le plus voté est joué.",
     "multiPublic": "Publique : affichée dans Parcourir, n'importe quelle chaîne peut la rejoindre. Privée : on peut la regarder, mais seule la chaîne qui a ton lien peut la rejoindre."
   },
   "timerOff": {

@@ -160,7 +160,7 @@
     "multiCard": "Twee kanalen nemen het tegen elkaar op",
     "voteTime": "Stemtijd (s)",
     "choice": "Zetkeuze",
-    "wheel": "🎡 Rad",
+    "wheel": "🎲 Willekeurig",
     "majority": "📊 Meerderheid",
     "spin": "Trekkingsanimatie",
     "spinSpeed": { "none": "Geen animatie", "fast": "Snel", "normal": "Normaal", "slow": "Langzaam" },
@@ -575,7 +575,7 @@
     "problemPause": "Wachttijd tussen twee puzzels.",
     "monoColor": "De kant die jij op het bord speelt; ingeschreven kijkers stemmen voor de andere.",
     "voteTime": "Hoeveel tijd de chat per zet heeft om te stemmen.",
-    "choice": "Rad: willekeurige trekking gewogen naar stemmen. Meerderheid: de zet met de meeste stemmen wordt gespeeld.",
+    "choice": "Willekeurig: willekeurige trekking gewogen naar stemmen. Meerderheid: de zet met de meeste stemmen wordt gespeeld.",
     "multiPublic": "Openbaar: zichtbaar bij Bekijken, elk kanaal kan meedoen. Privé: iedereen kan kijken, maar alleen het kanaal met jouw link kan meedoen."
   },
   "timerOff": {

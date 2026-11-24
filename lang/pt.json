@@ -160,7 +160,7 @@
     "multiCard": "Dois canais se enfrentam",
     "voteTime": "Tempo de votação (s)",
     "choice": "Escolha do lance",
-    "wheel": "🎡 Roleta",
+    "wheel": "🎲 Aleatório",
     "majority": "📊 Maioria",
     "spin": "Animação do sorteio",
     "spinSpeed": { "none": "Sem animação", "fast": "Rápida", "normal": "Normal", "slow": "Lenta" },
@@ -575,7 +575,7 @@
     "problemPause": "Espera entre dois puzzles.",
     "monoColor": "O lado que você joga no tabuleiro; os viewers inscritos votam pelo outro.",
     "voteTime": "Quanto tempo o chat tem para votar em cada lance.",
-    "choice": "Roleta: sorteio ponderado pelos votos. Maioria: o lance mais votado é jogado.",
+    "choice": "Aleatório: sorteio ponderado pelos votos. Maioria: o lance mais votado é jogado.",
     "multiPublic": "Pública: aparece em Explorar, qualquer canal pode entrar. Privada: todos podem assistir, mas só o canal com seu link pode entrar."
   },
   "timerOff": {

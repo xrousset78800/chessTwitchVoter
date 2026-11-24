@@ -160,7 +160,7 @@
     "multiCard": "Due canali si sfidano",
     "voteTime": "Tempo di voto (s)",
     "choice": "Scelta della mossa",
-    "wheel": "🎡 Ruota",
+    "wheel": "🎲 Casuale",
     "majority": "📊 Maggioranza",
     "spin": "Animazione dell'estrazione",
     "spinSpeed": { "none": "Nessuna animazione", "fast": "Veloce", "normal": "Normale", "slow": "Lenta" },
@@ -575,7 +575,7 @@
     "problemPause": "Attesa tra due puzzle.",
     "monoColor": "Il lato che giochi sulla scacchiera; gli iscritti votano per l'altro.",
     "voteTime": "Quanto tempo ha la chat per votare ogni mossa.",
-    "choice": "Ruota: estrazione a sorte pesata dai voti. Maggioranza: viene giocata la mossa più votata.",
+    "choice": "Casuale: estrazione a sorte pesata dai voti. Maggioranza: viene giocata la mossa più votata.",
     "multiPublic": "Pubblica: visibile in Esplora, qualsiasi canale può entrare. Privata: tutti possono guardare, ma entra solo il canale con il tuo link."
   },
   "timerOff": {

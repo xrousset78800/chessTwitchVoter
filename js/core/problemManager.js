@@ -676,7 +676,7 @@ resolveVotes() {
                     btn.textContent = fmtMove(move.replace("#", ""));
                     btn.onclick = () => {
                         if (this.config.timerEnabled && this.votingOpen) {
-                            this.receiveVote(move, 'en');
+                            this.receiveVote({ move, ...(window.gameEngine?.streamerVoter?.() || {}) }, 'en');
                             console.log('🗳️ Vote ajouté via clic:', move);
                         } else {
                             const result = this.validateAndPlayMove(move);
