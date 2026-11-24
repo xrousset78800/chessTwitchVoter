@@ -1036,7 +1036,7 @@ onMoveClick(move) {
     // Mode problemsManager (gameEngine natif) avec timer
     if (window.problemsManager?.isActive) {
         if (this.config.timerEnabled) {
-            window.problemsManager.receiveVote(move);
+            window.problemsManager.receiveVote(move, 'en');   // bouton : SAN international, pas la langue du chat
         } else {
             window.problemsManager.validateAndPlayMove(move);
         }

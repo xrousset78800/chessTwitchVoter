@@ -397,7 +397,8 @@ cancelVotingTimer() {
     this.votingTimerId = null; // gardé pour compatibilité mais inutilisé
 }
 
-receiveVote(voteData) {
+/** @param lang langue de notation du coup : celle du chat par défaut, 'en' pour un coup cliqué (SAN international) */
+receiveVote(voteData, lang) {
     const rawMove = typeof voteData === 'string' ? voteData : voteData.move;
     const username = typeof voteData === 'string' ? 'anonyme' : (voteData.displayName || voteData.username || 'anonyme');
 
@@ -412,7 +413,7 @@ receiveVote(voteData) {
 
     // "kh1" → "Kh1" : on résout contre les coups légaux (casse ignorée).
     // Un coup illégal n'est pas un vote.
-    const resolved = matchLegalMove(this.chess, rawMove);
+    const resolved = matchLegalMove(this.chess, rawMove, lang);
     if (!resolved) {
         console.log('🗳️ Vote rejeté : coup illégal', rawMove);
         return false;
@@ -644,7 +645,7 @@ resolveVotes() {
                     btn.textContent = fmtMove(move.replace("#", ""));
                     btn.onclick = () => {
                         if (this.config.timerEnabled && this.votingOpen) {
-                            this.receiveVote(move);
+                            this.receiveVote(move, 'en');
                             console.log('🗳️ Vote ajouté via clic:', move);
                         } else {
                             const result = this.validateAndPlayMove(move);
