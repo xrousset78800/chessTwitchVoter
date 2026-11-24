@@ -953,7 +953,11 @@ const H24Page = {
             ring.style.setProperty('--p', String(Math.max(0, Math.min(1, (exactLeft || 0) / this.clockTotal))));
             ring.classList.toggle('is-critical', critical);
             ring.classList.toggle('is-paused', !!s.paused);
-            ring.querySelector('.h24-clock__num').innerHTML = s.paused ? '<i class="fas fa-pause"></i>' : esc(txt);
+            // Pendule : toujours m:ss, dixièmes sous 10 s
+            const ex = exactLeft ?? 0;
+            const mmss = ex < 10 ? `0:0${(Math.floor(ex * 10) / 10).toFixed(1)}`
+                : `${Math.floor(Math.ceil(ex) / 60)}:${String(Math.ceil(ex) % 60).padStart(2, '0')}`;
+            ring.querySelector('.h24-clock__num').innerHTML = s.paused ? '<i class="fas fa-pause"></i>' : esc(left == null ? '--' : mmss);
             area.classList.toggle('is-soon', left != null && left <= 1);
             return;
         }
