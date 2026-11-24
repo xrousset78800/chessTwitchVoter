@@ -540,11 +540,7 @@ body[data-turn="b"] .sandbox__title::after {
     transition: background-color 0.2s ease;
 }
 
-#myBoard img {
-    /* Éviter le flash lors du changement */
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-}
+/* Pas d'image-rendering: crisp-edges sur les pièces : PNG de 80 px agrandis au plus proche voisin = pixellisés */
 
 
 .history-row.is-selected {
