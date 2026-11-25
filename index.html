@@ -1144,10 +1144,13 @@
 
                     <!-- ══ COL 2 : Échiquier ══ -->
                     <div class="board-wrapper">
-                        <div id="liveBoard"></div>
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted,#55556a);" id="fenDisplay">
-                            FEN : —
+                        <!-- Échiquier entre deux bandes : pendule, joueur et Elo (Noirs en haut, Blancs en bas) -->
+                        <div class="t-boardcol">
+                            <div class="h24-side t-side t-side--top" id="lSideBlack"><span class="h24-pclock" id="lBarClockBlack">—</span><span class="h24-side__team h24-team--b"><span class="h24-team__swatch"></span><span class="t-side__name" id="lBarNameBlack">—</span></span><span class="t-side__elo" id="lBarEloBlack"></span><span class="h24-side__spacer"></span></div>
+                            <div id="liveBoard"></div>
+                            <div class="h24-side t-side t-side--bottom" id="lSideWhite"><span class="h24-pclock" id="lBarClockWhite">—</span><span class="h24-side__team h24-team--w"><span class="h24-team__swatch"></span><span class="t-side__name" id="lBarNameWhite">—</span></span><span class="t-side__elo" id="lBarEloWhite"></span><span class="h24-side__spacer"></span></div>
                         </div>
+                        <span id="fenDisplay" hidden></span>
                     </div>
 
                     <!-- ══ COL 3 : Coups + Phantom ══ -->

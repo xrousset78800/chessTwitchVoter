@@ -505,8 +505,10 @@ input[type=range] {
     max-width: 560px;
 }
 /* Bandes joueur (pendule, nom, Elo) collées à l'échiquier, de sa largeur */
-#page-tournament .t-side { max-width: none; width: auto; margin-left: 24px; } /* 24px : colonne des rangées (boardCoords) */
-#page-tournament .t-side .h24-side__team { min-width: 0; }
+#page-live .t-boardcol { width: 100%; max-width: min(560px, max(300px, calc(100vh - 330px))); }
+#page-live .t-boardcol #liveBoard { max-width: none; }
+:is(#page-tournament, #page-live) .t-side { max-width: none; width: auto; margin-left: 24px; } /* 24px : colonne des rangées (boardCoords) */
+:is(#page-tournament, #page-live) .t-side .h24-side__team { min-width: 0; }
 .t-side__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-side__elo { flex: none; font-size: 0.78rem; font-weight: 600; color: var(--text-muted, #7f736b); font-variant-numeric: tabular-nums; }
 .t-side__score { flex: none; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--accent-purple, #ff8a3d); }

@@ -71,6 +71,19 @@ app.get('/proxy/chess/:gameId', async (req, res) => {
     }
 });
 
+// Pendules d'une partie live : temps restant après chaque coup (moveTimestamps, en dixièmes de seconde)
+app.get('/proxy/chess-live/:gameId', async (req, res) => {
+    if (!/^\d+$/.test(req.params.gameId)) return res.status(400).json({ error: 'id invalide' });
+    try {
+        const r = await fetch(`https://www.chess.com/callback/live/game/${req.params.gameId}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        const g = (await r.json()).game || {};
+        res.json({ moveTimestamps: g.moveTimestamps || '', baseTime1: g.baseTime1 ?? null, isFinished: !!g.isFinished });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Étape 2 : coups en cours (TCN)
 app.get('/proxy/chess-moves/', async (req, res) => {
     try {

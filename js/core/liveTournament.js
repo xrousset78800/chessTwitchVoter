@@ -416,6 +416,7 @@ async function startReviewT(g, wName, bName) {
     const info = [];
     const fens = replayFensT(moves, g.currentFEN, info);
     Object.assign(reviewT, { game: g, fens, moves: info, idx: fens.length - 1 });
+    updateUrlT();
 
     document.getElementById('playerWhiteT').textContent = wName;
     document.getElementById('ratingWhiteT').textContent = g.whiteElo || '';
@@ -504,6 +505,7 @@ function endReviewT(restoreLayout = true) {
     setReviewPlayingT(false);
     if (!reviewT.game) return;
     reviewT.game = null;
+    updateUrlT();
     document.getElementById('tReview').style.display = 'none';
     if (!stateT.currentGame) setStatusT('idle', 'En attente');
     if (restoreLayout) setFollowLayoutT(false);
@@ -851,6 +853,7 @@ async function startGamePolling(game) {
     stateT.polling = true;
     endReviewT(false);
     setFollowLayoutT(true);
+    updateUrlT();
     logT(`Suivi de ${game.white?.preferredShortName} vs ${game.black?.preferredShortName}`, 'info');
     setStatusT('polling', 'Connexion…');
     await pollGame();
@@ -863,6 +866,7 @@ function stopGamePolling() {
     stopClockT();  // ← reset
     stateT.currentGame = null;
     setStatusT('idle', 'En attente');
+    updateUrlT();
 }
 
 async function pollGame() {
@@ -971,9 +975,11 @@ function stopClockT() {
 function renderClocksT() {
     const fmt = ms => {
         const total = Math.floor(ms / 1000);
-        const m = Math.floor(total / 60);
-        const s = total % 60;
-        return `${m}:${String(s).padStart(2, '0')}`;
+        const h = Math.floor(total / 3600);
+        const m = Math.floor(total % 3600 / 60);
+        const pad = n => String(n).padStart(2, '0');
+        // Au-delà d'une heure : h:mm:ss (sinon 75:00 au lieu de 1:15:00)
+        return h ? `${h}:${pad(m)}:${pad(total % 60)}` : `${m}:${pad(total % 60)}`;
     };
     document.getElementById('clockWhiteT').textContent = fmt(stateT.clockWhite);
     document.getElementById('clockBlackT').textContent = fmt(stateT.clockBlack);
@@ -1041,9 +1047,46 @@ async function loadRoom(slug) {
     if (input) input.value = slug;
     renderTournament(data);
     logT(`${data.games.length} parties chargées`, 'ok');
+    openPendingGameT();
+    updateUrlT();
 }
 
-async function loadAndRenderTournament(slug, isIndex = false) {
+// ── Adresse directe : /tournament?event=…&room=…&game=… (un rafraîchissement rouvre la même partie) ──
+let eventSlugT = null;    // événement (ou salle) choisi
+let pendingGameT = null;  // partie à rouvrir une fois la salle chargée
+
+function updateUrlT() {
+    if (!location.pathname.startsWith('/tournament')) return;
+    const p = new URLSearchParams();
+    if (eventSlugT) p.set('event', eventSlugT);
+    const room = stateT.tournamentSlug;
+    if (room && room !== eventSlugT) p.set('room', room);
+    const g = stateT.currentGame || reviewT.game;
+    if (g) p.set('game', gameKey(g));
+    const url = '/tournament' + (p.toString() ? `?${p}` : '');
+    if (location.pathname + location.search !== url) history.replaceState(history.state, '', url);
+}
+
+/** Partie de l'adresse : on passe sur sa ronde puis on l'ouvre comme d'un clic (suivi en direct ou revue) */
+function openPendingGameT() {
+    const key = pendingGameT;
+    pendingGameT = null;
+    if (!key || !tournamentData) return;
+    const g = tournamentData.games.find(x => gameKey(x) === key);
+    if (!g) { logT('Partie du lien introuvable dans cette salle', 'warn'); return; }
+    if (g.roundId !== activeRoundId) {
+        activeRoundId = g.roundId;
+        roundPinned = true;
+        renderRounds(tournamentData);
+        renderGames(tournamentData.games, activeRoundId);
+    }
+    const row = document.querySelector(`#tournamentGames [data-game-key="${CSS.escape(key)}"]`);
+    if (row && (row.classList.contains('is-live') || row.classList.contains('is-reviewable'))) row.click();
+    else logT('Partie du lien pas encore commencée', 'info');
+}
+
+async function loadAndRenderTournament(slug, isIndex = false, wantRoom = null) {
+    eventSlugT = slug;
     try {
         logT(`Chargement de "${slug}"…`, 'info');
         document.getElementById('tournamentRoomPicker').style.display = 'none';
@@ -1062,8 +1105,10 @@ async function loadAndRenderTournament(slug, isIndex = false) {
             return;
         }
         renderRoomPicker(rooms);
-        if (rooms.length > 1) logT(`${rooms.length} salles dans cet événement, choisissez-en une`, 'info');
-        await loadRoom(rooms[0].slug);
+        const room = rooms.find(r => r.slug === wantRoom) || rooms[0];
+        document.getElementById('tournamentRoomSelect').value = room.slug;
+        if (rooms.length > 1 && !wantRoom) logT(`${rooms.length} salles dans cet événement, choisissez-en une`, 'info');
+        await loadRoom(room.slug);
     } catch (err) {
         logT(`Erreur : ${err.message}`, 'error');
     }
@@ -1127,6 +1172,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchEventsList().then(events => {
         allEvents = events;
         renderEventsList(events);
+        // Ouvert depuis un lien : le nom de l'événement plutôt que son slug
+        const ev = selectedEventSlug && events.find(e => e.slug === selectedEventSlug);
+        if (ev) setEventStepT(ev.name);
     });
 
     // La salle suivie se met à jour toute seule (nouvelles parties, rondes qui commencent)
@@ -1202,8 +1250,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (eventSlug) {
         const input = document.getElementById('tournamentInput');
         if (input) input.value = eventSlug;
+        selectedEventSlug = eventSlug;
+        pendingGameT = hashParams.get('game');
         setEventStepT(eventSlug);
-        loadAndRenderTournament(eventSlug);
+        loadAndRenderTournament(eventSlug, false, hashParams.get('room'));
     }
 
     btn.addEventListener('click', async () => {

@@ -215,6 +215,68 @@ function updateTurnIndicator() {
 window.phantomPositionProviders = window.phantomPositionProviders || {};
 window.phantomPositionProviders.live = () => state.polling ? state.chess.fen() : null;
 
+// ── Bandes joueur autour de l'échiquier : pendule, nom, Elo ──
+const clockL = { w: null, b: null, at: 0, ticking: false, timer: null };
+
+function fmtClockL(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor(total % 3600 / 60);
+    const pad = n => String(n).padStart(2, '0');
+    // Au-delà d'une heure : h:mm:ss
+    return h ? `${h}:${pad(m)}:${pad(total % 60)}` : `${m}:${pad(total % 60)}`;
+}
+
+function renderBarsL() {
+    const turn = state.chess?.turn();
+    const set = (id, v) => { const el = document.getElementById(id); if (el && el.textContent !== v) el.textContent = v; };
+    for (const [C, side] of [['White', 'w'], ['Black', 'b']]) {
+        const p = state.players?.[side];
+        set(`lBarName${C}`, p?.username || '—');
+        set(`lBarElo${C}`, p?.rating ? String(p.rating) : '');
+        const active = clockL.ticking && turn === side;
+        const ms = clockL[side] == null ? null : clockL[side] - (active ? Date.now() - clockL.at : 0);
+        set(`lBarClock${C}`, ms == null ? '—' : fmtClockL(ms));
+        const pc = document.getElementById(`lBarClock${C}`);
+        pc?.classList.toggle('is-active', active);
+        pc?.classList.toggle('is-critical', active && ms != null && ms < 20000);
+        document.getElementById(`lSide${C}`)?.classList.toggle('is-turn', !!p && state.polling && turn === side);
+    }
+}
+
+function stopClockL() {
+    clockL.ticking = false;
+    clearInterval(clockL.timer);
+    clockL.timer = null;
+    renderBarsL();
+}
+
+/** Temps restants lus chez chess.com à chaque nouveau coup ; entre deux, la pendule du trait décompte ici */
+async function syncClocksL() {
+    if (!state.legacyId || isDaily()) return;
+    const id = state.legacyId;
+    try {
+        const r = await fetch(`${PROXY_BASE}/proxy/chess-live/${id}`);
+        if (!r.ok || id !== state.legacyId) return;
+        const d = await r.json();
+        if (d.baseTime1 == null) return;
+        let w = d.baseTime1, b = d.baseTime1;
+        String(d.moveTimestamps).split(',').filter(Boolean).forEach((v, i) => { if (i % 2) b = +v; else w = +v; });
+        Object.assign(clockL, { w: w * 100, b: b * 100, at: Date.now() });
+        const plies = String(d.moveTimestamps).split(',').filter(Boolean).length;
+        clockL.ticking = state.polling && !d.isFinished && plies > 0;
+        if (clockL.ticking && !clockL.timer) clockL.timer = setInterval(renderBarsL, 250);
+        if (!clockL.ticking) stopClockL(); else renderBarsL();
+    } catch { /* nouvel essai au prochain coup */ }
+}
+
+/** Adresse directe : /live?game=… (&daily=1) ; un rafraîchissement reprend la partie */
+function updateUrlL(id) {
+    if (!location.pathname.startsWith('/live')) return;
+    const url = id ? `/live?game=${encodeURIComponent(id)}${isDaily() ? '&daily=1' : ''}` : '/live';
+    if (location.pathname + location.search !== url) history.replaceState(history.state, '', url);
+}
+
 // ── Mettre à jour l'UI ──
 function updateUI(gameInfo) {
     const fen = state.chess.fen();
@@ -226,6 +288,7 @@ function updateUI(gameInfo) {
     }
 
     renderMoveList();
+    renderBarsL();
 
     if (gameInfo?.playersDetails?.length >= 2) {
         const w = gameInfo.playersDetails[0];
@@ -234,6 +297,7 @@ function updateUI(gameInfo) {
         document.getElementById('ratingWhite').textContent = w.rating ? `(${w.rating})` : '';
         document.getElementById('playerBlack').textContent = b.username || '—';
         document.getElementById('ratingBlack').textContent = b.rating ? `(${b.rating})` : '';
+        state.players = { w, b };
 
         const meta = document.getElementById('gameMeta');
         if (meta.children.length === 0) {
@@ -284,6 +348,7 @@ async function poll(gameInfo) {
             updateUI(gameInfo);
             log(`${state.lastMoveCount} coups — ${state.chess.fen().split(' ')[0]}`, 'ok');
         }
+        if (changed || clockL.w == null) syncClocksL();
 
         // Fin de partie
         if (state.chess.game_over() || data.status === 'finished') {
@@ -305,6 +370,7 @@ async function poll(gameInfo) {
 function stopPolling() {
     state.polling = false;
     clearTimeout(state.pollTimer);
+    stopClockL();
     document.getElementById('btnConnect').disabled = false;
     document.getElementById('btnStop').disabled = true;
 }
@@ -322,6 +388,10 @@ document.getElementById('btnResetLive')?.addEventListener('click', async () => {
     state.lastMoveCount = 0;
     state.moveHistory = [];
     state.uuid = null;
+    state.players = null;
+    clockL.w = clockL.b = null;
+    renderBarsL();
+    updateUrlL(null);
     document.getElementById('fenDisplay').textContent = 'FEN : —';
     document.getElementById('movesList').innerHTML = '<span style="color:var(--text-muted,#55556a); font-size:0.8rem;">Aucun coup pour l\'instant</span>';
     setStatus('idle', 'En attente');
@@ -395,6 +465,10 @@ document.getElementById('btnConnect').addEventListener('click', async () => {
     state.moveHistory = [];
     state.chess.reset();
     state.board.position('start');
+    state.players = null;
+    clockL.w = clockL.b = null;
+    stopClockL();
+    updateUrlL(gameId);
 
     try {
         if (isDaily()) {
@@ -449,6 +523,7 @@ document.getElementById('btnConnect').addEventListener('click', async () => {
 
 document.getElementById('btnStop').addEventListener('click', () => {
     stopPolling();
+    updateUrlL(null);
     setStatus('idle', 'Arrêté');
     log('Arrêté manuellement', 'warn');
 });
@@ -469,4 +544,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initBoard();
     log('Phantom Live prêt', 'ok');
     log('Entrez un ID de partie chess.com en cours', 'info');
+    renderBarsL();
+    // Ouvert depuis /live?game=… : on reprend directement le suivi
+    const params = new URLSearchParams(location.search);
+    const id = location.pathname.startsWith('/live') && params.get('game');
+    if (id) {
+        document.getElementById('gameInput').value = id;
+        const daily = document.getElementById('isDailyGame');
+        if (daily) daily.checked = params.get('daily') === '1';
+        document.getElementById('btnConnect').click();
+    }
 });
