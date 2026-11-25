@@ -183,10 +183,6 @@
     "chipMajority": "większość",
     "chipWheel": "koło",
     "chipVotes": "głosy na widza: {n}",
-    "instant": {
-      "name": "Szybki test",
-      "desc": "Bez timera: pierwszy otrzymany głos jest od razu zagrany. Idealne, by wypróbować z czatem."
-    },
     "democracy": {
       "name": "Demokracja",
       "desc": "30 s na głosowanie, gra ruch z największą liczbą głosów."

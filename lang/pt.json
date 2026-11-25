@@ -183,10 +183,6 @@
     "chipMajority": "maioria",
     "chipWheel": "roleta",
     "chipVotes": "{n} votos / viewer",
-    "instant": {
-      "name": "Teste rápido",
-      "desc": "Sem timer: o primeiro voto recebido é jogado na hora. Ótimo para testar com seu chat."
-    },
     "democracy": {
       "name": "Democracia",
       "desc": "30s para votar, o lance mais votado é jogado."

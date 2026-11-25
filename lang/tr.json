@@ -183,10 +183,6 @@
     "chipMajority": "çoğunluk",
     "chipWheel": "çark",
     "chipVotes": "{n} oy / izleyici",
-    "instant": {
-      "name": "Hızlı test",
-      "desc": "Zamanlayıcı yok: gelen ilk oy hemen oynanır. Chat'inle denemek için ideal."
-    },
     "democracy": {
       "name": "Demokrasi",
       "desc": "Oylamak için 30 sn, en çok oy alan hamle oynanır."

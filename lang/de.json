@@ -183,10 +183,6 @@
     "chipMajority": "Mehrheit",
     "chipWheel": "Rad",
     "chipVotes": "{n} Stimmen / Zuschauer",
-    "instant": {
-      "name": "Schnelltest",
-      "desc": "Kein Timer: Die erste eingehende Stimme wird sofort gespielt. Ideal zum Ausprobieren mit deinem Chat."
-    },
     "democracy": {
       "name": "Demokratie",
       "desc": "30 s zum Abstimmen, der Zug mit den meisten Stimmen wird gespielt."

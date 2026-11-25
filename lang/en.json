@@ -183,10 +183,6 @@
     "chipMajority": "majority",
     "chipWheel": "wheel",
     "chipVotes": "{n} votes / viewer",
-    "instant": {
-      "name": "Quick test",
-      "desc": "No timer: the first vote received is played right away. Great to try things with your chat."
-    },
     "democracy": {
       "name": "Democracy",
       "desc": "30s to vote, the most voted move is played."

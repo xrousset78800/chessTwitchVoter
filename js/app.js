@@ -584,7 +584,6 @@ const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp
 const SETUP_PRESETS = [
     // Personnaliser : garde le mode choisi et affiche toutes les options (le minuteur les fait apparaître)
     { id: 'custom',    icon: '🎛️', mode: null,       config: { timerEnabled: true }, custom: true },
-    { id: 'instant',   icon: '⚡', mode: 'sandbox',  config: { timerEnabled: false } },
     { id: 'democracy', icon: '🗳️', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: true,  votesPerViewer: 1 } },
     { id: 'wheel',     icon: '🎡', mode: 'sandbox',  config: { timerEnabled: true, timerDuration: 30, majorityMode: false, votesPerViewer: 3 } },
     { id: 'vsChat',    icon: '👤', mode: 'oneVsAll', config: { timerEnabled: true, timerDuration: 45, majorityMode: true,  votesPerViewer: 1 } },

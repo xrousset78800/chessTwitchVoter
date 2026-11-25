@@ -183,10 +183,6 @@
     "chipMajority": "majorité",
     "chipWheel": "roue",
     "chipVotes": "{n} votes / viewer",
-    "instant": {
-      "name": "Test rapide",
-      "desc": "Sans timer : le premier vote reçu est joué tout de suite. Idéal pour essayer avec ton chat."
-    },
     "democracy": {
       "name": "Démocratie",
       "desc": "30 s pour voter, le coup le plus voté est joué."

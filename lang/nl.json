@@ -183,10 +183,6 @@
     "chipMajority": "meerderheid",
     "chipWheel": "rad",
     "chipVotes": "{n} stemmen / kijker",
-    "instant": {
-      "name": "Snelle test",
-      "desc": "Geen timer: de eerste ontvangen stem wordt meteen gespeeld. Ideaal om dingen uit te proberen met je chat."
-    },
     "democracy": {
       "name": "Democratie",
       "desc": "30 s om te stemmen, de zet met de meeste stemmen wordt gespeeld."
