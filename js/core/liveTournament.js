@@ -883,9 +883,13 @@ async function pollGame() {
             
             // Par id : en match, les mêmes joueurs ont plusieurs parties avec le même slug
             const updatedGame = data.games.find(game => g.id != null ? game.id === g.id : game.slug === g.slug);
+            // Partie terminée (nulle par accord, abandon, temps…) : les pendules s'arrêtent, même sans nouveau coup
+            const ended = !!(updatedGame?.result && updatedGame.result !== '*');
             if (updatedGame && stateT.currentGame === g) {
-                if (updatedGame.result && updatedGame.result !== '*') setStatusT('ended', `Terminée (${updatedGame.result})`);
-                else setStatusT('live', 'En direct');
+                if (ended) {
+                    setStatusT('ended', `Terminée (${updatedGame.result})`);
+                    if (stateT.clockInterval) stopClockT();
+                } else setStatusT('live', 'En direct');
             }
 
 
@@ -918,7 +922,12 @@ async function pollGame() {
 
                 // Chrono — resync depuis les données Chess.com si dispo, sinon simulation
                 if (updatedGame.whiteClock != null) {
-                    startClockT(updatedGame.whiteClock, updatedGame.blackClock);
+                    if (ended) {
+                        // Temps finaux, figés
+                        stateT.clockWhite = updatedGame.whiteClock;
+                        stateT.clockBlack = updatedGame.blackClock;
+                        renderClocksT();
+                    } else startClockT(updatedGame.whiteClock, updatedGame.blackClock);
                 }
 
                 // Phantom
