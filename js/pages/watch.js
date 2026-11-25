@@ -19,7 +19,9 @@ import { renderPodium, renderHistory, paintMoveChips, morphPodiumToWheel, markPo
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
-const MODE_LABEL = { multi: '⚔ Multi', rush: '🔥 Puzzle Rush', mono: '👥 Mono', sandbox: '🧪 Partie libre', problems: '🧩 Problèmes', chatVsChat: '⚔ Multi' };
+const MODE_ICON = { multi: '⚔', rush: '🔥', mono: '👥', sandbox: '🧪', problems: '🧩', chatVsChat: '⚔' };
+const MODE_KEY = { multi: 'Multi', rush: 'Rush', mono: 'Mono', sandbox: 'Sandbox', problems: 'Problems', chatVsChat: 'Multi' };
+const modeLabel = (m) => { m = MODE_ICON[m] ? m : 'sandbox'; return `${MODE_ICON[m]} ${t('browsePage.mode' + MODE_KEY[m])}`; };
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
 const $ = (id) => document.getElementById(id);
 const clean = (m) => String(m || '').replace(/[+#]/g, '');
@@ -341,7 +343,7 @@ const WatchPage = {
         const title = $('watch-mode');
         if (!title) return;
         const lock = s.isPublic === false ? ` <span class="game-card__private">🔒 ${esc(t('browsePage.private'))}</span>` : '';
-        title.innerHTML = `${esc(MODE_LABEL[s.mode] || MODE_LABEL.sandbox)}${lock}`;
+        title.innerHTML = `${esc(modeLabel(s.mode))}${lock}`;
     },
 
     player(name, color) {

@@ -115,25 +115,25 @@ const roundIsOverdue = (r, games) => !roundStartedAt(r, games) && Date.parse(r.s
 const roundTimeLabel = (r, games) => {
     const started = roundStartedAt(r, games);
     if (started) return formatRoundStart(started);
-    return roundIsOverdue(r, games) ? 'à suivre' : formatRoundStart(r.startAt);
+    return roundIsOverdue(r, games) ? window.tt('ui.tour.tbd') : formatRoundStart(r.startAt);
 };
 
 function roundTooltip(r, games) {
     const full = { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' };
     const hm = { hour: '2-digit', minute: '2-digit' };
-    const lines = [`Ronde ${r.slug}`, `Prévue : ${new Date(r.startAt).toLocaleString(roundLocale(), full)}`];
+    const lines = [window.tt('ui.tour.round', { r: r.slug }), window.tt('ui.tour.planned', { date: new Date(r.startAt).toLocaleString(roundLocale(), full) })];
     const started = roundStartedAt(r, games);
-    if (started) lines.push(`Commencée à ${new Date(started).toLocaleTimeString(roundLocale(), hm)}`);
-    else if (roundIsOverdue(r, games)) lines.push(`Horaire du match (chess.com) : commencera après la ronde précédente`);
+    if (started) lines.push(window.tt('ui.tour.startedAt', { time: new Date(started).toLocaleTimeString(roundLocale(), hm) }));
+    else if (roundIsOverdue(r, games)) lines.push(window.tt('ui.tour.afterPrev'));
     const tc = formatTimeControl(r.timeControl);
     if (tc) lines.push(tc);
     const roundGames = games.filter(g => g.roundId === r.id);
     const ends = roundGames.map(g => Date.parse(g.endAt)).filter(Number.isFinite);
     if (roundGames.length && ends.length === roundGames.length) {
         const end = new Date(Math.max(...ends)).toLocaleTimeString(roundLocale(), hm);
-        lines.push(`Terminée à ${end}`);
+        lines.push(window.tt('ui.tour.endedAt', { time: end }));
     } else if (roundGames.some(isLiveGame)) {
-        lines.push('En cours');
+        lines.push(window.tt('ui.tour.inProgress'));
     }
     return lines.join('\n');
 }
@@ -439,9 +439,9 @@ async function startReviewT(g, wName, bName) {
 
 function reviewMoveLabelT(i) {
     const n = reviewT.fens.length - 1;
-    if (i === 0) return `Départ · 0/${n}`;
+    if (i === 0) return window.tt('ui.tour.start', { n });
     const mv = reviewT.moves[i - 1];
-    if (!mv) return `Position finale · ${i}/${n}`;
+    if (!mv) return window.tt('ui.tour.final', { i, n });
     return `${Math.ceil(i / 2)}${i % 2 ? '.' : '…'} ${mv.san} · ${i}/${n}`;
 }
 
@@ -562,7 +562,7 @@ function renderGames(games, roundId) {
             <div class="tg-meta">
                 ${isLive
                     ? `<span class="tg-live-dot"></span><span class="tg-elapsed">${elapsed !== null ? formatElapsed(elapsed) : '—'}</span>`
-                    : `<span class="tg-result">${g.result === '*' ? 'à venir' : g.result}</span>`
+                    : `<span class="tg-result">${g.result === '*' ? window.tt('ui.tour.upcoming') : g.result}</span>`
                 }
             </div>`;
 
@@ -887,7 +887,7 @@ async function pollGame() {
             const ended = !!(updatedGame?.result && updatedGame.result !== '*');
             if (updatedGame && stateT.currentGame === g) {
                 if (ended) {
-                    setStatusT('ended', `Terminée (${updatedGame.result})`);
+                    setStatusT('ended', window.tt('ui.tour.ended', { result: updatedGame.result }));
                     if (stateT.clockInterval) stopClockT();
                 } else setStatusT('live', 'En direct');
             }
@@ -1040,9 +1040,9 @@ function renderRoomPicker(rooms) {
     rooms.forEach(room => {
         const ended = room.endAt && Date.parse(room.endAt) < now;
         const started = room.currentRound?.startAt && Date.parse(room.currentRound.startAt) <= now;
-        const round = ended ? ' · terminé'
+        const round = ended ? ' · ' + window.tt('ui.tour.roomEnded')
             : room.currentRound?.startAt
-                ? ` · ronde ${room.currentRound.name || room.currentRound.slug} le ${fmtDate(room.currentRound.startAt)}`
+                ? ' · ' + window.tt('ui.tour.roomRound', { r: room.currentRound.name || room.currentRound.slug, date: fmtDate(room.currentRound.startAt) })
                 : '';
         const mark = ended ? '✓ ' : started ? '● ' : '';
         select.add(new Option(`${mark}${room.name}${round}`, room.slug));
@@ -1141,14 +1141,14 @@ function renderEventsList(events, filter = '') {
         : events;
 
     if (shown.length === 0) {
-        el.innerHTML = '<span style="color:var(--text-muted,#55556a); font-size:0.8rem;">Aucun tournoi trouvé</span>';
+        el.innerHTML = `<span style="color:var(--text-muted,#55556a); font-size:0.8rem;">${window.tt('ui.tour.noEvents')}</span>`;
         return;
     }
 
     el.innerHTML = '';
-    const fmtDate = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-    const fmtFull = d => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-    const typeLabel = { 'swiss': 'Suisse', 'round-robin': 'Toutes rondes', 'team-round-robin': 'Équipes', 'event': 'Événement', 'knockout': 'Élimination directe' };
+    const fmtDate = d => new Date(d).toLocaleDateString(roundLocale(), { day: 'numeric', month: 'short' });
+    const fmtFull = d => new Date(d).toLocaleDateString(roundLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
+    const typeLabel = { 'swiss': 'swiss', 'round-robin': 'roundRobin', 'team-round-robin': 'teamRoundRobin', 'event': 'event', 'knockout': 'knockout' };
     const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const now = Date.now();
 
@@ -1160,13 +1160,13 @@ function renderEventsList(events, filter = '') {
         row.className = 't-event' + (isUpcoming ? ' is-upcoming' : ' is-live')
                       + (event.slug === selectedEventSlug ? ' is-selected' : '');
 
-        const label = typeLabel[event.eventType] ?? event.eventType ?? 'Tournoi';
-        const players = event.playerCount > 0 ? ` · ${event.playerCount} joueurs` : '';
+        const label = typeLabel[event.eventType] ? window.tt('ui.tour.type.' + typeLabel[event.eventType]) : event.eventType ?? window.tt('ui.tour.tournament');
+        const players = event.playerCount > 0 ? ' · ' + window.tt('ui.tour.players', { n: event.playerCount }) : '';
         row.title = `${event.name}\n${label} · ${fmtFull(event.startAt)} → ${fmtFull(event.endAt)}${players}`;
         row.innerHTML = `
             <span class="t-event__status"></span>
             <span class="t-event__name">${esc(event.name)}</span>
-            <span class="t-event__dates">${isUpcoming ? 'dès le ' + fmtDate(event.startAt) : 'jusqu\'au ' + fmtDate(event.endAt)}</span>`;
+            <span class="t-event__dates">${esc(isUpcoming ? window.tt('ui.tour.from', { date: fmtDate(event.startAt) }) : window.tt('ui.tour.until', { date: fmtDate(event.endAt) }))}</span>`;
 
         row.addEventListener('click', () => {
             const input = document.getElementById('tournamentInput');
@@ -1378,10 +1378,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!el) return;
         if (window.phantomChessboard?.isConnected) {
             el.className = 'phantom-status connected';
-            el.innerHTML = '<i class="fas fa-check-circle"></i> Connecté';
+            el.innerHTML = `<i class="fas fa-check-circle"></i> ${window.tt('ui.connected')}`;
         } else {
             el.className = 'phantom-status disconnected';
-            el.innerHTML = '<i class="fas fa-times-circle"></i> Déconnecté';
+            el.innerHTML = `<i class="fas fa-times-circle"></i> ${window.tt('ui.disconnected')}`;
         }
     }, 2000);
 });

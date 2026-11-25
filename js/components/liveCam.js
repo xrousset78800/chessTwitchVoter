@@ -32,7 +32,7 @@ export const camSupported = {
 export async function listCameras() {
     try {
         const all = await navigator.mediaDevices.enumerateDevices();
-        return all.filter(d => d.kind === 'videoinput').map((d, i) => ({ id: d.deviceId, label: d.label || `Caméra ${i + 1}` }));
+        return all.filter(d => d.kind === 'videoinput').map((d, i) => ({ id: d.deviceId, label: d.label || window.tt('ui.cam.n', { n: i + 1 }) }));
     } catch { return []; }
 }
 
@@ -74,7 +74,7 @@ export class CamSender {
         const width = Math.max(16, Math.floor((st.width || q.width) * scale / 2) * 2);
         const height = Math.max(16, Math.floor((st.height || q.height) * scale / 2) * 2);
         const cfg = await pickCodec(width, height, q.bitrate, q.fps);
-        if (!cfg) { track.stop(); throw new Error('Aucun codec vidéo disponible dans ce navigateur'); }
+        if (!cfg) { track.stop(); throw new Error(window.tt('ui.cam.noCodec')); }
 
         this.stream = stream;
         this.track = track;
@@ -98,7 +98,7 @@ export class CamSender {
         });
         this.encoder.configure(cfg);
         this.announce();
-        track.addEventListener('ended', () => { this.onStatus({ error: 'Caméra débranchée' }); this.stop(); });
+        track.addEventListener('ended', () => { this.onStatus({ error: window.tt('ui.cam.unplugged') }); this.stop(); });
 
         // Lecture des images : MediaStreamTrackProcessor (Chrome/Edge, continue onglet en arrière-plan),
         // sinon une vidéo cachée lue à intervalle régulier

@@ -620,9 +620,9 @@ const SandboxPage = {
         const titleEl = document.getElementById('nav-page-title');
         const backBtn = document.getElementById('sandbox-back');
         if (pageName === 'game') {
-            const titles = { rush: '🔥 Puzzle Rush', problems: '🧩 Problèmes', mono: '👥 Mono', multi: '⚔ Multi', sandbox: '🧪 Partie libre', vsBot: '🤖 Stockfish' };
+            const titles = { rush: '🔥 ' + tr('browsePage.modeRush'), problems: '🧩 ' + tr('browsePage.modeProblems'), mono: '👥 ' + tr('browsePage.modeMono'), multi: '⚔ ' + tr('browsePage.modeMulti'), sandbox: '🧪 ' + tr('browsePage.modeSandbox'), vsBot: '🤖 Stockfish' };
             const route = GameSession.current?.route;
-            if (titleEl) titleEl.textContent = titles[AppState.gameMode] || '♟ Partie';
+            if (titleEl) titleEl.textContent = titles[AppState.gameMode] || '♟ ' + tr('ui.game');
             // La flèche ramène aux réglages sans arrêter la partie (lien "Partie en cours" pour revenir)
             if (backBtn) backBtn.dataset.navigate = route ? `/${route}` : '/sandbox';
         } else if (pageName === 'sandbox') {
@@ -697,7 +697,7 @@ async startConfiguredGame() {
     if (AppState.gameMode === 'problems') {
         if (!this.problemsInitialized) {
             const success = await this.initProblemsMode();
-            if (!success) { Toast.error('Erreur initialisation mode problèmes'); return; }
+            if (!success) { Toast.error(tr('ui.toast.problemsInit')); return; }
         }
         problemsManager.clearThemes();
         AppState.problems.selectedThemes.forEach(t => problemsManager.toggleTheme(t));
@@ -745,7 +745,7 @@ async startConfiguredGame() {
                     ? { around: AppState.config.rushStartRating || 100 } : {});
             } catch (error) {
                 console.error('Erreur chargement problèmes:', error);
-                Toast.error('Erreur chargement des problèmes');
+                Toast.error(tr('ui.toast.problemsLoad'));
                 return false;
             }
         }
@@ -927,20 +927,20 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         let status, cls = '';
         const loggedIn = !!window.twitchAuth?.isLoggedIn;
         if (!loggedIn) {
-            status = 'Connecte-toi avec Twitch pour enregistrer le record de ta chaîne.';
+            status = tr('ui.rushEnd.loginToSave');
             cls = 'rush-end__status--muted';
         } else if (result.error) {
-            status = `Score non enregistré : ${result.error}`;
+            status = tr('ui.rushEnd.notSaved', { error: result.error });
             cls = 'rush-end__status--error';
         } else if (result.score === 0) {
-            status = 'Aucun puzzle résolu, rien à enregistrer.';
+            status = tr('ui.rushEnd.nothing');
             cls = 'rush-end__status--muted';
         } else if (result.isNewRecord) {
-            status = '🏆 Nouveau record de la chaîne !';
+            status = tr('ui.rushEnd.newRecord');
             cls = 'rush-end__status--record';
         } else {
             const best = result.record?.best?.score;
-            status = best != null ? `Record de la chaîne : ${best}` : 'Score enregistré.';
+            status = best != null ? tr('ui.rushEnd.best', { n: best }) : tr('ui.rushEnd.saved');
         }
         const statusEl = document.getElementById('rush-end-status');
         if (statusEl) {
@@ -1065,13 +1065,13 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         document.getElementById('btn-reset')?.addEventListener('click', () => {
             if (AppState.gameMode !== 'sandbox') return;
             gameEngine.reset();
-            Toast.success('Échiquier réinitialisé');
+            Toast.success(tr('ui.toast.boardReset'));
         });
 
         document.getElementById('btn-snap-center')?.addEventListener('click', async () => {
             if (window.phantomChessboard?.isConnected) {
                 await window.phantomChessboard.snapToCenter();
-                Toast.success('Centrage des pièces demandé');
+                Toast.success(tr('ui.toast.snapCenter'));
             }
         });
 
@@ -1079,10 +1079,10 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
 
         document.getElementById('btn-calibrate')?.addEventListener('click', async () => {
             if (window.phantomChessboard?.isConnected) {
-                Toast.info('Recalibration du Phantom : arrêt, calibration puis remise en place des pièces');
+                Toast.info(tr('ui.toast.recalibrating'));
                 const fen = gameEngine.chess?.fen();
                 await window.phantomChessboard.recalibrate(() => fen);
-                Toast.success('Phantom recalibré');
+                Toast.success(tr('ui.toast.recalibrated'));
             }
         });
 
@@ -1156,7 +1156,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         document.getElementById('btn-sync')?.addEventListener('click', () => {
             if (window.phantomChessboard?.isConnected) {
                 window.phantomChessboard.syncPosition(gameEngine.getFen());
-                Toast.info('Synchronisation envoyée');
+                Toast.info(tr('ui.toast.syncSent'));
             }
         });
 
@@ -1166,9 +1166,9 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             gameEngine.reset();
             if (window.phantomChessboard?.isConnected) {
                 window.phantomChessboard.syncPosition(gameEngine.getFen());
-                Toast.success('Échiquier réinitialisé et synchronisé');
+                Toast.success(tr('ui.toast.resetSynced'));
             } else {
-                Toast.success('Échiquier réinitialisé');
+                Toast.success(tr('ui.toast.boardReset'));
             }
         });
 
@@ -1176,7 +1176,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         document.getElementById('btn-game-end')?.addEventListener('click', async () => {
             if (window.phantomChessboard?.isConnected) {
                 await window.phantomChessboard.sendGameEnd();
-                Toast.success('Game End envoyé');
+                Toast.success(tr('ui.toast.gameEndSent'));
             }
         });
 
@@ -1291,7 +1291,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
 
             const count = problemsManager.getFilteredProblems().length;
             const countEl = document.getElementById('problem-count');
-            if (countEl) countEl.textContent = `${count} problèmes`;
+            if (countEl) countEl.textContent = tr('ui.problemsCount', { n: count });
         });
 
         // ========== MODAL SAUVEGARDE ==========
@@ -1300,7 +1300,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             if (name) {
                 Storage.saveNamedConfig(name);
                 this.renderConfigs();
-                Toast.success(`Config "${name}" sauvegardée`);
+                Toast.success(tr('ui.toast.configSaved', { name }));
                 document.getElementById('modal-save')?.classList.remove('is-active');
                 document.getElementById('config-name').value = '';
             } else {
@@ -1743,7 +1743,7 @@ fullReset() {
                 e.stopPropagation();
                 Storage.deleteSavedConfig(btn.dataset.delete);
                 this.renderConfigs();
-                Toast.info('Config supprimée');
+                Toast.info(tr('ui.toast.configDeleted'));
             });
         });
     },
@@ -2149,9 +2149,9 @@ function setupConnectionHandlers() {
             try {
                 await twitch.logout();
                 updateConnectionUI();
-                Toast.info('Déconnecté de Twitch');
+                Toast.info(tr('ui.toast.twitchOut'));
             } catch (e) {
-                Toast.error('Déconnexion Twitch échouée');
+                Toast.error(tr('ui.toast.twitchOutFailed'));
             }
         });
     });
@@ -2164,12 +2164,12 @@ function setupConnectionHandlers() {
 
         if (reason === 'login' && user) {
             // Le chat est rejoint par twitch.restore() dans initApp
-            Toast.success(`Connecté en tant que ${user.displayName}`);
+            Toast.success(tr('ui.toast.twitchIn', { name: user.displayName }));
         } else if (reason === 'expired') {
             await twitch.disconnect();
-            Toast.warning('Session Twitch expirée, reconnecte-toi');
+            Toast.warning(tr('ui.toast.twitchExpired'));
         } else if (reason === 'error') {
-            Toast.error(`Connexion Twitch refusée : ${error || 'erreur inconnue'}`);
+            Toast.error(tr('ui.toast.twitchRefused', { error: error || tr('ui.toast.unknownError') }));
         }
     });
 
@@ -2229,10 +2229,10 @@ function setupPhantomModal() {
             await phantom.connect();
             if (!phantom.isConnected) throw new Error('non connecté');
             updateConnectionUI();
-            Toast.success('Phantom connecté !');
+            Toast.success(tr('ui.toast.phantomOn'));
             close();
         } catch (e) {
-            Toast.error('Connexion Phantom échouée');
+            Toast.error(tr('ui.toast.phantomFailed'));
         } finally {
             render();
         }
@@ -3068,7 +3068,7 @@ async function initApp() {
         // Rendre le Toast accessible au multiplayerManager
         window.AppToast = Toast;
 
-        Toast.success(`⚔ Bataille lancée ! ${players.white} (⬜) vs ${players.black} (⬛)`);
+        Toast.success(tr('ui.toast.battle', { white: players.white, black: players.black }));
         console.log(`🎮 Partie multi démarrée : ${players.white} vs ${players.black}`);
     });
     if (MultiRoom.room) MultiRoom.enter();
@@ -3087,11 +3087,11 @@ async function initApp() {
         const route = (routeHash().split('/')[1] || '').split('?')[0];
         const provider = window.phantomPositionProviders?.[route];
         const fen = provider ? provider() : (gameEngine.isRunning ? gameEngine.chess?.fen() : null);
-        Toast.show('Réparation du centrage : le Phantom redémarre puis se reconnecte tout seul (environ une minute)', 'info', 8000);
+        Toast.show(tr('ui.toast.repairStart'), 'info', 8000);
         const ok = await phantom.repairCentering(() => fen);
         updateConnectionUI();
-        if (ok) Toast.success('Phantom reconnecté, remise en place des pièces');
-        else Toast.show('Réparation interrompue : reconnecte le Phantom à la main (menu Phantom)', 'error', 10000);
+        if (ok) Toast.success(tr('ui.toast.repairOk'));
+        else Toast.show(tr('ui.toast.repairFail'), 'error', 10000);
     };
 
     window.addEventListener('phantomError', (e) => {

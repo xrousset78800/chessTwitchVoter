@@ -891,7 +891,7 @@ skipPause() {
         if (!timerValue) return;
 
         const icon = status === 'solved' ? '🎉' : '💔';
-        const text = status === 'solved' ? 'Résolu!' : 'Raté!';
+        const text = window.tt(status === 'solved' ? 'h24.solved' : 'h24.failed');
 
         timerValue.innerHTML = `
             <div class="problem-timer-message problem-timer-message--${status}">

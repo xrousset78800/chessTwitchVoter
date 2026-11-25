@@ -255,7 +255,7 @@
                                         <div class="mode-options" id="options-oneVsAll">
                                             <div class="player-input">
                                                 <span data-i18n="gameMode.1vall.title" class="player-input__label">Joueur seul</span>
-                                                <input type="text" class="input input--sm player-input__field" id="player-solo" placeholder="Pseudo...">
+                                                <input type="text" class="input input--sm player-input__field" id="player-solo" placeholder="Pseudo..." data-i18n-placeholder="ui.pseudoPh">
                                             </div>
                                         </div>
 
@@ -263,11 +263,11 @@
                                         <div class="mode-options" id="options-oneVsOne">
                                             <div class="player-input">
                                                 <span class="player-input__label" data-i18n="gameMode.1v1.player1">Joueur 1 ⬜</span>
-                                                <input type="text" class="input input--sm player-input__field" id="player-1" placeholder="Pseudo...">
+                                                <input type="text" class="input input--sm player-input__field" id="player-1" placeholder="Pseudo..." data-i18n-placeholder="ui.pseudoPh">
                                             </div>
                                             <div class="player-input">
                                                 <span class="player-input__label" data-i18n="gameMode.1v1.player2">Joueur 2 ⬛</span>
-                                                <input type="text" class="input input--sm player-input__field" id="player-2" placeholder="Pseudo...">
+                                                <input type="text" class="input input--sm player-input__field" id="player-2" placeholder="Pseudo..." data-i18n-placeholder="ui.pseudoPh">
                                             </div>
                                         </div>
 
@@ -275,11 +275,11 @@
                                         <div class="mode-options" id="options-chatVsChat">
                                             <div class="player-input">
                                                 <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer1">Chat 1 ⬜</span>
-                                                <input type="text" class="input input--sm player-input__field" id="chat-1" placeholder="Channel...">
+                                                <input type="text" class="input input--sm player-input__field" id="chat-1" placeholder="Chaîne..." data-i18n-placeholder="ui.channelPh">
                                             </div>
                                             <div class="player-input">
                                                 <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer2">Chat 2 ⬛</span>
-                                                <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Channel...">
+                                                <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Chaîne..." data-i18n-placeholder="ui.channelPh">
                                             </div>
                                         </div>
 
@@ -443,20 +443,20 @@
                 <!-- Écran de fin Puzzle Rush -->
                 <div id="rush-end" class="rush-end">
                     <div class="rush-end__card">
-                        <button class="rush-end__close" id="rush-end-close" title="Fermer"><i class="fas fa-times"></i></button>
+                        <button class="rush-end__close" id="rush-end-close" data-i18n-title="ui.close" title="Fermer"><i class="fas fa-times"></i></button>
                         <div class="rush-end__icon">🔥</div>
-                        <h2 class="rush-end__title">Run terminé</h2>
+                        <h2 class="rush-end__title" data-i18n="ui.rushEnd.title">Run terminé</h2>
                         <div class="rush-end__score" id="rush-end-score">0</div>
-                        <div class="rush-end__subtitle">puzzles résolus</div>
+                        <div class="rush-end__subtitle" data-i18n="ui.rushEnd.solved">puzzles résolus</div>
                         <div class="rush-end__stats">
-                            <div><span class="rush-end__stat-label">Rating max</span><span class="rush-end__stat-value" id="rush-end-rating">—</span></div>
-                            <div><span class="rush-end__stat-label">Durée</span><span class="rush-end__stat-value" id="rush-end-duration">0:00</span></div>
+                            <div><span class="rush-end__stat-label" data-i18n="ui.rushEnd.ratingMax">Rating max</span><span class="rush-end__stat-value" id="rush-end-rating">—</span></div>
+                            <div><span class="rush-end__stat-label" data-i18n="ui.rushEnd.duration">Durée</span><span class="rush-end__stat-value" id="rush-end-duration">0:00</span></div>
                         </div>
                         <p class="rush-end__status" id="rush-end-status"></p>
                         <div class="rush-end__actions">
-                            <button class="btn btn--primary" id="rush-restart-btn"><i class="fas fa-redo"></i> Rejouer</button>
-                            <button class="btn btn--ghost" id="rush-login-btn" style="display:none;"><i class="fab fa-twitch"></i> Se connecter</button>
-                            <a class="btn btn--ghost" href="/records"><i class="fas fa-trophy"></i> Voir les records</a>
+                            <button class="btn btn--primary" id="rush-restart-btn"><i class="fas fa-redo"></i> <span data-i18n="ui.rushEnd.replay">Rejouer</span></button>
+                            <button class="btn btn--ghost" id="rush-login-btn" style="display:none;"><i class="fab fa-twitch"></i> <span data-i18n="lobby.login">Se connecter</span></button>
+                            <a class="btn btn--ghost" href="/records"><i class="fas fa-trophy"></i> <span data-i18n="ui.rushEnd.records">Voir les records</span></a>
                         </div>
                     </div>
                 </div>
@@ -530,7 +530,7 @@
 
                     <div class="sandbox__main">
                         <!-- Turn indicator (mode Bataille Twitch) -->
-                        <div class="multi-turn-indicator" id="multi-turn-indicator">À votre tour de voter !</div>
+                        <div class="multi-turn-indicator" id="multi-turn-indicator" data-i18n="ui.multi.yourTurn">🗳 À votre tour — votez !</div>
                         <!-- Board with webcam overlay -->
                         <div class="board-wrapper">
                             <div class="board-container">
@@ -572,7 +572,7 @@
                                         <div class="phantom-actions">
                                             <button class="phantom-action phantom-action--calibrate" id="btn-snap-center" disabled><i class="fas fa-crosshairs"></i> <span data-i18n="setup.snapCenter">Centrer les pièces</span></button>
                                             <button class="phantom-action phantom-action--calibrate" id="btn-calibrate" disabled><i class="fas fa-tools"></i> <span data-i18n="setup.calibrate">Calibrer</span></button>
-                                            <button class="phantom-action phantom-action--danger" id="btn-repair-centering" disabled title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
+                                            <button class="phantom-action phantom-action--danger" id="btn-repair-centering" disabled data-i18n-title="ui.phantom.repairTitle" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                                         </div>
                                     </details>
                                     <div class="ph-settings">
@@ -905,8 +905,8 @@
                             <span class="spectators-badge"><i class="fas fa-eye"></i> <span id="h24-viewers">0</span></span>
                             <!-- Son : directement accessible -->
                             <div class="h24-volume h24-volume--bar">
-                                <button type="button" class="h24-volume__btn" data-h24-mute title="Couper le son"><i class="fas fa-volume-up"></i></button>
-                                <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" title="Volume">
+                                <button type="button" class="h24-volume__btn" data-h24-mute data-i18n-title="ui.mute" title="Couper le son"><i class="fas fa-volume-up"></i></button>
+                                <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" data-i18n-title="ui.volume" title="Volume">
                             </div>
                             <!-- Réglages du viewer (tirage, couleurs) regroupés derrière la roue crantée -->
                             <div class="h24-settings">
@@ -915,8 +915,8 @@
                                     <div class="h24-settings__row">
                                         <span class="h24-settings__label" data-i18n="h24.settingsDraw">Tirage</span>
                                         <div class="h24-style" role="group">
-                                            <button type="button" class="btn btn--sm" data-h24-style="band" title="Tirage : bande"><i class="fas fa-grip-lines"></i> <span data-i18n="h24.styleBand">Bande</span></button>
-                                            <button type="button" class="btn btn--sm" data-h24-style="wheel" title="Tirage : roue"><i class="fas fa-dharmachakra"></i> <span data-i18n="h24.styleWheel">Roue</span></button>
+                                            <button type="button" class="btn btn--sm" data-h24-style="band" data-i18n-title="ui.drawBand" title="Tirage : bande"><i class="fas fa-grip-lines"></i> <span data-i18n="h24.styleBand">Bande</span></button>
+                                            <button type="button" class="btn btn--sm" data-h24-style="wheel" data-i18n-title="ui.drawWheel" title="Tirage : roue"><i class="fas fa-dharmachakra"></i> <span data-i18n="h24.styleWheel">Roue</span></button>
                                         </div>
                                     </div>
                                     <div class="h24-settings__row">
@@ -1142,7 +1142,7 @@
                     <h1 class="live-header__title">Phantom Live</h1>
                     <span class="live-badge idle" id="statusBadge">
                         <span class="dot"></span>
-                        <span id="statusText">En attente</span>
+                        <span id="statusText" data-i18n="live.status.idle">En attente</span>
                     </span>
                     <div class="phantom-menu live-phantom-menu">
                         <button class="btn btn--sm live-phantom-menu__btn" aria-haspopup="true" aria-expanded="false">
@@ -1150,12 +1150,12 @@
                         </button>
                         <div class="phantom-menu__panel" role="menu">
                             <div class="phantom-status disconnected" id="phantomStatus">
-                                <i class="fas fa-times-circle"></i> Déconnecté
+                                <i class="fas fa-times-circle"></i> <span data-i18n="ui.disconnected">Déconnecté</span>
                             </div>
 
                             <button class="btn-primary btn-connect" id="btnPhantom"><i class="fas fa-robot"></i> <span data-i18n="live.phantom.connect">Connecter Phantom</span></button>
                             <div class="phantom-actions">
-                                <button class="phantom-action phantom-action--sync" id="btnSyncLive"><i class="fas fa-sync"></i> Synchroniser</button>
+                                <button class="phantom-action phantom-action--sync" id="btnSyncLive"><i class="fas fa-sync"></i> <span data-i18n="actions.sync">Synchroniser</span></button>
                                 <button class="phantom-action phantom-action--reset" id="btnResetLive"><i class="fas fa-undo"></i> Reset + Sync</button>
                                 <button class="phantom-action phantom-action--end" id="btnGameEndLive"><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                             </div>
@@ -1163,8 +1163,8 @@
                                 <summary><i class="fas fa-wrench"></i> <span data-i18n="setup.troubleshoot">Dépannage</span></summary>
                                 <div class="phantom-actions">
                                     <button class="phantom-action phantom-action--calibrate" id="btnSnapCenterLive"><i class="fas fa-crosshairs"></i> <span data-i18n="setup.snapCenter">Centrer les pièces</span></button>
-                                    <button class="phantom-action phantom-action--calibrate" id="btnCalibrateLive"><i class="fas fa-tools"></i> Calibrer</button>
-                                    <button class="phantom-action phantom-action--danger" id="btnRepairLive" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
+                                    <button class="phantom-action phantom-action--calibrate" id="btnCalibrateLive"><i class="fas fa-tools"></i> <span data-i18n="setup.calibrate">Calibrer</span></button>
+                                    <button class="phantom-action phantom-action--danger" id="btnRepairLive" data-i18n-title="ui.phantom.repairTitle" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                                 </div>
                             </details>
 
@@ -1212,7 +1212,7 @@
 
                         <!-- Infos partie -->
                         <div class="live-card" id="gameInfoCard">
-                            <div class="live-card__title"><i class="fas fa-info-circle"></i> Infos partie</div>
+                            <div class="live-card__title"><i class="fas fa-info-circle"></i> <span data-i18n="ui.live.gameInfo">Infos partie</span></div>
 
                             <div class="player-row white">
                                 <div class="player-color-dot"></div>
@@ -1270,17 +1270,17 @@
                     <h1 class="live-header__title">Phantom Tournament</h1>
                     <span class="live-badge idle" id="statusBadgeT">
                         <span class="dot"></span>
-                        <span id="statusTextT">En attente</span>
+                        <span id="statusTextT" data-i18n="live.status.idle">En attente</span>
                     </span>
                     <button class="t-list-toggle" id="btnToggleListT" style="display:none;"></button>
-                    <button class="t-list-toggle" id="btnEvalT" aria-pressed="false" title="Afficher ou masquer la jauge d'évaluation (Stockfish)"><i class="fas fa-chart-bar"></i> Évaluation</button>
+                    <button class="t-list-toggle" id="btnEvalT" aria-pressed="false" data-i18n-title="ui.tour.evalTitle" title="Afficher ou masquer la jauge d'évaluation (Stockfish)"><i class="fas fa-chart-bar"></i> <span data-i18n="ui.tour.eval">Évaluation</span></button>
                     <div class="phantom-menu live-phantom-menu">
                         <button class="btn btn--sm live-phantom-menu__btn" aria-haspopup="true" aria-expanded="false">
                             <span class="phantom-menu__dot"></span> Phantom <i class="fas fa-caret-down"></i>
                         </button>
                         <div class="phantom-menu__panel" role="menu">
                             <div class="phantom-status disconnected" id="phantomStatusT">
-                                <i class="fas fa-times-circle"></i> Déconnecté
+                                <i class="fas fa-times-circle"></i> <span data-i18n="ui.disconnected">Déconnecté</span>
                             </div>
 
                             <button class="btn-primary btn-connect" id="btnPhantomT">
@@ -1288,7 +1288,7 @@
                             </button>
 
                             <div class="phantom-actions">
-                                <button class="phantom-action phantom-action--sync" id="btnSyncT"><i class="fas fa-sync"></i> Synchroniser</button>
+                                <button class="phantom-action phantom-action--sync" id="btnSyncT"><i class="fas fa-sync"></i> <span data-i18n="actions.sync">Synchroniser</span></button>
                                 <button class="phantom-action phantom-action--reset" id="btnResetT"><i class="fas fa-undo"></i> Reset + Sync</button>
                                 <button class="phantom-action phantom-action--end" id="btnGameEndT"><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
                             </div>
@@ -1296,8 +1296,8 @@
                                 <summary><i class="fas fa-wrench"></i> <span data-i18n="setup.troubleshoot">Dépannage</span></summary>
                                 <div class="phantom-actions">
                                     <button class="phantom-action phantom-action--calibrate" id="btnSnapCenterT"><i class="fas fa-crosshairs"></i> <span data-i18n="setup.snapCenter">Centrer les pièces</span></button>
-                                    <button class="phantom-action phantom-action--calibrate" id="btnCalibrateT"><i class="fas fa-tools"></i> Calibrer</button>
-                                    <button class="phantom-action phantom-action--danger" id="btnRepairT" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
+                                    <button class="phantom-action phantom-action--calibrate" id="btnCalibrateT"><i class="fas fa-tools"></i> <span data-i18n="setup.calibrate">Calibrer</span></button>
+                                    <button class="phantom-action phantom-action--danger" id="btnRepairT" data-i18n-title="ui.phantom.repairTitle" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                                 </div>
                             </details>
 
@@ -1316,8 +1316,8 @@
 
                         <div class="live-card">
                             <div class="live-card__title" style="display:flex; justify-content:space-between; align-items:center;">
-                                <span><i class="fas fa-chess-board"></i> Tournois en cours</span>
-                                <button id="btnRefreshEvents" title="Actualiser" style="background:none; border:none; color:var(--accent-purple,#8b5cf6); cursor:pointer; font-size:0.85rem; padding:2px 4px;">
+                                <span><i class="fas fa-chess-board"></i> <span data-i18n="ui.tour.events">Tournois en cours</span></span>
+                                <button id="btnRefreshEvents" data-i18n-title="records.refresh" title="Actualiser" style="background:none; border:none; color:var(--accent-purple,#8b5cf6); cursor:pointer; font-size:0.85rem; padding:2px 4px;">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
@@ -1326,24 +1326,24 @@
                             <div id="tEventSummary" class="t-summary" style="display:none;">
                                 <i class="fas fa-check-circle"></i>
                                 <span class="t-summary__name" id="tEventName"></span>
-                                <button class="t-summary__change" id="btnChangeEvent">Changer</button>
+                                <button class="t-summary__change" id="btnChangeEvent" data-i18n="ui.tour.change">Changer</button>
                             </div>
 
                             <div id="tEventPicker">
                             <!-- Filtre texte -->
                             <input type="text" class="live-input" id="eventSearchInput"
-                                   placeholder="Filtrer les tournois…"
+                                   placeholder="Filtrer les tournois…" data-i18n-placeholder="ui.tour.filter"
                                    style="margin-bottom:6px; width:100%; box-sizing:border-box;">
 
                             <!-- Liste des événements -->
                             <div id="eventsList" style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; margin-bottom:8px;">
-                                <span style="color:var(--text-muted,#55556a); font-size:0.8rem;">Chargement…</span>
+                                <span style="color:var(--text-muted,#55556a); font-size:0.8rem;" data-i18n="ui.loading">Chargement…</span>
                             </div>
 
                             <!-- Slug manuel (secondaire) -->
                             <details>
                                 <summary style="font-size:0.75rem; cursor:pointer; color:var(--text-muted,#55556a); user-select:none; margin-bottom:4px;">
-                                    Entrer un slug manuellement
+                                    <span data-i18n="ui.tour.manualSlug">Entrer un slug manuellement</span>
                                 </summary>
                                 <div style="display:flex; gap:6px; margin-top:6px;">
                                     <input type="text" class="live-input" id="tournamentInput"
@@ -1383,16 +1383,16 @@
                         <!-- Revue d'une partie terminée -->
                         <div class="t-review" id="tReview" style="display:none;">
                             <div class="t-review__nav">
-                                <button id="tRevFirst" title="Début (Origine)"><i class="fas fa-fast-backward"></i></button>
-                                <button id="tRevPrev" title="Coup précédent (←)"><i class="fas fa-step-backward"></i></button>
-                                <button id="tRevPlay" class="t-review__play" title="Lecture automatique (Espace)"><i class="fas fa-play"></i></button>
+                                <button id="tRevFirst" data-i18n-title="ui.review.first" title="Début (Origine)"><i class="fas fa-fast-backward"></i></button>
+                                <button id="tRevPrev" data-i18n-title="ui.review.prev" title="Coup précédent (←)"><i class="fas fa-step-backward"></i></button>
+                                <button id="tRevPlay" class="t-review__play" data-i18n-title="ui.review.play" title="Lecture automatique (Espace)"><i class="fas fa-play"></i></button>
                                 <span class="t-review__move" id="tRevMove">—</span>
-                                <button id="tRevNext" title="Coup suivant (→)"><i class="fas fa-step-forward"></i></button>
-                                <button id="tRevLast" title="Fin (Fin)"><i class="fas fa-fast-forward"></i></button>
+                                <button id="tRevNext" data-i18n-title="ui.review.next" title="Coup suivant (→)"><i class="fas fa-step-forward"></i></button>
+                                <button id="tRevLast" data-i18n-title="ui.review.last" title="Fin (Fin)"><i class="fas fa-fast-forward"></i></button>
                             </div>
                             <input type="range" id="tRevSlider" min="0" max="0" value="0">
                             <div class="t-review__opts">
-                                <label title="Pause entre deux coups pendant la lecture. Si le Phantom suit la revue, on attend aussi qu'il ait fini de jouer le coup.">Pause
+                                <label data-i18n-title="ui.review.pauseTitle" title="Pause entre deux coups pendant la lecture. Si le Phantom suit la revue, on attend aussi qu'il ait fini de jouer le coup."><span data-i18n="ui.review.pause">Pause</span>
                                     <select id="tRevDelay">
                                         <option value="0" selected>0 s</option>
                                         <option value="1">1 s</option>
@@ -1402,8 +1402,8 @@
                                         <option value="10">10 s</option>
                                     </select>
                                 </label>
-                                <label><input type="checkbox" id="tRevPhantom"> Le Phantom suit la revue</label>
-                                <button id="tRevClose"><i class="fas fa-times"></i> Quitter la revue</button>
+                                <label><input type="checkbox" id="tRevPhantom"> <span data-i18n="ui.review.phantomFollows">Le Phantom suit la revue</span></label>
+                                <button id="tRevClose"><i class="fas fa-times"></i> <span data-i18n="ui.review.quit">Quitter la revue</span></button>
                             </div>
                         </div>
                     </div>
@@ -1413,7 +1413,7 @@
 
                         <!-- Infos partie sélectionnée -->
                         <div class="live-card">
-                            <div class="live-card__title"><i class="fas fa-info-circle"></i> Partie sélectionnée</div>
+                            <div class="live-card__title"><i class="fas fa-info-circle"></i> <span data-i18n="ui.tour.selected">Partie sélectionnée</span></div>
                             <div class="player-row black">
                                 <div class="player-color-dot"></div>
                                 <span class="player-name" id="playerBlackT">—</span>
@@ -1455,11 +1455,11 @@
             <div class="modal__body">
                 <div class="form-group">
                     <label class="form-label" data-i18n="modalsave.config.name">Nom de la configuration</label>
-                    <input type="text" class="input" id="config-name" placeholder="Ma config préférée...">
+                    <input type="text" class="input" id="config-name" placeholder="Ma config préférée..." data-i18n-placeholder="ui.configPh">
                 </div>
             </div>
             <div class="modal__footer">
-                <button class="btn" data-close-modal>Annuler</button>
+                <button class="btn" data-close-modal data-i18n="tournamentFollow.cancel">Annuler</button>
                 <button class="btn btn--primary" id="btn-confirm-save" data-i18n="modalsave.config.save">Sauvegarder</button>
             </div>
         </div>
@@ -1502,9 +1502,9 @@
                 <p class="pm-unsupported" id="pmUnsupported" hidden><i class="fas fa-exclamation-triangle"></i> <span data-i18n="phantomModal.unsupported">Ce navigateur ne gère pas le Bluetooth : ouvre le site dans Chrome ou Edge.</span></p>
                 <p class="pm-status" id="pmStatus"></p>
                 <details class="pm-repair" id="pmRepair" hidden>
-                    <summary>L'échiquier pose les pièces à côté des cases ?</summary>
-                    <p>Si toutes les pièces ont le même décalage et que le journal montre des erreurs de capteurs en boucle, la mécanique est désynchronisée. La réparation remet le Phantom aux réglages d'usine (ce qui recentre le chariot), le reconnecte tout seul puis remet les pièces en place. Compter environ une minute.</p>
-                    <button class="pm-repair__btn" id="pmFactoryReset"><i class="fas fa-exclamation-triangle"></i> Réparer le centrage</button>
+                    <summary data-i18n="ui.phantom.repairQ">L'échiquier pose les pièces à côté des cases ?</summary>
+                    <p data-i18n="ui.phantom.repairText">Si toutes les pièces ont le même décalage et que le journal montre des erreurs de capteurs en boucle, la mécanique est désynchronisée. La réparation remet le Phantom aux réglages d'usine (ce qui recentre le chariot), le reconnecte tout seul puis remet les pièces en place. Compter environ une minute.</p>
+                    <button class="pm-repair__btn" id="pmFactoryReset"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
                 </details>
                 </div>
             </div>
@@ -1528,9 +1528,9 @@
                 <p class="form-hint" data-i18n="tournamentFollow.hint">Placer directement cette position, ou remettre l'échiquier à zéro et rejouer la partie coup par coup. Le Phantom suit ensuite les coups joués.</p>
                 <div class="tf-actions">
                     <button class="btn btn--primary" id="tfConfirm"><i class="fas fa-chess-board"></i> <span data-i18n="tournamentFollow.confirm">Position actuelle</span></button>
-                    <button class="btn" id="tfReplay" disabled><i class="fas fa-backward"></i> <span id="tfReplayLabel">Rejouer depuis le début</span></button>
+                    <button class="btn" id="tfReplay" disabled><i class="fas fa-backward"></i> <span id="tfReplayLabel" data-i18n="tournamentFollow.replay">Rejouer depuis le début</span></button>
                 </div>
-                <label class="tf-delay">Pause entre les coups rejoués
+                <label class="tf-delay"><span data-i18n="ui.tour.replayDelay">Pause entre les coups rejoués</span>
                     <select id="tfDelay">
                         <option value="0" selected>0 s</option>
                         <option value="1">1 s</option>

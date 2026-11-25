@@ -107,12 +107,12 @@ class TwitchManager {
                 : `<i class="fab fa-twitch"></i>`;
 
             if (this.connectionState === 'connecting') {
-                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Connexion...`;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${tw('connecting', 'Connexion...')}`;
             } else if (user) {
                 const chat = this.connectionState === 'connected' ? ` · #${this.channel}` : '';
-                btn.innerHTML = `${avatar} ${user.displayName}${chat} <span class="twitch-logout">Déconnexion</span>`;
+                btn.innerHTML = `${avatar} ${user.displayName}${chat} <span class="twitch-logout">${window.tt('ui.logout')}</span>`;
             } else {
-                btn.innerHTML = `<i class="fab fa-twitch"></i> Se connecter avec Twitch`;
+                btn.innerHTML = `<i class="fab fa-twitch"></i> ${window.tt('ui.loginTwitch')}`;
             }
         });
     }

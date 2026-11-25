@@ -200,3 +200,8 @@ class I18n {
 // Create global instance
 window.i18n = new I18n();
 window.i18n.init();
+/** Traduction avec repli (texte d'origine) tant que la langue n'est pas chargée ou si la clé manque */
+window.tt = (key, params, fallback) => {
+    const v = window.i18n?.t?.(key, params || {});
+    return v && v !== key ? v : (fallback ?? key);
+};

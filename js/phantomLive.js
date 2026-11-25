@@ -536,10 +536,10 @@ setInterval(() => {
     const el = document.getElementById('phantomStatus');
     if (window.phantomChessboard?.isConnected) {
         el.className = 'phantom-status connected';
-        el.innerHTML = '<i class="fas fa-check-circle"></i> Connecté';
+        el.innerHTML = `<i class="fas fa-check-circle"></i> ${window.tt('ui.connected')}`;
     } else {
         el.className = 'phantom-status disconnected';
-        el.innerHTML = '<i class="fas fa-times-circle"></i> Déconnecté';
+        el.innerHTML = `<i class="fas fa-times-circle"></i> ${window.tt('ui.disconnected')}`;
     }
 }, 2000);
 

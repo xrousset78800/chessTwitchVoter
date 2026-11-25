@@ -95,7 +95,7 @@ class MultiplayerManager {
             // Lancer le jeu (app.js écoute cet event)
             window.dispatchEvent(new CustomEvent('multiGameReady', { detail: data }));
 
-            this.showToast(`⚔ Bataille lancée ! ${white} vs ${black}`, 'success');
+            this.showToast(window.tt('ui.toast.battle', { white, black }), 'success');
         });
 
         // ---- Coup joué par le partenaire ----
@@ -134,7 +134,7 @@ class MultiplayerManager {
             console.warn('⚠️ Adversaire déconnecté');
             this.partnerConnected = false;
             this.updatePartnerStatus(false);
-            if (window.AppToast) window.AppToast.warning('⚠️ Adversaire déconnecté');
+            if (window.AppToast) window.AppToast.warning(window.tt('ui.multi.partnerLeft'));
             window.dispatchEvent(new Event('multiPartnerLeft'));
         });
 
@@ -232,7 +232,7 @@ class MultiplayerManager {
                 const dot = el.querySelector('.multi-waiting__dot');
                 if (dot) dot.style.background = '#10b981';
                 const textNode = el.lastChild;
-                if (textNode) textNode.textContent = ' Adversaire connecté !';
+                if (textNode) textNode.textContent = ' ' + window.tt('ui.multi.partnerJoined');
             });
         } else {
             waitEls.forEach(el => el.classList.remove('multi-waiting--connected'));
@@ -253,9 +253,7 @@ class MultiplayerManager {
 
         const ind = document.getElementById('multi-turn-indicator');
         if (ind) {
-            ind.textContent = isMyTurn
-                ? '🗳 À votre tour — votez !'
-                : '⏳ Tour de l\'adversaire...';
+            ind.textContent = window.tt(isMyTurn ? 'ui.multi.yourTurn' : 'ui.multi.theirTurn');
         }
     }
 

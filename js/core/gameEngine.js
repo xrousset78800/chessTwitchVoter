@@ -400,17 +400,17 @@ class GameEngine {
         if (this.chess.game_over()) {
             let result = '';
             if (this.chess.in_checkmate()) {
-                result = this.chess.turn() === 'w' ? 'Les Noirs gagnent !' : 'Les Blancs gagnent !';
+                result = window.tt(this.chess.turn() === 'w' ? 'ui.result.blackWins' : 'ui.result.whiteWins');
             } else if (this.chess.in_stalemate()) {
-                result = 'Pat !';
+                result = window.tt('ui.result.stalemate');
             } else if (this.chess.insufficient_material()) {
-                result = 'Nulle : matériel insuffisant';
+                result = window.tt('ui.result.material');
             } else if (this.chess.in_threefold_repetition()) {
-                result = 'Nulle : répétition de la position';
+                result = window.tt('ui.result.repetition');
             } else if (Number(this.chess.fen().split(' ')[4]) >= 100) {
-                result = 'Nulle : règle des 50 coups';
+                result = window.tt('ui.result.fifty');
             } else {
-                result = 'Nulle !';
+                result = window.tt('ui.result.draw');
             }
 
             console.log('🏁 Fin de partie:', result);

@@ -189,7 +189,7 @@ class PhantomChessboard {
             this.processQueue();
         } else {
             // Mettre à jour l'overlay avec le nombre en attente
-            this.showBlockingOverlay?.('Déplacement en cours...', this.moveQueue.length);
+            this.showBlockingOverlay?.(window.tt('ui.phantom.moving'), this.moveQueue.length);
         }
     }
 
@@ -628,10 +628,7 @@ class PhantomChessboard {
 
     /** Confirmation commune à tous les boutons « Réparer le centrage » */
     confirmRepair() {
-        return window.confirm('Réparer le centrage du Phantom ?\n\n' +
-            'À utiliser quand les pièces sont posées à côté du centre des cases (même décalage partout, erreurs capteurs en boucle).\n\n' +
-            'Le Phantom revient à ses réglages d\'usine, redémarre, se reconnecte tout seul puis remet les pièces en place. ' +
-            'Compter environ une minute ; la vitesse est conservée.');
+        return window.confirm(window.tt('ui.phantom.repairConfirm'));
     }
 
     /**
@@ -651,7 +648,7 @@ class PhantomChessboard {
         this.recalibrating = true;   // positions reçues pendant la réparation : gardées pour après
         this.pendingFen = null;
         window.dispatchEvent(new CustomEvent('phantomMoveStart'));
-        this.showBlockingOverlay?.('Réparation du centrage...', 0);
+        this.showBlockingOverlay?.(window.tt('ui.phantom.repairing'), 0);
         let ok = false;
         try {
             this.moveQueue = [];
