@@ -1039,6 +1039,13 @@
       "quit": "Quitter la revue"
     }
   },
+  "pieces": {
+    "title": "Pièces",
+    "classic": "Classique",
+    "flat": "Plat",
+    "neon": "Néon",
+    "token": "Jetons"
+  },
   "seo": {
     "title": "Crowd Gambit — Les échecs joués par ton chat Twitch",
     "desc": {

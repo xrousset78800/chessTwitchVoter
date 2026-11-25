@@ -1039,6 +1039,13 @@
       "quit": "İncelemeden çık"
     }
   },
+  "pieces": {
+    "title": "Taşlar",
+    "classic": "Klasik",
+    "flat": "Düz",
+    "neon": "Neon",
+    "token": "Pullar"
+  },
   "seo": {
     "title": "Crowd Gambit — Twitch sohbetinin oynadığı satranç",
     "desc": {

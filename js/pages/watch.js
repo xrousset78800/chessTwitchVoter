@@ -18,7 +18,7 @@ import { renderPodium, renderHistory, paintMoveChips, morphPodiumToWheel, markPo
 
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
+const PIECES = p => window.pieceUrl(p);   // set de pièces choisi
 const MODE_ICON = { multi: '⚔', rush: '🔥', mono: '👥', sandbox: '🧪', problems: '🧩', chatVsChat: '⚔' };
 const MODE_KEY = { multi: 'Multi', rush: 'Rush', mono: 'Mono', sandbox: 'Sandbox', problems: 'Problems', chatVsChat: 'Multi' };
 const modeLabel = (m) => { m = MODE_ICON[m] ? m : 'sandbox'; return `${MODE_ICON[m]} ${t('browsePage.mode' + MODE_KEY[m])}`; };

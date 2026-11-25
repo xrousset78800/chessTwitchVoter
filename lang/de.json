@@ -1039,6 +1039,13 @@
       "quit": "Analyse verlassen"
     }
   },
+  "pieces": {
+    "title": "Figuren",
+    "classic": "Klassisch",
+    "flat": "Flach",
+    "neon": "Neon",
+    "token": "Spielsteine"
+  },
   "seo": {
     "title": "Crowd Gambit — Schach, gespielt von deinem Twitch-Chat",
     "desc": {

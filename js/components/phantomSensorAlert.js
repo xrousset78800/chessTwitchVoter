@@ -85,7 +85,7 @@ function boardHtml(expected, missing, extra) {
             const dark = (f + rank) % 2 === 1 ? ' is-dark' : '';   // a1 sombre
             const state = miss.has(sq) ? ' is-missing' : ext.has(sq) ? ' is-extra' : '';
             const img = p && p !== '.'
-                ? `<img src="./img/chesspieces/wikipedia/${p === p.toUpperCase() ? 'w' : 'b'}${p.toUpperCase()}.png" alt="${p}">`
+                ? `<img src="${window.pieceUrl((p === p.toUpperCase() ? 'w' : 'b') + p.toUpperCase())}" alt="${p}">`
                 : '';
             const coord = (f === 0 ? `<span class="phantom-sensor__rank">${rank}</span>` : '') +
                 (rank === 1 ? `<span class="phantom-sensor__file">${'abcdefgh'[f]}</span>` : '');

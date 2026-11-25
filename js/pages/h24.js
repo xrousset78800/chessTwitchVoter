@@ -23,7 +23,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<'
 const $ = (id) => document.getElementById(id);
 // Sons des coups, comme sur les autres échiquiers
 const SOUNDS = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', end: 'mp3/end.wav' };
-const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
+const PIECES = p => window.pieceUrl(p);   // set de pièces choisi
 // Ordre d'affichage du cycle : on choisit (mode, options), on s'inscrit, on joue, puis le récap avant le tour suivant
 const STEPS = ['voteMode', 'voteOptions', 'signup', 'play', 'recap'];
 
@@ -929,7 +929,7 @@ const H24Page = {
             const piece = pieceOf(next.san);
             const score = next.random ? '🎲' : next.pct != null ? `${next.pct}%` : '';
             msg = t('h24.flowChosen', { move: fmtMove(next.san) }, `Coup retenu : ${next.san}`);
-            html = `${piece ? `<img class="h24-guide__piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/${g.turn === 'b' ? 'b' : 'w'}${piece}.png" alt="">` : ''}`
+            html = `${piece ? `<img class="h24-guide__piece" src="${window.pieceUrl((g.turn === 'b' ? 'b' : 'w') + piece)}" alt="">` : ''}`
                 + `${esc(t('h24.nextMove', null, 'Coup retenu'))} <b class="h24-guide__san">${esc(fmtMove(next.san))}</b>`
                 + `${score ? ` <span class="h24-guide__pct">${score}</span>` : ''}`
                 + `${next.voter ? ` <span class="h24-guide__voter">@${esc(next.voter)}${next.via ? ' ' + esc(next.via.startsWith('#') ? next.via : '#' + next.via) : ''}</span>` : ''}`;

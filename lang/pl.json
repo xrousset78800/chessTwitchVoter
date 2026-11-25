@@ -1039,6 +1039,13 @@
       "quit": "Zakończ przegląd"
     }
   },
+  "pieces": {
+    "title": "Bierki",
+    "classic": "Klasyczne",
+    "flat": "Płaskie",
+    "neon": "Neon",
+    "token": "Żetony"
+  },
   "seo": {
     "title": "Crowd Gambit — Szachy, w które gra Twój czat na Twitchu",
     "desc": {

@@ -63,7 +63,7 @@ function initBoard() {
     state.chess = new Chess();
     state.board = Chessboard('liveBoard', {
         position: 'start',
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+        pieceTheme: p => window.pieceUrl(p),
         draggable: false,
     });
     window.BoardAnnotations?.attach('liveBoard');

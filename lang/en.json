@@ -1039,6 +1039,13 @@
       "quit": "Leave the review"
     }
   },
+  "pieces": {
+    "title": "Pieces",
+    "classic": "Classic",
+    "flat": "Flat",
+    "neon": "Neon",
+    "token": "Tokens"
+  },
   "seo": {
     "title": "Crowd Gambit — Chess played by your Twitch chat",
     "desc": {

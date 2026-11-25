@@ -74,7 +74,7 @@ class GameEngine {
         const boardConfig = {
             draggable: true,
             position: 'start',
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+            pieceTheme: p => window.pieceUrl(p),
             onDragStart: this.onDragStart.bind(this),
             onDrop: this.onDrop.bind(this),
             onSnapEnd: this.onSnapEnd.bind(this)

@@ -370,3 +370,35 @@ body.game-mode .nav__page-title {
     .nav:not(:hover):not(:focus-within) > :not(.nav__logo) { opacity: 0; visibility: hidden; }
     .nav:is(:hover, :focus-within), .nav:is(:hover, :focus-within) > * { transition-delay: 0s; }
 }
+
+/* Sélecteur de set de pièces (js/utils/pieceSet.js), même allure que celui de la langue */
+.nav__pieces { position: relative; display: flex; align-items: center; }
+.nav__pieces-current {
+    display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px;
+    border: 1px solid transparent; border-radius: var(--radius-sm, 6px);
+    background: none; color: var(--text-muted, #b9aea6); cursor: pointer; opacity: 0.8;
+    transition: var(--transition-fast, all 0.15s ease);
+}
+.nav__pieces-current i { font-size: 0.55rem; }
+.nav__pieces-current img { width: 22px; height: 22px; display: block; }
+.nav__pieces-current:hover, .nav__pieces.is-open .nav__pieces-current { opacity: 1; background: var(--bg-card); border-color: var(--border-subtle); }
+.nav__pieces-current:focus-visible { outline: 2px solid rgba(255, 138, 61, 0.5); outline-offset: 1px; }
+.nav__pieces-menu {
+    position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000; min-width: 210px;
+    margin: 0; padding: 6px; list-style: none;
+    background: var(--bg-card, #1a1512); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md, 10px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.nav__pieces-menu[hidden] { display: none; }
+.nav__pieces-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px;
+    border: none; border-radius: var(--radius-sm, 6px); background: none;
+    color: var(--text-secondary, #d8cfc8); font: inherit; font-size: 0.85rem; text-align: left; cursor: pointer;
+}
+.nav__pieces-item:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-primary, #f4eee8); }
+.nav__pieces-item.is-active { color: var(--accent-purple, #ff8a3d); font-weight: 600; }
+.nav__pieces-preview {
+    display: inline-flex; flex: none; border-radius: 3px; overflow: hidden;
+    background: linear-gradient(90deg, #f0d9b5 0 25%, #b58863 25% 50%, #f0d9b5 50% 75%, #b58863 75%);
+}
+.nav__pieces-preview img { width: 26px; height: 26px; display: block; }

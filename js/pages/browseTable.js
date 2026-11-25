@@ -11,7 +11,7 @@ import { fmtMove } from '../utils/moveMatch.js';
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = (id) => document.getElementById(id);
-const PIECES = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
+const PIECES = p => window.pieceUrl(p);   // set de pièces choisi
 const MODE_ICON = { multi: '⚔', mono: '👥', rush: '🔥', sandbox: '🧪', problems: '🧩' };
 const MODE_KEY = { multi: 'browsePage.modeMulti', mono: 'browsePage.modeMono', rush: 'browsePage.modeRush', sandbox: 'browsePage.modeSandbox', problems: 'browsePage.modeProblems' };
 const MODES = ['multi', 'mono', 'rush', 'sandbox', 'problems'];

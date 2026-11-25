@@ -1039,6 +1039,13 @@
       "quit": "Esci dalla revisione"
     }
   },
+  "pieces": {
+    "title": "Pezzi",
+    "classic": "Classico",
+    "flat": "Piatto",
+    "neon": "Neon",
+    "token": "Gettoni"
+  },
   "seo": {
     "title": "Crowd Gambit — Scacchi giocati dalla tua chat di Twitch",
     "desc": {

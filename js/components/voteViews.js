@@ -13,7 +13,6 @@ const t = (key, params, fallback) => {
     return s && s !== key ? s : fallback;
 };
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const PIECE_IMG = 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png';
 const SAN_RE = /^(?:O-O(?:-O)?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?)[+#]?$/;
 
 /** Pièce qui joue le coup (null si ce n'est pas du SAN) */
@@ -86,7 +85,7 @@ export function renderPodium(listEl, totalEl, votes, opts = {}) {
         slot.style.setProperty('--c', color);
         const piece = pieceOf(v.move);
         const img = slot.querySelector('.podium__piece img');
-        const src = piece ? PIECE_IMG.replace('{piece}', turn + piece) : '';
+        const src = piece ? window.pieceUrl(turn + piece) : '';
         if (img.getAttribute('src') !== src) {
             if (src) img.setAttribute('src', src); else img.removeAttribute('src');
         }
@@ -147,7 +146,7 @@ export function renderHistory(el, moves, firstColor = 'w') {
             : typeof m.v === 'number' ? `<span class="hist-vote">${m.v}%</span>` : '';
         // Pièce jouée, dans la couleur du camp (Blancs en colonne de gauche)
         const piece = pieceOf(m.san);
-        const img = piece ? `<img class="hist-piece" src="${PIECE_IMG.replace('{piece}', (i % 2 ? 'b' : 'w') + piece)}" alt="" draggable="false">` : '';
+        const img = piece ? `<img class="hist-piece" src="${window.pieceUrl((i % 2 ? 'b' : 'w') + piece)}" alt="" draggable="false">` : '';
         return `<span class="hist-move${i === lastIndex ? ' is-last' : ''}" data-ply="${i}">${img}<span class="hist-san">${esc(fmtMove(m.san))}</span>${vote}</span>`;
     };
     let rows = '';
@@ -295,7 +294,7 @@ export function revealWinner(slot, { move, color, pct, turn = 'w' }) {
         slot.appendChild(el);
     }
     const piece = pieceOf(move);
-    const img = piece ? `<img class="votes-slot__winner-piece" src="${PIECE_IMG.replace('{piece}', turn + piece)}" alt="">` : '';
+    const img = piece ? `<img class="votes-slot__winner-piece" src="${window.pieceUrl(turn + piece)}" alt="">` : '';
     const score = pct == null
         ? `<span class="votes-slot__winner-pct">🎲 ${esc(t('podium.random', null, 'Tirage au sort'))}</span>`
         : `<span class="votes-slot__winner-pct">${pct}%</span>`;

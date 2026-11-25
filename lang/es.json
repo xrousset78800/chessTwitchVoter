@@ -1039,6 +1039,13 @@
       "quit": "Salir de la revisión"
     }
   },
+  "pieces": {
+    "title": "Piezas",
+    "classic": "Clásico",
+    "flat": "Plano",
+    "neon": "Neón",
+    "token": "Fichas"
+  },
   "seo": {
     "title": "Crowd Gambit — Ajedrez jugado por tu chat de Twitch",
     "desc": {

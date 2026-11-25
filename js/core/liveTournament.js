@@ -32,7 +32,7 @@ function initTournamentBoard() {
     stateT.chess = new Chess();
     stateT.board = Chessboard('liveBoardT', {
         position: 'start',
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+        pieceTheme: p => window.pieceUrl(p),
         draggable: false,
     });
     window.BoardAnnotations?.attach('liveBoardT');
@@ -608,7 +608,7 @@ const trT = (key, fallback) => {
 // ── Aperçu de la position au survol d'une partie ──
 const previewGames = new Map(); // clé -> { fen, title }, remis à jour à chaque actualisation de la liste
 const gameKey = g => String(g.id ?? g.slug);
-const PIECE_IMG = p => `https://chessboardjs.com/img/chesspieces/wikipedia/${p}.png`;
+const PIECE_IMG = p => window.pieceUrl(p);
 
 /** Petit échiquier statique (blancs en bas) à partir d'un FEN */
 function miniBoardHTML(fen) {
