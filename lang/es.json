@@ -32,7 +32,11 @@
       "unknown": "Diferencia no localizada por los sensores",
       "hint": "Recoloca las piezas a mano como en el esquema: esta ventana se actualiza y se cierra en cuanto todo esté en su sitio.",
       "close": "Cerrar",
-      "ok": "✅ Phantom: posición correcta"
+      "ok": "✅ Phantom: posición correcta",
+      "errorTitle": "⚠️ Phantom: error señalado",
+      "errorHint": "Si las piezas quedan fuera de sus casillas: «Centrar piezas», o «Recalibrar» para reajustar la mecánica y volver a colocar la posición.",
+      "snap": "Centrar piezas",
+      "recal": "Recalibrar"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Solución de problemas",
     "phantomSpeed": "Velocidad",
     "phantomWebcam": "Webcam sobre el tablero",
+    "autoRecal": "Recalibración auto (jugadas)",
+    "autoRecalTitle": "Recalibra la mecánica cada N jugadas del Phantom (entre jugadas) para que las piezas no se desplacen poco a poco",
+    "autoRecalOff": "Nunca",
     "webcamOn": "Sí",
     "webcamOff": "No",
     "repairCentering": "Corregir centrado",
@@ -979,7 +986,8 @@
       "repairTitle": "Piezas fuera del centro de las casillas: restablecimiento de fábrica y recolocación",
       "repairQ": "¿El tablero coloca las piezas fuera de las casillas?",
       "repairText": "Si todas las piezas tienen el mismo desfase y el registro muestra errores de sensores sin parar, la mecánica está desincronizada. La reparación restablece los ajustes de fábrica del Phantom (lo que recentra el carro), lo reconecta solo y vuelve a colocar las piezas. Cuenta con un minuto aproximadamente.",
-      "repairConfirm": "¿Reparar el centrado del Phantom?\n\nÚsalo cuando las piezas quedan fuera del centro de las casillas (mismo desfase en todas, errores de sensores sin parar).\n\nEl Phantom vuelve a los ajustes de fábrica, se reinicia, se reconecta solo y vuelve a colocar las piezas. Cuenta con un minuto aproximadamente; la velocidad se conserva."
+      "repairConfirm": "¿Reparar el centrado del Phantom?\n\nÚsalo cuando las piezas quedan fuera del centro de las casillas (mismo desfase en todas, errores de sensores sin parar).\n\nEl Phantom vuelve a los ajustes de fábrica, se reinicia, se reconecta solo y vuelve a colocar las piezas. Cuenta con un minuto aproximadamente; la velocidad se conserva.",
+      "calibrating": "Calibrando el Phantom..."
     },
     "live": {
       "gameInfo": "Información de la partida"

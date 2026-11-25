@@ -35,13 +35,24 @@ function ensure() {
                 <ul class="phantom-sensor__legend"></ul>
                 <p class="phantom-sensor__hint"></p>
             </div>
-            <div class="modal__footer">
+            <div class="modal__footer phantom-sensor__footer">
+                <button class="btn btn--sm" data-ps-snap></button>
+                <button class="btn btn--sm" data-ps-recal></button>
                 <button class="btn btn--sm" data-ps-close></button>
             </div>
         </div>`;
     document.body.appendChild(el);
     el.addEventListener('click', e => {
         if (e.target === el || e.target.closest('[data-ps-close]')) close(true);
+        const phantom = window.phantomChessboard;
+        if (!phantom?.isConnected) return;
+        if (e.target.closest('[data-ps-snap]')) phantom.snapToCenter();
+        if (e.target.closest('[data-ps-recal]')) {
+            // Recale la mécanique puis repose la position que l'échiquier devait avoir
+            const fen = phantom.lastFenSent;
+            close(false);
+            phantom.recalibrate(() => fen);
+        }
     });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && el.classList.contains('is-active')) close(true); });
     return el;
@@ -105,7 +116,35 @@ export function showSensorAlert(d) {
     root.querySelector('.phantom-sensor__legend').innerHTML = items.join('');
     root.querySelector('.phantom-sensor__hint').textContent = t('phantom.sensor.hint', null,
         'Replace les pièces à la main comme sur le schéma : la fenêtre se met à jour et se ferme dès que tout est en place.');
+    labelButtons(root);
+    root.classList.add('is-active');
+}
+
+function labelButtons(root) {
+    root.querySelector('[data-ps-snap]').textContent = t('phantom.sensor.snap', null, 'Centrer les pièces');
+    root.querySelector('[data-ps-recal]').textContent = t('phantom.sensor.recal', null, 'Recalibrer');
     root.querySelector('.modal__footer [data-ps-close]').textContent = t('phantom.sensor.close', null, 'Fermer');
+}
+
+/**
+ * Autre erreur signalée par l'échiquier (message non lisible comme écart de capteurs) :
+ * même fenêtre, avec le message brut et les actions de recentrage, au lieu d'un simple toast.
+ */
+export function showPhantomError(text) {
+    const key = 'err:' + String(text);
+    if (dismissed && dismissed === key) return;
+    dismissed = null;
+    clearTimeout(okTimer);
+    const root = ensure();
+    root.dataset.expected = key;
+    root.querySelector('.phantom-sensor__modal').classList.remove('is-ok');
+    root.querySelector('#phantom-sensor-title').textContent = t('phantom.sensor.errorTitle', null, '⚠️ Phantom : erreur signalée');
+    root.querySelector('.phantom-sensor__lead').textContent = String(text).slice(0, 300);
+    root.querySelector('.phantom-sensor__board').innerHTML = '';
+    root.querySelector('.phantom-sensor__legend').innerHTML = '';
+    root.querySelector('.phantom-sensor__hint').textContent = t('phantom.sensor.errorHint', null,
+        'Si les pièces sont posées à côté des cases : « Centrer les pièces », ou « Recalibrer » pour recaler la mécanique puis reposer la position.');
+    labelButtons(root);
     root.classList.add('is-active');
 }
 

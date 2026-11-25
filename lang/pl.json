@@ -32,7 +32,11 @@
       "unknown": "Niezgodność niezlokalizowana przez czujniki",
       "hint": "Ustaw bierki ręcznie zgodnie ze schematem: to okno odświeży się i zamknie, gdy wszystko będzie na miejscu.",
       "close": "Zamknij",
-      "ok": "✅ Phantom: pozycja poprawna"
+      "ok": "✅ Phantom: pozycja poprawna",
+      "errorTitle": "⚠️ Phantom: zgłoszono błąd",
+      "errorHint": "Jeśli bierki stoją obok pól: „Wyśrodkuj bierki” lub „Kalibruj”, aby wyrównać mechanizm i ponownie ustawić pozycję.",
+      "snap": "Wyśrodkuj bierki",
+      "recal": "Kalibruj"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Rozwiązywanie problemów",
     "phantomSpeed": "Prędkość",
     "phantomWebcam": "Kamera nad szachownicą",
+    "autoRecal": "Auto-kalibracja (ruchy)",
+    "autoRecalTitle": "Kalibruje mechanizm co N ruchów wykonanych przez Phantoma (między ruchami), aby bierki stopniowo się nie przesuwały",
+    "autoRecalOff": "Nigdy",
     "webcamOn": "Wł.",
     "webcamOff": "Wył.",
     "repairCentering": "Napraw centrowanie",
@@ -979,7 +986,8 @@
       "repairTitle": "Figury obok pól: reset fabryczny i ponowne ustawienie",
       "repairQ": "Szachownica stawia figury obok pól?",
       "repairText": "Jeśli wszystkie figury są przesunięte o tyle samo, a dziennik ciągle pokazuje błędy czujników, mechanika straciła synchronizację. Naprawa przywraca ustawienia fabryczne Phantoma (co wyśrodkowuje karetkę), sama go ponownie łączy i ustawia figury. Trwa to około minuty.",
-      "repairConfirm": "Naprawić wyśrodkowanie Phantoma?\n\nUżyj, gdy figury stają obok środka pól (wszędzie to samo przesunięcie, ciągłe błędy czujników).\n\nPhantom wraca do ustawień fabrycznych, uruchamia się ponownie, sam się łączy i ustawia figury. Trwa to około minuty; prędkość zostaje zachowana."
+      "repairConfirm": "Naprawić wyśrodkowanie Phantoma?\n\nUżyj, gdy figury stają obok środka pól (wszędzie to samo przesunięcie, ciągłe błędy czujników).\n\nPhantom wraca do ustawień fabrycznych, uruchamia się ponownie, sam się łączy i ustawia figury. Trwa to około minuty; prędkość zostaje zachowana.",
+      "calibrating": "Kalibracja Phantoma..."
     },
     "live": {
       "gameInfo": "Informacje o partii"

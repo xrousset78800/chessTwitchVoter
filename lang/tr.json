@@ -32,7 +32,11 @@
       "unknown": "Sensörlerin yerini bulamadığı uyumsuzluk",
       "hint": "Taşları şemadaki gibi elle yerleştir: her şey yerine oturunca bu pencere güncellenir ve kapanır.",
       "close": "Kapat",
-      "ok": "✅ Phantom: pozisyon doğru"
+      "ok": "✅ Phantom: pozisyon doğru",
+      "errorTitle": "⚠️ Phantom: hata bildirildi",
+      "errorHint": "Taşlar karelerin yanında duruyorsa: «Taşları ortala» ya da mekanizmayı hizalayıp konumu yeniden kurmak için «Yeniden kalibre et».",
+      "snap": "Taşları ortala",
+      "recal": "Yeniden kalibre et"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Sorun giderme",
     "phantomSpeed": "Hız",
     "phantomWebcam": "Tahtanın üstünde webcam",
+    "autoRecal": "Otomatik kalibrasyon (hamle)",
+    "autoRecalTitle": "Taşların yavaş yavaş kaymaması için mekanizmayı Phantom'un oynadığı her N hamlede bir (iki hamle arasında) yeniden kalibre eder",
+    "autoRecalOff": "Asla",
     "webcamOn": "Açık",
     "webcamOff": "Kapalı",
     "repairCentering": "Ortalamayı düzelt",
@@ -979,7 +986,8 @@
       "repairTitle": "Taşlar karelerin dışında: fabrika ayarlarına dönüş ve yeniden yerleştirme",
       "repairQ": "Tahta taşları karelerin dışına mı koyuyor?",
       "repairText": "Tüm taşlar aynı miktarda kaymışsa ve günlük sürekli sensör hataları gösteriyorsa mekanizmanın ayarı bozulmuştur. Onarım Phantom'u fabrika ayarlarına döndürür (taşıyıcı yeniden ortalanır), kendiliğinden yeniden bağlar ve taşları yerine koyar. Yaklaşık bir dakika sürer.",
-      "repairConfirm": "Phantom'un ortalaması onarılsın mı?\n\nTaşlar karelerin ortasının dışına konuyorsa kullan (her yerde aynı kayma, sürekli sensör hataları).\n\nPhantom fabrika ayarlarına döner, yeniden başlar, kendiliğinden bağlanır ve taşları yerine koyar. Yaklaşık bir dakika sürer; hız ayarı korunur."
+      "repairConfirm": "Phantom'un ortalaması onarılsın mı?\n\nTaşlar karelerin ortasının dışına konuyorsa kullan (her yerde aynı kayma, sürekli sensör hataları).\n\nPhantom fabrika ayarlarına döner, yeniden başlar, kendiliğinden bağlanır ve taşları yerine koyar. Yaklaşık bir dakika sürer; hız ayarı korunur.",
+      "calibrating": "Phantom kalibre ediliyor..."
     },
     "live": {
       "gameInfo": "Oyun bilgisi"

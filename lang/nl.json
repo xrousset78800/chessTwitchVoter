@@ -32,7 +32,11 @@
       "unknown": "Afwijking niet gelokaliseerd door de sensoren",
       "hint": "Zet de stukken met de hand terug zoals op het schema: dit venster werkt zich bij en sluit zodra alles op zijn plek staat.",
       "close": "Sluiten",
-      "ok": "✅ Phantom: stelling klopt"
+      "ok": "✅ Phantom: stelling klopt",
+      "errorTitle": "⚠️ Phantom: fout gemeld",
+      "errorHint": "Staan de stukken naast de velden: „Stukken centreren”, of „Herkalibreren” om het mechanisme opnieuw uit te lijnen en de stelling opnieuw op te zetten.",
+      "snap": "Stukken centreren",
+      "recal": "Herkalibreren"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Probleemoplossing",
     "phantomSpeed": "Snelheid",
     "phantomWebcam": "Webcam boven het bord",
+    "autoRecal": "Auto-herkalibratie (zetten)",
+    "autoRecalTitle": "Herkalibreert het mechanisme elke N zetten van de Phantom (tussen twee zetten), zodat de stukken niet geleidelijk verschuiven",
+    "autoRecalOff": "Nooit",
     "webcamOn": "Aan",
     "webcamOff": "Uit",
     "repairCentering": "Centrering herstellen",
@@ -979,7 +986,8 @@
       "repairTitle": "Stukken naast de velden: fabrieksreset en daarna terugzetten",
       "repairQ": "Zet het bord de stukken naast de velden?",
       "repairText": "Als alle stukken even ver verschoven staan en het logboek steeds sensorfouten toont, loopt de mechaniek niet meer gelijk. Het herstel zet de Phantom terug naar de fabrieksinstellingen (waardoor de slede opnieuw wordt gecentreerd), maakt zelf weer verbinding en zet de stukken terug. Reken op ongeveer een minuut.",
-      "repairConfirm": "Centrering van de Phantom herstellen?\n\nGebruik dit als de stukken naast het midden van de velden worden gezet (overal dezelfde verschuiving, steeds sensorfouten).\n\nDe Phantom gaat terug naar de fabrieksinstellingen, herstart, maakt zelf weer verbinding en zet de stukken terug. Reken op ongeveer een minuut; de snelheid blijft behouden."
+      "repairConfirm": "Centrering van de Phantom herstellen?\n\nGebruik dit als de stukken naast het midden van de velden worden gezet (overal dezelfde verschuiving, steeds sensorfouten).\n\nDe Phantom gaat terug naar de fabrieksinstellingen, herstart, maakt zelf weer verbinding en zet de stukken terug. Reken op ongeveer een minuut; de snelheid blijft behouden.",
+      "calibrating": "Phantom wordt gekalibreerd..."
     },
     "live": {
       "gameInfo": "Partij-info"

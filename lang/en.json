@@ -32,7 +32,11 @@
       "unknown": "Mismatch not located by the sensors",
       "hint": "Put the pieces back by hand as shown: this window updates and closes as soon as everything is in place.",
       "close": "Close",
-      "ok": "✅ Phantom: position correct"
+      "ok": "✅ Phantom: position correct",
+      "errorTitle": "⚠️ Phantom: error reported",
+      "errorHint": "If pieces sit beside their squares: “Center pieces”, or “Recalibrate” to reset the mechanism and set the position up again.",
+      "snap": "Center pieces",
+      "recal": "Recalibrate"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Troubleshooting",
     "phantomSpeed": "Speed",
     "phantomWebcam": "Webcam over the board",
+    "autoRecal": "Auto recalibration (moves)",
+    "autoRecalTitle": "Recalibrates the mechanism every N moves played by the Phantom (between moves), so pieces don't gradually drift off their squares",
+    "autoRecalOff": "Never",
     "webcamOn": "On",
     "webcamOff": "Off",
     "repairCentering": "Fix centering",
@@ -979,7 +986,8 @@
       "repairTitle": "Pieces placed off-center: factory reset, then put back in place",
       "repairQ": "Is the board placing pieces off-center?",
       "repairText": "If every piece is off by the same amount and the log keeps showing sensor errors, the mechanism is out of sync. The repair restores the Phantom's factory settings (which re-centers the carriage), reconnects it on its own, then puts the pieces back. Allow about a minute.",
-      "repairConfirm": "Repair the Phantom's centering?\n\nUse this when pieces are placed off the center of the squares (same offset everywhere, sensor errors over and over).\n\nThe Phantom goes back to its factory settings, restarts, reconnects on its own, then puts the pieces back. Allow about a minute; the speed setting is kept."
+      "repairConfirm": "Repair the Phantom's centering?\n\nUse this when pieces are placed off the center of the squares (same offset everywhere, sensor errors over and over).\n\nThe Phantom goes back to its factory settings, restarts, reconnects on its own, then puts the pieces back. Allow about a minute; the speed setting is kept.",
+      "calibrating": "Calibrating the Phantom..."
     },
     "live": {
       "gameInfo": "Game info"

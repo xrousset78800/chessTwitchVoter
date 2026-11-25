@@ -62,6 +62,13 @@ class PhantomChessboard {
         this.moveDoneResolver = null;
         this.moveTimeout = null;
         this.MOVE_TIMEOUT_MS = 30000; // 30 secondes max par mouvement
+        // Recalibration automatique tous les N coups (0 : jamais), cf. maybeAutoRecalibrate
+        this.movesSinceCal = 0;
+        this.autoRecalEvery = 40;
+        try {
+            const v = localStorage.getItem('phantomAutoRecal');
+            if (v !== null) this.autoRecalEvery = Number(v) || 0;
+        } catch (e) { }
         this.savedTimerState = null; // Pour la pause du timer de vote
 
         // 🆕 Webcam
@@ -212,7 +219,9 @@ class PhantomChessboard {
 
         try {
             // Exécuter le mouvement et attendre BLE_MOVE_DONE
+            const isMove = this.lastFenSent !== null;   // sinon mise en place complète (GAME_START)
             await this.syncPositionAndWait(fen);
+            if (isMove) this.movesSinceCal++;
             this.log('✅ Mouvement terminé', 'success');
         } catch (error) {
             this.log(`❌ Erreur mouvement: ${error.message}`, 'error');
@@ -232,6 +241,7 @@ class PhantomChessboard {
             this.isMoving = false;
             // Émettre l'événement APRÈS que BLE_MOVE_DONE a été reçu
             window.dispatchEvent(new CustomEvent('phantomMoveComplete'));
+            this.maybeAutoRecalibrate();
             return;
         }
 
@@ -481,24 +491,29 @@ class PhantomChessboard {
 
             // Erreur de l'échiquier : texte complet (une fois par message, puis un compteur)
             if (opCode === this.OP_CODES.ERROR_MSG) {
-                if (dataStr === this.lastError) {
+                // Message répété : on ne relogue pas, mais la fenêtre est quand même (ré)affichée
+                const repeat = dataStr === this.lastError;
+                if (repeat) {
                     this.lastErrorCount = (this.lastErrorCount || 1) + 1;
                     if (this.lastErrorCount % 20 === 0) this.log(`⚠️ ERROR_MSG identique ×${this.lastErrorCount}`, 'warn');
-                    return;
+                } else {
+                    this.lastError = dataStr;
+                    this.lastErrorCount = 1;
                 }
-                this.lastError = dataStr;
-                this.lastErrorCount = 1;
                 const d = this.describeSensorError(dataStr);
                 if (dataStr.startsWith('CLEAN')) {   // « CLEAN: Match. » : capteurs conformes
-                    this.log(d ? `🧲 Capteurs OK : ${d.seen}/${d.total} pièces détectées` : '🧲 Capteurs OK', 'success');
+                    if (!repeat) this.log(d ? `🧲 Capteurs OK : ${d.seen}/${d.total} pièces détectées` : '🧲 Capteurs OK', 'success');
                     window.dispatchEvent(new CustomEvent('phantomSensorsOk'));
                     return;
                 }
-                this.log(`⚠️ [ERROR_MSG] ${dataStr}`, 'warn');
-                if (d) this.log(`🧲 Capteurs : ${d.seen}/${d.total} pièces détectées` +
-                    (d.extra.length ? `, détection sur cases vides : ${d.extra.join(' ')}` : '') +
-                    (d.missing.length && d.missing.length <= 12 ? `, manquantes : ${d.missing.join(' ')}` : ''), 'warn');
-                // Écart capteurs / position attendue : fenêtre détaillée pour le propriétaire, sinon simple message
+                if (!repeat) {
+                    this.recordError(dataStr, d);
+                    this.log(`⚠️ [ERROR_MSG] ${dataStr}`, 'warn');
+                    if (d) this.log(`🧲 Capteurs : ${d.seen}/${d.total} pièces détectées` +
+                        (d.extra.length ? `, détection sur cases vides : ${d.extra.join(' ')}` : '') +
+                        (d.missing.length && d.missing.length <= 12 ? `, manquantes : ${d.missing.join(' ')}` : ''), 'warn');
+                }
+                // Écart capteurs / position attendue : fenêtre avec la position ; autre erreur : fenêtre avec le message brut
                 if (d) window.dispatchEvent(new CustomEvent('phantomSensorMismatch', { detail: d }));
                 else window.dispatchEvent(new CustomEvent('phantomError', { detail: dataStr }));
                 return;
@@ -647,6 +662,9 @@ class PhantomChessboard {
         this.repairing = true;
         this.recalibrating = true;   // positions reçues pendant la réparation : gardées pour après
         this.pendingFen = null;
+        this.movesSinceCal = 0;
+        this.lastError = null;
+        clearTimeout(this._autoRecalTimer);
         window.dispatchEvent(new CustomEvent('phantomMoveStart'));
         this.showBlockingOverlay?.(window.tt('ui.phantom.repairing'), 0);
         let ok = false;
@@ -737,6 +755,48 @@ class PhantomChessboard {
         return { seen, total, missing, extra, expected, sensors };
     }
 
+    /**
+     * Garde les dernières erreurs de l'échiquier (localStorage « phantomErrorLog ») avec le
+     * nombre de coups joués depuis la dernière calibration : pour voir après coup ce qui s'est
+     * passé et si les erreurs suivent une dérive de la mécanique. Console : phantomChessboard.errorLog()
+     */
+    recordError(text, d) {
+        try {
+            const log = JSON.parse(localStorage.getItem('phantomErrorLog') || '[]');
+            log.push({
+                at: new Date().toISOString(),
+                route: (location.pathname + location.hash).slice(0, 40),
+                moves: this.movesSinceCal,
+                msg: d ? `capteurs ${d.seen}/${d.total}` + (d.missing.length ? ` manquantes ${d.missing.join(' ')}` : '') +
+                    (d.extra.length ? ` en trop ${d.extra.join(' ')}` : '') : String(text).slice(0, 300)
+            });
+            localStorage.setItem('phantomErrorLog', JSON.stringify(log.slice(-40)));
+        } catch (e) { }
+    }
+
+    errorLog() {
+        try { return JSON.parse(localStorage.getItem('phantomErrorLog') || '[]'); } catch (e) { return []; }
+    }
+
+    /**
+     * Recalibration automatique : la mécanique (moteurs pas à pas, sans retour de position)
+     * peut perdre quelques pas à chaque déplacement et se décaler peu à peu. Tous les
+     * `autoRecalEvery` coups, une fois le Phantom au repos, on relance la calibration
+     * (retour en butée) puis on repose la position. 0 : désactivé.
+     */
+    maybeAutoRecalibrate() {
+        if (!this.autoRecalEvery || this.movesSinceCal < this.autoRecalEvery) return;
+        clearTimeout(this._autoRecalTimer);
+        this._autoRecalTimer = setTimeout(() => {
+            // Occupé (nouveau coup, réparation) : on réessaiera à la fin du prochain coup
+            if (!this.isConnected || this.isMoving || this.moveQueue.length || this.recalibrating || this.repairing) return;
+            const fen = this.lastFenSent;
+            if (!fen) return;
+            this.log(`🛠️ Recalibration automatique (${this.movesSinceCal} coups depuis la dernière)`, 'info');
+            this.recalibrate(() => fen);
+        }, this.autoRecalDelayMs ?? 2500);
+    }
+
     async snapToCenter() {
         this.lastError = null;
         return await this.sendCommand(this.OP_CODES.SNAPTOCENTERCOM);
@@ -754,9 +814,12 @@ class PhantomChessboard {
         if (!this.isConnected || this.recalibrating) return false;
         this.recalibrating = true;
         this.pendingFen = null;
+        this.movesSinceCal = 0;
+        this.lastError = null;
+        clearTimeout(this._autoRecalTimer);
         const sleep = ms => new Promise(r => setTimeout(r, ms));
         window.dispatchEvent(new CustomEvent('phantomMoveStart'));   // le minuteur de vote attend
-        this.showBlockingOverlay?.('Calibration du Phantom...', 0);
+        this.showBlockingOverlay?.(window.tt?.('ui.phantom.calibrating') || 'Calibration du Phantom...', 0);
         try {
             // Abandonner le mouvement en cours et la file
             this.moveQueue = [];
@@ -1386,6 +1449,26 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('🎯 Phantom.js chargé - Version avec file d\'attente et blocage UI');
 
 // ========== RÉGLAGES PHANTOM COMPACTS (menus Partie, Live, Tournoi) ==========
+// Recalibration automatique [data-ph-autorecal] : réglage commun, gardé dans le navigateur
+function refreshPhantomAutoRecalControls() {
+    const every = String(window.phantomChessboard?.autoRecalEvery ?? 0);
+    document.querySelectorAll('[data-ph-autorecal]').forEach(s => { s.value = every; });
+}
+document.addEventListener('change', (e) => {
+    const sel = e.target.closest?.('[data-ph-autorecal]');
+    const phantom = window.phantomChessboard;
+    if (!sel || !phantom) return;
+    phantom.autoRecalEvery = Number(sel.value) || 0;
+    try { localStorage.setItem('phantomAutoRecal', String(phantom.autoRecalEvery)); } catch (err) { }
+    phantom.log(phantom.autoRecalEvery
+        ? `🛠️ Recalibration automatique tous les ${phantom.autoRecalEvery} coups (${phantom.movesSinceCal} depuis la dernière)`
+        : '🛠️ Recalibration automatique désactivée', 'info');
+    refreshPhantomAutoRecalControls();
+    phantom.maybeAutoRecalibrate();
+});
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshPhantomAutoRecalControls);
+else refreshPhantomAutoRecalControls();
+
 // Sélecteurs de vitesse 1..5 [data-ph-speed] : tous affichent la vitesse réelle du Phantom
 function refreshPhantomSpeedControls() {
     const speed = window.phantomChessboard?.currentSpeed;

@@ -32,7 +32,11 @@
       "unknown": "Diferença não localizada pelos sensores",
       "hint": "Recoloque as peças à mão como no diagrama: esta janela se atualiza e fecha assim que tudo estiver no lugar.",
       "close": "Fechar",
-      "ok": "✅ Phantom: posição correta"
+      "ok": "✅ Phantom: posição correta",
+      "errorTitle": "⚠️ Phantom: erro sinalizado",
+      "errorHint": "Se as peças estão fora das casas: «Centrar peças», ou «Recalibrar» para realinhar a mecânica e recolocar a posição.",
+      "snap": "Centrar peças",
+      "recal": "Recalibrar"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Solução de problemas",
     "phantomSpeed": "Velocidade",
     "phantomWebcam": "Webcam sobre o tabuleiro",
+    "autoRecal": "Recalibração auto (lances)",
+    "autoRecalTitle": "Recalibra a mecânica a cada N lances jogados pelo Phantom (entre lances), para que as peças não se desloquem aos poucos",
+    "autoRecalOff": "Nunca",
     "webcamOn": "Ligada",
     "webcamOff": "Desligada",
     "repairCentering": "Corrigir centralização",
@@ -979,7 +986,8 @@
       "repairTitle": "Peças fora do centro das casas: restauração de fábrica e reposicionamento",
       "repairQ": "O tabuleiro coloca as peças fora das casas?",
       "repairText": "Se todas as peças têm o mesmo deslocamento e o registro mostra erros de sensores sem parar, a mecânica está dessincronizada. O reparo restaura as configurações de fábrica do Phantom (o que recentraliza o carro), reconecta-o sozinho e recoloca as peças. Leva cerca de um minuto.",
-      "repairConfirm": "Reparar a centralização do Phantom?\n\nUse quando as peças ficam fora do centro das casas (mesmo deslocamento em todas, erros de sensores sem parar).\n\nO Phantom volta às configurações de fábrica, reinicia, reconecta-se sozinho e recoloca as peças. Leva cerca de um minuto; a velocidade é mantida."
+      "repairConfirm": "Reparar a centralização do Phantom?\n\nUse quando as peças ficam fora do centro das casas (mesmo deslocamento em todas, erros de sensores sem parar).\n\nO Phantom volta às configurações de fábrica, reinicia, reconecta-se sozinho e recoloca as peças. Leva cerca de um minuto; a velocidade é mantida.",
+      "calibrating": "Calibrando o Phantom..."
     },
     "live": {
       "gameInfo": "Informações da partida"

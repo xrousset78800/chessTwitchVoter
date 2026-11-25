@@ -32,7 +32,11 @@
       "unknown": "Differenza non localizzata dai sensori",
       "hint": "Rimetti a mano i pezzi come nello schema: la finestra si aggiorna e si chiude appena è tutto a posto.",
       "close": "Chiudi",
-      "ok": "✅ Phantom: posizione corretta"
+      "ok": "✅ Phantom: posizione corretta",
+      "errorTitle": "⚠️ Phantom: errore segnalato",
+      "errorHint": "Se i pezzi sono fuori dalle case: «Centra i pezzi», oppure «Ricalibra» per riallineare la meccanica e ripristinare la posizione.",
+      "snap": "Centra i pezzi",
+      "recal": "Ricalibra"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Risoluzione problemi",
     "phantomSpeed": "Velocità",
     "phantomWebcam": "Webcam sulla scacchiera",
+    "autoRecal": "Ricalibrazione auto (mosse)",
+    "autoRecalTitle": "Ricalibra la meccanica ogni N mosse giocate dal Phantom (tra una mossa e l'altra), così i pezzi non si spostano poco a poco",
+    "autoRecalOff": "Mai",
     "webcamOn": "On",
     "webcamOff": "Off",
     "repairCentering": "Ripara centratura",
@@ -979,7 +986,8 @@
       "repairTitle": "Pezzi fuori dal centro delle case: ripristino di fabbrica e riposizionamento",
       "repairQ": "La scacchiera posa i pezzi fuori dalle case?",
       "repairText": "Se tutti i pezzi hanno lo stesso scostamento e il registro mostra errori dei sensori in continuazione, la meccanica è fuori sincrono. La riparazione riporta il Phantom alle impostazioni di fabbrica (ricentrando il carrello), lo riconnette da solo e rimette i pezzi al loro posto. Serve circa un minuto.",
-      "repairConfirm": "Riparare la centratura del Phantom?\n\nDa usare quando i pezzi vengono posati fuori dal centro delle case (stesso scostamento ovunque, errori dei sensori in continuazione).\n\nIl Phantom torna alle impostazioni di fabbrica, si riavvia, si riconnette da solo e rimette i pezzi al loro posto. Serve circa un minuto; la velocità viene mantenuta."
+      "repairConfirm": "Riparare la centratura del Phantom?\n\nDa usare quando i pezzi vengono posati fuori dal centro delle case (stesso scostamento ovunque, errori dei sensori in continuazione).\n\nIl Phantom torna alle impostazioni di fabbrica, si riavvia, si riconnette da solo e rimette i pezzi al loro posto. Serve circa un minuto; la velocità viene mantenuta.",
+      "calibrating": "Calibrazione del Phantom..."
     },
     "live": {
       "gameInfo": "Info partita"

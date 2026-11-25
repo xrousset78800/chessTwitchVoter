@@ -768,3 +768,11 @@ input[type=range] {
 .ph-webcam:hover { background: rgba(242, 112, 15, 0.15); }
 .ph-webcam.is-active { background: #f2700f; border-color: #f2700f; color: #000; font-weight: 700; }
 .ph-settings__row + .ph-settings__row { margin-top: 6px; }
+.ph-autorecal {
+    background: var(--bg-input, #1a1512);
+    color: var(--text-primary, #f1e9e2);
+    border: 1px solid var(--border-subtle, #2b2420);
+    border-radius: 2px;
+    padding: 2px 4px;
+    font: inherit;
+}

@@ -326,6 +326,9 @@
 .phantom-sensor .modal__body { margin-bottom: 14px; }
 .phantom-sensor__lead, .phantom-sensor__hint { font-size: 0.88rem; color: var(--text-secondary); margin: 0 0 10px; }
 .phantom-sensor__hint { margin: 10px 0 0; }
+.phantom-sensor__board:empty, .phantom-sensor__legend:empty { display: none; }
+.phantom-sensor__lead { overflow-wrap: anywhere; }
+.phantom-sensor__footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .phantom-sensor__board {
     display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
     width: min(100%, 320px); aspect-ratio: 1; margin: 0 auto;

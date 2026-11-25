@@ -32,7 +32,11 @@
       "unknown": "Abweichung von den Sensoren nicht lokalisiert",
       "hint": "Stell die Figuren wie gezeigt von Hand zurück: Dieses Fenster aktualisiert sich und schließt sich, sobald alles stimmt.",
       "close": "Schließen",
-      "ok": "✅ Phantom: Stellung korrekt"
+      "ok": "✅ Phantom: Stellung korrekt",
+      "errorTitle": "⚠️ Phantom: Fehler gemeldet",
+      "errorHint": "Stehen die Figuren neben den Feldern: „Figuren zentrieren“, oder „Neu kalibrieren“, um die Mechanik auszurichten und die Stellung neu aufzubauen.",
+      "snap": "Figuren zentrieren",
+      "recal": "Neu kalibrieren"
     }
   },
   "sandbox": {
@@ -351,6 +355,9 @@
     "troubleshoot": "Fehlerbehebung",
     "phantomSpeed": "Tempo",
     "phantomWebcam": "Webcam über dem Brett",
+    "autoRecal": "Auto-Kalibrierung (Züge)",
+    "autoRecalTitle": "Kalibriert die Mechanik alle N vom Phantom gespielten Züge neu (zwischen zwei Zügen), damit die Figuren nicht nach und nach verrutschen",
+    "autoRecalOff": "Nie",
     "webcamOn": "An",
     "webcamOff": "Aus",
     "repairCentering": "Zentrierung reparieren",
@@ -979,7 +986,8 @@
       "repairTitle": "Figuren neben den Feldern: Werksreset, dann zurückstellen",
       "repairQ": "Stellt das Brett die Figuren neben die Felder?",
       "repairText": "Wenn alle Figuren gleich verschoben sind und das Protokoll ständig Sensorfehler zeigt, ist die Mechanik aus dem Takt. Die Reparatur setzt das Phantom auf Werkseinstellungen zurück (der Schlitten wird neu zentriert), verbindet es selbst wieder und stellt die Figuren zurück. Etwa eine Minute einplanen.",
-      "repairConfirm": "Zentrierung des Phantom reparieren?\n\nNutze das, wenn die Figuren neben der Feldmitte stehen (überall gleich verschoben, ständige Sensorfehler).\n\nDas Phantom kehrt zu den Werkseinstellungen zurück, startet neu, verbindet sich selbst wieder und stellt die Figuren zurück. Etwa eine Minute einplanen; die Geschwindigkeit bleibt erhalten."
+      "repairConfirm": "Zentrierung des Phantom reparieren?\n\nNutze das, wenn die Figuren neben der Feldmitte stehen (überall gleich verschoben, ständige Sensorfehler).\n\nDas Phantom kehrt zu den Werkseinstellungen zurück, startet neu, verbindet sich selbst wieder und stellt die Figuren zurück. Etwa eine Minute einplanen; die Geschwindigkeit bleibt erhalten.",
+      "calibrating": "Phantom wird kalibriert..."
     },
     "live": {
       "gameInfo": "Partie-Infos"
