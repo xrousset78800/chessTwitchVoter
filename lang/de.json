@@ -1044,7 +1044,18 @@
     "classic": "Klassisch",
     "flat": "Flach",
     "neon": "Neon",
-    "token": "Spielsteine"
+    "token": "Spielsteine",
+    "boardTitle": "Brett",
+    "board": {
+      "wood": "Holz",
+      "green": "Grün",
+      "blue": "Blau",
+      "grey": "Schiefer",
+      "orange": "Glut",
+      "purple": "Lavendel",
+      "rose": "Rosa",
+      "night": "Nacht"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Schach, gespielt von deinem Twitch-Chat",

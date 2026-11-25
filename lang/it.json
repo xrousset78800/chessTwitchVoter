@@ -1044,7 +1044,18 @@
     "classic": "Classico",
     "flat": "Piatto",
     "neon": "Neon",
-    "token": "Gettoni"
+    "token": "Gettoni",
+    "boardTitle": "Scacchiera",
+    "board": {
+      "wood": "Legno",
+      "green": "Verde",
+      "blue": "Blu",
+      "grey": "Ardesia",
+      "orange": "Brace",
+      "purple": "Lavanda",
+      "rose": "Rosa",
+      "night": "Notte"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Scacchi giocati dalla tua chat di Twitch",

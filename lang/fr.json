@@ -1044,7 +1044,18 @@
     "classic": "Classique",
     "flat": "Plat",
     "neon": "Néon",
-    "token": "Jetons"
+    "token": "Jetons",
+    "boardTitle": "Échiquier",
+    "board": {
+      "wood": "Bois",
+      "green": "Vert",
+      "blue": "Bleu",
+      "grey": "Ardoise",
+      "orange": "Braise",
+      "purple": "Lavande",
+      "rose": "Rose",
+      "night": "Nuit"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Les échecs joués par ton chat Twitch",

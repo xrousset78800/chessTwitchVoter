@@ -1044,7 +1044,18 @@
     "classic": "Klasyczne",
     "flat": "Płaskie",
     "neon": "Neon",
-    "token": "Żetony"
+    "token": "Żetony",
+    "boardTitle": "Szachownica",
+    "board": {
+      "wood": "Drewno",
+      "green": "Zielona",
+      "blue": "Niebieska",
+      "grey": "Łupek",
+      "orange": "Żar",
+      "purple": "Lawenda",
+      "rose": "Róż",
+      "night": "Noc"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Szachy, w które gra Twój czat na Twitchu",

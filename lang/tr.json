@@ -1044,7 +1044,18 @@
     "classic": "Klasik",
     "flat": "Düz",
     "neon": "Neon",
-    "token": "Pullar"
+    "token": "Pullar",
+    "boardTitle": "Tahta",
+    "board": {
+      "wood": "Ahşap",
+      "green": "Yeşil",
+      "blue": "Mavi",
+      "grey": "Arduvaz",
+      "orange": "Kor",
+      "purple": "Lavanta",
+      "rose": "Pembe",
+      "night": "Gece"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Twitch sohbetinin oynadığı satranç",

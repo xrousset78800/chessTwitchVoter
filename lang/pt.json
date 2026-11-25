@@ -1044,7 +1044,18 @@
     "classic": "Clássico",
     "flat": "Plano",
     "neon": "Néon",
-    "token": "Fichas"
+    "token": "Fichas",
+    "boardTitle": "Tabuleiro",
+    "board": {
+      "wood": "Madeira",
+      "green": "Verde",
+      "blue": "Azul",
+      "grey": "Ardósia",
+      "orange": "Brasa",
+      "purple": "Lavanda",
+      "rose": "Rosa",
+      "night": "Noite"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Xadrez jogado pelo seu chat da Twitch",

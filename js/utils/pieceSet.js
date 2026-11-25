@@ -16,6 +16,27 @@
     let current = SETS[0];
     try { current = byId(localStorage.getItem('pieceSet')); } catch (e) { }
 
+    // Couleurs de l'échiquier (variables --sq-light / --sq-dark, cf. css/components/boardTheme.css)
+    const BOARDS = [
+        { id: 'wood', key: 'wood', label: 'Bois', light: '#f0d9b5', dark: '#b58863' },
+        { id: 'green', key: 'green', label: 'Vert', light: '#eeeed2', dark: '#769656' },
+        { id: 'blue', key: 'blue', label: 'Bleu', light: '#dee3e6', dark: '#8ca2ad' },
+        { id: 'grey', key: 'grey', label: 'Ardoise', light: '#dcdcdc', dark: '#8a8d93' },
+        { id: 'orange', key: 'orange', label: 'Braise', light: '#f6e2cc', dark: '#d2804f' },
+        { id: 'purple', key: 'purple', label: 'Lavande', light: '#e9e1f3', dark: '#8f77b5' },
+        { id: 'rose', key: 'rose', label: 'Rose', light: '#f5e1e4', dark: '#c27a87' },
+        { id: 'night', key: 'night', label: 'Nuit', light: '#9aa3b1', dark: '#4f5a6b' },
+    ];
+    const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
+    let board = BOARDS[0];
+    try { board = boardById(localStorage.getItem('boardTheme')); } catch (e) { }
+    function applyBoard() {
+        const s = document.documentElement.style;
+        s.setProperty('--sq-light', board.light);
+        s.setProperty('--sq-dark', board.dark);
+    }
+    applyBoard();
+
     const url = (piece, set = current) => `/img/chesspieces/${set.id}/${piece}.${set.ext}`;
     window.pieceUrl = piece => url(piece);
     window.pieceTheme = piece => url(piece);
@@ -24,10 +45,12 @@
         const v = window.i18n?.t?.(`pieces.${s.key}`);
         return v && v !== `pieces.${s.key}` ? v : s.label;
     };
-    const title = () => {
-        const v = window.i18n?.t?.('pieces.title');
-        return v && v !== 'pieces.title' ? v : 'Pièces';
+    const tr = (key, fb) => {
+        const v = window.i18n?.t?.(key);
+        return v && v !== key ? v : fb;
     };
+    const title = () => tr('pieces.title', 'Pièces');
+    const boardLabel = b => tr(`pieces.board.${b.key}`, b.label);
 
     // Toutes les images de pièces déjà affichées (échiquiers et petites icônes)
     const PIECE_SRC = /\/chesspieces\/[^/]+\/([wb][PNBRQK])\.(?:png|svg)(?:[?#].*)?$/;
@@ -43,7 +66,7 @@
             const btn = box.querySelector('.nav__pieces-current');
             if (!btn) return;
             btn.innerHTML = `<img src="${url('wN')}" alt=""><i class="fas fa-chevron-down" aria-hidden="true"></i>`;
-            btn.title = `${title()} : ${label(current)}`;
+            btn.title = `${title()} : ${label(current)} · ${tr('pieces.boardTitle', 'Échiquier')} : ${boardLabel(board)}`;
             btn.setAttribute('aria-label', btn.title);
             box.querySelectorAll('[data-piece-set]').forEach(el => {
                 const s = byId(el.dataset.pieceSet);
@@ -52,6 +75,15 @@
                 el.setAttribute('aria-selected', String(on));
                 el.querySelector('.nav__pieces-name').textContent = label(s);
             });
+            box.querySelectorAll('[data-board-theme]').forEach(el => {
+                const b = boardById(el.dataset.boardTheme);
+                const on = b.id === board.id;
+                el.classList.toggle('is-active', on);
+                el.setAttribute('aria-pressed', String(on));
+                el.title = boardLabel(b);
+                el.setAttribute('aria-label', boardLabel(b));
+            });
+            box.querySelectorAll('.nav__pieces-heading').forEach(h => { h.textContent = tr(h.dataset.key, h.dataset.fb); });
         });
     }
 
@@ -64,11 +96,24 @@
     }
     window.setPieceSet = setPieceSet;
 
+    function setBoardTheme(id) {
+        board = boardById(id);
+        try { localStorage.setItem('boardTheme', board.id); } catch (e) { }
+        applyBoard();
+        render();
+        window.dispatchEvent(new CustomEvent('boardThemeChanged', { detail: { id: board.id } }));
+    }
+    window.setBoardTheme = setBoardTheme;
+
     function setup() {
         document.querySelectorAll('.nav__pieces').forEach(box => {
             box.innerHTML = `
                 <button class="nav__pieces-current" type="button" aria-haspopup="listbox" aria-expanded="false"></button>
-                <ul class="nav__pieces-menu" role="listbox" hidden>
+                <ul class="nav__pieces-menu" hidden>
+                    <li class="nav__pieces-heading" data-key="pieces.boardTitle" data-fb="Échiquier"></li>
+                    <li class="nav__pieces-boards">${BOARDS.map(b => `<button type="button" class="nav__pieces-swatch" data-board-theme="${b.id}"
+                        style="--l:${b.light};--d:${b.dark}"></button>`).join('')}</li>
+                    <li class="nav__pieces-heading" data-key="pieces.title" data-fb="Pièces"></li>
                     ${SETS.map(s => `<li><button type="button" role="option" class="nav__pieces-item" data-piece-set="${s.id}">
                         <span class="nav__pieces-preview">${['wK', 'wN', 'bQ', 'bP'].map(p => `<img src="${url(p, s)}" alt="" loading="lazy">`).join('')}</span>
                         <span class="nav__pieces-name"></span></button></li>`).join('')}
@@ -82,6 +127,8 @@
             };
             btn.addEventListener('click', e => { e.stopPropagation(); toggle(menu.hidden); });
             menu.addEventListener('click', e => {
+                const sw = e.target.closest('[data-board-theme]');
+                if (sw) { e.stopPropagation(); setBoardTheme(sw.dataset.boardTheme); return; }   // le menu reste ouvert pour comparer
                 const item = e.target.closest('[data-piece-set]');
                 if (!item) return;
                 toggle(false);

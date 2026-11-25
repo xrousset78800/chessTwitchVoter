@@ -1044,7 +1044,18 @@
     "classic": "Classic",
     "flat": "Flat",
     "neon": "Neon",
-    "token": "Tokens"
+    "token": "Tokens",
+    "boardTitle": "Board",
+    "board": {
+      "wood": "Wood",
+      "green": "Green",
+      "blue": "Blue",
+      "grey": "Slate",
+      "orange": "Ember",
+      "purple": "Lavender",
+      "rose": "Rose",
+      "night": "Night"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Chess played by your Twitch chat",

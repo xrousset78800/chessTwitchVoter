@@ -565,11 +565,11 @@ input[type=range] {
 }
 
 .mini-board__sq {
-    background: #f0d9b5;
+    background: var(--sq-light, #f0d9b5);
 }
 
 .mini-board__sq.is-dark {
-    background: #b58863;
+    background: var(--sq-dark, #b58863);
 }
 
 .mini-board__sq { min-width: 0; min-height: 0; aspect-ratio: 1; }

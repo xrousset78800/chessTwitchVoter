@@ -1044,7 +1044,18 @@
     "classic": "Klassiek",
     "flat": "Plat",
     "neon": "Neon",
-    "token": "Fiches"
+    "token": "Fiches",
+    "boardTitle": "Bord",
+    "board": {
+      "wood": "Hout",
+      "green": "Groen",
+      "blue": "Blauw",
+      "grey": "Leisteen",
+      "orange": "Gloed",
+      "purple": "Lavendel",
+      "rose": "Roze",
+      "night": "Nacht"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Schaken gespeeld door je Twitch-chat",
