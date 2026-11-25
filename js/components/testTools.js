@@ -67,7 +67,7 @@ const TestTools = {
 
     /** Page où ces outils servent : une page de jeu, un salon Multi, ou une partie avec inscriptions */
     relevant() {
-        const route = location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search;
+        const route = location.hash.startsWith('#/') ? location.hash : '#' + appPath() + location.search;
         const page = window.AppState?.currentPage;
         if (!this.allowed) {
             // Tout le monde : partie, problèmes, Mono (pas de rush ni de Multi)

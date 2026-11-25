@@ -861,5 +861,19 @@
       "camMissing": "Nie znaleziono kamery",
       "camNoSupport": "Kamera: użyj Chrome lub Edge, by transmitować"
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Szachy, w które gra Twój czat na Twitchu",
+    "desc": {
+      "home": "Twój czat na Twitchu głosuje na ruchy i gra w szachy: stacja 24/7, Puzzle Rush, partie ze Stockfishem, pojedynki kanałów i podłączona szachownica Phantom. Za darmo, w przeglądarce.",
+      "rush": "Puzzle Rush na Twitchu: Twój czat rozwiązuje coraz trudniejsze zadania szachowe, głosując. Trzy błędy i koniec serii. Pobij rekord swojego kanału!",
+      "mono": "Tryb Mono: widzowie Twojego czatu zapisują się, wpisując join, i razem grają partię szachów, ruch po ruchu.",
+      "multi": "Tryb Multi: dwa kanały na Twitchu mierzą się w szachy, każdy czat gra jednym kolorem i głosuje na swoje ruchy.",
+      "sandbox": "Wolna partia: skonfiguruj partię szachów swojego czatu na Twitchu (demokracja, koło chaosu, ze Stockfishem, zadania…) i uruchom ją jednym kliknięciem.",
+      "browse": "Partie szachów rozgrywane teraz przez czaty na Twitchu: oglądaj na żywo lub dołącz do partii.",
+      "records": "Rekordy Puzzle Rush, pojedynki kanałów i najaktywniejsi widzowie czatów na Twitchu, które grają w szachy.",
+      "live": "Śledź partię z Chess.com na żywo i odtwarzaj ją ruch po ruchu na szachownicy Phantom.",
+      "tournament": "Śledź turnieje szachowe Chess.com na żywo, partia po partii, i odtwarzaj je na szachownicy Phantom."
+    }
   }
 }

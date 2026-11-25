@@ -34,7 +34,7 @@ const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 const RUSH_MODES = ['0', '30', '60', '120'];
 const modeLabel = (k) => (k === '0' ? t('modeUnlimited') : k === '60' ? '1 min' : k === '120' ? '2 min' : '30 s');
 const currentChannel = () => {
-    const q = (location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search).split('?')[1] || '';
+    const q = (location.hash.startsWith('#/') ? location.hash : '#' + appPath() + location.search).split('?')[1] || '';
     const c = new URLSearchParams(q).get('c');
     return c && /^[a-z0-9_]{1,25}$/i.test(c) ? c.toLowerCase() : null;
 };

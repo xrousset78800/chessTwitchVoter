@@ -32,7 +32,9 @@ function mergeDeep(base, over) {
 
 class I18n {
     constructor() {
-        const saved = localStorage.getItem('lang');
+        // Langue de l'adresse (/en/...), fixee par le script en tete de index.html
+        let saved = window.CG_LANG;
+        try { saved = saved || localStorage.getItem('lang'); } catch {}
         this.currentLang = LANGS.some(l => l.code === saved) ? saved : 'fr';
         this.langs = LANGS;
         this.translations = {};
@@ -72,6 +74,8 @@ class I18n {
     async setLanguage(lang) {
         if (lang === this.currentLang) return;
         await this.loadLanguage(lang);
+        window.setUrlLang?.(this.currentLang);
+        if (window.langUrl) document.querySelectorAll('[data-navigate]').forEach(el => el.setAttribute('href', langUrl(el.dataset.navigate)));
         this.updateDOM();
         window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
     }

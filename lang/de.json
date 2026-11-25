@@ -861,5 +861,19 @@
       "camMissing": "Kamera nicht gefunden",
       "camNoSupport": "Kamera: Nutze Chrome oder Edge zum Streamen"
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Schach, gespielt von deinem Twitch-Chat",
+    "desc": {
+      "home": "Dein Twitch-Chat stimmt über die Züge ab und spielt Schach: 24/7-Station, Puzzle Rush, Partien gegen Stockfish, Kanal-Duelle und ein verbundenes Phantom-Brett. Kostenlos im Browser.",
+      "rush": "Puzzle Rush für Twitch: Dein Chat löst per Abstimmung immer schwerere Schachaufgaben. Drei Fehler und der Run ist vorbei. Schlag den Rekord deines Kanals!",
+      "mono": "Mono-Modus: Deine Twitch-Zuschauer melden sich mit join an und spielen gemeinsam eine Schachpartie, Zug um Zug.",
+      "multi": "Multi-Modus: Zwei Twitch-Kanäle treten im Schach gegeneinander an, jeder Chat spielt eine Farbe und stimmt über seine Züge ab.",
+      "sandbox": "Freie Partie: Stell die Schachpartie deines Twitch-Chats ein (Demokratie, Chaos-Rad, gegen Stockfish, Aufgaben…) und starte sie mit einem Klick.",
+      "browse": "Schachpartien, die gerade von Twitch-Chats gespielt werden: live zuschauen oder einer Partie beitreten.",
+      "records": "Puzzle-Rush-Rekorde, Kanal-Duelle und die aktivsten Zuschauer der Twitch-Chats, die Schach spielen.",
+      "live": "Verfolge eine Chess.com-Partie live und spiele sie Zug um Zug auf deinem Phantom-Brett nach.",
+      "tournament": "Verfolge Chess.com-Schachturniere live, Partie für Partie, und spiele sie auf deinem Phantom-Brett nach."
+    }
   }
 }

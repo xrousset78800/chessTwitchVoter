@@ -861,5 +861,19 @@
       "camMissing": "Videocamera non trovata",
       "camNoSupport": "Videocamera: usa Chrome o Edge per trasmettere"
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Scacchi giocati dalla tua chat di Twitch",
+    "desc": {
+      "home": "La tua chat di Twitch vota le mosse e gioca a scacchi: stazione 24/7, Puzzle Rush, partite contro Stockfish, sfide tra canali e scacchiera Phantom collegata. Gratis, nel browser.",
+      "rush": "Puzzle Rush per Twitch: la tua chat risolve problemi di scacchi sempre più difficili votando. Tre errori e la run finisce. Batti il record del tuo canale!",
+      "mono": "Modalità Mono: gli spettatori della tua chat di Twitch si iscrivono scrivendo join e giocano insieme una partita a scacchi, mossa dopo mossa.",
+      "multi": "Modalità Multi: due canali Twitch si sfidano a scacchi, ogni chat gioca un colore e vota le sue mosse.",
+      "sandbox": "Partita libera: configura la partita a scacchi della tua chat di Twitch (democrazia, ruota del caos, contro Stockfish, problemi…) e avviala con un clic.",
+      "browse": "Le partite a scacchi giocate in questo momento dalle chat di Twitch: guardale in diretta o unisciti a una partita.",
+      "records": "Record di Puzzle Rush, sfide tra canali e spettatori più attivi delle chat di Twitch che giocano a scacchi.",
+      "live": "Segui una partita di Chess.com in diretta e rigiocala mossa dopo mossa sulla tua scacchiera Phantom.",
+      "tournament": "Segui i tornei di scacchi di Chess.com in diretta, partita per partita, e rigiocali sulla tua scacchiera Phantom."
+    }
   }
 }

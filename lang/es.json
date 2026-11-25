@@ -861,5 +861,19 @@
       "camMissing": "Cámara no encontrada",
       "camNoSupport": "Cámara: usa Chrome o Edge para emitir"
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Ajedrez jugado por tu chat de Twitch",
+    "desc": {
+      "home": "Tu chat de Twitch vota las jugadas y juega al ajedrez: estación 24/7, Puzzle Rush, partidas contra Stockfish, duelos entre canales y tablero Phantom conectado. Gratis, en el navegador.",
+      "rush": "Puzzle Rush para Twitch: tu chat resuelve problemas de ajedrez cada vez más difíciles votando. Tres errores y se acaba. ¡Bate el récord de tu canal!",
+      "mono": "Modo Mono: los espectadores de tu chat de Twitch se inscriben escribiendo join y juegan juntos una partida de ajedrez, jugada a jugada.",
+      "multi": "Modo Multi: dos canales de Twitch se enfrentan al ajedrez; cada chat juega con un color y vota sus jugadas.",
+      "sandbox": "Partida libre: configura la partida de ajedrez de tu chat de Twitch (democracia, ruleta del caos, contra Stockfish, problemas…) y lánzala con un clic.",
+      "browse": "Las partidas de ajedrez que juegan ahora mismo los chats de Twitch: míralas en directo o únete a una.",
+      "records": "Récords de Puzzle Rush, batallas entre canales y espectadores más activos de los chats de Twitch que juegan al ajedrez.",
+      "live": "Sigue una partida de Chess.com en directo y reprodúcela jugada a jugada en tu tablero Phantom.",
+      "tournament": "Sigue los torneos de ajedrez de Chess.com en directo, partida a partida, y reprodúcelos en tu tablero Phantom."
+    }
   }
 }

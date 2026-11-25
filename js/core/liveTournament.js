@@ -1073,8 +1073,8 @@ function updateUrlT() {
     if (g) p.set('game', gameKey(g));
     const url = '/tournament' + (p.toString() ? `?${p}` : '');
     setNavUrl('/tournament', url);
-    if (!location.pathname.startsWith('/tournament')) return;
-    if (location.pathname + location.search !== url) history.replaceState(history.state, '', url);
+    if (!appPath().startsWith('/tournament')) return;
+    if (appPath() + location.search !== url) history.replaceState(history.state, '', url);
 }
 
 /** Le lien du menu garde l'adresse de la partie : en revenant sur l'onglet (ou en le rouvrant), on la retrouve */
@@ -1285,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Auto-load depuis /tournament?event=slug (ou l'ancien #/tournament?event=slug)
-    const hash = (location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search);
+    const hash = (location.hash.startsWith('#/') ? location.hash : '#' + appPath() + location.search);
     const hashParams = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
     const eventSlug = hashParams.get('event');
     if (eventSlug) {

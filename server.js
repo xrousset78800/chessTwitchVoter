@@ -36,29 +36,19 @@ const newPublicId = () => crypto.randomBytes(6).toString('hex');
 const BUILD = Date.now().toString(36);
 const INDEX_HTML = require('fs').readFileSync(path.join(__dirname, 'index.html'), 'utf8')
     .replace(/((?:href|src)="\/?(?:css|js)\/[^"?]+\.(?:css|js))"/g, `$1?v=${BUILD}"`);
-const sendIndex = (req, res) => res.set('Cache-Control', 'no-cache').type('html').send(INDEX_HTML);
-app.get(['/', '/index.html'], sendIndex);
 
-// Servir les fichiers statiques (HTML, CSS, JS) : toujours revalidés auprès du serveur
-const noCache = { setHeaders: res => res.set('Cache-Control', 'no-cache') };
-app.use(express.static(path.join(__dirname), noCache));
-app.use('/js', express.static(path.join(__dirname, 'js'), noCache));
-app.use('/css', express.static(path.join(__dirname, 'css'), noCache));
-app.use('/mp3', express.static(path.join(__dirname, 'mp3')));
-
-// Route principale
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Route pour le setup multiplayer
-app.get('/multiplayer', (req, res) => {
-    res.sendFile(path.join(__dirname, 'multiplayer-setup.html'));
-});
-
-// Adresses propres de l'appli (/24h, /records?c=x, /multi/hote/code…) : même page, le routeur côté client prend le relais
+// Adresses propres de l'appli (/24h, /records?c=x, /multi/hote/code…) : même page, le routeur côté client prend le relais.
+// Chaque langue a ses adresses (/en/rush, /de/records…) et reçoit la page déjà traduite (seo.js), avec robots.txt et sitemap.xml.
 const APP_ROUTES = /^\/(24h|sandbox|game|browse|records|watch|live|tournament|rush|mono|multi)(\/|$)/;
-app.get(APP_ROUTES, sendIndex);
+require('./seo')({ app, rootDir: __dirname, indexHtml: INDEX_HTML, appRoutes: APP_ROUTES });
+
+// Fichiers publics seulement : jamais le code serveur, package.json ni les données (data/)
+const noCache = { setHeaders: res => res.set('Cache-Control', 'no-cache') };
+for (const dir of ['js', 'css', 'lang', 'img', 'vendor']) app.use('/' + dir, express.static(path.join(__dirname, dir), noCache));
+app.use('/mp3', express.static(path.join(__dirname, 'mp3')));
+for (const page of ['phantomLive.html', 'phantom_debug.html', 'sandbox-legacy.html']) {
+    app.get('/' + page, (req, res) => res.set('Cache-Control', 'no-cache').sendFile(path.join(__dirname, page)));
+}
 
 app.get('/proxy/chess/:gameId', async (req, res) => {
     try {

@@ -897,5 +897,19 @@
       "chatVsChat": "Deux chaînes Twitch s'affrontent : le chat de la première joue les Blancs, celui de la seconde les Noirs.",
       "vsBot": "Le chat vote ses coups face à Stockfish, de 300 à 2400+ Elo. Choisis le niveau et le camp du chat."
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Les échecs joués par ton chat Twitch",
+    "desc": {
+      "home": "Ton chat Twitch vote les coups et joue aux échecs : station 24/24, Puzzle Rush, parties contre Stockfish, duels entre chaînes et échiquier Phantom connecté. Gratuit, dans le navigateur.",
+      "rush": "Puzzle Rush pour Twitch : ton chat résout des problèmes d'échecs de plus en plus durs en votant. Trois erreurs et le run s'arrête. Bats le record de ta chaîne !",
+      "mono": "Mode Mono : les viewers de ton chat Twitch s'inscrivent en tapant join et jouent une partie d'échecs ensemble, coup par coup.",
+      "multi": "Mode Multi : deux chaînes Twitch s'affrontent aux échecs, chaque chat joue une couleur et vote ses coups.",
+      "sandbox": "Partie libre : configure la partie d'échecs de ton chat Twitch (démocratie, roue du chaos, contre Stockfish, problèmes…) et lance-la en un clic.",
+      "browse": "Les parties d'échecs jouées en ce moment par des chats Twitch : regarde-les en direct ou rejoins une partie.",
+      "records": "Records Puzzle Rush, batailles entre chaînes et viewers les plus actifs des chats Twitch qui jouent aux échecs.",
+      "live": "Suis une partie Chess.com en direct et rejoue-la coup par coup sur ton échiquier Phantom.",
+      "tournament": "Suis les tournois d'échecs Chess.com en direct, partie par partie, et rejoue-les sur ton échiquier Phantom."
+    }
   }
 }

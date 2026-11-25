@@ -861,5 +861,19 @@
       "camMissing": "Kamera bulunamadı",
       "camNoSupport": "Kamera: yayın için Chrome veya Edge kullan"
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Twitch sohbetinin oynadığı satranç",
+    "desc": {
+      "home": "Twitch sohbetin hamlelere oy verir ve satranç oynar: 7/24 istasyon, Puzzle Rush, Stockfish'e karşı oyunlar, kanal düelloları ve bağlı Phantom tahtası. Ücretsiz, tarayıcıda.",
+      "rush": "Twitch için Puzzle Rush: sohbetin oy vererek giderek zorlaşan satranç bulmacalarını çözer. Üç hata ve seri biter. Kanalının rekorunu kır!",
+      "mono": "Mono modu: Twitch izleyicilerin join yazarak katılır ve birlikte hamle hamle bir satranç oyunu oynar.",
+      "multi": "Multi modu: iki Twitch kanalı satrançta karşı karşıya gelir, her sohbet bir rengi oynar ve hamlelerine oy verir.",
+      "sandbox": "Serbest oyun: Twitch sohbetinin satranç oyununu ayarla (demokrasi, kaos çarkı, Stockfish'e karşı, bulmacalar…) ve tek tıkla başlat.",
+      "browse": "Şu anda Twitch sohbetlerinin oynadığı satranç oyunları: canlı izle ya da bir oyuna katıl.",
+      "records": "Puzzle Rush rekorları, kanal düelloları ve satranç oynayan Twitch sohbetlerinin en aktif izleyicileri.",
+      "live": "Bir Chess.com oyununu canlı takip et ve Phantom tahtanda hamle hamle yeniden oynat.",
+      "tournament": "Chess.com satranç turnuvalarını oyun oyun canlı takip et ve Phantom tahtanda yeniden oynat."
+    }
   }
 }

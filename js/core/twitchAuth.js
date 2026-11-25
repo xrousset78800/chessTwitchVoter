@@ -95,7 +95,7 @@ class TwitchAuth {
         let forceVerify = !!opts.forceVerify;
         try {
             sessionStorage.setItem(STATE_KEY, state);
-            sessionStorage.setItem(RETURN_KEY, (location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search));
+            sessionStorage.setItem(RETURN_KEY, (location.hash.startsWith('#/') ? location.hash : '#' + appPath() + location.search));
             if (localStorage.getItem(SWITCH_KEY)) {
                 forceVerify = true;
                 localStorage.removeItem(SWITCH_KEY);

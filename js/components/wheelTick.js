@@ -17,7 +17,7 @@ function wake() {
 
 /** Volume : celui du 24/24 sur cette page (muet compris), plein ailleurs */
 function volume() {
-    if (!location.pathname.startsWith('/24h')) return 1;
+    if (!appPath().startsWith('/24h')) return 1;
     try {
         if (localStorage.getItem('h24Muted') === '1') return 0;
         const v = parseFloat(localStorage.getItem('h24Volume'));

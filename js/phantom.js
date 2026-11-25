@@ -122,7 +122,7 @@ class PhantomChessboard {
      */
     syncCurrentPosition() {
         // La page affichée (Tournoi, Live) peut suivre sa propre partie : c'est elle qui fait foi
-        const route = ((location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search).split('/')[1] || '').split('?')[0];
+        const route = ((location.hash.startsWith('#/') ? location.hash : '#' + appPath() + location.search).split('/')[1] || '').split('?')[0];
         const provided = window.phantomPositionProviders?.[route]?.();
         if (typeof provided === 'function') {
             // La page gère elle-même la mise en place (ex. Tournoi : choix position actuelle / rejouer)

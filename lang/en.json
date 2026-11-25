@@ -897,5 +897,19 @@
       "chatVsChat": "Two Twitch channels face off: the first one's chat plays White, the second one's plays Black.",
       "vsBot": "The chat votes its moves against Stockfish, from 300 to 2400+ Elo. Pick the level and the chat's side."
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Chess played by your Twitch chat",
+    "desc": {
+      "home": "Your Twitch chat votes on moves and plays chess: 24/7 station, Puzzle Rush, games against Stockfish, channel duels and a connected Phantom board. Free, in your browser.",
+      "rush": "Puzzle Rush for Twitch: your chat solves harder and harder chess puzzles by voting. Three mistakes and the run is over. Beat your channel's record!",
+      "mono": "Mono mode: your Twitch viewers sign up by typing join and play a chess game together, move by move.",
+      "multi": "Multi mode: two Twitch channels face off at chess, each chat plays one color and votes on its moves.",
+      "sandbox": "Free game: set up your Twitch chat's chess game (democracy, chaos wheel, against Stockfish, puzzles…) and start it in one click.",
+      "browse": "Chess games being played right now by Twitch chats: watch them live or join a game.",
+      "records": "Puzzle Rush records, channel battles and the most active viewers of the Twitch chats that play chess.",
+      "live": "Follow a Chess.com game live and replay it move by move on your Phantom board.",
+      "tournament": "Follow Chess.com chess tournaments live, game by game, and replay them on your Phantom board."
+    }
   }
 }

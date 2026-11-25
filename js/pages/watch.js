@@ -40,7 +40,7 @@ const WatchPage = {
 
     init() {
         this.bind();
-        const query = ((location.hash.startsWith('#/') ? location.hash : '#' + location.pathname + location.search).split('?')[1]) || '';
+        const query = ((location.hash.startsWith('#/') ? location.hash : '#' + appPath() + location.search).split('?')[1]) || '';
         const id = new URLSearchParams(query).get('g') || '';
         if (id === this.id && this.socket) return;
         this.stop();

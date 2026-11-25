@@ -361,7 +361,7 @@ const Router = {
         });
 
         document.querySelectorAll('[data-navigate]').forEach(el => {
-            el.setAttribute('href', el.dataset.navigate);
+            el.setAttribute('href', langUrl(el.dataset.navigate));
             el.addEventListener('click', (e) => {
                 if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
                 e.preventDefault();

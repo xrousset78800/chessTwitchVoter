@@ -861,5 +861,19 @@
       "camMissing": "Camera niet gevonden",
       "camNoSupport": "Camera: gebruik Chrome of Edge om te streamen"
     }
+  },
+  "seo": {
+    "title": "Crowd Gambit — Schaken gespeeld door je Twitch-chat",
+    "desc": {
+      "home": "Je Twitch-chat stemt op de zetten en speelt schaak: 24/7-station, Puzzle Rush, partijen tegen Stockfish, duels tussen kanalen en een verbonden Phantom-bord. Gratis, in je browser.",
+      "rush": "Puzzle Rush voor Twitch: je chat lost steeds moeilijkere schaakpuzzels op door te stemmen. Drie fouten en de run is voorbij. Verbreek het record van je kanaal!",
+      "mono": "Mono-modus: je Twitch-kijkers schrijven zich in door join te typen en spelen samen een schaakpartij, zet voor zet.",
+      "multi": "Multi-modus: twee Twitch-kanalen nemen het tegen elkaar op met schaak, elke chat speelt één kleur en stemt op zijn zetten.",
+      "sandbox": "Vrije partij: stel de schaakpartij van je Twitch-chat in (democratie, chaoswiel, tegen Stockfish, puzzels…) en start met één klik.",
+      "browse": "Schaakpartijen die nu door Twitch-chats worden gespeeld: kijk live mee of doe mee aan een partij.",
+      "records": "Puzzle Rush-records, duels tussen kanalen en de actiefste kijkers van de Twitch-chats die schaken.",
+      "live": "Volg een Chess.com-partij live en speel die zet voor zet na op je Phantom-bord.",
+      "tournament": "Volg Chess.com-schaaktoernooien live, partij voor partij, en speel ze na op je Phantom-bord."
+    }
   }
 }

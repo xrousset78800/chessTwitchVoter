@@ -7,7 +7,7 @@
 /** Route courante sous la forme « #/chemin?query » */
 export function routeHash() {
     if (location.hash.startsWith('#/')) return location.hash;
-    return '#' + (location.pathname || '/') + location.search;
+    return '#' + appPath() + location.search;
 }
 
 /** « #/records?c=x » ou « /records?c=x » → « /records?c=x » */
@@ -19,7 +19,7 @@ export function toUrl(route) {
 /** Va sur une route (nouvelle entrée d'historique, ou remplacement) et prévient le routeur */
 export function go(route, { replace = false } = {}) {
     const url = toUrl(route);
-    if (url !== location.pathname + location.search || location.hash) {
+    if (url !== appPath() + location.search || location.hash) {
         history[replace ? 'replaceState' : 'pushState'](null, '', url);
     }
     window.dispatchEvent(new Event('routechange'));

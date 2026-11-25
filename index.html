@@ -4,6 +4,43 @@
     <!-- Adresses propres (/records, /multi/hote…) : les fichiers restent servis depuis la racine -->
     <base href="/">
     <meta charset="UTF-8">
+    <!-- Langue dans l'adresse (/en/rush, /de/records… ; le français sans préfixe) : le code de l'appli lit appPath()
+         (chemin sans préfixe) et ses changements d'adresse reçoivent le préfixe de la langue en cours -->
+    <script>
+    (function () {
+        var LANGS = ['en', 'es', 'de', 'it', 'pt', 'nl', 'pl', 'tr', 'ru'];
+        var m = location.pathname.match(/^\/([a-z]{2})(?=\/|$)/);
+        var fromUrl = m && LANGS.indexOf(m[1]) >= 0 ? m[1] : null;
+        var saved = null;
+        try { saved = localStorage.getItem('lang'); } catch (e) {}
+        // Langue de l'adresse, sinon (adresse sans préfixe) la dernière langue choisie
+        var lang = fromUrl || (LANGS.indexOf(saved) >= 0 ? saved : 'fr');
+        try { localStorage.setItem('lang', lang); } catch (e) {}
+        var prefix = lang === 'fr' ? '' : '/' + lang;
+        var push = history.pushState, replace = history.replaceState;
+        window.CG_LANG = lang;
+        window.appPath = function () {
+            var p = location.pathname;
+            if (fromUrl && (p === '/' + fromUrl || p.indexOf('/' + fromUrl + '/') === 0)) p = p.slice(fromUrl.length + 1);
+            return p || '/';
+        };
+        window.langUrl = function (url) {
+            url = String(url == null ? '' : url);
+            return prefix && url.charAt(0) === '/' && url.charAt(1) !== '/' ? prefix + url : url;
+        };
+        history.pushState = function (s, t, url) { return push.call(history, s, t, url == null ? url : window.langUrl(url)); };
+        history.replaceState = function (s, t, url) { return replace.call(history, s, t, url == null ? url : window.langUrl(url)); };
+        // Changement de langue : même page, nouvelle adresse
+        window.setUrlLang = function (code) {
+            var path = window.appPath() + location.search + location.hash;
+            lang = code; fromUrl = code === 'fr' ? null : code; prefix = fromUrl ? '/' + code : '';
+            window.CG_LANG = code;
+            replace.call(history, history.state, '', prefix + path);
+        };
+        if (!fromUrl && prefix) replace.call(history, history.state, '', prefix + location.pathname + location.search + location.hash);
+        if (!fromUrl && prefix) fromUrl = lang;
+    })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crowd Gambit</title>
     <!-- Fond choisi par le viewer (Paramètres du 24/24), appliqué avant l'affichage -->
@@ -168,7 +205,7 @@
                             <div class="sandbox-setup__col">
                             <!-- Mode selector (Personnaliser) : les tuiles et la description du mode choisi -->
                             <div class="panel launch-only">
-                                <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
+                                <div class="panel__header"><i class="fas fa-gamepad"></i> <span data-i18n="gameMode.title">Mode de jeu</span></div>
                                 <div class="panel__content">
                                     <div class="mode-selector">
                                         <div class="mode-option is-active" data-mode="sandbox">
@@ -340,7 +377,7 @@
                             </div>
                             <!-- Voting options -->
                             <div class="panel config-only">
-                                <div class="panel__header" data-i18n="gameMode.voteOptions.title"><i class="fas fa-vote-yea"></i> Système de vote</div>
+                                <div class="panel__header"><i class="fas fa-vote-yea"></i> <span data-i18n="gameMode.voteOptions.title">Système de vote</span></div>
                                 <div class="panel__content vote-options">
                                     <div class="vote-options__grid">
                                         <div class="form-row">
@@ -576,7 +613,7 @@
                             </div>
                         </div>
                         <div class="panel">
-                            <div class="panel__header" data-i18n="game.history.title"><i class="fas fa-history"></i> Historique</div>
+                            <div class="panel__header"><i class="fas fa-history"></i> <span data-i18n="game.history.title">Historique</span></div>
                             <div class="panel__content">
                                 <div class="history-list" id="history-list">
                                 </div>

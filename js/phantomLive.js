@@ -276,8 +276,8 @@ function updateUrlL(id) {
     // Le lien du menu garde l'adresse de la partie suivie
     const link = document.querySelector('.nav__link[data-navigate^="/live"]');
     if (link) { link.dataset.navigate = url; link.setAttribute('href', url); }
-    if (!location.pathname.startsWith('/live')) return;
-    if (location.pathname + location.search !== url) history.replaceState(history.state, '', url);
+    if (!appPath().startsWith('/live')) return;
+    if (appPath() + location.search !== url) history.replaceState(history.state, '', url);
 }
 
 // ── Mettre à jour l'UI ──
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBarsL();
     // Ouvert depuis /live?game=… : on reprend directement le suivi
     const params = new URLSearchParams(location.search);
-    const id = location.pathname.startsWith('/live') && params.get('game');
+    const id = appPath().startsWith('/live') && params.get('game');
     if (id) {
         document.getElementById('gameInput').value = id;
         const daily = document.getElementById('isDailyGame');
