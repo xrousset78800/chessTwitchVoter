@@ -46,6 +46,10 @@
     animation: h24-guide 2.6s ease-in-out infinite;
 }
 #page-h24 #h24-hint:empty { display: none; }
+#page-h24 #h24-hint .h24-guide__piece { display: inline-block; width: 26px; height: 26px; margin: -6px 4px -6px 0; vertical-align: middle; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); }
+#page-h24 #h24-hint .h24-guide__san { font-size: 1.15em; color: #fff; }
+#page-h24 #h24-hint .h24-guide__pct { color: var(--accent); }
+#page-h24 #h24-hint .h24-guide__voter { font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; font-size: 0.85em; color: var(--text-secondary); }
 /* Grand écran avec souris : dans la bande du menu (transparent tant qu'on ne le survole pas) */
 @media (hover: hover) and (min-width: 1101px) {
     #page-h24 .sandbox__main > #h24-hint {

@@ -305,35 +305,23 @@ const H24Page = {
         this.applyFolds();
     },
 
-    /** Coup retenu (majorité, ou tiré au sort une fois la roue arrêtée), en attente d'être joué : carte en bas de l'historique */
-    renderNextMove(g) {
-        const sc = $('h24-history')?.closest('.panel__content');
-        if (!sc) return;
-        let next = null;
-        if (g && !g.result && g.draw && !this.revealing) {
+    /** Coup retenu (majorité, ou tiré au sort une fois la roue arrêtée), en attente d'être joué */
+    nextMoveOf(g) {
+        if (!g || g.result) return null;
+        if (g.draw && !this.revealing && g.draw.winner) {
             const votes = g.draw.votes || [];
             const total = votes.reduce((a, v) => a + (v.n || 0), 0);
             const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
-            next = { san: g.draw.winner, pct: g.draw.random || !total ? null : g.draw.pct ?? Math.round(n * 100 / total), random: !!g.draw.random || !total, voter: g.draw.voter, via: g.draw.via };
-        } else if (g && !g.result && g.chosen) {
-            next = { san: g.chosen.move, pct: g.chosen.pct ?? null, voter: g.chosen.voter, via: g.chosen.via };
+            return { san: g.draw.winner, pct: g.draw.random || !total ? null : g.draw.pct ?? Math.round(n * 100 / total), random: !!g.draw.random || !total, voter: g.draw.voter, via: g.draw.via };
         }
-        let card = sc.querySelector('.h24-next');
-        const ply = (g?.history || []).length;
-        if (!next?.san) { card?.remove(); return; }
-        const key = `${ply}:${next.san}`;
-        if (card?.dataset.key === key) return;
-        const piece = pieceOf(next.san);
-        const color = g.turn === 'b' ? 'b' : 'w';
-        if (!card) { card = document.createElement('div'); card.className = 'h24-next'; sc.appendChild(card); }
-        card.dataset.key = key;
-        card.dataset.ply = String(ply);
-        const score = next.random ? `<span class="h24-next__pct">🎲</span>` : next.pct != null ? `<span class="h24-next__pct">${next.pct}%</span>` : '';
-        card.innerHTML = `${piece ? `<img class="h24-next__piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece}.png" alt="">` : ''}
-            <span class="h24-next__body"><span class="h24-next__label">${esc(t('h24.nextMove', null, 'Coup retenu'))}</span>
-            <span class="h24-next__line"><span class="h24-next__san">${esc(fmtMove(next.san))}</span>${score}${next.voter ? `<span class="h24-next__voter">@${esc(next.voter)}${next.via ? ` <span class="h24-next__via">${esc(next.via.startsWith('#') ? next.via : '#' + next.via)}</span>` : ''}</span>` : ''}</span></span>`;
-        card.classList.remove('is-in'); void card.offsetWidth; card.classList.add('is-in');
-        this.historyToBottom();
+        if (g.chosen?.move) return { san: g.chosen.move, pct: g.chosen.pct ?? null, voter: g.chosen.voter, via: g.chosen.via };
+        return null;
+    },
+
+    /** Le coup retenu s'affiche dans le guide en haut (plus de carte en bas de l'historique) */
+    renderNextMove() {
+        $('h24-history')?.closest('.panel__content')?.querySelector('.h24-next')?.remove();
+        this.renderGuide();
     },
 
     /** Fondu enchaîné : la carte du coup retenu rejoint sa case dans l'historique */
@@ -928,14 +916,21 @@ const H24Page = {
         const last = hist.length ? t('h24.flowLast', { move: fmtMove(hist[hist.length - 1]) }, `Dernier coup : ${hist[hist.length - 1]}`) : '';
         const mine = this.myTurn();
         const side = t(g.turn === 'w' ? 'h24.sideW' : 'h24.sideB');
-        let msg;
+        let msg, html = '';
+        const next = !s.paused && this.nextMoveOf(g);
         if (s.paused) msg = s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause');
         else if (g.result) msg = this.resultInfo(g.result)?.title || last;
-        else if (g.draw || g.chosen) {
-            const move = g.draw?.winner || g.chosen?.move;
-            msg = g.draw && (this.revealing || !move) ? t('h24.flowDrawing', null, 'Tirage au sort…')
-                : t('h24.flowChosen', { move: fmtMove(move) }, `Coup retenu : ${move}`);
-        } else if (g.settle) {
+        else if (next) {
+            // Coup retenu : pièce, coup, score (ou dé si tiré au hasard) et votant
+            const piece = pieceOf(next.san);
+            const score = next.random ? '🎲' : next.pct != null ? `${next.pct}%` : '';
+            msg = t('h24.flowChosen', { move: fmtMove(next.san) }, `Coup retenu : ${next.san}`);
+            html = `${piece ? `<img class="h24-guide__piece" src="https://chessboardjs.com/img/chesspieces/wikipedia/${g.turn === 'b' ? 'b' : 'w'}${piece}.png" alt="">` : ''}`
+                + `${esc(t('h24.nextMove', null, 'Coup retenu'))} <b class="h24-guide__san">${esc(fmtMove(next.san))}</b>`
+                + `${score ? ` <span class="h24-guide__pct">${score}</span>` : ''}`
+                + `${next.voter ? ` <span class="h24-guide__voter">@${esc(next.voter)}${next.via ? ' ' + esc(next.via.startsWith('#') ? next.via : '#' + next.via) : ''}</span>` : ''}`;
+        } else if (g.draw) msg = t('h24.flowDrawing', null, 'Tirage au sort…');
+        else if (g.settle) {
             const n = Math.max(1, this.remaining(s.endsAt) ?? 1);
             msg = [last, t('h24.flowNextIn', { n }, `Vote dans ${n} s`)].filter(Boolean).join(' · ');
         } else if (s.vs?.thinking) msg = t('h24.botThinking', null, 'Stockfish réfléchit…');
@@ -953,7 +948,9 @@ const H24Page = {
         else if (mine) msg = t('h24.clickToVote', null, 'Clique un coup ou déplace une pièce');
         else if (s.mode === 'teams') msg = t('h24.flowVoteOf', { side }, g.turn === 'w' ? 'Vote des Blancs' : 'Vote des Noirs');
         else msg = last;
-        this.setGuide(hint, msg, mine && !s.paused && !g.draw && !g.chosen);
+        // Chat Twitch relié : les viewers votent aussi
+        if (this.me.chat && mine && !s.paused && !g.draw && !g.chosen) msg += ' · ' + t('h24.guideViewersMove', null, 'tes viewers votent aussi dans ton chat (ex. e4)');
+        this.setGuide(hint, msg, mine && !s.paused && !g.draw && !g.chosen, html);
     },
 
     /** Entre deux parties : vote du mode et des options, inscription, récap → [message, à toi d'agir] */
@@ -964,16 +961,17 @@ const H24Page = {
         if (s.paused) return [s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'), false];
         if ((s.phase === 'voteMode' || s.phase === 'voteOptions') && b) {
             if (b.winner != null) return [t('h24.guideDecided', { choice: choiceLabel(b.id, b.winner) }, `Choix retenu : ${choiceLabel(b.id, b.winner)}`), false];
-            if (this.me.ballot != null) return [t('h24.yourVote', { move: choiceLabel(b.id, this.me.ballot) }, `Ton vote : ${choiceLabel(b.id, this.me.ballot)}`), false];
-            if (this.me.chat) return [t('h24.chatVote', { nums: numList(b.choices.length) }, `Dans le chat Twitch : tape ${numList(b.choices.length)}`), true];
-            if (this.me.login) return [t('h24.guideClickOption', null, 'Clique une option pour voter'), true];
+            const nums = numList(b.choices.length);
+            const viewers = this.me.chat ? ' · ' + t('h24.guideViewersVote', { nums }, `tes viewers tapent ${nums} dans ton chat`) : '';
+            if (this.me.ballot != null) return [t('h24.yourVote', { move: choiceLabel(b.id, this.me.ballot) }, `Ton vote : ${choiceLabel(b.id, this.me.ballot)}`) + viewers, false];
+            if (this.me.login) return [t('h24.guideClickOption', null, 'Clique une option pour voter') + viewers, true];
             return [t('h24.guideLoginVote', null, 'Connecte-toi avec Twitch pour voter'), false];
         }
         if (s.phase === 'signup') {
             const start = n ? ' · ' + t('h24.guideStartIn', { n }, `Départ dans ${n} s`) : '';
-            if (this.me.team) return [t('h24.registered', null, 'Tu es inscrit !') + start, false];
-            if (this.me.chat) return [t('h24.chatJoin', null, 'Dans le chat Twitch : tape join') + start, true];
-            if (this.me.login) return [t('h24.guideJoin', null, 'Clique sur Rejoindre pour entrer dans la partie') + start, true];
+            const viewers = this.me.chat ? ' · ' + t('h24.guideViewersJoin', null, 'tes viewers tapent join dans ton chat') : '';
+            if (this.me.team) return [t('h24.registered', null, 'Tu es inscrit !') + viewers + start, false];
+            if (this.me.login) return [t('h24.guideJoin', null, 'Clique sur Rejoindre pour entrer dans la partie') + viewers + start, true];
             return [t('h24.watchOnly', null, 'Tu regardes. Connecte-toi pour jouer.') + start, false];
         }
         if (s.phase === 'recap') {
@@ -983,11 +981,14 @@ const H24Page = {
         return ['', false];
     },
 
-    setGuide(hint, msg, go) {
-        if (msg !== hint.textContent) {
-            hint.textContent = msg;
+    setGuide(hint, msg, go, html = '') {
+        const key = html || msg;
+        if (key !== this.guideKey) {
+            this.guideKey = key;
+            if (html) hint.innerHTML = html; else hint.textContent = msg;
+            hint.title = msg;
             // Nouvelle action : petit rebond pour attirer l'œil (pas à chaque seconde du décompte)
-            const kind = msg.replace(/\d+/g, '');
+            const kind = key.replace(/\d+/g, '');
             if (kind !== this.guideKind) {
                 this.guideKind = kind;
                 hint.classList.remove('is-new');
