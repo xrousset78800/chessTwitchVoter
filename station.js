@@ -374,6 +374,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             botList: botList(),
             vs: s.mode === 'bot' ? { side: s.vsSide, elo: s.options.elo, thinking: !!g?.engine && !g?.result } : null,
             next: s.ballotQueue.map(b => b.id),
+            // Réglages du mode en cours de vote : la jauge des étapes faites / restantes
+            plan: s.phase === 'voteOptions' && BALLOTS[s.mode] ? BALLOTS[s.mode].map(b => b.id) : null,
             recap: s.recap,
             game: g && {
                 fen: g.chess.fen(),
