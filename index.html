@@ -157,51 +157,7 @@
                                     <h3 class="setup-configs__title"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="suggested.title">Configurations suggérées</span></h3>
                                     <div id="presets-list" class="presets-list"></div>
                                 </div>
-                                <!-- Mode selector (Personnaliser) : les tuiles et la description du mode choisi -->
-                                <div class="panel launch-only">
-                                    <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
-                                    <div class="panel__content">
-                                        <div class="mode-selector">
-                                            <div class="mode-option is-active" data-mode="sandbox">
-                                                <span class="mode-option__icon">🎲</span>
-                                                <span class="mode-option__label">YOLO</span>
-                                            </div>
-                                            <div class="mode-option" data-mode="problems">
-                                                <span class="mode-option__icon">🧩</span>
-                                                <span class="mode-option__label" data-i18n="gameMode.problems.label">Problèmes</span>
-                                            </div>
-                                            <div class="mode-option" data-mode="rush" style="display:none;">
-                                                <span class="mode-option__icon">🔥</span>
-                                                <span class="mode-option__label">Puzzle Rush</span>
-                                            </div>
-                                            <div class="mode-option" data-mode="oneVsAll">
-                                                <span class="mode-option__icon">👤</span>
-                                                <span class="mode-option__label">1 vs All</span>
-                                            </div>
-                                            <div class="mode-option" data-mode="oneVsOne">
-                                                <span class="mode-option__icon">⚔️</span>
-                                                <span class="mode-option__label">1 vs 1</span>
-                                            </div>
-                                            <div class="mode-option" data-mode="chatVsChat">
-                                                <span class="mode-option__icon">🎭</span>
-                                                <span class="mode-option__label">Chat vs Chat</span>
-                                            </div>
-                                            <div class="mode-option" data-mode="vsBot">
-                                                <span class="mode-option__icon">🤖</span>
-                                                <span class="mode-option__label" data-i18n="gameMode.vsBot.label">Contre Stockfish</span>
-                                            </div>
-                                        </div>
-                                        <div class="mode-desc">
-                                        <p data-mode-desc="sandbox" data-i18n="newInfo.modes.sandbox">Tout le chat vote pour les deux camps, coup après coup. Le plus simple pour jouer avec ta communauté.</p>
-                                        <p data-mode-desc="problems" data-i18n="newInfo.modes.problems">Le chat résout des puzzles, sur les thèmes de ton choix, avec une pause entre chaque puzzle.</p>
-                                        <p data-mode-desc="oneVsAll" data-i18n="newInfo.modes.oneVsAll">Un joueur seul, désigné par son pseudo Twitch, affronte tout le reste du chat.</p>
-                                        <p data-mode-desc="oneVsOne" data-i18n="newInfo.modes.oneVsOne">Deux joueurs désignés par leur pseudo Twitch s'affrontent pendant que le chat regarde.</p>
-                                        <p data-mode-desc="chatVsChat" data-i18n="newInfo.modes.chatVsChat">Deux chaînes Twitch s'affrontent : le chat de la première joue les Blancs, celui de la seconde les Noirs.</p>
-                                        <p data-mode-desc="vsBot" data-i18n="newInfo.modes.vsBot">Le chat vote ses coups face à Stockfish, de 300 à 2400+ Elo. Choisis le niveau et le camp du chat.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Configurations sauvegardées : simple liste sous les modes -->
+                                <!-- Configurations sauvegardées : simple liste sous les suggestions -->
                                 <div class="setup-configs">
                                     <h3 class="setup-configs__title"><i class="fas fa-folder"></i> <span data-i18n="game.configuration.title">Configurations</span></h3>
                                     <div id="configs-list">
@@ -210,6 +166,50 @@
                                 </div>
                             </div>
                             <div class="sandbox-setup__col">
+                            <!-- Mode selector (Personnaliser) : les tuiles et la description du mode choisi -->
+                            <div class="panel launch-only">
+                                <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
+                                <div class="panel__content">
+                                    <div class="mode-selector">
+                                        <div class="mode-option is-active" data-mode="sandbox">
+                                            <span class="mode-option__icon">🎲</span>
+                                            <span class="mode-option__label">YOLO</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="problems">
+                                            <span class="mode-option__icon">🧩</span>
+                                            <span class="mode-option__label" data-i18n="gameMode.problems.label">Problèmes</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="rush" style="display:none;">
+                                            <span class="mode-option__icon">🔥</span>
+                                            <span class="mode-option__label">Puzzle Rush</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="oneVsAll">
+                                            <span class="mode-option__icon">👤</span>
+                                            <span class="mode-option__label">1 vs All</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="oneVsOne">
+                                            <span class="mode-option__icon">⚔️</span>
+                                            <span class="mode-option__label">1 vs 1</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="chatVsChat">
+                                            <span class="mode-option__icon">🎭</span>
+                                            <span class="mode-option__label">Chat vs Chat</span>
+                                        </div>
+                                        <div class="mode-option" data-mode="vsBot">
+                                            <span class="mode-option__icon">🤖</span>
+                                            <span class="mode-option__label" data-i18n="gameMode.vsBot.label">Contre Stockfish</span>
+                                        </div>
+                                    </div>
+                                    <div class="mode-desc">
+                                    <p data-mode-desc="sandbox" data-i18n="newInfo.modes.sandbox">Tout le chat vote pour les deux camps, coup après coup. Le plus simple pour jouer avec ta communauté.</p>
+                                    <p data-mode-desc="problems" data-i18n="newInfo.modes.problems">Le chat résout des puzzles, sur les thèmes de ton choix, avec une pause entre chaque puzzle.</p>
+                                    <p data-mode-desc="oneVsAll" data-i18n="newInfo.modes.oneVsAll">Un joueur seul, désigné par son pseudo Twitch, affronte tout le reste du chat.</p>
+                                    <p data-mode-desc="oneVsOne" data-i18n="newInfo.modes.oneVsOne">Deux joueurs désignés par leur pseudo Twitch s'affrontent pendant que le chat regarde.</p>
+                                    <p data-mode-desc="chatVsChat" data-i18n="newInfo.modes.chatVsChat">Deux chaînes Twitch s'affrontent : le chat de la première joue les Blancs, celui de la seconde les Noirs.</p>
+                                    <p data-mode-desc="vsBot" data-i18n="newInfo.modes.vsBot">Le chat vote ses coups face à Stockfish, de 300 à 2400+ Elo. Choisis le niveau et le camp du chat.</p>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- Options du mode choisi (pseudos, niveau de Stockfish, thèmes…) ; caché quand le mode n'en a pas -->
                             <div class="panel launch-only setup-mode-opts">
                                 <div class="panel__header"><i class="fas fa-sliders-h"></i> <span data-i18n="newInfo.modeOptions">Options du mode</span></div>
