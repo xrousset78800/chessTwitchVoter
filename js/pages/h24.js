@@ -728,6 +728,10 @@ const H24Page = {
             ${p?.isConnected ? `<div class="h24-regie__row">
                 <span class="h24-regie__status"><i class="fas fa-tachometer-alt"></i> ${esc(t('setup.phantomSpeed', null, 'Vitesse'))}</span>
                 <div class="ph-speed" data-ph-speed role="group" aria-label="${esc(t('setup.phantomSpeed', null, 'Vitesse'))}">${[1, 2, 3, 4, 5].map(v => `<button type="button" data-speed="${v}"${v === p.currentSpeed ? ' class="is-active"' : ''}>${v}</button>`).join('')}</div>
+            </div>
+            <div class="h24-regie__row" title="${esc(t('setup.autoRecalTitle', null, 'Recalibre la mécanique tous les N coups joués par le Phantom (entre deux coups), pour éviter que les pièces se décalent peu à peu'))}">
+                <span class="h24-regie__status"><i class="fas fa-tools"></i> ${esc(t('setup.autoRecal', null, 'Recalibration auto (coups)'))}</span>
+                <select class="ph-autorecal" data-ph-autorecal aria-label="${esc(t('setup.autoRecal', null, 'Recalibration auto (coups)'))}">${[0, 20, 40, 60, 100].map(v => `<option value="${v}"${v === (p.autoRecalEvery || 0) ? ' selected' : ''}>${v ? v : esc(t('setup.autoRecalOff', null, 'Jamais'))}</option>`).join('')}</select>
             </div>` : ''}
             <form class="h24-regie__row h24-regie__channel" data-h24-regie-form>
                 <input type="text" id="h24-regie-channel" maxlength="60" autocomplete="off" placeholder="${esc(t('h24.regie.channelPh', null, 'Chaîne Twitch de la vue réelle'))}" value="${esc(this.regie.channel || shown || this.me.login || '')}">
