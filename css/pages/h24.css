@@ -204,21 +204,23 @@
 /* Plus de podium : la roue (style roue) ou le nombre de votes (style bande) tiennent sa place, sans bouger */
 /* Tirage au sort : roue ou bande en direct, sans podium ; majorité : podium, roue ou bande seulement en cas d'égalité */
 #h24-votes-panel.is-live #h24-votes { display: none; }
-#h24-votes-panel.votes-slot--wheel.is-live { min-height: calc(var(--dock-size) + 20px); }
+#h24-votes-panel.votes-slot--wheel.is-live { min-height: calc(var(--dock-size) + 56px); }
 /* Style roue : la place de la roue reste réservée (podium centré dedans), sans transition de hauteur :
    rien ne saute dans la colonne quand on passe du podium à la roue et inversement */
 #page-h24 #h24-votes-panel.votes-slot--wheel {
-    min-height: calc(var(--dock-size) + 20px); transition: none;
+    min-height: calc(var(--dock-size) + 56px); transition: none;
     display: flex; flex-direction: column; justify-content: center;
 }
 #h24-votes-panel.votes-slot--wheel.is-live .votes-slot__podium { visibility: hidden; }
 /* Pas de halo ni de flou autour de la roue : rien ne déborde sur la barre des votes ou les panneaux voisins */
 #page-h24 #h24-votes-panel { contain: paint; }
 #page-h24 #h24-wheel-area .wheel-canvas { box-shadow: 0 0 0 4px var(--border-subtle); }
-/* Roue qui tourne : anneau orange seul, sans lueur (elle était rognée en haut et en bas du panneau) */
+/* Halo de la roue : resserré pour tenir dans la marge du panneau (28 px en haut et en bas), jamais rogné */
 #page-h24 #h24-wheel-area .wheel-container.is-spinning .wheel-canvas { box-shadow: 0 0 0 4px var(--accent); }
 #page-h24 #h24-wheel-area .wheel-pointer { filter: none; }
-#page-h24 #h24-wheel-area .wheel-container { box-shadow: none; }
+#page-h24 #h24-wheel-area .wheel-container { box-shadow: 0 0 0 3px var(--accent), 0 0 20px rgba(255, 138, 61, 0.3); }
+#page-h24 #h24-wheel-area.is-spinning .wheel-container,
+#page-h24 #h24-wheel-area .wheel-container.is-spinning { box-shadow: 0 0 0 3px var(--accent), 0 0 24px rgba(255, 138, 61, 0.5); }
 #page-h24 #h24-wheel-area.is-spinning .wheel-band { box-shadow: none; }
 #page-h24 #h24-wheel-area .wheel-pointer::after, #page-h24 #h24-wheel-area .wheel-center { box-shadow: none; }
 .h24-bg-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35); vertical-align: -1px; }
