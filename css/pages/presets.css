@@ -378,19 +378,6 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .test-tools__bot button { border: 0; background: none; color: inherit; opacity: .6; cursor: pointer; padding: 0 4px; font-size: 0.85rem; line-height: 1; }
 .test-tools__bot button:hover { opacity: 1; color: #f87171; }
 
-/* Ecran Nouveau : bots de test dans le panneau des modes (meme contenu que le panneau flottant) */
-.setup-test-bots {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 12px;
-    padding: 10px 12px;
-    border: 1px dashed rgba(250, 204, 21, 0.6);
-    border-radius: 3px;
-    font-size: 0.8rem;
-}
-.setup-test-bots[hidden] { display: none; }
-
 /* Choix de niveau : (stockfish) = joue par Stockfish, (todo) = simule sous son plancher */
 .sf-tag { margin-left: 4px; font-size: 0.7em; font-weight: 600; white-space: nowrap; }
 .sf-tag--ok { color: #34d399; }

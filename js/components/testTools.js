@@ -1,6 +1,6 @@
 /**
  * Bots Stockfish : faux viewers qui votent dans la partie.
- * - Tous les streamers (une chaîne choisie) : écran Nouveau, partie, problèmes, Mono.
+ * - Tous les streamers (une chaîne choisie) : partie, problèmes, Mono (panneau flottant, une fois la partie lancée).
  * - Régie en plus (tests) : rush, Multi, adversaire fictif, bavardage, pseudos variés.
  *
  * - Bots : faux viewers ajoutés un par un, chacun avec un niveau (300 à 2400+). Leurs coups sont ceux de
@@ -97,12 +97,9 @@ const TestTools = {
     },
 
     tick() {
-        // Écran Nouveau : les bots se préparent avant de lancer la partie
-        const onSetup = window.AppState?.currentPage === 'sandbox';
         const relevant = this.relevant();
-        if ((relevant || onSetup) && (this.allowed === null || this.checkedFor !== twitchAuth.user?.login)) this.check();
+        if (relevant && (this.allowed === null || this.checkedFor !== twitchAuth.user?.login)) this.check();
         const available = this.available();
-        this.renderSetup(onSetup && available);
         if (!relevant || !available) {
             if (this.el) this.el.hidden = true;
             return;
@@ -243,7 +240,7 @@ const TestTools = {
 
     // ---------- Panneau ----------
 
-    /** Boutons du panneau (flottant ou dans Nouveau) */
+    /** Boutons du panneau flottant */
     bind(el) {
         el.addEventListener('click', (e) => {
             const a = e.target.closest('[data-test-action]');
@@ -265,22 +262,8 @@ const TestTools = {
         });
     },
 
-    /** Écran Nouveau : bots à ajouter avant de lancer (ils restent pour la partie) */
-    renderSetup(show) {
-        const box = document.getElementById('setup-test-bots');
-        if (!box) return;
-        box.hidden = !show;
-        if (!show) return;
-        if (!box.dataset.bound) { box.dataset.bound = '1'; this.bind(box); }
-        const sig = [this.bots.map(b => b.login).join(), this.allowed].join('|');
-        if (box.dataset.sig === sig && box.childElementCount) return;
-        box.dataset.sig = sig;
-        box.innerHTML = this.html(this.allowed ? '🧪 Bots Stockfish (régie)' : '🤖 Bots Stockfish', false);
-    },
-
     render(force = false) {
         if (!this.available()) return;
-        this.renderSetup(window.AppState?.currentPage === 'sandbox');
         if (!this.el) {
             this.el = document.createElement('div');
             this.el.className = 'test-tools';
