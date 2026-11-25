@@ -42,6 +42,7 @@ const SECRET_REVEAL_MS = 2500;    // vote secret : les votes dévoilés avant qu
 const CHOSEN_MS = 2200;           // coup choisi (flèche, part des votes, viewer tiré) montré avant d'être joué
 
 const DUR = {
+    settle: 2500,     // après chaque coup : le temps de le voir avant que le vote suivant s'ouvre
     recap: 15000,
     voteMode: 20000,
     voteOption: 30000,
@@ -382,6 +383,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 startFen: g.startFen,
                 lastMove: g.lastMove,
                 turnEndsAt: g.turnEndsAt,
+                settle: !!g.settle,
                 // Vote secret : rien de visible avant la fin du tour, seulement le nombre de votes
                 votes: hidden ? [] : tally(g.votes).map(({ k, n }) => ({ move: k, count: n })),
                 secret: hidden ? [...g.votes.values()].reduce((a, v) => a + v.length, 0) : false,
@@ -510,6 +512,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const g = s.game;
         if (s.mode === 'bot' && g.chess.turn() !== s.vsSide) return engineTurn();
         g.engine = false;
+        g.settle = false;
         g.votes = new Map();
         g.recent = [];
         g.recentN = 0;
@@ -523,10 +526,32 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emitMeAll();
     }
 
+    /**
+     * Après un coup : une courte pause (coup surligné, « vote dans 3 s ») avant d'ouvrir le vote suivant.
+     * Le décompte passe par tick() : il s'arrête avec la pause (régie, Phantom qui bouge les pièces).
+     * Le tour de Stockfish n'attend pas : il prend déjà son temps.
+     */
+    function startTurnSoon() {
+        const g = s.game;
+        if (s.mode === 'bot' && g.chess.turn() !== s.vsSide) return startTurn();
+        g.engine = false;
+        g.votes = new Map();
+        g.recent = [];
+        g.recentN = 0;
+        g.draw = null;
+        g.chosen = null;
+        g.turnEndsAt = null;
+        g.settle = true;
+        s.endsAt = Date.now() + DUR.settle;
+        emit();
+        emitMeAll();
+    }
+
     /** Contre Stockfish : le moteur joue son coup (au niveau voté), pas avant VS_MIN_MS, jamais pendant une pause */
     function engineTurn() {
         const g = s.game;
         g.engine = true;
+        g.settle = false;
         g.votes = new Map();
         g.recent = [];
         g.recentN = 0;
@@ -637,7 +662,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         g.chosen = null;
         // Seules les fins prévues par les règles : mat, pat, répétition, 50 coups, matériel insuffisant
         if (g.chess.isGameOver()) return endGame();
-        startTurn();
+        startTurnSoon();
     }
 
     // ------------------------------------------------------------------ puzzle rush
@@ -661,7 +686,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             applyUci(p.moves[0]);
             g.step = 1;
             g.side = g.chess.turn();
-            startTurn();
+            startTurnSoon();
         });
         g.side = g.chess.turn() === 'w' ? 'b' : 'w';
         g.turnEndsAt = null;
@@ -694,7 +719,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             applyUci(g.puzzle.moves[g.step]);
             g.step++;
             if (g.step >= g.puzzle.moves.length) return solvePuzzle();
-            startTurn();
+            startTurnSoon();
         });
     }
     function solvePuzzle() {
@@ -792,7 +817,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             case 'voteMode':
             case 'voteOptions': return closeBallot();
             case 'signup': return startGame();
-            case 'play': if (s.game?.turnEndsAt) return resolveTurn();
+            case 'play':
+                if (s.game?.turnEndsAt) return resolveTurn();
+                if (s.game?.settle && !s.game.result) return startTurn();
         }
     }
     setInterval(tick, 250).unref?.();
@@ -822,7 +849,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function force(phase) {
         clearTimeout(pending);
         pending = null;
-        if (s.game) { s.game.turnEndsAt = null; s.game.draw = null; }
+        if (s.game) { s.game.turnEndsAt = null; s.game.draw = null; s.game.settle = false; }
         switch (phase) {
             case 'play':
                 if (!allPlayers().length) s.optOut.clear();

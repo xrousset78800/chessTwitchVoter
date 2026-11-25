@@ -340,6 +340,16 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
     background: rgba(255, 255, 255, 0.04); border: 1px solid transparent;
 }
 .h24-side[hidden] { display: none; }
+/* Fil du tour, au-dessus de l'échiquier : étapes sobres et consigne */
+.h24-flow {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; box-sizing: border-box; width: 100%; max-width: 560px;
+    margin: 0 auto 3px; min-height: 20px; font-size: 0.74rem; line-height: 1.3; color: var(--text-secondary, #b3aca5);
+}
+.h24-flow[hidden] { display: none; }
+.h24-flow__steps { list-style: none; display: flex; align-items: center; gap: 4px; margin: 0; padding: 0; }
+.h24-flow__steps li { padding: 1px 9px; border-radius: 999px; color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.04); transition: color 0.5s, background-color 0.5s; }
+.h24-flow__steps li.is-on { color: #fff; font-weight: 700; background: rgba(255, 255, 255, 0.14); }
+.h24-flow__msg { font-weight: 600; color: var(--text-primary, #ebe6e0); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h24-side--top { margin-bottom: 3px; }
 .h24-side--bottom { margin-top: 3px; }
 .h24-side__team { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: #fff; }

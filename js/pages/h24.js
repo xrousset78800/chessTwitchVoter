@@ -919,6 +919,38 @@ const H24Page = {
         return Math.max(0, Math.ceil((at - (Date.now() + (this.skew || 0))) / 1000));
     },
 
+    /** Fil du tour au-dessus de l'échiquier : vote → choix du coup → coup joué, et une consigne calme (« vote dans 3 s ») */
+    renderFlow() {
+        const el = $('h24-flow');
+        if (!el) return;
+        const s = this.state, g = s?.game;
+        const on = s?.phase === 'play' && !!g && !g.result;
+        el.hidden = !on;
+        if (!on) { this.flowHtml = ''; return; }
+        const hist = g.history || [];
+        const last = hist.length ? t('h24.flowLast', { move: fmtMove(hist[hist.length - 1]) }, `Dernier coup : ${hist[hist.length - 1]}`) : '';
+        let step, msg;
+        if (g.draw || g.chosen) {
+            step = 1;
+            const move = g.draw?.winner || g.chosen?.move;
+            msg = g.draw && this.revealing ? t('h24.flowDrawing', null, 'Tirage au sort…')
+                : move ? t('h24.flowChosen', { move: fmtMove(move) }, `Coup retenu : ${move}`) : '';
+        } else if (g.turnEndsAt) {
+            step = 0;
+            msg = s.mode === 'rush' ? last
+                : t('h24.flowVoteOf', { side: t(g.turn === 'w' ? 'h24.sideW' : 'h24.sideB') }, g.turn === 'w' ? 'Vote des Blancs' : 'Vote des Noirs');
+        } else {
+            step = 2;
+            const n = g.settle && !s.paused ? Math.max(1, this.remaining(s.endsAt) ?? 1) : null;
+            msg = n ? [last, t('h24.flowNextIn', { n }, `Vote dans ${n} s`)].filter(Boolean).join(' · ')
+                : s.vs?.thinking ? t('h24.botThinking', null, 'Stockfish réfléchit…') : last;
+        }
+        if (s.paused) msg = s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause');
+        const labels = [t('h24.flowVote', null, 'Vote'), t('h24.flowPick', null, 'Choix du coup'), t('h24.flowPlayed', null, 'Coup joué')];
+        const html = `<ol class="h24-flow__steps">${labels.map((l, i) => `<li${i === step ? ' class="is-on"' : ''}>${esc(l)}</li>`).join('')}</ol><span class="h24-flow__msg">${esc(msg)}</span>`;
+        if (html !== this.flowHtml) { this.flowHtml = html; el.innerHTML = html; }
+    },
+
     /** Chrono : anneau en tête de la barre d'outils (contre le coin haut droit de l'échiquier) pendant la partie, barre de la fenêtre centrale entre deux parties */
     renderClock() {
         const s = this.state;
@@ -929,6 +961,7 @@ const H24Page = {
         const at = inPlay ? (g.draw || g.result ? null : g.turnEndsAt) : s.endsAt;
         const area = $('h24-wheel-area');
         // Pendant la partie : pendules au bout des bandeaux des deux camps
+        this.renderFlow();
         if (inPlay) {
             box.hidden = true;
             area?.classList.toggle('is-soon', !!at && !s.paused && (this.remaining(at) ?? 99) <= 1);
@@ -981,7 +1014,7 @@ const H24Page = {
             else if (active && at) {
                 const sec = Math.max(0, (at - (Date.now() + (this.skew || 0))) / 1000);
                 html = fmt(sec); critical = sec <= 5; running = sec > 0;
-            } else if (active) html = '–';
+            } else if (active) html = g.settle ? full : '–';
             if (el.innerHTML !== html) el.innerHTML = html;
             el.classList.toggle('is-active', active);
             el.classList.toggle('is-paused', active && !!s.paused);
@@ -1380,7 +1413,7 @@ const H24Page = {
                 const icon = CHOICE_ICON[c] ? `<i class="fas ${CHOICE_ICON[c]}"></i>` : '';
                 const won = decided ? (String(b.winner) === String(c) ? ' is-winner' : ' is-loser') : '';
                 return `<button type="button" class="h24-choice${String(mine) === String(c) ? ' is-mine' : ''}${won}" data-h24-choice="${esc(c)}" ${canVote ? '' : 'disabled'} style="--pct:${pct}%">
-                    <span class="h24-choice__label"><span class="h24-choice__num">${i + 1}</span>${icon}${esc(choiceLabel(b.id, c))}${b.id === 'elo' && window.BotEngine ? ` <span class="sf-tag sf-tag--${BotEngine.levelTag(c) === '(todo)' ? 'todo' : 'ok'}">${BotEngine.levelTag(c)}</span>` : ''}</span>
+                    <span class="h24-choice__label"><span class="h24-choice__num">${i + 1}</span>${icon}${esc(choiceLabel(b.id, c))}</span>
                     <span class="h24-choice__pct">${pct}%<small>${n}</small></span></button>`;
             }).join('');
             const next = (s.next || []).length ? `<p class="h24-card__next">${esc(t('h24.nextBallots', { n: s.next.length }, `Encore ${s.next.length} vote(s)`))}</p>` : '';
@@ -1392,7 +1425,6 @@ const H24Page = {
             }
             return `${clock}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
                 <div class="h24-choices">${buttons}</div>
-                ${this.me.regie ? `<p class="h24-chat-hint h24-regie-hint"><i class="fas fa-sliders-h"></i> ${esc(t('h24.regiePick', null, 'Régie : clique sur une option pour la choisir tout de suite'))}</p>` : ''}
                 ${chat ? chatHint('h24.chatVote', { nums: numList(b.choices.length) }, `Dans le chat Twitch : tape ${numList(b.choices.length)}`) : ''}
                 <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}${canVote ? '' : ' · ' + esc(t('h24.loginToVote', null, 'connecte-toi pour voter'))}</p>${next}`;
         }
