@@ -27,11 +27,11 @@ const TICK_MS = 400;
 const MAX_BOTS = 30;
 // Remplissage rapide : un mélange de niveaux
 const MIX = [1320, 1500, 900, 1800, 600, 2100, 1500, 300, 1320, 2400];
-// Pages de jeu (partie, problèmes, rush, Mono, Multi)
-const PAGES = new Set(['game', 'rush', 'mono', 'multi']);
-// Pour tous les streamers : partie et problèmes (page game), Mono. Pas de rush (records de chaîne)
-// ni de Multi (bataille contre un vrai streamer) : réservés aux tests de la régie.
-const PUBLIC_PAGES = new Set(['game', 'mono']);
+// Seulement une fois la partie lancée (page game : partie libre, problèmes, rush, Mono), pas sur les
+// écrans de lancement. Pour tous les streamers, pas de rush (records de chaîne) ni de Multi (bataille
+// contre un vrai streamer) : réservés aux tests de la régie.
+const PAGES = new Set(['game']);
+const PUBLIC_PAGES = new Set(['game']);
 const COLLAPSED_KEY = 'sfBotsCollapsed';
 
 const rand = (n) => Math.floor(Math.random() * n);
