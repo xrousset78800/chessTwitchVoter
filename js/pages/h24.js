@@ -1185,7 +1185,6 @@ const H24Page = {
             el.innerHTML = `${pclock(solo ? 'all' : side)}<span class="h24-side__spacer"></span><span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span>${esc(label)}</span>
                 <span class="h24-side__count" title="${esc(t('h24.players', null, 'Joueurs'))}"><i class="fas fa-user"></i> ${n}</span>
                 ${mine ? `<span class="h24-side__mine">${esc(t('h24.yourTeam', null, 'Votre équipe'))}</span>` : ''}
-                ${turn ? `<span class="h24-side__turn">${esc(t('h24.toMove', null, 'Au trait'))}</span>` : ''}
                 ${withAction ? action : ''}`;
         };
         if (solo) { top.hidden = true; fill(bottom, 'bottom', 'w', true); }

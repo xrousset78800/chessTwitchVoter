@@ -37,14 +37,24 @@
 /* Entre deux parties : pas de coups, le panneau s'efface */
 #page-h24:not([data-phase="play"]) #h24-moves { display: none; }
 #h24-moves .moves-panel__title.is-active { color: var(--text-primary); }
-/* Guide de la partie (au-dessus des coups) : l'action en cours, qui pulse doucement */
+/* Guide de la partie : l'action en cours, qui pulse doucement, centré au-dessus de l'échiquier */
 #page-h24 #h24-hint {
-    display: flex; align-items: center; gap: 9px; min-height: 22px; padding: 8px 11px; border-radius: 8px;
-    font-size: 0.95rem; color: var(--text-primary); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+    display: block; box-sizing: border-box; width: fit-content; max-width: 100%;
+    margin: 0 auto; min-height: 22px; padding: 8px 16px; border-radius: 999px; text-align: center;
+    font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 1rem;
+    color: var(--text-primary); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
     animation: h24-guide 2.6s ease-in-out infinite;
 }
+#page-h24:not([data-phase="play"]) #h24-hint, #page-h24 #h24-hint:empty { display: none; }
+/* Grand écran avec souris : dans la bande du menu (transparent tant qu'on ne le survole pas) */
+@media (hover: hover) and (min-width: 1101px) {
+    #page-h24 .sandbox__main > #h24-hint {
+        position: absolute; left: 50%; top: calc(-1 * var(--nav-height) / 2 - 2px); transform: translate(-50%, -50%);
+        max-width: min(100%, 720px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+}
 #page-h24 #h24-hint::before {
-    content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary);
+    content: ''; display: inline-block; vertical-align: middle; margin: -2px 10px 0 0; width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary);
     animation: h24-guide-dot 1.3s ease-in-out infinite;
 }
 #page-h24 #h24-hint.is-active { background: rgba(255, 138, 61, 0.1); border-color: rgba(255, 138, 61, 0.4); animation-name: h24-guide-go; }

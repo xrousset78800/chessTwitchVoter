@@ -768,7 +768,6 @@
                         </div>
                         <aside class="sandbox__moves-panel" id="h24-moves">
                             <div class="moves-panel__typeit">
-                                <div class="moves-panel__title" id="h24-hint"></div>
                                 <form class="h24-move-form" id="h24-move-form" hidden autocomplete="off">
                                     <input type="text" id="h24-move-input" maxlength="10" data-i18n-placeholder="h24.movePlaceholder" placeholder="Ex. e4, Cf3, e2e4">
                                     <button type="submit" class="btn btn--primary btn--sm"><i class="fas fa-paper-plane"></i></button>
@@ -788,6 +787,8 @@
                     </div>
 
                     <div class="sandbox__main">
+                        <!-- Guide de la partie : l'action en cours, en haut au centre (dans la bande du menu escamotable) -->
+                        <div class="h24-guide" id="h24-hint" aria-live="polite"></div>
                         <div class="board-wrapper">
                             <!-- Pendant la partie : une équipe en haut, l'autre en bas (nombre de joueurs, trait, ton équipe) -->
                             <div class="h24-side h24-side--top" id="h24-side-top" hidden></div>
