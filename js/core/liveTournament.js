@@ -1056,7 +1056,6 @@ let eventSlugT = null;    // événement (ou salle) choisi
 let pendingGameT = null;  // partie à rouvrir une fois la salle chargée
 
 function updateUrlT() {
-    if (!location.pathname.startsWith('/tournament')) return;
     const p = new URLSearchParams();
     if (eventSlugT) p.set('event', eventSlugT);
     const room = stateT.tournamentSlug;
@@ -1064,7 +1063,17 @@ function updateUrlT() {
     const g = stateT.currentGame || reviewT.game;
     if (g) p.set('game', gameKey(g));
     const url = '/tournament' + (p.toString() ? `?${p}` : '');
+    setNavUrl('/tournament', url);
+    if (!location.pathname.startsWith('/tournament')) return;
     if (location.pathname + location.search !== url) history.replaceState(history.state, '', url);
+}
+
+/** Le lien du menu garde l'adresse de la partie : en revenant sur l'onglet (ou en le rouvrant), on la retrouve */
+function setNavUrl(route, url) {
+    const link = document.querySelector(`.nav__link[data-navigate^="${route}"]`);
+    if (!link || link.dataset.navigate === url) return;
+    link.dataset.navigate = url;
+    link.setAttribute('href', url);
 }
 
 /** Partie de l'adresse : on passe sur sa ronde puis on l'ouvre comme d'un clic (suivi en direct ou revue) */

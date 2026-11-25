@@ -272,8 +272,11 @@ async function syncClocksL() {
 
 /** Adresse directe : /live?game=… (&daily=1) ; un rafraîchissement reprend la partie */
 function updateUrlL(id) {
-    if (!location.pathname.startsWith('/live')) return;
     const url = id ? `/live?game=${encodeURIComponent(id)}${isDaily() ? '&daily=1' : ''}` : '/live';
+    // Le lien du menu garde l'adresse de la partie suivie
+    const link = document.querySelector('.nav__link[data-navigate^="/live"]');
+    if (link) { link.dataset.navigate = url; link.setAttribute('href', url); }
+    if (!location.pathname.startsWith('/live')) return;
     if (location.pathname + location.search !== url) history.replaceState(history.state, '', url);
 }
 

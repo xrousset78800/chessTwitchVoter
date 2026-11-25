@@ -958,70 +958,91 @@ class PhantomChessboard {
         prompt.id = 'phantom-reconnect-prompt';
         prompt.innerHTML = `
             <div class="phantom-reconnect-content">
-                <span>🎯 Reconnecter "${previousState.deviceName}" ?</span>
+                <span class="phantom-reconnect-icon"><i class="fab fa-bluetooth-b"></i></span>
+                <span class="phantom-reconnect-text">Reconnecter <b></b> ?</span>
                 <button id="phantom-reconnect-yes">Connecter</button>
-                <button id="phantom-reconnect-no">✕</button>
+                <button id="phantom-reconnect-no" aria-label="Fermer">×</button>
             </div>
         `;
+        prompt.querySelector('.phantom-reconnect-text b').textContent = previousState.deviceName || 'le Phantom';
         document.body.appendChild(prompt);
 
-        // Styles
+        // Styles (charte du site : carte sombre et liseré orange, comme les notifications)
         if (!document.getElementById('phantom-reconnect-styles')) {
             const style = document.createElement('style');
             style.id = 'phantom-reconnect-styles';
             style.textContent = `
                 #phantom-reconnect-prompt {
                     position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 10000;
-                    animation: slideIn 0.3s ease;
+                    top: calc(var(--nav-height, 70px) + 12px);
+                    right: 16px;
+                    z-index: var(--z-toast, 10000);
+                    animation: phantomReconnectIn 0.22s ease-out both;
                 }
 
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
+                @keyframes phantomReconnectIn {
+                    from { opacity: 0; transform: translateY(-6px); }
+                    to { opacity: 1; transform: none; }
                 }
 
                 .phantom-reconnect-content {
-                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                    padding: 15px 20px;
-                    border-radius: 12px;
                     display: flex;
                     align-items: center;
-                    gap: 15px;
-                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-                    border: 1px solid rgba(102, 126, 234, 0.3);
-                    color: white;
-                    font-size: 14px;
+                    gap: 12px;
+                    max-width: calc(100vw - 32px);
+                    padding: 10px 10px 10px 14px;
+                    border-radius: var(--radius-md, 6px);
+                    background: rgba(26, 21, 18, 0.97);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-left: 3px solid #ff8a3d;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+                    color: var(--text-primary, #f5ede6);
+                    font-size: 0.92rem;
                 }
 
+                .phantom-reconnect-icon {
+                    flex: none;
+                    width: 28px;
+                    height: 28px;
+                    display: grid;
+                    place-items: center;
+                    border-radius: var(--radius-sm, 4px);
+                    background: rgba(255, 138, 61, 0.16);
+                    color: #ff8a3d;
+                }
+
+                .phantom-reconnect-text { min-width: 0; }
+                .phantom-reconnect-text b { font-weight: 600; }
+
                 .phantom-reconnect-content button {
-                    padding: 8px 16px;
+                    flex: none;
                     border: none;
-                    border-radius: 8px;
                     cursor: pointer;
-                    font-weight: 500;
-                    transition: all 0.2s;
+                    font: inherit;
+                    transition: background 0.15s, color 0.15s;
                 }
 
                 #phantom-reconnect-yes {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
+                    padding: 6px 14px;
+                    border-radius: var(--radius-sm, 4px);
+                    background: #ff8a3d;
+                    color: #1a1512;
+                    font-weight: 600;
                 }
 
-                #phantom-reconnect-yes:hover {
-                    transform: scale(1.05);
-                }
+                #phantom-reconnect-yes:hover { background: #ffa463; }
 
                 #phantom-reconnect-no {
-                    background: rgba(255, 255, 255, 0.1);
-                    color: white;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: var(--radius-sm, 4px);
+                    background: none;
+                    color: var(--text-muted, #7f736b);
+                    font-size: 18px;
+                    line-height: 1;
                 }
 
-                #phantom-reconnect-no:hover {
-                    background: rgba(255, 255, 255, 0.2);
-                }
+                #phantom-reconnect-no:hover { color: var(--text-primary, #f5ede6); background: rgba(255, 255, 255, 0.06); }
             `;
             document.head.appendChild(style);
         }
