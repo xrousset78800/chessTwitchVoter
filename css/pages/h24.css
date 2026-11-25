@@ -218,6 +218,8 @@
 /* Roue qui tourne : anneau orange seul, sans lueur (elle était rognée en haut et en bas du panneau) */
 #page-h24 #h24-wheel-area .wheel-container.is-spinning .wheel-canvas { box-shadow: 0 0 0 4px var(--accent); }
 #page-h24 #h24-wheel-area .wheel-pointer { filter: none; }
+#page-h24 #h24-wheel-area .wheel-container { box-shadow: none; }
+#page-h24 #h24-wheel-area.is-spinning .wheel-band { box-shadow: none; }
 #page-h24 #h24-wheel-area .wheel-pointer::after, #page-h24 #h24-wheel-area .wheel-center { box-shadow: none; }
 .h24-bg-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35); vertical-align: -1px; }
 #page-h24 #h24-votes-panel.has-winner > #h24-wheel-area { filter: saturate(0.6); }
