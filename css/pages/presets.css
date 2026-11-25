@@ -9,43 +9,18 @@
     min-height: 100vh;
 }
 
-/* Deux colonnes : le mode et son explication à gauche, les options et le lancement à droite */
-.preset__layout {
+/* Nouveau : menu vertical à gauche (onglets + explications), options de l'onglet à droite */
+.preset,
+body.sandbox-launch #page-sandbox .sandbox {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 32px;
+    grid-template-columns: 330px minmax(0, 1fr);
+    gap: 20px;
     align-items: start;
 }
-
-.preset__info,
-.preset__opts {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-}
-
-.preset__opts {
-    padding-left: 32px;
-    border-left: 1px solid var(--border-subtle);
-}
-
-.preset__info .browse__title {
-    font-size: 2rem;
-    margin-bottom: 0;
-}
-
-.preset__info .browse__desc {
-    font-size: 1.05rem;
-    line-height: 1.5;
-}
-
-.preset__info .preset__choices {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-}
-
-.preset__opts .preset__subtitle:first-child { margin-top: 0; }
+body.sandbox-launch #page-sandbox .sandbox { max-width: 1180px; margin: 0 auto; }
+.preset > .preset__card,
+body.sandbox-launch #page-sandbox .sandbox > #sandbox-setup { grid-column: 2; grid-row: 1; max-width: none; margin: 0; min-width: 0; }
+.preset__card .preset__subtitle:first-child { margin-top: 0; }
 
 .preset__how {
     display: flex;
@@ -84,11 +59,6 @@
 
 .preset__subtitle i { color: var(--accent-purple, #ff8a3d); }
 
-@media (max-width: 860px) {
-    .preset__layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-    .preset__opts { padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--border-subtle); }
-    .preset__info .browse__title { font-size: 1.7rem; }
-}
 
 .preset__row {
     display: flex;
@@ -308,39 +278,78 @@ body.preset-multi #btn-reset {
     display: none;
 }
 
-/* ── Onglets de Nouveau : Partie libre, Mono, Multi, Puzzle Rush ── */
+/* ── Onglets de Nouveau : menu vertical, chaque onglet avec sa description ── */
 .new-tabs {
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    top: calc(var(--nav-height) + 12px);
     display: flex;
+    flex-direction: column;
     gap: 4px;
-    width: fit-content;
-    max-width: 100%;
-    margin: 0 auto 20px;
-    padding: 4px;
-    overflow-x: auto;
+    margin: 0;
+    padding: 6px;
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-lg);
 }
+body.sandbox-launch #page-sandbox .sandbox > .new-tabs { margin: 0; }
 
 .new-tab {
-    padding: 8px 16px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 12px 14px;
     color: var(--text-secondary);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background var(--transition-fast), color var(--transition-fast);
+    transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.new-tab:hover {
-    color: #ffe8d6;
-    background: rgba(255, 138, 61, 0.12);
+.new-tab__title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-primary);
 }
+
+.new-tab__desc {
+    font-size: 0.84rem;
+    line-height: 1.4;
+}
+
+.new-tab__more { display: none; }
+
+.new-tab:hover { background: rgba(255, 138, 61, 0.07); }
 
 .new-tab.is-active {
-    color: var(--on-accent);
-    background: var(--twitch-purple);
+    background: linear-gradient(135deg, rgba(255, 138, 61, 0.16), rgba(242, 112, 15, 0.05));
+    box-shadow: inset 3px 0 0 var(--accent-purple, #ff8a3d);
+    cursor: default;
+}
+.new-tab.is-active .new-tab__title { color: #ffb27a; }
+.new-tab.is-active .new-tab__more {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.new-tab__how-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.new-tab__how li { font-size: 0.84rem; }
+
+.new-tab__intro {
+    font-size: 0.84rem;
+    line-height: 1.45;
 }
 
 /* Sur l'échiquier, les onglets ne servent qu'à l'écran de lancement */
@@ -348,9 +357,22 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
     display: none;
 }
 
-@media (max-width: 600px) {
-    .new-tabs { width: 100%; }
-    .new-tab { padding: 8px 12px; }
+/* Écran étroit : une colonne, onglets en ligne et sans les explications */
+@media (max-width: 860px) {
+    .preset,
+    body.sandbox-launch #page-sandbox .sandbox { display: flex; flex-direction: column; align-items: stretch; }
+    .new-tabs {
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+        border-radius: var(--radius-full);
+        padding: 4px;
+    }
+    .new-tab { padding: 8px 14px; white-space: nowrap; border-radius: var(--radius-full); }
+    .new-tab__title { font-size: 0.9rem; }
+    .new-tab__desc,
+    .new-tab.is-active .new-tab__more { display: none; }
+    .new-tab.is-active { box-shadow: inset 0 0 0 1px var(--accent-purple, #ff8a3d); }
 }
 
 .roster__hint {

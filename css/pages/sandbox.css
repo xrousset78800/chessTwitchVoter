@@ -489,17 +489,10 @@
 /* Lancement : la carte remplace l'échiquier et la barre d'outils */
 body.sandbox-launch .sandbox-setup {
     display: block;
-    max-width: 1180px;
-    margin: 0 auto;
 }
-/* Deux colonnes égales : modes et descriptions à gauche, options à droite */
+/* Deux colonnes égales dans la carte : suggestions et modes, puis options du vote */
 body.sandbox-launch .sandbox-setup__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
-.setup-intro {
-    margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    color: var(--text-secondary);
-}
+@media (max-width: 1200px) { body.sandbox-launch .sandbox-setup__grid { grid-template-columns: minmax(0, 1fr); } }
 /* Description du mode choisi, sous les tuiles */
 .mode-desc p {
     display: none;
@@ -525,12 +518,12 @@ body.sandbox-launch .sandbox-setup__grid { grid-template-columns: minmax(0, 1fr)
 body.sandbox-launch .sandbox-setup__header { display: none; }
 body.sandbox-launch #page-sandbox .sandbox { padding-top: calc(var(--nav-height) + 12px); }
 /* Configurations suggérées : trois par ligne */
-body.sandbox-launch .presets-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+body.sandbox-launch .presets-list { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 1200px) { body.sandbox-launch .presets-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { body.sandbox-launch .presets-list { grid-template-columns: minmax(0, 1fr); } }
 
 /* Écran Nouveau : les onglets suffisent, pas de titre « Sandbox » au-dessus */
 body.sandbox-launch #page-sandbox .sandbox__header { display: none; }
-body.sandbox-launch #page-sandbox .new-tabs { margin-bottom: 10px; }
 body.sandbox-launch .sandbox-setup__card {
     padding: 18px 20px;
     background:

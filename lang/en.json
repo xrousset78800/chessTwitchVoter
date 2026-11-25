@@ -890,6 +890,7 @@
       "visibilityTitle": "Who can join you?"
     },
     "free": {
+      "desc": "The whole chat votes, no sign-up: free vote, puzzles, against Stockfish, chat vs chat…",
       "intro": "No sign-up here: your whole chat votes, move after move. Start from a ready-made setup, or pick Customize to set the game mode and every voting option."
     },
     "modes": {

@@ -91,12 +91,53 @@
             <div class="sandbox">
 
                 <!-- Onglets de Nouveau (déplacés par le router vers /rush, /mono, /multi) -->
+                <!-- Menu vertical à gauche (horizontal sur mobile) ; l'onglet actif détaille son fonctionnement -->
                 <nav class="new-tabs" id="new-tabs">
                     <!-- Puzzle Rush d'abord : le plus simple à essayer -->
-                    <a class="new-tab" data-navigate="/rush" data-new-tab="rush">🔥 Puzzle Rush</a>
-                    <a class="new-tab" data-navigate="/mono" data-new-tab="mono">👥 Mono</a>
-                    <a class="new-tab" data-navigate="/multi" data-new-tab="multi">⚔ Multi</a>
-                    <a class="new-tab" data-navigate="/sandbox" data-new-tab="sandbox">🧪 <span data-i18n="newTabs.free">Partie libre</span></a>
+                    <a class="new-tab" data-navigate="/rush" data-new-tab="rush">
+                        <span class="new-tab__title">🔥 Puzzle Rush</span>
+                        <span class="new-tab__desc" data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</span>
+                        <span class="new-tab__more">
+                            <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
+                            <ol class="preset__how new-tab__how">
+                                <li data-i18n="newInfo.rush.how1">Un puzzle s'affiche sur l'échiquier : le chat propose des coups dans le tchat.</li>
+                                <li data-i18n="newInfo.rush.how2">En Illimité, le premier coup valide est joué ; avec un temps, c'est le coup le plus voté à la fin du minuteur.</li>
+                                <li data-i18n="newInfo.rush.how3">Chaque puzzle résolu en amène un plus difficile. Un mauvais coup, ou aucun vote à temps, compte comme une erreur.</li>
+                                <li data-i18n="newInfo.rush.how4">À la troisième erreur, le run s'arrête. Connecté avec Twitch, ton score entre dans le classement de ta chaîne.</li>
+                            </ol>
+                        </span>
+                    </a>
+                    <a class="new-tab" data-navigate="/mono" data-new-tab="mono">
+                        <span class="new-tab__title">👥 Mono</span>
+                        <span class="new-tab__desc" data-i18n="mono.desc">Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.</span>
+                        <span class="new-tab__more">
+                            <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
+                            <ol class="preset__how new-tab__how">
+                                <li data-i18n="newInfo.mono.how1">Tu ouvres les inscriptions : tes viewers tapent join dans le chat pendant 2 minutes.</li>
+                                <li data-i18n="newInfo.mono.how2">La partie démarre ensuite toute seule. Seuls les inscrits votent, les autres regardent.</li>
+                                <li data-i18n="newInfo.mono.how3">Tu peux réserver les inscriptions aux followers ou aux abonnés.</li>
+                            </ol>
+                        </span>
+                    </a>
+                    <a class="new-tab" data-navigate="/multi" data-new-tab="multi">
+                        <span class="new-tab__title">⚔ Multi</span>
+                        <span class="new-tab__desc" data-i18n="multi.desc">Deux chaînes s'affrontent, la tienne joue les Blancs. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</span>
+                        <span class="new-tab__more">
+                            <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
+                            <ol class="preset__how new-tab__how">
+                                <li data-i18n="newInfo.multi.how1">Tu crées la partie : ta chaîne joue les Blancs, la chaîne qui te rejoint joue les Noirs.</li>
+                                <li data-i18n="newInfo.multi.how2">Dès qu'une chaîne rejoint, les deux chats ont 2 minutes pour s'inscrire.</li>
+                                <li data-i18n="newInfo.multi.how3">Chaque chat vote les coups de son camp, et les deux chaînes suivent la même partie en direct.</li>
+                            </ol>
+                        </span>
+                    </a>
+                    <a class="new-tab" data-navigate="/sandbox" data-new-tab="sandbox">
+                        <span class="new-tab__title">🧪 <span data-i18n="newTabs.free">Partie libre</span></span>
+                        <span class="new-tab__desc" data-i18n="newInfo.free.desc">Tout le chat vote, sans inscription : vote libre, problèmes, contre Stockfish, chat contre chat…</span>
+                        <span class="new-tab__more">
+                            <span class="new-tab__intro" data-i18n="newInfo.free.intro">Pas d'inscription ici : tout ton chat vote, coup après coup. Pars d'une configuration prête à l'emploi, ou choisis Personnaliser pour régler le mode de jeu et chaque option du vote.</span>
+                        </span>
+                    </a>
                 </nav>
 
                 <!-- Lancement (Nouveau) ; pendant la partie, la même carte sert de modale ⚙ -->
@@ -111,7 +152,6 @@
                         </div>
                         <div class="sandbox-setup__grid">
                             <div class="sandbox-setup__col launch-only">
-                                <p class="setup-intro" data-i18n="newInfo.free.intro">Pas d'inscription ici : tout ton chat vote, coup après coup. Pars d'une configuration prête à l'emploi, ou choisis Personnaliser pour régler le mode de jeu et chaque option du vote.</p>
                                 <!-- Configurations suggérées : prêtes à l'emploi, au-dessus des sauvegardées -->
                                 <div class="setup-configs setup-presets">
                                     <h3 class="setup-configs__title"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="suggested.title">Configurations suggérées</span></h3>
@@ -550,18 +590,7 @@
         <!-- ==================== ROUTE PUZZLE RUSH ==================== -->
         <div class="page" id="page-rush">
             <div class="preset">
-                <!-- Deux colonnes : le mode et son explication à gauche, le lancement à droite -->
-                <div class="battle-setup__card battle-setup__card--rush preset__card preset__layout">
-                    <div class="preset__info">
-                        <h1 class="browse__title">🔥 Puzzle Rush</h1>
-                        <p class="browse__desc" data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</p>
-                        <h2 class="preset__subtitle" data-i18n="newInfo.howTitle">Comment ça marche</h2>
-                        <ul class="preset__how">
-                            <li data-i18n="newInfo.rush.how1">Un puzzle s'affiche sur l'échiquier : le chat propose des coups dans le tchat.</li>
-                            <li data-i18n="newInfo.rush.how2">En Illimité, le premier coup valide est joué ; avec un temps, c'est le coup le plus voté à la fin du minuteur.</li>
-                            <li data-i18n="newInfo.rush.how3">Chaque puzzle résolu en amène un plus difficile. Un mauvais coup, ou aucun vote à temps, compte comme une erreur.</li>
-                            <li data-i18n="newInfo.rush.how4">À la troisième erreur, le run s'arrête. Connecté avec Twitch, ton score entre dans le classement de ta chaîne.</li>
-                        </ul>
+                <div class="battle-setup__card battle-setup__card--rush preset__card">
                         <h2 class="preset__subtitle" data-i18n="newInfo.rush.modesTitle">Choisis le temps pour voter</h2>
                         <div class="rush-modes" data-records="rush-page-records" role="group" aria-label="Temps pour voter">
                             <button type="button" class="rush-mode" data-rush-mode="0" data-i18n="rushPage.modeUnlimited">Illimité</button>
@@ -570,8 +599,6 @@
                             <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
                         </div>
                         <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.</p>
-                    </div>
-                    <div class="preset__opts">
                         <button class="btn btn--primary btn--full btn--lg" id="rush-page-start">
                             <i class="fas fa-play"></i> <span data-i18n="rushPage.start">Lancer un run</span>
                         </button>
@@ -579,7 +606,6 @@
                         <div id="rush-page-records" class="rush-records">
                             <div class="rush-records__empty" data-i18n="rushPage.loading">Chargement des records…</div>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -587,17 +613,7 @@
         <!-- ==================== ROUTE MONO ==================== -->
         <div class="page" id="page-mono">
             <div class="preset">
-                <!-- Deux colonnes : la formule et son explication à gauche, les options à droite -->
-                <div class="battle-setup__card preset__card preset__layout">
-                    <div class="preset__info">
-                    <h1 class="browse__title">👥 Mono</h1>
-                    <p class="browse__desc" data-i18n="mono.desc">Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.</p>
-                    <h2 class="preset__subtitle" data-i18n="newInfo.howTitle">Comment ça marche</h2>
-                    <ul class="preset__how">
-                        <li data-i18n="newInfo.mono.how1">Tu ouvres les inscriptions : tes viewers tapent join dans le chat pendant 2 minutes.</li>
-                        <li data-i18n="newInfo.mono.how2">La partie démarre ensuite toute seule. Seuls les inscrits votent, les autres regardent.</li>
-                        <li data-i18n="newInfo.mono.how3">Tu peux réserver les inscriptions aux followers ou aux abonnés.</li>
-                    </ul>
+                <div class="battle-setup__card preset__card">
                     <h2 class="preset__subtitle" data-i18n="newInfo.mono.choicesTitle">Qui joue contre qui ?</h2>
                     <div class="preset__choices">
                         <button class="preset-choice is-active" type="button" data-format="vsStreamer">
@@ -613,8 +629,6 @@
                             <span class="preset-choice__desc" data-i18n="mono.vsBotDesc">Les inscrits votent leurs coups face à Stockfish, au niveau choisi.</span>
                         </button>
                     </div>
-                    </div>
-                    <div class="preset__opts">
                     <h2 class="preset__subtitle"><i class="fas fa-sliders-h"></i> <span data-i18n="newInfo.options">Options</span></h2>
                     <div class="preset__row" id="mono-bot-group" style="display: none">
                         <div class="form-group">
@@ -668,7 +682,6 @@
                     <button class="btn btn--primary btn--full btn--lg" id="mono-start">
                         <i class="fas fa-play"></i> <span data-i18n="mono.start">Ouvrir les inscriptions</span>
                     </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -676,17 +689,7 @@
         <!-- ==================== ROUTE MULTI ==================== -->
         <div class="page" id="page-multi">
             <div class="preset">
-                <!-- Deux colonnes : la formule et son explication à gauche, les options à droite -->
-                <div class="battle-setup__card preset__card preset__layout">
-                    <div class="preset__info">
-                    <h1 class="browse__title">⚔ Multi</h1>
-                    <p class="browse__desc" data-i18n="multi.desc">Deux chaînes s'affrontent, la tienne joue les Blancs. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</p>
-                    <h2 class="preset__subtitle" data-i18n="newInfo.howTitle">Comment ça marche</h2>
-                    <ul class="preset__how">
-                        <li data-i18n="newInfo.multi.how1">Tu crées la partie : ta chaîne joue les Blancs, la chaîne qui te rejoint joue les Noirs.</li>
-                        <li data-i18n="newInfo.multi.how2">Dès qu'une chaîne rejoint, les deux chats ont 2 minutes pour s'inscrire.</li>
-                        <li data-i18n="newInfo.multi.how3">Chaque chat vote les coups de son camp, et les deux chaînes suivent la même partie en direct.</li>
-                    </ul>
+                <div class="battle-setup__card preset__card">
                     <h2 class="preset__subtitle" data-i18n="newInfo.multi.visibilityTitle">Qui peut te rejoindre ?</h2>
                     <div class="multi-visibility" id="multi-visibility" data-visibility="public">
                         <label class="multi-visibility__switch">
@@ -700,8 +703,6 @@
                             <i class="fas fa-lock"></i> <span data-i18n="multi.privateDesc">Visible dans Parcourir (on peut regarder) mais seule la chaîne qui a le lien peut la rejoindre. Le lien n'apparaît jamais à l'écran.</span>
                         </p>
                     </div>
-                    </div>
-                    <div class="preset__opts">
                     <h2 class="preset__subtitle"><i class="fas fa-sliders-h"></i> <span data-i18n="newInfo.options">Options</span></h2>
                         <div class="preset__row">
                             <div class="form-group">
@@ -737,7 +738,6 @@
                     <button class="btn btn--primary btn--full btn--lg" id="multi-start">
                         <i class="fas fa-play"></i> <span data-i18n="multi.start">Créer la partie</span>
                     </button>
-                    </div>
                 </div>
             </div>
         </div>

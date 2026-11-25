@@ -890,6 +890,7 @@
       "visibilityTitle": "Qui peut te rejoindre ?"
     },
     "free": {
+      "desc": "Tout le chat vote, sans inscription : vote libre, problèmes, contre Stockfish, chat contre chat…",
       "intro": "Pas d'inscription ici : tout ton chat vote, coup après coup. Pars d'une configuration prête à l'emploi, ou choisis Personnaliser pour régler le mode de jeu et chaque option du vote."
     },
     "modes": {
