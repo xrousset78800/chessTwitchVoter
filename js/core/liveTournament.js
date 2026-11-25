@@ -1220,6 +1220,29 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(() => stateT.board?.resize());
     });
 
+    // Jauge d'évaluation à gauche de l'échiquier (choix mémorisé dans le navigateur)
+    const evalCol = document.querySelector('#page-tournament .t-boardcol');
+    const evalBtn = document.getElementById('btnEvalT');
+    if (window.EvalBar && evalCol && evalBtn) {
+        const evalT = EvalBar.attach({
+            host: evalCol,
+            boardEl: document.getElementById('liveBoardT'),
+            getFen: () => stateT.chess?.fen(),
+        });
+        const setEvalT = on => {
+            evalCol.classList.toggle('has-eval', on);
+            evalBtn.setAttribute('aria-pressed', String(on));
+            evalBtn.classList.toggle('is-on', on);
+            evalT.setEnabled(on);
+            requestAnimationFrame(() => { stateT.board?.resize(); evalT.place(); });
+            try { localStorage.setItem('tEval', on ? '1' : '0'); } catch { /* stockage indisponible */ }
+        };
+        let saved = false;
+        try { saved = localStorage.getItem('tEval') === '1'; } catch { /* stockage indisponible */ }
+        if (saved) setEvalT(true);
+        evalBtn.addEventListener('click', () => setEvalT(!evalT.enabled));
+    }
+
     document.getElementById('tournamentRoomSelect')?.addEventListener('change', async function () {
         logT(`Chargement de "${this.value}"…`, 'info');
         try {

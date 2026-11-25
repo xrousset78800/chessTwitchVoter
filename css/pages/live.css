@@ -510,6 +510,14 @@ input[type=range] {
 :is(#page-tournament, #page-live) .t-side { max-width: none; width: auto; margin-left: 24px; } /* 24px : colonne des rangées (boardCoords) */
 :is(#page-tournament, #page-live) .t-side .h24-side__team { min-width: 0; }
 .t-side__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Jauge d'évaluation (Blancs en bas) à gauche de l'échiquier */
+#page-tournament .t-boardcol.has-eval { padding-left: 28px; box-sizing: border-box; }
+.eval-bar { position: absolute; left: 0; width: 20px; background: #403d39; border-radius: 2px; overflow: hidden; cursor: default; }
+.eval-bar[hidden] { display: none; }
+.eval-bar__white { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: #f1f1f1; transition: height .4s ease; }
+.eval-bar__label { position: absolute; left: 0; right: 0; top: 3px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; color: #f1f1f1; z-index: 1; }
+.eval-bar__label.is-white { top: auto; bottom: 3px; color: #403d39; }
+#btnEvalT.is-on { color: var(--accent-purple, #ff8a3d); border-color: currentColor; }
 .t-side__elo { flex: none; font-size: 0.78rem; font-weight: 600; color: var(--text-muted, #7f736b); font-variant-numeric: tabular-nums; }
 .t-side__score { flex: none; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--accent-purple, #ff8a3d); }
 
