@@ -600,7 +600,10 @@
     "monoColor": "Strona, którą grasz na szachownicy; zapisani widzowie głosują za drugą.",
     "voteTime": "Ile czasu czat ma na głosowanie nad każdym ruchem.",
     "choice": "Losowo: losowanie ważone głosami. Większość: gra ruch z największą liczbą głosów.",
-    "multiPublic": "Publiczna: widoczna w Przeglądaj, każdy kanał może dołączyć. Prywatna: każdy może oglądać, ale dołączyć może tylko kanał z twoim linkiem."
+    "multiPublic": "Publiczna: widoczna w Przeglądaj, każdy kanał może dołączyć. Prywatna: każdy może oglądać, ale dołączyć może tylko kanał z twoim linkiem.",
+    "anonymity": "Widoczne: nicki i głosy na żywo. Ukryte nicki: widać wybrane ruchy, ale nie kto na nie głosował. Tajne głosowanie: nic w trakcie tury (bez podium, strzałek i nicków), wynik pojawia się przy losowaniu lub po wykonaniu ruchu. Głosy nadal widać na czacie Twitch: ukryj go na streamie, by głosowanie było naprawdę w ciemno.",
+    "anonymityMulti": "Wybierasz za oba kanały: przeciwnik musi stosować to ustawienie. Widoczne: nicki i głosy na żywo. Ukryte nicki: wybrane ruchy bez nicków. Tajne głosowanie: nic w trakcie tury, wynik pojawia się przy losowaniu lub po wykonaniu ruchu.",
+    "chroma": "Zastępuje tło strony jednolitym kolorem, który wytniesz w OBS filtrem \"Chroma Key\". Wybierz kolor, którego nie ma na szachownicy ani bierkach (domyślnie zielony)."
   },
   "timerOff": {
     "warning": "Timer wyłączony: pierwszy otrzymany głos jest grany od razu.",
@@ -640,9 +643,6 @@
     "you": "(ty)",
     "anonOne": "{n} anonimowy",
     "anonMany": "Anonimowi: {n}",
-    "anonymity": "Widoczne: nicki i głosy na żywo. Ukryte nicki: widać wybrane ruchy, ale nie kto na nie głosował. Tajne głosowanie: nic w trakcie tury (bez podium, strzałek i nicków), wynik pojawia się przy losowaniu lub po wykonaniu ruchu. Głosy nadal widać na czacie Twitch: ukryj go na streamie, by głosowanie było naprawdę w ciemno.",
-    "anonymityMulti": "Wybierasz za oba kanały: przeciwnik musi stosować to ustawienie. Widoczne: nicki i głosy na żywo. Ukryte nicki: wybrane ruchy bez nicków. Tajne głosowanie: nic w trakcie tury, wynik pojawia się przy losowaniu lub po wykonaniu ruchu.",
-    "chroma": "Zastępuje tło strony jednolitym kolorem, który wytniesz w OBS filtrem \"Chroma Key\". Wybierz kolor, którego nie ma na szachownicy ani bierkach (domyślnie zielony).",
     "loginHint": "Zaloguj się przez Twitch, by pojawić się ze swoim nickiem."
   },
   "podium": {

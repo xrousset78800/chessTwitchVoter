@@ -600,7 +600,10 @@
     "monoColor": "De kant die jij op het bord speelt; ingeschreven kijkers stemmen voor de andere.",
     "voteTime": "Hoeveel tijd de chat per zet heeft om te stemmen.",
     "choice": "Willekeurig: willekeurige trekking gewogen naar stemmen. Meerderheid: de zet met de meeste stemmen wordt gespeeld.",
-    "multiPublic": "Openbaar: zichtbaar bij Bekijken, elk kanaal kan meedoen. Privé: iedereen kan kijken, maar alleen het kanaal met jouw link kan meedoen."
+    "multiPublic": "Openbaar: zichtbaar bij Bekijken, elk kanaal kan meedoen. Privé: iedereen kan kijken, maar alleen het kanaal met jouw link kan meedoen.",
+    "anonymity": "Zichtbaar: namen en stemmen live getoond. Verborgen namen: je ziet de gestemde zetten, niet wie erop stemde. Geheime stemming: niets tijdens de beurt (geen podium, geen pijl, geen namen), de uitslag verschijnt bij de trekking of wanneer de zet gespeeld wordt. Stemmen staan nog steeds in de Twitch-chat: verberg die op je stream voor een echt blinde stemming.",
+    "anonymityMulti": "Jij kiest voor beide kanalen: je tegenstander moet deze instelling volgen. Zichtbaar: namen en stemmen live. Verborgen namen: de gestemde zetten zonder namen. Geheime stemming: niets tijdens de beurt, de uitslag verschijnt bij de trekking of wanneer de zet gespeeld wordt.",
+    "chroma": "Vervangt de paginaachtergrond door een effen kleur die je in OBS kunt wegfilteren met een \"Chroma Key\"-filter. Kies een kleur die niet op het bord of de stukken voorkomt (standaard groen)."
   },
   "timerOff": {
     "warning": "Timer uit: de eerste ontvangen stem wordt meteen gespeeld.",
@@ -640,9 +643,6 @@
     "you": "(jij)",
     "anonOne": "{n} anoniem",
     "anonMany": "{n} anoniem",
-    "anonymity": "Zichtbaar: namen en stemmen live getoond. Verborgen namen: je ziet de gestemde zetten, niet wie erop stemde. Geheime stemming: niets tijdens de beurt (geen podium, geen pijl, geen namen), de uitslag verschijnt bij de trekking of wanneer de zet gespeeld wordt. Stemmen staan nog steeds in de Twitch-chat: verberg die op je stream voor een echt blinde stemming.",
-    "anonymityMulti": "Jij kiest voor beide kanalen: je tegenstander moet deze instelling volgen. Zichtbaar: namen en stemmen live. Verborgen namen: de gestemde zetten zonder namen. Geheime stemming: niets tijdens de beurt, de uitslag verschijnt bij de trekking of wanneer de zet gespeeld wordt.",
-    "chroma": "Vervangt de paginaachtergrond door een effen kleur die je in OBS kunt wegfilteren met een \"Chroma Key\"-filter. Kies een kleur die niet op het bord of de stukken voorkomt (standaard groen).",
     "loginHint": "Log in met Twitch om met je naam te verschijnen."
   },
   "podium": {

@@ -3,14 +3,91 @@
    ============================================ */
 
 .preset {
-    padding: calc(var(--nav-height) + 30px) 16px 60px;
-    max-width: 680px;
+    padding: calc(var(--nav-height) + 12px) 16px 60px;
+    max-width: 1180px;
     margin: 0 auto;
     min-height: 100vh;
 }
 
-.preset__card {
-    margin-top: 24px;
+/* Deux colonnes : le mode et son explication à gauche, les options et le lancement à droite */
+.preset__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+}
+
+.preset__info,
+.preset__opts {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.preset__opts {
+    padding-left: 32px;
+    border-left: 1px solid var(--border-subtle);
+}
+
+.preset__info .browse__title {
+    font-size: 2rem;
+    margin-bottom: 0;
+}
+
+.preset__info .browse__desc {
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+.preset__info .preset__choices {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+}
+
+.preset__opts .preset__subtitle:first-child { margin-top: 0; }
+
+.preset__how {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: how;
+}
+
+.preset__how li {
+    position: relative;
+    padding-left: 32px;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    counter-increment: how;
+}
+
+.preset__how li::before {
+    content: counter(how);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-purple, #ff8a3d);
+    background: rgba(255, 138, 61, 0.14);
+}
+
+.preset__subtitle i { color: var(--accent-purple, #ff8a3d); }
+
+@media (max-width: 860px) {
+    .preset__layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .preset__opts { padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--border-subtle); }
+    .preset__info .browse__title { font-size: 1.7rem; }
 }
 
 .preset__row {

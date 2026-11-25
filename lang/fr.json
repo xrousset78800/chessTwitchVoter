@@ -600,7 +600,10 @@
     "monoColor": "Le camp que tu joues sur l'échiquier ; les inscrits votent pour l'autre.",
     "voteTime": "Temps laissé au chat pour voter à chaque coup.",
     "choice": "Aléatoire : tirage au sort pondéré par les votes. Majorité : le coup le plus voté est joué.",
-    "multiPublic": "Publique : affichée dans Parcourir, n'importe quelle chaîne peut la rejoindre. Privée : on peut la regarder, mais seule la chaîne qui a ton lien peut la rejoindre."
+    "multiPublic": "Publique : affichée dans Parcourir, n'importe quelle chaîne peut la rejoindre. Privée : on peut la regarder, mais seule la chaîne qui a ton lien peut la rejoindre.",
+    "anonymity": "Visible : pseudos et votes en direct. Pseudos cachés : on voit les coups votés, pas qui les vote. Vote secret : rien pendant le tour (ni podium, ni flèche, ni pseudos), le résultat se découvre au tirage ou quand le coup est joué. Les votes restent écrits dans le chat Twitch : masque-le sur ton stream pour un vrai vote à l'aveugle.",
+    "anonymityMulti": "Tu choisis pour les deux chaînes : ton adversaire suit obligatoirement ce réglage. Visible : pseudos et votes en direct. Pseudos cachés : les coups votés sans les pseudos. Vote secret : rien pendant le tour, le résultat se découvre au tirage ou quand le coup est joué.",
+    "chroma": "Remplace le fond de la page par une couleur unie, à découper dans OBS avec un filtre « Clé de chrominance ». Choisis une couleur absente de l'échiquier et des pièces (vert par défaut)."
   },
   "timerOff": {
     "warning": "Timer désactivé : le premier vote reçu est joué immédiatement.",
@@ -640,9 +643,6 @@
     "you": "(toi)",
     "anonOne": "{n} anonyme",
     "anonMany": "{n} anonymes",
-    "anonymity": "Visible : pseudos et votes en direct. Pseudos cachés : on voit les coups votés, pas qui les vote. Vote secret : rien pendant le tour (ni podium, ni flèche, ni pseudos), le résultat se découvre au tirage ou quand le coup est joué. Les votes restent écrits dans le chat Twitch : masque-le sur ton stream pour un vrai vote à l'aveugle.",
-    "anonymityMulti": "Tu choisis pour les deux chaînes : ton adversaire suit obligatoirement ce réglage. Visible : pseudos et votes en direct. Pseudos cachés : les coups votés sans les pseudos. Vote secret : rien pendant le tour, le résultat se découvre au tirage ou quand le coup est joué.",
-    "chroma": "Remplace le fond de la page par une couleur unie, à découper dans OBS avec un filtre « Clé de chrominance ». Choisis une couleur absente de l'échiquier et des pièces (vert par défaut).",
     "loginHint": "Connecte-toi à Twitch pour apparaître avec ton pseudo."
   },
   "podium": {
@@ -864,6 +864,41 @@
       "camDenied": "Accès à la caméra refusé par le navigateur",
       "camMissing": "Caméra introuvable",
       "camNoSupport": "Caméra : utilise Chrome ou Edge pour diffuser"
+    }
+  },
+  "newInfo": {
+    "howTitle": "Comment ça marche",
+    "options": "Options",
+    "modeOptions": "Options du mode",
+    "rush": {
+      "how1": "Un puzzle s'affiche sur l'échiquier : le chat propose des coups dans le tchat.",
+      "how2": "En Illimité, le premier coup valide est joué ; avec un temps, c'est le coup le plus voté à la fin du minuteur.",
+      "how3": "Chaque puzzle résolu en amène un plus difficile. Un mauvais coup, ou aucun vote à temps, compte comme une erreur.",
+      "how4": "À la troisième erreur, le run s'arrête. Connecté avec Twitch, ton score entre dans le classement de ta chaîne.",
+      "modesTitle": "Choisis le temps pour voter"
+    },
+    "mono": {
+      "how1": "Tu ouvres les inscriptions : tes viewers tapent join dans le chat pendant 2 minutes.",
+      "how2": "La partie démarre ensuite toute seule. Seuls les inscrits votent, les autres regardent.",
+      "how3": "Tu peux réserver les inscriptions aux followers ou aux abonnés.",
+      "choicesTitle": "Qui joue contre qui ?"
+    },
+    "multi": {
+      "how1": "Tu crées la partie : ta chaîne joue les Blancs, la chaîne qui te rejoint joue les Noirs.",
+      "how2": "Dès qu'une chaîne rejoint, les deux chats ont 2 minutes pour s'inscrire.",
+      "how3": "Chaque chat vote les coups de son camp, et les deux chaînes suivent la même partie en direct.",
+      "visibilityTitle": "Qui peut te rejoindre ?"
+    },
+    "free": {
+      "intro": "Pas d'inscription ici : tout ton chat vote, coup après coup. Pars d'une configuration prête à l'emploi, ou choisis Personnaliser pour régler le mode de jeu et chaque option du vote."
+    },
+    "modes": {
+      "sandbox": "Tout le chat vote pour les deux camps, coup après coup. Le plus simple pour jouer avec ta communauté.",
+      "problems": "Le chat résout des puzzles, sur les thèmes de ton choix, avec une pause entre chaque puzzle.",
+      "oneVsAll": "Un joueur seul, désigné par son pseudo Twitch, affronte tout le reste du chat.",
+      "oneVsOne": "Deux joueurs désignés par leur pseudo Twitch s'affrontent pendant que le chat regarde.",
+      "chatVsChat": "Deux chaînes Twitch s'affrontent : le chat de la première joue les Blancs, celui de la seconde les Noirs.",
+      "vsBot": "Le chat vote ses coups face à Stockfish, de 300 à 2400+ Elo. Choisis le niveau et le camp du chat."
     }
   }
 }

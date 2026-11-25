@@ -111,10 +111,55 @@
                         </div>
                         <div class="sandbox-setup__grid">
                             <div class="sandbox-setup__col launch-only">
+                                <p class="setup-intro" data-i18n="newInfo.free.intro">Pas d'inscription ici : tout ton chat vote, coup après coup. Pars d'une configuration prête à l'emploi, ou choisis Personnaliser pour régler le mode de jeu et chaque option du vote.</p>
                                 <!-- Configurations suggérées : prêtes à l'emploi, au-dessus des sauvegardées -->
                                 <div class="setup-configs setup-presets">
                                     <h3 class="setup-configs__title"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="suggested.title">Configurations suggérées</span></h3>
                                     <div id="presets-list" class="presets-list"></div>
+                                </div>
+                                <!-- Mode selector (Personnaliser) : les tuiles et la description du mode choisi -->
+                                <div class="panel launch-only">
+                                    <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
+                                    <div class="panel__content">
+                                        <div class="mode-selector">
+                                            <div class="mode-option is-active" data-mode="sandbox">
+                                                <span class="mode-option__icon">🎲</span>
+                                                <span class="mode-option__label">YOLO</span>
+                                            </div>
+                                            <div class="mode-option" data-mode="problems">
+                                                <span class="mode-option__icon">🧩</span>
+                                                <span class="mode-option__label" data-i18n="gameMode.problems.label">Problèmes</span>
+                                            </div>
+                                            <div class="mode-option" data-mode="rush" style="display:none;">
+                                                <span class="mode-option__icon">🔥</span>
+                                                <span class="mode-option__label">Puzzle Rush</span>
+                                            </div>
+                                            <div class="mode-option" data-mode="oneVsAll">
+                                                <span class="mode-option__icon">👤</span>
+                                                <span class="mode-option__label">1 vs All</span>
+                                            </div>
+                                            <div class="mode-option" data-mode="oneVsOne">
+                                                <span class="mode-option__icon">⚔️</span>
+                                                <span class="mode-option__label">1 vs 1</span>
+                                            </div>
+                                            <div class="mode-option" data-mode="chatVsChat">
+                                                <span class="mode-option__icon">🎭</span>
+                                                <span class="mode-option__label">Chat vs Chat</span>
+                                            </div>
+                                            <div class="mode-option" data-mode="vsBot">
+                                                <span class="mode-option__icon">🤖</span>
+                                                <span class="mode-option__label" data-i18n="gameMode.vsBot.label">Contre Stockfish</span>
+                                            </div>
+                                        </div>
+                                        <div class="mode-desc">
+                                        <p data-mode-desc="sandbox" data-i18n="newInfo.modes.sandbox">Tout le chat vote pour les deux camps, coup après coup. Le plus simple pour jouer avec ta communauté.</p>
+                                        <p data-mode-desc="problems" data-i18n="newInfo.modes.problems">Le chat résout des puzzles, sur les thèmes de ton choix, avec une pause entre chaque puzzle.</p>
+                                        <p data-mode-desc="oneVsAll" data-i18n="newInfo.modes.oneVsAll">Un joueur seul, désigné par son pseudo Twitch, affronte tout le reste du chat.</p>
+                                        <p data-mode-desc="oneVsOne" data-i18n="newInfo.modes.oneVsOne">Deux joueurs désignés par leur pseudo Twitch s'affrontent pendant que le chat regarde.</p>
+                                        <p data-mode-desc="chatVsChat" data-i18n="newInfo.modes.chatVsChat">Deux chaînes Twitch s'affrontent : le chat de la première joue les Blancs, celui de la seconde les Noirs.</p>
+                                        <p data-mode-desc="vsBot" data-i18n="newInfo.modes.vsBot">Le chat vote ses coups face à Stockfish, de 300 à 2400+ Elo. Choisis le niveau et le camp du chat.</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <!-- Configurations sauvegardées : simple liste sous les modes -->
                                 <div class="setup-configs">
@@ -125,124 +170,94 @@
                                 </div>
                             </div>
                             <div class="sandbox-setup__col">
-                            <!-- Mode selector -->
-                            <div class="panel launch-only">
-                                <div class="panel__header" data-i18n="gameMode.title"><i class="fas fa-gamepad"></i> Mode de jeu</div>
+                            <!-- Options du mode choisi (pseudos, niveau de Stockfish, thèmes…) ; caché quand le mode n'en a pas -->
+                            <div class="panel launch-only setup-mode-opts">
+                                <div class="panel__header"><i class="fas fa-sliders-h"></i> <span data-i18n="newInfo.modeOptions">Options du mode</span></div>
                                 <div class="panel__content">
-                                    <div class="mode-selector">
-                                        <div class="mode-option is-active" data-mode="sandbox">
-                                            <span class="mode-option__icon">🎲</span>
-                                            <span class="mode-option__label">YOLO</span>
+                                        <!-- Mode: 1vsAll options -->
+                                        <div class="mode-options" id="options-oneVsAll">
+                                            <div class="player-input">
+                                                <span data-i18n="gameMode.1vall.title" class="player-input__label">Joueur seul</span>
+                                                <input type="text" class="input input--sm player-input__field" id="player-solo" placeholder="Pseudo...">
+                                            </div>
                                         </div>
-                                        <div class="mode-option" data-mode="problems">
-                                            <span class="mode-option__icon">🧩</span>
-                                            <span class="mode-option__label" data-i18n="gameMode.problems.label">Problèmes</span>
-                                        </div>
-                                        <div class="mode-option" data-mode="rush" style="display:none;">
-                                            <span class="mode-option__icon">🔥</span>
-                                            <span class="mode-option__label">Puzzle Rush</span>
-                                        </div>
-                                        <div class="mode-option" data-mode="oneVsAll">
-                                            <span class="mode-option__icon">👤</span>
-                                            <span class="mode-option__label">1 vs All</span>
-                                        </div>
-                                        <div class="mode-option" data-mode="oneVsOne">
-                                            <span class="mode-option__icon">⚔️</span>
-                                            <span class="mode-option__label">1 vs 1</span>
-                                        </div>
-                                        <div class="mode-option" data-mode="chatVsChat">
-                                            <span class="mode-option__icon">🎭</span>
-                                            <span class="mode-option__label">Chat vs Chat</span>
-                                        </div>
-                                        <div class="mode-option" data-mode="vsBot">
-                                            <span class="mode-option__icon">🤖</span>
-                                            <span class="mode-option__label" data-i18n="gameMode.vsBot.label">Contre Stockfish</span>
-                                        </div>
-                                    </div>
-                                    <!-- Mode: 1vsAll options -->
-                                    <div class="mode-options" id="options-oneVsAll">
-                                        <div class="player-input">
-                                            <span data-i18n="gameMode.1vall.title" class="player-input__label">Joueur seul</span>
-                                            <input type="text" class="input input--sm player-input__field" id="player-solo" placeholder="Pseudo...">
-                                        </div>
-                                    </div>
 
-                                    <!-- Mode: 1vs1 options -->
-                                    <div class="mode-options" id="options-oneVsOne">
-                                        <div class="player-input">
-                                            <span class="player-input__label" data-i18n="gameMode.1v1.player1">Joueur 1 ⬜</span>
-                                            <input type="text" class="input input--sm player-input__field" id="player-1" placeholder="Pseudo...">
+                                        <!-- Mode: 1vs1 options -->
+                                        <div class="mode-options" id="options-oneVsOne">
+                                            <div class="player-input">
+                                                <span class="player-input__label" data-i18n="gameMode.1v1.player1">Joueur 1 ⬜</span>
+                                                <input type="text" class="input input--sm player-input__field" id="player-1" placeholder="Pseudo...">
+                                            </div>
+                                            <div class="player-input">
+                                                <span class="player-input__label" data-i18n="gameMode.1v1.player2">Joueur 2 ⬛</span>
+                                                <input type="text" class="input input--sm player-input__field" id="player-2" placeholder="Pseudo...">
+                                            </div>
                                         </div>
-                                        <div class="player-input">
-                                            <span class="player-input__label" data-i18n="gameMode.1v1.player2">Joueur 2 ⬛</span>
-                                            <input type="text" class="input input--sm player-input__field" id="player-2" placeholder="Pseudo...">
-                                        </div>
-                                    </div>
 
-                                    <!-- Mode: ChatVsChat options -->
-                                    <div class="mode-options" id="options-chatVsChat">
-                                        <div class="player-input">
-                                            <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer1">Chat 1 ⬜</span>
-                                            <input type="text" class="input input--sm player-input__field" id="chat-1" placeholder="Channel...">
+                                        <!-- Mode: ChatVsChat options -->
+                                        <div class="mode-options" id="options-chatVsChat">
+                                            <div class="player-input">
+                                                <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer1">Chat 1 ⬜</span>
+                                                <input type="text" class="input input--sm player-input__field" id="chat-1" placeholder="Channel...">
+                                            </div>
+                                            <div class="player-input">
+                                                <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer2">Chat 2 ⬛</span>
+                                                <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Channel...">
+                                            </div>
                                         </div>
-                                        <div class="player-input">
-                                            <span class="player-input__label" data-i18n="gameMode.chatvchat.streamer2">Chat 2 ⬛</span>
-                                            <input type="text" class="input input--sm player-input__field" id="chat-2" placeholder="Channel...">
-                                        </div>
-                                    </div>
 
-                                    <!-- Mode: Contre Stockfish (le chat vote ses coups, Stockfish joue l'autre camp) -->
-                                    <div class="mode-options" id="options-vsBot">
-                                        <div class="form-row">
-                                            <label class="form-label" for="bot-elo"><i class="fas fa-robot"></i> <span data-i18n="gameMode.vsBot.level">Niveau de Stockfish</span></label>
-                                            <select class="input input--sm input--inline" id="bot-elo"></select>
+                                        <!-- Mode: Contre Stockfish (le chat vote ses coups, Stockfish joue l'autre camp) -->
+                                        <div class="mode-options" id="options-vsBot">
+                                            <div class="form-row">
+                                                <label class="form-label" for="bot-elo"><i class="fas fa-robot"></i> <span data-i18n="gameMode.vsBot.level">Niveau de Stockfish</span></label>
+                                                <select class="input input--sm input--inline" id="bot-elo"></select>
+                                            </div>
+                                            <div class="form-row">
+                                                <label class="form-label" for="bot-side"><i class="fas fa-chess"></i> <span data-i18n="gameMode.vsBot.side">Le chat joue</span></label>
+                                                <select class="input input--sm input--inline" id="bot-side">
+                                                    <option value="random" data-i18n="gameMode.vsBot.random">Au hasard</option>
+                                                    <option value="w" data-i18n="gameMode.vsBot.white">Blancs</option>
+                                                    <option value="b" data-i18n="gameMode.vsBot.black">Noirs</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div class="form-row">
-                                            <label class="form-label" for="bot-side"><i class="fas fa-chess"></i> <span data-i18n="gameMode.vsBot.side">Le chat joue</span></label>
-                                            <select class="input input--sm input--inline" id="bot-side">
-                                                <option value="random" data-i18n="gameMode.vsBot.random">Au hasard</option>
-                                                <option value="w" data-i18n="gameMode.vsBot.white">Blancs</option>
-                                                <option value="b" data-i18n="gameMode.vsBot.black">Noirs</option>
-                                            </select>
-                                        </div>
-                                    </div>
 
-                                    <!-- Mode: Puzzle Rush options -->
-                                    <div class="mode-options" id="options-rush">
-                                        <p class="form-hint rush-rules" data-i18n="gameMode.rush.rules" data-i18n-html>Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité). <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote avant la fin du timer compte comme une erreur.</p>
-                                        <div class="form-row">
-                                            <label class="form-label" for="rush-start-rating" data-info="rushRating">
-                                                <i class="fas fa-signal"></i> <span data-i18n="rushPage.rating">Rating de départ</span>
-                                            </label>
-                                            <input type="number" id="rush-start-rating" class="input input--sm"
-                                                   style="width: 90px;" min="100" max="3000" step="50" value="100">
+                                        <!-- Mode: Puzzle Rush options -->
+                                        <div class="mode-options" id="options-rush">
+                                            <p class="form-hint rush-rules" data-i18n="gameMode.rush.rules" data-i18n-html>Le chat enchaîne des puzzles de plus en plus durs (vote à la majorité). <strong>3 erreurs</strong> et le run s'arrête. Un mauvais coup ou aucun vote avant la fin du timer compte comme une erreur.</p>
+                                            <div class="form-row">
+                                                <label class="form-label" for="rush-start-rating" data-info="rushRating">
+                                                    <i class="fas fa-signal"></i> <span data-i18n="rushPage.rating">Rating de départ</span>
+                                                </label>
+                                                <input type="number" id="rush-start-rating" class="input input--sm"
+                                                       style="width: 90px;" min="100" max="3000" step="50" value="100">
+                                            </div>
+                                            <div class="form-row">
+                                                <label class="form-label" for="rush-pause" data-info="rushPause">
+                                                    <i class="fas fa-clock"></i> <span data-i18n="gameMode.rush.pause">Pause entre puzzles</span>
+                                                </label>
+                                                <input type="number" id="rush-pause" class="input input--sm"
+                                                       style="width: 80px;" min="1" max="60" value="15">
+                                            </div>
+                                            <p class="form-hint" data-i18n="gameMode.rush.recordHint" data-i18n-html>Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href="/records">Records</a>.</p>
                                         </div>
-                                        <div class="form-row">
-                                            <label class="form-label" for="rush-pause" data-info="rushPause">
-                                                <i class="fas fa-clock"></i> <span data-i18n="gameMode.rush.pause">Pause entre puzzles</span>
-                                            </label>
-                                            <input type="number" id="rush-pause" class="input input--sm"
-                                                   style="width: 80px;" min="1" max="60" value="15">
-                                        </div>
-                                        <p class="form-hint" data-i18n="gameMode.rush.recordHint" data-i18n-html>Le record de la chaîne est enregistré si tu es connecté avec Twitch et s'affiche dans <a href="/records">Records</a>.</p>
-                                    </div>
 
-                                    <!-- Mode: Problems options -->
-                                    <div class="mode-options" id="options-problems">
-                                        <div class="form-group">
-                                            <label data-i18n="gameMode.problems.themes" data-info="problemThemes" class="form-label">Thèmes</label>
-                                            <select class="input select" id="problem-themes" multiple>
+                                        <!-- Mode: Problems options -->
+                                        <div class="mode-options" id="options-problems">
+                                            <div class="form-group">
+                                                <label data-i18n="gameMode.problems.themes" data-info="problemThemes" class="form-label">Thèmes</label>
+                                                <select class="input select" id="problem-themes" multiple>
 
-                                            </select>
+                                                </select>
+                                            </div>
+                                            <div class="form-row">
+                                                <label class="form-label" for="problem-pause" data-info="problemPause">
+                                                    <i class="fas fa-clock"></i> <span data-i18n="gameMode.problems.pause">Pause</span>
+                                                </label>
+                                                <input type="number" id="problem-pause" class="input input--sm"
+                                                       style="width: 80px;" min="1" max="60" value="15">
+                                            </div>
                                         </div>
-                                        <div class="form-row">
-                                            <label class="form-label" for="problem-pause" data-info="problemPause">
-                                                <i class="fas fa-clock"></i> <span data-i18n="gameMode.problems.pause">Pause</span>
-                                            </label>
-                                            <input type="number" id="problem-pause" class="input input--sm"
-                                                   style="width: 80px;" min="1" max="60" value="15">
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                             <!-- En cours de partie : outils d'affichage -->
@@ -535,23 +550,35 @@
         <!-- ==================== ROUTE PUZZLE RUSH ==================== -->
         <div class="page" id="page-rush">
             <div class="preset">
-                <h1 class="browse__title">🔥 Puzzle Rush</h1>
-                <p class="browse__desc" data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</p>
-                <div class="battle-setup__card battle-setup__card--rush preset__card">
-                    <label class="form-label" data-i18n="rushPage.mode" data-info="rushMode">Temps pour voter</label>
-                    <div class="rush-modes" data-records="rush-page-records" role="group" aria-label="Temps pour voter">
-                        <button type="button" class="rush-mode" data-rush-mode="0" data-i18n="rushPage.modeUnlimited">Illimité</button>
-                        <button type="button" class="rush-mode" data-rush-mode="30">30 s</button>
-                        <button type="button" class="rush-mode" data-rush-mode="60">1 min</button>
-                        <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
+                <!-- Deux colonnes : le mode et son explication à gauche, le lancement à droite -->
+                <div class="battle-setup__card battle-setup__card--rush preset__card preset__layout">
+                    <div class="preset__info">
+                        <h1 class="browse__title">🔥 Puzzle Rush</h1>
+                        <p class="browse__desc" data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</p>
+                        <h2 class="preset__subtitle" data-i18n="newInfo.howTitle">Comment ça marche</h2>
+                        <ul class="preset__how">
+                            <li data-i18n="newInfo.rush.how1">Un puzzle s'affiche sur l'échiquier : le chat propose des coups dans le tchat.</li>
+                            <li data-i18n="newInfo.rush.how2">En Illimité, le premier coup valide est joué ; avec un temps, c'est le coup le plus voté à la fin du minuteur.</li>
+                            <li data-i18n="newInfo.rush.how3">Chaque puzzle résolu en amène un plus difficile. Un mauvais coup, ou aucun vote à temps, compte comme une erreur.</li>
+                            <li data-i18n="newInfo.rush.how4">À la troisième erreur, le run s'arrête. Connecté avec Twitch, ton score entre dans le classement de ta chaîne.</li>
+                        </ul>
+                        <h2 class="preset__subtitle" data-i18n="newInfo.rush.modesTitle">Choisis le temps pour voter</h2>
+                        <div class="rush-modes" data-records="rush-page-records" role="group" aria-label="Temps pour voter">
+                            <button type="button" class="rush-mode" data-rush-mode="0" data-i18n="rushPage.modeUnlimited">Illimité</button>
+                            <button type="button" class="rush-mode" data-rush-mode="30">30 s</button>
+                            <button type="button" class="rush-mode" data-rush-mode="60">1 min</button>
+                            <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
+                        </div>
+                        <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.</p>
                     </div>
-                    <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.</p>
-                    <button class="btn btn--primary btn--full" id="rush-page-start">
-                        <i class="fas fa-play"></i> <span data-i18n="rushPage.start">Lancer un run</span>
-                    </button>
-                    <h2 class="preset__subtitle" data-i18n="rushPage.records">Records des chaînes</h2>
-                    <div id="rush-page-records" class="rush-records">
-                        <div class="rush-records__empty" data-i18n="rushPage.loading">Chargement des records…</div>
+                    <div class="preset__opts">
+                        <button class="btn btn--primary btn--full btn--lg" id="rush-page-start">
+                            <i class="fas fa-play"></i> <span data-i18n="rushPage.start">Lancer un run</span>
+                        </button>
+                        <h2 class="preset__subtitle" data-i18n="rushPage.records">Records des chaînes</h2>
+                        <div id="rush-page-records" class="rush-records">
+                            <div class="rush-records__empty" data-i18n="rushPage.loading">Chargement des records…</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -560,9 +587,18 @@
         <!-- ==================== ROUTE MONO ==================== -->
         <div class="page" id="page-mono">
             <div class="preset">
-                <h1 class="browse__title">👥 Mono</h1>
-                <p class="browse__desc" data-i18n="mono.desc">Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.</p>
-                <div class="battle-setup__card preset__card">
+                <!-- Deux colonnes : la formule et son explication à gauche, les options à droite -->
+                <div class="battle-setup__card preset__card preset__layout">
+                    <div class="preset__info">
+                    <h1 class="browse__title">👥 Mono</h1>
+                    <p class="browse__desc" data-i18n="mono.desc">Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.</p>
+                    <h2 class="preset__subtitle" data-i18n="newInfo.howTitle">Comment ça marche</h2>
+                    <ul class="preset__how">
+                        <li data-i18n="newInfo.mono.how1">Tu ouvres les inscriptions : tes viewers tapent join dans le chat pendant 2 minutes.</li>
+                        <li data-i18n="newInfo.mono.how2">La partie démarre ensuite toute seule. Seuls les inscrits votent, les autres regardent.</li>
+                        <li data-i18n="newInfo.mono.how3">Tu peux réserver les inscriptions aux followers ou aux abonnés.</li>
+                    </ul>
+                    <h2 class="preset__subtitle" data-i18n="newInfo.mono.choicesTitle">Qui joue contre qui ?</h2>
                     <div class="preset__choices">
                         <button class="preset-choice is-active" type="button" data-format="vsStreamer">
                             <span class="preset-choice__title" data-i18n="mono.vsStreamer">Moi contre les inscrits</span>
@@ -577,6 +613,9 @@
                             <span class="preset-choice__desc" data-i18n="mono.vsBotDesc">Les inscrits votent leurs coups face à Stockfish, au niveau choisi.</span>
                         </button>
                     </div>
+                    </div>
+                    <div class="preset__opts">
+                    <h2 class="preset__subtitle"><i class="fas fa-sliders-h"></i> <span data-i18n="newInfo.options">Options</span></h2>
                     <div class="preset__row" id="mono-bot-group" style="display: none">
                         <div class="form-group">
                             <label class="form-label" for="mono-bot-elo"><i class="fas fa-robot"></i> <span data-i18n="gameMode.vsBot.level">Niveau de Stockfish</span></label>
@@ -626,9 +665,10 @@
                             <button type="button" class="toggle toggle--chip toggle--follow" id="mono-follow-toggle" data-i18n-title="presets.followersHint" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
                             <button type="button" class="toggle toggle--chip toggle--sub" id="mono-sub-toggle" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                         </div>
-                    <button class="btn btn--primary btn--full" id="mono-start">
+                    <button class="btn btn--primary btn--full btn--lg" id="mono-start">
                         <i class="fas fa-play"></i> <span data-i18n="mono.start">Ouvrir les inscriptions</span>
                     </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -636,9 +676,18 @@
         <!-- ==================== ROUTE MULTI ==================== -->
         <div class="page" id="page-multi">
             <div class="preset">
-                <h1 class="browse__title">⚔ Multi</h1>
-                <p class="browse__desc" data-i18n="multi.desc">Deux chaînes s'affrontent, la tienne joue les Blancs. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</p>
-                <div class="battle-setup__card preset__card">
+                <!-- Deux colonnes : la formule et son explication à gauche, les options à droite -->
+                <div class="battle-setup__card preset__card preset__layout">
+                    <div class="preset__info">
+                    <h1 class="browse__title">⚔ Multi</h1>
+                    <p class="browse__desc" data-i18n="multi.desc">Deux chaînes s'affrontent, la tienne joue les Blancs. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</p>
+                    <h2 class="preset__subtitle" data-i18n="newInfo.howTitle">Comment ça marche</h2>
+                    <ul class="preset__how">
+                        <li data-i18n="newInfo.multi.how1">Tu crées la partie : ta chaîne joue les Blancs, la chaîne qui te rejoint joue les Noirs.</li>
+                        <li data-i18n="newInfo.multi.how2">Dès qu'une chaîne rejoint, les deux chats ont 2 minutes pour s'inscrire.</li>
+                        <li data-i18n="newInfo.multi.how3">Chaque chat vote les coups de son camp, et les deux chaînes suivent la même partie en direct.</li>
+                    </ul>
+                    <h2 class="preset__subtitle" data-i18n="newInfo.multi.visibilityTitle">Qui peut te rejoindre ?</h2>
                     <div class="multi-visibility" id="multi-visibility" data-visibility="public">
                         <label class="multi-visibility__switch">
                             <input type="checkbox" id="multi-public" checked>
@@ -651,6 +700,9 @@
                             <i class="fas fa-lock"></i> <span data-i18n="multi.privateDesc">Visible dans Parcourir (on peut regarder) mais seule la chaîne qui a le lien peut la rejoindre. Le lien n'apparaît jamais à l'écran.</span>
                         </p>
                     </div>
+                    </div>
+                    <div class="preset__opts">
+                    <h2 class="preset__subtitle"><i class="fas fa-sliders-h"></i> <span data-i18n="newInfo.options">Options</span></h2>
                         <div class="preset__row">
                             <div class="form-group">
                                 <label class="form-label"><i class="fas fa-clock"></i> <span data-i18n="presets.voteTime" data-info="voteTime">Temps de vote (s)</span></label>
@@ -682,9 +734,10 @@
                             <label class="form-label"><i class="fas fa-user-secret"></i> <span data-i18n="anonymity.title" data-info="anonymityMulti">Anonymat du vote</span></label>
                             <div class="anon-picker" data-anon-picker></div>
                         </div>
-                    <button class="btn btn--primary btn--full" id="multi-start">
+                    <button class="btn btn--primary btn--full btn--lg" id="multi-start">
                         <i class="fas fa-play"></i> <span data-i18n="multi.start">Créer la partie</span>
                     </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1684,8 +1684,8 @@ fullReset() {
         });
         // Le choix du mode de jeu n'apparaît qu'avec « Personnaliser » (une suggestion fixe déjà le mode)
         const modePanel = document.querySelector('#sandbox-setup .mode-selector')?.closest('.panel');
-        // Contre Stockfish : le niveau et le camp restent réglables avec la suggestion
-        if (modePanel) modePanel.hidden = anyMatch && AppState.gameMode !== 'vsBot';
+        // Les options du mode (niveau de Stockfish, pseudos…) sont dans leur propre panneau, toujours visibles
+        if (modePanel) modePanel.hidden = anyMatch;
     },
 
     /** Remplit l'écran avec une configuration suggérée (sans lancer : on peut encore ajuster) */

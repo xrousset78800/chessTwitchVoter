@@ -600,7 +600,10 @@
     "monoColor": "Tahtada oynadığın taraf; kayıtlı izleyiciler diğeri için oy verir.",
     "voteTime": "Chat'in her hamle için oy verme süresi.",
     "choice": "Rastgele: oylara göre ağırlıklı rastgele çekiliş. Çoğunluk: en çok oy alan hamle oynanır.",
-    "multiPublic": "Herkese açık: Göz at'ta listelenir, her kanal katılabilir. Özel: herkes izleyebilir ama yalnızca bağlantına sahip kanal katılabilir."
+    "multiPublic": "Herkese açık: Göz at'ta listelenir, her kanal katılabilir. Özel: herkes izleyebilir ama yalnızca bağlantına sahip kanal katılabilir.",
+    "anonymity": "Görünür: kullanıcı adları ve oylar canlı gösterilir. Gizli adlar: oylanan hamleleri görürsün, kimin oyladığını değil. Gizli oy: tur boyunca hiçbir şey yok (podyum, ok, ad yok), sonuç çekilişte ya da hamle oynandığında ortaya çıkar. Oylar yine de Twitch chat'inde yazılı kalır: gerçekten kör bir oylama için yayınında chat'i gizle.",
+    "anonymityMulti": "İki kanal için de sen seçersin: rakibin bu ayara uymak zorunda. Görünür: kullanıcı adları ve oylar canlı. Gizli adlar: kullanıcı adları olmadan oylanan hamleler. Gizli oy: tur boyunca hiçbir şey yok, sonuç çekilişte ya da hamle oynandığında ortaya çıkar.",
+    "chroma": "Sayfa arka planını, OBS'te \"Chroma Key\" filtresiyle silebileceğin düz bir renkle değiştirir. Tahtada ve taşlarda olmayan bir renk seç (varsayılan yeşil)."
   },
   "timerOff": {
     "warning": "Zamanlayıcı kapalı: gelen ilk oy hemen oynanır.",
@@ -640,9 +643,6 @@
     "you": "(sen)",
     "anonOne": "{n} anonim",
     "anonMany": "{n} anonim",
-    "anonymity": "Görünür: kullanıcı adları ve oylar canlı gösterilir. Gizli adlar: oylanan hamleleri görürsün, kimin oyladığını değil. Gizli oy: tur boyunca hiçbir şey yok (podyum, ok, ad yok), sonuç çekilişte ya da hamle oynandığında ortaya çıkar. Oylar yine de Twitch chat'inde yazılı kalır: gerçekten kör bir oylama için yayınında chat'i gizle.",
-    "anonymityMulti": "İki kanal için de sen seçersin: rakibin bu ayara uymak zorunda. Görünür: kullanıcı adları ve oylar canlı. Gizli adlar: kullanıcı adları olmadan oylanan hamleler. Gizli oy: tur boyunca hiçbir şey yok, sonuç çekilişte ya da hamle oynandığında ortaya çıkar.",
-    "chroma": "Sayfa arka planını, OBS'te \"Chroma Key\" filtresiyle silebileceğin düz bir renkle değiştirir. Tahtada ve taşlarda olmayan bir renk seç (varsayılan yeşil).",
     "loginHint": "Kullanıcı adınla görünmek için Twitch ile giriş yap."
   },
   "podium": {

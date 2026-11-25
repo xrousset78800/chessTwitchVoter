@@ -600,7 +600,10 @@
     "monoColor": "Die Seite, die du am Brett spielst; die angemeldeten Zuschauer stimmen für die andere ab.",
     "voteTime": "Wie lange der Chat pro Zug abstimmen kann.",
     "choice": "Zufall: Zufallsauslosung, gewichtet nach Stimmen. Mehrheit: Der Zug mit den meisten Stimmen wird gespielt.",
-    "multiPublic": "Öffentlich: unter Entdecken gelistet, jeder Kanal kann beitreten. Privat: Jeder kann zuschauen, aber nur der Kanal mit deinem Link kann beitreten."
+    "multiPublic": "Öffentlich: unter Entdecken gelistet, jeder Kanal kann beitreten. Privat: Jeder kann zuschauen, aber nur der Kanal mit deinem Link kann beitreten.",
+    "anonymity": "Sichtbar: Namen und Stimmen live. Namen verborgen: Man sieht die gewählten Züge, aber nicht, wer sie gewählt hat. Geheime Abstimmung: nichts während des Zugs (kein Podium, kein Pfeil, keine Namen), das Ergebnis zeigt sich bei der Auslosung oder wenn der Zug gespielt wird. Die Stimmen stehen trotzdem im Twitch-Chat: Blende ihn in deinem Stream aus für eine echte Blind-Abstimmung.",
+    "anonymityMulti": "Du wählst für beide Kanäle: Dein Gegner muss diese Einstellung übernehmen. Sichtbar: Namen und Stimmen live. Namen verborgen: die gewählten Züge ohne Namen. Geheime Abstimmung: nichts während des Zugs, das Ergebnis zeigt sich bei der Auslosung oder wenn der Zug gespielt wird.",
+    "chroma": "Ersetzt den Seitenhintergrund durch eine Vollfarbe, die du in OBS mit einem \"Chroma Key\"-Filter freistellen kannst. Wähle eine Farbe, die nicht auf Brett oder Figuren vorkommt (standardmäßig Grün)."
   },
   "timerOff": {
     "warning": "Timer aus: Die erste eingehende Stimme wird sofort gespielt.",
@@ -640,9 +643,6 @@
     "you": "(du)",
     "anonOne": "{n} anonym",
     "anonMany": "{n} anonym",
-    "anonymity": "Sichtbar: Namen und Stimmen live. Namen verborgen: Man sieht die gewählten Züge, aber nicht, wer sie gewählt hat. Geheime Abstimmung: nichts während des Zugs (kein Podium, kein Pfeil, keine Namen), das Ergebnis zeigt sich bei der Auslosung oder wenn der Zug gespielt wird. Die Stimmen stehen trotzdem im Twitch-Chat: Blende ihn in deinem Stream aus für eine echte Blind-Abstimmung.",
-    "anonymityMulti": "Du wählst für beide Kanäle: Dein Gegner muss diese Einstellung übernehmen. Sichtbar: Namen und Stimmen live. Namen verborgen: die gewählten Züge ohne Namen. Geheime Abstimmung: nichts während des Zugs, das Ergebnis zeigt sich bei der Auslosung oder wenn der Zug gespielt wird.",
-    "chroma": "Ersetzt den Seitenhintergrund durch eine Vollfarbe, die du in OBS mit einem \"Chroma Key\"-Filter freistellen kannst. Wähle eine Farbe, die nicht auf Brett oder Figuren vorkommt (standardmäßig Grün).",
     "loginHint": "Melde dich mit Twitch an, um mit deinem Namen zu erscheinen."
   },
   "podium": {

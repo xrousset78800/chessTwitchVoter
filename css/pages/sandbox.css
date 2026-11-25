@@ -489,15 +489,43 @@
 /* Lancement : la carte remplace l'échiquier et la barre d'outils */
 body.sandbox-launch .sandbox-setup {
     display: block;
-    max-width: 1280px;
+    max-width: 1180px;
     margin: 0 auto;
 }
+/* Deux colonnes égales : modes et descriptions à gauche, options à droite */
+body.sandbox-launch .sandbox-setup__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.setup-intro {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+/* Description du mode choisi, sous les tuiles */
+.mode-desc p {
+    display: none;
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-left: 3px solid var(--accent-purple, #ff8a3d);
+    border-radius: 3px;
+    background: rgba(255, 138, 61, 0.07);
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+#sandbox-setup:has(.mode-option.is-active[data-mode="sandbox"]) .mode-desc [data-mode-desc="sandbox"],
+#sandbox-setup:has(.mode-option.is-active[data-mode="problems"]) .mode-desc [data-mode-desc="problems"],
+#sandbox-setup:has(.mode-option.is-active[data-mode="oneVsAll"]) .mode-desc [data-mode-desc="oneVsAll"],
+#sandbox-setup:has(.mode-option.is-active[data-mode="oneVsOne"]) .mode-desc [data-mode-desc="oneVsOne"],
+#sandbox-setup:has(.mode-option.is-active[data-mode="chatVsChat"]) .mode-desc [data-mode-desc="chatVsChat"],
+#sandbox-setup:has(.mode-option.is-active[data-mode="vsBot"]) .mode-desc [data-mode-desc="vsBot"] { display: block; }
+/* Options du mode : panneau de la colonne de droite, caché quand le mode n'en a pas */
+.setup-mode-opts:not(:has(.mode-options.is-visible)) { display: none; }
+.setup-mode-opts .mode-options { margin: 0; padding: 0; background: none; }
 /* Écran Nouveau : pas de titre « Nouvelle partie » (les onglets disent déjà où on est), tout remonte */
 body.sandbox-launch .sandbox-setup__header { display: none; }
 body.sandbox-launch #page-sandbox .sandbox { padding-top: calc(var(--nav-height) + 12px); }
 /* Configurations suggérées : trois par ligne */
-body.sandbox-launch .presets-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 1100px) { body.sandbox-launch .presets-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+body.sandbox-launch .presets-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 600px) { body.sandbox-launch .presets-list { grid-template-columns: minmax(0, 1fr); } }
 
 /* Écran Nouveau : les onglets suffisent, pas de titre « Sandbox » au-dessus */
@@ -662,7 +690,8 @@ body.phantom-connected .phantom-menu__dot {
 }
 
 @media (max-width: 900px) {
-    .sandbox-setup__grid {
+    .sandbox-setup__grid,
+    body.sandbox-launch .sandbox-setup__grid {
         grid-template-columns: minmax(0, 1fr);
     }
 }

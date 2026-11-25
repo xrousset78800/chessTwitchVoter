@@ -600,7 +600,10 @@
     "monoColor": "Il lato che giochi sulla scacchiera; gli iscritti votano per l'altro.",
     "voteTime": "Quanto tempo ha la chat per votare ogni mossa.",
     "choice": "Casuale: estrazione a sorte pesata dai voti. Maggioranza: viene giocata la mossa più votata.",
-    "multiPublic": "Pubblica: visibile in Esplora, qualsiasi canale può entrare. Privata: tutti possono guardare, ma entra solo il canale con il tuo link."
+    "multiPublic": "Pubblica: visibile in Esplora, qualsiasi canale può entrare. Privata: tutti possono guardare, ma entra solo il canale con il tuo link.",
+    "anonymity": "Visibile: nomi e voti in diretta. Nomi nascosti: vedi le mosse votate, non chi le ha votate. Voto segreto: niente durante il turno (né podio, né freccia, né nomi), il risultato si scopre all'estrazione o quando la mossa viene giocata. I voti restano scritti nella chat di Twitch: nascondila nel tuo stream per un vero voto alla cieca.",
+    "anonymityMulti": "Scegli tu per entrambi i canali: il tuo avversario deve seguire questa impostazione. Visibile: nomi e voti in diretta. Nomi nascosti: le mosse votate senza i nomi. Voto segreto: niente durante il turno, il risultato si scopre all'estrazione o quando la mossa viene giocata.",
+    "chroma": "Sostituisce lo sfondo della pagina con un colore pieno da scontornare in OBS con un filtro \"Chroma Key\". Scegli un colore che non sia sulla scacchiera o sui pezzi (verde di default)."
   },
   "timerOff": {
     "warning": "Timer disattivato: il primo voto ricevuto viene giocato subito.",
@@ -640,9 +643,6 @@
     "you": "(tu)",
     "anonOne": "{n} anonimo",
     "anonMany": "{n} anonimi",
-    "anonymity": "Visibile: nomi e voti in diretta. Nomi nascosti: vedi le mosse votate, non chi le ha votate. Voto segreto: niente durante il turno (né podio, né freccia, né nomi), il risultato si scopre all'estrazione o quando la mossa viene giocata. I voti restano scritti nella chat di Twitch: nascondila nel tuo stream per un vero voto alla cieca.",
-    "anonymityMulti": "Scegli tu per entrambi i canali: il tuo avversario deve seguire questa impostazione. Visibile: nomi e voti in diretta. Nomi nascosti: le mosse votate senza i nomi. Voto segreto: niente durante il turno, il risultato si scopre all'estrazione o quando la mossa viene giocata.",
-    "chroma": "Sostituisce lo sfondo della pagina con un colore pieno da scontornare in OBS con un filtro \"Chroma Key\". Scegli un colore che non sia sulla scacchiera o sui pezzi (verde di default).",
     "loginHint": "Accedi con Twitch per comparire con il tuo nome."
   },
   "podium": {

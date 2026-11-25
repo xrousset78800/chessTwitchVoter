@@ -600,7 +600,10 @@
     "monoColor": "O lado que você joga no tabuleiro; os viewers inscritos votam pelo outro.",
     "voteTime": "Quanto tempo o chat tem para votar em cada lance.",
     "choice": "Aleatório: sorteio ponderado pelos votos. Maioria: o lance mais votado é jogado.",
-    "multiPublic": "Pública: aparece em Explorar, qualquer canal pode entrar. Privada: todos podem assistir, mas só o canal com seu link pode entrar."
+    "multiPublic": "Pública: aparece em Explorar, qualquer canal pode entrar. Privada: todos podem assistir, mas só o canal com seu link pode entrar.",
+    "anonymity": "Visível: nomes e votos mostrados ao vivo. Nomes ocultos: você vê os lances votados, mas não quem votou. Voto secreto: nada durante o turno (sem pódio, sem seta, sem nomes), o resultado aparece no sorteio ou quando o lance é jogado. Os votos continuam escritos no chat da Twitch: esconda o chat na sua live para um voto realmente às cegas.",
+    "anonymityMulti": "Você escolhe pelos dois canais: seu adversário segue obrigatoriamente esta configuração. Visível: nomes e votos ao vivo. Nomes ocultos: os lances votados sem os nomes. Voto secreto: nada durante o turno, o resultado aparece no sorteio ou quando o lance é jogado.",
+    "chroma": "Substitui o fundo da página por uma cor sólida que você pode recortar no OBS com um filtro \"Chroma Key\". Escolha uma cor que não esteja no tabuleiro nem nas peças (verde por padrão)."
   },
   "timerOff": {
     "warning": "Timer desligado: o primeiro voto recebido é jogado na hora.",
@@ -640,9 +643,6 @@
     "you": "(você)",
     "anonOne": "{n} anônimo",
     "anonMany": "{n} anônimos",
-    "anonymity": "Visível: nomes e votos mostrados ao vivo. Nomes ocultos: você vê os lances votados, mas não quem votou. Voto secreto: nada durante o turno (sem pódio, sem seta, sem nomes), o resultado aparece no sorteio ou quando o lance é jogado. Os votos continuam escritos no chat da Twitch: esconda o chat na sua live para um voto realmente às cegas.",
-    "anonymityMulti": "Você escolhe pelos dois canais: seu adversário segue obrigatoriamente esta configuração. Visível: nomes e votos ao vivo. Nomes ocultos: os lances votados sem os nomes. Voto secreto: nada durante o turno, o resultado aparece no sorteio ou quando o lance é jogado.",
-    "chroma": "Substitui o fundo da página por uma cor sólida que você pode recortar no OBS com um filtro \"Chroma Key\". Escolha uma cor que não esteja no tabuleiro nem nas peças (verde por padrão).",
     "loginHint": "Entre com a Twitch para aparecer com seu nome."
   },
   "podium": {

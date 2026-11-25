@@ -600,7 +600,10 @@
     "monoColor": "El bando que juegas en el tablero; los inscritos votan por el otro.",
     "voteTime": "Tiempo que tiene el chat para votar cada jugada.",
     "choice": "Aleatorio: sorteo ponderado por los votos. Mayoría: se juega la jugada más votada.",
-    "multiPublic": "Pública: aparece en Explorar, cualquier canal puede unirse. Privada: cualquiera puede mirar, pero solo el canal con tu enlace puede unirse."
+    "multiPublic": "Pública: aparece en Explorar, cualquier canal puede unirse. Privada: cualquiera puede mirar, pero solo el canal con tu enlace puede unirse.",
+    "anonymity": "Visible: nombres de usuario y votos en directo. Nombres ocultos: se ven las jugadas votadas, pero no quién las votó. Voto secreto: nada durante el turno (ni podio, ni flecha, ni nombres), el resultado se revela en el sorteo o cuando se juega la jugada. Los votos siguen escritos en el chat de Twitch: ocúltalo en tu stream para un voto realmente a ciegas.",
+    "anonymityMulti": "Tú eliges para los dos canales: tu rival debe seguir este ajuste. Visible: nombres de usuario y votos en directo. Nombres ocultos: las jugadas votadas sin nombres. Voto secreto: nada durante el turno, el resultado se revela en el sorteo o cuando se juega la jugada.",
+    "chroma": "Sustituye el fondo de la página por un color sólido que puedes eliminar en OBS con un filtro \"Chroma Key\". Elige un color que no esté en el tablero ni en las piezas (verde por defecto)."
   },
   "timerOff": {
     "warning": "Temporizador desactivado: el primer voto recibido se juega al instante.",
@@ -640,9 +643,6 @@
     "you": "(tú)",
     "anonOne": "{n} anónimo",
     "anonMany": "{n} anónimos",
-    "anonymity": "Visible: nombres de usuario y votos en directo. Nombres ocultos: se ven las jugadas votadas, pero no quién las votó. Voto secreto: nada durante el turno (ni podio, ni flecha, ni nombres), el resultado se revela en el sorteo o cuando se juega la jugada. Los votos siguen escritos en el chat de Twitch: ocúltalo en tu stream para un voto realmente a ciegas.",
-    "anonymityMulti": "Tú eliges para los dos canales: tu rival debe seguir este ajuste. Visible: nombres de usuario y votos en directo. Nombres ocultos: las jugadas votadas sin nombres. Voto secreto: nada durante el turno, el resultado se revela en el sorteo o cuando se juega la jugada.",
-    "chroma": "Sustituye el fondo de la página por un color sólido que puedes eliminar en OBS con un filtro \"Chroma Key\". Elige un color que no esté en el tablero ni en las piezas (verde por defecto).",
     "loginHint": "Inicia sesión con Twitch para aparecer con tu nombre de usuario."
   },
   "podium": {

@@ -600,7 +600,10 @@
     "monoColor": "The side you play on the board; registered viewers vote for the other one.",
     "voteTime": "How long chat has to vote on each move.",
     "choice": "Random: random draw weighted by votes. Majority: the most voted move is played.",
-    "multiPublic": "Public: listed in Browse, any channel can join. Private: anyone can watch, but only the channel with your link can join."
+    "multiPublic": "Public: listed in Browse, any channel can join. Private: anyone can watch, but only the channel with your link can join.",
+    "anonymity": "Visible: usernames and votes shown live. Hidden names: you see the voted moves, not who voted them. Secret vote: nothing during the turn (no podium, no arrow, no names), the result shows up at the draw or when the move is played. Votes are still written in the Twitch chat: hide it on your stream for a truly blind vote.",
+    "anonymityMulti": "You choose for both channels: your opponent must follow this setting. Visible: usernames and votes live. Hidden names: the voted moves without usernames. Secret vote: nothing during the turn, the result shows up at the draw or when the move is played.",
+    "chroma": "Replaces the page background with a solid colour you can key out in OBS with a \"Chroma Key\" filter. Pick a colour that isn't on the board or pieces (green by default)."
   },
   "timerOff": {
     "warning": "Timer off: the first vote received is played immediately.",
@@ -640,9 +643,6 @@
     "you": "(you)",
     "anonOne": "{n} anonymous",
     "anonMany": "{n} anonymous",
-    "anonymity": "Visible: usernames and votes shown live. Hidden names: you see the voted moves, not who voted them. Secret vote: nothing during the turn (no podium, no arrow, no names), the result shows up at the draw or when the move is played. Votes are still written in the Twitch chat: hide it on your stream for a truly blind vote.",
-    "anonymityMulti": "You choose for both channels: your opponent must follow this setting. Visible: usernames and votes live. Hidden names: the voted moves without usernames. Secret vote: nothing during the turn, the result shows up at the draw or when the move is played.",
-    "chroma": "Replaces the page background with a solid colour you can key out in OBS with a \"Chroma Key\" filter. Pick a colour that isn't on the board or pieces (green by default).",
     "loginHint": "Log in with Twitch to appear with your username."
   },
   "podium": {
@@ -864,6 +864,41 @@
       "camDenied": "Camera access denied by the browser",
       "camMissing": "Camera not found",
       "camNoSupport": "Camera: use Chrome or Edge to stream"
+    }
+  },
+  "newInfo": {
+    "howTitle": "How it works",
+    "options": "Options",
+    "modeOptions": "Mode options",
+    "rush": {
+      "how1": "A puzzle appears on the board: your chat suggests moves in the chat.",
+      "how2": "In Unlimited, the first valid move is played; with a time limit, the most voted move is played when the timer ends.",
+      "how3": "Every solved puzzle brings a harder one. A wrong move, or no vote in time, counts as a mistake.",
+      "how4": "On the third mistake the run ends. Logged in with Twitch, your score goes into your channel's leaderboard.",
+      "modesTitle": "Pick the voting time"
+    },
+    "mono": {
+      "how1": "You open sign-ups: your viewers type join in the chat for 2 minutes.",
+      "how2": "The game then starts on its own. Only signed-up viewers vote, the others watch.",
+      "how3": "You can restrict sign-ups to followers or subscribers.",
+      "choicesTitle": "Who plays whom?"
+    },
+    "multi": {
+      "how1": "You create the game: your channel plays White, the channel that joins plays Black.",
+      "how2": "As soon as a channel joins, both chats have 2 minutes to sign up.",
+      "how3": "Each chat votes its side's moves, and both channels follow the same game live.",
+      "visibilityTitle": "Who can join you?"
+    },
+    "free": {
+      "intro": "No sign-up here: your whole chat votes, move after move. Start from a ready-made setup, or pick Customize to set the game mode and every voting option."
+    },
+    "modes": {
+      "sandbox": "The whole chat votes for both sides, move after move. The simplest way to play with your community.",
+      "problems": "The chat solves puzzles on the themes you pick, with a pause between puzzles.",
+      "oneVsAll": "A single player, named by their Twitch username, takes on the rest of the chat.",
+      "oneVsOne": "Two players named by their Twitch usernames face each other while the chat watches.",
+      "chatVsChat": "Two Twitch channels face off: the first one's chat plays White, the second one's plays Black.",
+      "vsBot": "The chat votes its moves against Stockfish, from 300 to 2400+ Elo. Pick the level and the chat's side."
     }
   }
 }
