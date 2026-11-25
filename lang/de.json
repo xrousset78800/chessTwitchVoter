@@ -862,6 +862,42 @@
       "camNoSupport": "Kamera: Nutze Chrome oder Edge zum Streamen"
     }
   },
+  "newInfo": {
+    "howTitle": "So funktioniert's",
+    "options": "Optionen",
+    "modeOptions": "Modus-Optionen",
+    "rush": {
+      "how1": "Ein Puzzle erscheint auf dem Brett: Dein Chat schlägt Züge im Chat vor.",
+      "how2": "Wenn der Timer abläuft, wird der meistgewählte Zug gespielt.",
+      "how3": "Jedes gelöste Puzzle bringt ein schwereres. Ein falscher Zug oder keine Stimme rechtzeitig zählt als Fehler.",
+      "how4": "Beim dritten Fehler endet der Run. Mit Twitch angemeldet, kommt dein Ergebnis in die Rangliste deines Kanals.",
+      "modesTitle": "Wähle die Abstimmungszeit"
+    },
+    "mono": {
+      "how1": "Du öffnest die Anmeldung: Deine Zuschauer tippen 2 Minuten lang join in den Chat.",
+      "how2": "Danach startet die Partie von selbst. Nur angemeldete Zuschauer stimmen ab, die anderen schauen zu.",
+      "how3": "Du kannst die Anmeldung auf Follower oder Abonnenten beschränken.",
+      "choicesTitle": "Wer spielt gegen wen?"
+    },
+    "multi": {
+      "how1": "Du erstellst die Partie: Dein Kanal spielt Weiß, der beitretende Kanal spielt Schwarz.",
+      "how2": "Sobald ein Kanal beitritt, haben beide Chats 2 Minuten, um sich anzumelden.",
+      "how3": "Jeder Chat stimmt über die Züge seiner Seite ab, und beide Kanäle verfolgen dieselbe Partie live.",
+      "visibilityTitle": "Wer darf dir beitreten?"
+    },
+    "free": {
+      "desc": "Der ganze Chat stimmt ab, ohne Anmeldung: freie Abstimmung, Puzzles, gegen Stockfish, Chat gegen Chat…",
+      "intro": "Hier gibt es keine Anmeldung: Dein ganzer Chat stimmt ab, Zug um Zug. Starte mit einer fertigen Einstellung oder wähle Anpassen, um den Spielmodus und jede Abstimmungsoption festzulegen."
+    },
+    "modes": {
+      "sandbox": "Der ganze Chat stimmt für beide Seiten ab, Zug um Zug. Die einfachste Art, mit deiner Community zu spielen.",
+      "problems": "Der Chat löst Puzzles zu den Themen deiner Wahl, mit einer Pause zwischen den Puzzles.",
+      "oneVsAll": "Ein einzelner Spieler, angegeben mit seinem Twitch-Namen, tritt gegen den Rest des Chats an.",
+      "oneVsOne": "Zwei Spieler, angegeben mit ihren Twitch-Namen, spielen gegeneinander, während der Chat zuschaut.",
+      "chatVsChat": "Zwei Twitch-Kanäle treten gegeneinander an: Der Chat des ersten spielt Weiß, der des zweiten Schwarz.",
+      "vsBot": "Der Chat stimmt über seine Züge gegen Stockfish ab, von 300 bis 2400+ Elo. Wähle die Stärke und die Seite des Chats."
+    }
+  },
   "seo": {
     "title": "Crowd Gambit — Schach, gespielt von deinem Twitch-Chat",
     "desc": {
@@ -869,7 +905,7 @@
       "rush": "Puzzle Rush für Twitch: Dein Chat löst per Abstimmung immer schwerere Schachaufgaben. Drei Fehler und der Run ist vorbei. Schlag den Rekord deines Kanals!",
       "mono": "Mono-Modus: Deine Twitch-Zuschauer melden sich mit join an und spielen gemeinsam eine Schachpartie, Zug um Zug.",
       "multi": "Multi-Modus: Zwei Twitch-Kanäle treten im Schach gegeneinander an, jeder Chat spielt eine Farbe und stimmt über seine Züge ab.",
-      "sandbox": "Freie Partie: Stell die Schachpartie deines Twitch-Chats ein (Demokratie, Chaos-Rad, gegen Stockfish, Aufgaben…) und starte sie mit einem Klick.",
+      "sandbox": "Freies Spiel: Stell die Schachpartie deines Twitch-Chats ein (Demokratie, Chaos-Rad, gegen Stockfish, Aufgaben…) und starte sie mit einem Klick.",
       "browse": "Schachpartien, die gerade von Twitch-Chats gespielt werden: live zuschauen oder einer Partie beitreten.",
       "records": "Puzzle-Rush-Rekorde, Kanal-Duelle und die aktivsten Zuschauer der Twitch-Chats, die Schach spielen.",
       "live": "Verfolge eine Chess.com-Partie live und spiele sie Zug um Zug auf deinem Phantom-Brett nach.",

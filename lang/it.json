@@ -862,6 +862,42 @@
       "camNoSupport": "Videocamera: usa Chrome o Edge per trasmettere"
     }
   },
+  "newInfo": {
+    "howTitle": "Come funziona",
+    "options": "Opzioni",
+    "modeOptions": "Opzioni della modalità",
+    "rush": {
+      "how1": "Sulla scacchiera appare un problema: la tua chat propone le mosse in chat.",
+      "how2": "Allo scadere del timer viene giocata la mossa più votata.",
+      "how3": "Ogni problema risolto ne porta uno più difficile. Una mossa sbagliata, o nessun voto in tempo, conta come errore.",
+      "how4": "Al terzo errore la run finisce. Se sei connesso con Twitch, il punteggio entra nella classifica del tuo canale.",
+      "modesTitle": "Scegli il tempo di voto"
+    },
+    "mono": {
+      "how1": "Apri le iscrizioni: i tuoi spettatori scrivono join in chat per 2 minuti.",
+      "how2": "Poi la partita parte da sola. Votano solo gli iscritti, gli altri guardano.",
+      "how3": "Puoi limitare le iscrizioni ai follower o agli abbonati.",
+      "choicesTitle": "Chi gioca contro chi?"
+    },
+    "multi": {
+      "how1": "Crei la partita: il tuo canale gioca con il Bianco, il canale che si unisce con il Nero.",
+      "how2": "Appena un canale si unisce, le due chat hanno 2 minuti per iscriversi.",
+      "how3": "Ogni chat vota le mosse del proprio colore ed entrambi i canali seguono la stessa partita in diretta.",
+      "visibilityTitle": "Chi può unirsi a te?"
+    },
+    "free": {
+      "desc": "Vota tutta la chat, senza iscrizione: voto libero, problemi, contro Stockfish, chat contro chat…",
+      "intro": "Qui non c'è iscrizione: tutta la tua chat vota, mossa dopo mossa. Parti da una configurazione pronta o scegli Personalizza per regolare la modalità di gioco e ogni opzione di voto."
+    },
+    "modes": {
+      "sandbox": "Tutta la chat vota per entrambi i colori, mossa dopo mossa. Il modo più semplice per giocare con la tua community.",
+      "problems": "La chat risolve problemi sui temi che scegli, con una pausa tra un problema e l'altro.",
+      "oneVsAll": "Un solo giocatore, indicato dal suo nome Twitch, sfida il resto della chat.",
+      "oneVsOne": "Due giocatori, indicati dai loro nomi Twitch, si sfidano mentre la chat guarda.",
+      "chatVsChat": "Due canali Twitch si sfidano: la chat del primo gioca con il Bianco, quella del secondo con il Nero.",
+      "vsBot": "La chat vota le sue mosse contro Stockfish, da 300 a 2400+ Elo. Scegli il livello e il colore della chat."
+    }
+  },
   "seo": {
     "title": "Crowd Gambit — Scacchi giocati dalla tua chat di Twitch",
     "desc": {
@@ -869,7 +905,7 @@
       "rush": "Puzzle Rush per Twitch: la tua chat risolve problemi di scacchi sempre più difficili votando. Tre errori e la run finisce. Batti il record del tuo canale!",
       "mono": "Modalità Mono: gli spettatori della tua chat di Twitch si iscrivono scrivendo join e giocano insieme una partita a scacchi, mossa dopo mossa.",
       "multi": "Modalità Multi: due canali Twitch si sfidano a scacchi, ogni chat gioca un colore e vota le sue mosse.",
-      "sandbox": "Partita libera: configura la partita a scacchi della tua chat di Twitch (democrazia, ruota del caos, contro Stockfish, problemi…) e avviala con un clic.",
+      "sandbox": "Gioco libero: configura la partita a scacchi della tua chat di Twitch (democrazia, ruota del caos, contro Stockfish, problemi…) e avviala con un clic.",
       "browse": "Le partite a scacchi giocate in questo momento dalle chat di Twitch: guardale in diretta o unisciti a una partita.",
       "records": "Record di Puzzle Rush, sfide tra canali e spettatori più attivi delle chat di Twitch che giocano a scacchi.",
       "live": "Segui una partita di Chess.com in diretta e rigiocala mossa dopo mossa sulla tua scacchiera Phantom.",

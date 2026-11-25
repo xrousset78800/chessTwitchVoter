@@ -862,6 +862,42 @@
       "camNoSupport": "Kamera: użyj Chrome lub Edge, by transmitować"
     }
   },
+  "newInfo": {
+    "howTitle": "Jak to działa",
+    "options": "Opcje",
+    "modeOptions": "Opcje trybu",
+    "rush": {
+      "how1": "Na szachownicy pojawia się zadanie: twój czat proponuje ruchy na czacie.",
+      "how2": "Gdy czas się skończy, wykonywany jest ruch z największą liczbą głosów.",
+      "how3": "Każde rozwiązane zadanie przynosi trudniejsze. Zły ruch albo brak głosu na czas liczy się jako błąd.",
+      "how4": "Po trzecim błędzie seria się kończy. Po zalogowaniu przez Twitcha wynik trafia do rankingu twojego kanału.",
+      "modesTitle": "Wybierz czas na głosowanie"
+    },
+    "mono": {
+      "how1": "Otwierasz zapisy: twoi widzowie przez 2 minuty wpisują join na czacie.",
+      "how2": "Potem partia startuje sama. Głosują tylko zapisani widzowie, reszta ogląda.",
+      "how3": "Możesz ograniczyć zapisy do obserwujących lub subskrybentów.",
+      "choicesTitle": "Kto gra z kim?"
+    },
+    "multi": {
+      "how1": "Tworzysz partię: twój kanał gra białymi, kanał, który dołączy, gra czarnymi.",
+      "how2": "Gdy tylko kanał dołączy, oba czaty mają 2 minuty na zapisy.",
+      "how3": "Każdy czat głosuje na ruchy swojej strony, a oba kanały śledzą tę samą partię na żywo.",
+      "visibilityTitle": "Kto może do ciebie dołączyć?"
+    },
+    "free": {
+      "desc": "Głosuje cały czat, bez zapisów: wolne głosowanie, zadania, ze Stockfishem, czat na czat…",
+      "intro": "Tu nie ma zapisów: głosuje cały twój czat, ruch po ruchu. Zacznij od gotowej konfiguracji albo wybierz Dostosuj, aby ustawić tryb gry i każdą opcję głosowania."
+    },
+    "modes": {
+      "sandbox": "Cały czat głosuje za obie strony, ruch po ruchu. Najprostszy sposób na grę ze społecznością.",
+      "problems": "Czat rozwiązuje zadania z wybranych przez ciebie motywów, z przerwą między zadaniami.",
+      "oneVsAll": "Jeden gracz, wskazany nazwą na Twitchu, mierzy się z resztą czatu.",
+      "oneVsOne": "Dwóch graczy, wskazanych nazwami na Twitchu, gra przeciwko sobie, a czat ogląda.",
+      "chatVsChat": "Dwa kanały na Twitchu mierzą się ze sobą: czat pierwszego gra białymi, czat drugiego czarnymi.",
+      "vsBot": "Czat głosuje na swoje ruchy przeciwko Stockfishowi, od 300 do 2400+ Elo. Wybierz poziom i stronę czatu."
+    }
+  },
   "seo": {
     "title": "Crowd Gambit — Szachy, w które gra Twój czat na Twitchu",
     "desc": {
@@ -869,7 +905,7 @@
       "rush": "Puzzle Rush na Twitchu: Twój czat rozwiązuje coraz trudniejsze zadania szachowe, głosując. Trzy błędy i koniec serii. Pobij rekord swojego kanału!",
       "mono": "Tryb Mono: widzowie Twojego czatu zapisują się, wpisując join, i razem grają partię szachów, ruch po ruchu.",
       "multi": "Tryb Multi: dwa kanały na Twitchu mierzą się w szachy, każdy czat gra jednym kolorem i głosuje na swoje ruchy.",
-      "sandbox": "Wolna partia: skonfiguruj partię szachów swojego czatu na Twitchu (demokracja, koło chaosu, ze Stockfishem, zadania…) i uruchom ją jednym kliknięciem.",
+      "sandbox": "Gra swobodna: skonfiguruj partię szachów swojego czatu na Twitchu (demokracja, koło chaosu, ze Stockfishem, zadania…) i uruchom ją jednym kliknięciem.",
       "browse": "Partie szachów rozgrywane teraz przez czaty na Twitchu: oglądaj na żywo lub dołącz do partii.",
       "records": "Rekordy Puzzle Rush, pojedynki kanałów i najaktywniejsi widzowie czatów na Twitchu, które grają w szachy.",
       "live": "Śledź partię z Chess.com na żywo i odtwarzaj ją ruch po ruchu na szachownicy Phantom.",

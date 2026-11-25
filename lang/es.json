@@ -862,6 +862,42 @@
       "camNoSupport": "Cámara: usa Chrome o Edge para emitir"
     }
   },
+  "newInfo": {
+    "howTitle": "Cómo funciona",
+    "options": "Opciones",
+    "modeOptions": "Opciones del modo",
+    "rush": {
+      "how1": "Aparece un problema en el tablero: tu chat propone jugadas en el chat.",
+      "how2": "Al acabar el temporizador, se juega la jugada más votada.",
+      "how3": "Cada problema resuelto trae uno más difícil. Una jugada incorrecta, o no votar a tiempo, cuenta como error.",
+      "how4": "Al tercer error se acaba la partida. Si estás conectado con Twitch, tu puntuación entra en la clasificación de tu canal.",
+      "modesTitle": "Elige el tiempo de votación"
+    },
+    "mono": {
+      "how1": "Abres las inscripciones: tus espectadores escriben join en el chat durante 2 minutos.",
+      "how2": "Después la partida empieza sola. Solo votan los inscritos; los demás miran.",
+      "how3": "Puedes limitar las inscripciones a seguidores o suscriptores.",
+      "choicesTitle": "¿Quién juega contra quién?"
+    },
+    "multi": {
+      "how1": "Creas la partida: tu canal juega con blancas y el canal que se une juega con negras.",
+      "how2": "En cuanto un canal se une, los dos chats tienen 2 minutos para inscribirse.",
+      "how3": "Cada chat vota las jugadas de su bando y ambos canales siguen la misma partida en directo.",
+      "visibilityTitle": "¿Quién puede unirse?"
+    },
+    "free": {
+      "desc": "Vota todo el chat, sin inscripción: voto libre, problemas, contra Stockfish, chat contra chat…",
+      "intro": "Aquí no hay inscripción: todo tu chat vota, jugada a jugada. Empieza con una configuración lista o elige Personalizar para ajustar el modo de juego y cada opción de voto."
+    },
+    "modes": {
+      "sandbox": "Todo el chat vota por los dos bandos, jugada a jugada. La forma más sencilla de jugar con tu comunidad.",
+      "problems": "El chat resuelve problemas de los temas que elijas, con una pausa entre problemas.",
+      "oneVsAll": "Un solo jugador, indicado por su nombre de Twitch, se enfrenta al resto del chat.",
+      "oneVsOne": "Dos jugadores, indicados por sus nombres de Twitch, se enfrentan mientras el chat mira.",
+      "chatVsChat": "Dos canales de Twitch se enfrentan: el chat del primero juega con blancas y el del segundo con negras.",
+      "vsBot": "El chat vota sus jugadas contra Stockfish, de 300 a 2400+ Elo. Elige el nivel y el bando del chat."
+    }
+  },
   "seo": {
     "title": "Crowd Gambit — Ajedrez jugado por tu chat de Twitch",
     "desc": {

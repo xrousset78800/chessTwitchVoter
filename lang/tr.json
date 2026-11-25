@@ -862,6 +862,42 @@
       "camNoSupport": "Kamera: yayın için Chrome veya Edge kullan"
     }
   },
+  "newInfo": {
+    "howTitle": "Nasıl çalışır",
+    "options": "Seçenekler",
+    "modeOptions": "Mod seçenekleri",
+    "rush": {
+      "how1": "Tahtada bir bulmaca belirir: Chat'in hamle önerilerini chat'e yazar.",
+      "how2": "Süre dolunca en çok oy alan hamle oynanır.",
+      "how3": "Çözülen her bulmacanın ardından daha zoru gelir. Yanlış hamle ya da zamanında oy gelmemesi hata sayılır.",
+      "how4": "Üçüncü hatada seri biter. Twitch ile bağlıysan skorun kanalının sıralamasına girer.",
+      "modesTitle": "Oylama süresini seç"
+    },
+    "mono": {
+      "how1": "Kayıtları açarsın: izleyicilerin 2 dakika boyunca chat'e join yazar.",
+      "how2": "Ardından oyun kendiliğinden başlar. Yalnızca kayıtlı izleyiciler oy verir, diğerleri izler.",
+      "how3": "Kayıtları takipçilerle veya abonelerle sınırlayabilirsin.",
+      "choicesTitle": "Kim kime karşı oynuyor?"
+    },
+    "multi": {
+      "how1": "Oyunu sen oluşturursun: kanalın beyazları, katılan kanal siyahları oynar.",
+      "how2": "Bir kanal katılır katılmaz iki chat'in de kayıt olmak için 2 dakikası olur.",
+      "how3": "Her chat kendi tarafının hamlelerine oy verir ve iki kanal da aynı oyunu canlı izler.",
+      "visibilityTitle": "Kimler katılabilir?"
+    },
+    "free": {
+      "desc": "Kayıt yok, tüm chat oy verir: serbest oylama, bulmacalar, Stockfish'e karşı, chat'e karşı chat…",
+      "intro": "Burada kayıt yok: tüm chat'in hamle hamle oy verir. Hazır bir ayarla başla ya da oyun modunu ve her oylama seçeneğini ayarlamak için Özelleştir'i seç."
+    },
+    "modes": {
+      "sandbox": "Tüm chat iki taraf için de hamle hamle oy verir. Topluluğunla oynamanın en basit yolu.",
+      "problems": "Chat, seçtiğin temalardaki bulmacaları çözer; bulmacalar arasında kısa bir ara verilir.",
+      "oneVsAll": "Twitch kullanıcı adıyla belirtilen tek bir oyuncu, chat'in geri kalanına karşı oynar.",
+      "oneVsOne": "Twitch kullanıcı adlarıyla belirtilen iki oyuncu karşılaşır, chat izler.",
+      "chatVsChat": "İki Twitch kanalı karşılaşır: ilkinin chat'i beyazları, ikincisininki siyahları oynar.",
+      "vsBot": "Chat, Stockfish'e karşı hamlelerine oy verir; 300'den 2400+ Elo'ya kadar. Seviyeyi ve chat'in tarafını seç."
+    }
+  },
   "seo": {
     "title": "Crowd Gambit — Twitch sohbetinin oynadığı satranç",
     "desc": {

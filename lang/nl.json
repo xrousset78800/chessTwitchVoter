@@ -862,6 +862,42 @@
       "camNoSupport": "Camera: gebruik Chrome of Edge om te streamen"
     }
   },
+  "newInfo": {
+    "howTitle": "Zo werkt het",
+    "options": "Opties",
+    "modeOptions": "Opties van de modus",
+    "rush": {
+      "how1": "Er verschijnt een puzzel op het bord: je chat stelt zetten voor in de chat.",
+      "how2": "Als de timer afloopt, wordt de zet met de meeste stemmen gespeeld.",
+      "how3": "Elke opgeloste puzzel brengt een moeilijkere. Een foute zet, of niet op tijd gestemd, telt als fout.",
+      "how4": "Bij de derde fout stopt de run. Ben je ingelogd met Twitch, dan komt je score in de ranglijst van je kanaal.",
+      "modesTitle": "Kies de stemtijd"
+    },
+    "mono": {
+      "how1": "Je opent de inschrijving: je kijkers typen 2 minuten lang join in de chat.",
+      "how2": "Daarna start de partij vanzelf. Alleen ingeschreven kijkers stemmen, de rest kijkt mee.",
+      "how3": "Je kunt de inschrijving beperken tot volgers of abonnees.",
+      "choicesTitle": "Wie speelt tegen wie?"
+    },
+    "multi": {
+      "how1": "Je maakt de partij aan: jouw kanaal speelt met wit, het kanaal dat meedoet met zwart.",
+      "how2": "Zodra een kanaal meedoet, hebben beide chats 2 minuten om zich in te schrijven.",
+      "how3": "Elke chat stemt op de zetten van zijn kant, en beide kanalen volgen dezelfde partij live.",
+      "visibilityTitle": "Wie mag meedoen?"
+    },
+    "free": {
+      "desc": "De hele chat stemt, zonder inschrijving: vrij stemmen, puzzels, tegen Stockfish, chat tegen chat…",
+      "intro": "Hier is geen inschrijving: je hele chat stemt, zet voor zet. Begin met een kant-en-klare instelling of kies Aanpassen om de spelmodus en elke stemoptie in te stellen."
+    },
+    "modes": {
+      "sandbox": "De hele chat stemt voor beide kanten, zet voor zet. De eenvoudigste manier om met je community te spelen.",
+      "problems": "De chat lost puzzels op met de thema's die jij kiest, met een pauze tussen de puzzels.",
+      "oneVsAll": "Eén speler, aangewezen met zijn Twitch-naam, neemt het op tegen de rest van de chat.",
+      "oneVsOne": "Twee spelers, aangewezen met hun Twitch-namen, spelen tegen elkaar terwijl de chat toekijkt.",
+      "chatVsChat": "Twee Twitch-kanalen nemen het tegen elkaar op: de chat van het eerste speelt met wit, die van het tweede met zwart.",
+      "vsBot": "De chat stemt op zijn zetten tegen Stockfish, van 300 tot 2400+ Elo. Kies het niveau en de kant van de chat."
+    }
+  },
   "seo": {
     "title": "Crowd Gambit — Schaken gespeeld door je Twitch-chat",
     "desc": {
@@ -869,7 +905,7 @@
       "rush": "Puzzle Rush voor Twitch: je chat lost steeds moeilijkere schaakpuzzels op door te stemmen. Drie fouten en de run is voorbij. Verbreek het record van je kanaal!",
       "mono": "Mono-modus: je Twitch-kijkers schrijven zich in door join te typen en spelen samen een schaakpartij, zet voor zet.",
       "multi": "Multi-modus: twee Twitch-kanalen nemen het tegen elkaar op met schaak, elke chat speelt één kleur en stemt op zijn zetten.",
-      "sandbox": "Vrije partij: stel de schaakpartij van je Twitch-chat in (democratie, chaoswiel, tegen Stockfish, puzzels…) en start met één klik.",
+      "sandbox": "Vrij spel: stel de schaakpartij van je Twitch-chat in (democratie, chaoswiel, tegen Stockfish, puzzels…) en start met één klik.",
       "browse": "Schaakpartijen die nu door Twitch-chats worden gespeeld: kijk live mee of doe mee aan een partij.",
       "records": "Puzzle Rush-records, duels tussen kanalen en de actiefste kijkers van de Twitch-chats die schaken.",
       "live": "Volg een Chess.com-partij live en speel die zet voor zet na op je Phantom-bord.",

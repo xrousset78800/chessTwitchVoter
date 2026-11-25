@@ -862,6 +862,42 @@
       "camNoSupport": "Câmera: use o Chrome ou o Edge para transmitir"
     }
   },
+  "newInfo": {
+    "howTitle": "Como funciona",
+    "options": "Opções",
+    "modeOptions": "Opções do modo",
+    "rush": {
+      "how1": "Um problema aparece no tabuleiro: seu chat sugere lances no chat.",
+      "how2": "Quando o tempo acaba, o lance mais votado é jogado.",
+      "how3": "Cada problema resolvido traz um mais difícil. Um lance errado, ou nenhum voto a tempo, conta como erro.",
+      "how4": "No terceiro erro a rodada termina. Conectado com a Twitch, sua pontuação entra no ranking do seu canal.",
+      "modesTitle": "Escolha o tempo de votação"
+    },
+    "mono": {
+      "how1": "Você abre as inscrições: seus espectadores digitam join no chat durante 2 minutos.",
+      "how2": "Depois a partida começa sozinha. Só os inscritos votam, os outros assistem.",
+      "how3": "Você pode limitar as inscrições a seguidores ou inscritos do canal.",
+      "choicesTitle": "Quem joga contra quem?"
+    },
+    "multi": {
+      "how1": "Você cria a partida: seu canal joga de brancas, o canal que entrar joga de pretas.",
+      "how2": "Assim que um canal entra, os dois chats têm 2 minutos para se inscrever.",
+      "how3": "Cada chat vota nos lances do seu lado, e os dois canais acompanham a mesma partida ao vivo.",
+      "visibilityTitle": "Quem pode entrar?"
+    },
+    "free": {
+      "desc": "O chat inteiro vota, sem inscrição: voto livre, problemas, contra o Stockfish, chat contra chat…",
+      "intro": "Aqui não há inscrição: o chat inteiro vota, lance a lance. Comece com uma configuração pronta ou escolha Personalizar para ajustar o modo de jogo e cada opção de votação."
+    },
+    "modes": {
+      "sandbox": "O chat inteiro vota pelos dois lados, lance a lance. O jeito mais simples de jogar com sua comunidade.",
+      "problems": "O chat resolve problemas dos temas que você escolher, com uma pausa entre eles.",
+      "oneVsAll": "Um único jogador, indicado pelo nome na Twitch, enfrenta o resto do chat.",
+      "oneVsOne": "Dois jogadores, indicados pelos nomes na Twitch, se enfrentam enquanto o chat assiste.",
+      "chatVsChat": "Dois canais da Twitch se enfrentam: o chat do primeiro joga de brancas, o do segundo de pretas.",
+      "vsBot": "O chat vota nos lances contra o Stockfish, de 300 a 2400+ Elo. Escolha o nível e o lado do chat."
+    }
+  },
   "seo": {
     "title": "Crowd Gambit — Xadrez jogado pelo seu chat da Twitch",
     "desc": {
@@ -869,7 +905,7 @@
       "rush": "Puzzle Rush para Twitch: seu chat resolve problemas de xadrez cada vez mais difíceis votando. Três erros e a rodada acaba. Bata o recorde do seu canal!",
       "mono": "Modo Mono: os espectadores do seu chat da Twitch se inscrevem digitando join e jogam juntos uma partida de xadrez, lance a lance.",
       "multi": "Modo Multi: dois canais da Twitch se enfrentam no xadrez, cada chat joga com uma cor e vota nos seus lances.",
-      "sandbox": "Partida livre: configure a partida de xadrez do seu chat da Twitch (democracia, roda do caos, contra o Stockfish, problemas…) e comece com um clique.",
+      "sandbox": "Jogo livre: configure a partida de xadrez do seu chat da Twitch (democracia, roda do caos, contra o Stockfish, problemas…) e comece com um clique.",
       "browse": "As partidas de xadrez sendo jogadas agora por chats da Twitch: assista ao vivo ou entre em uma partida.",
       "records": "Recordes de Puzzle Rush, batalhas entre canais e os espectadores mais ativos dos chats da Twitch que jogam xadrez.",
       "live": "Acompanhe uma partida do Chess.com ao vivo e reproduza-a lance a lance no seu tabuleiro Phantom.",
