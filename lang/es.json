@@ -222,7 +222,7 @@
     "loading": "Cargando récords…",
     "mode": "Tiempo para votar",
     "modeUnlimited": "Ilimitado",
-    "modeHint": "Ilimitado: se juega la primera jugada válida propuesta por el chat. Cada tiempo tiene su propia clasificación."
+    "modeHint": "Cada tiempo tiene su propia clasificación."
   },
   "mono": {
     "desc": "Tu chat tiene 2 minutos para inscribirse escribiendo join, y luego empieza la partida.",
@@ -594,7 +594,7 @@
     "restrictions": "Limita los votos a seguidores y/o suscriptores. El streamer, los mods y los VIPs siempre pueden votar. Seguidores requiere permitir el acceso a los seguidores al conectar Twitch.",
     "rushRating": "Dificultad del primer problema. Sube con cada problema resuelto.",
     "rushPause": "Espera entre dos problemas, para respirar y ver la solución.",
-    "rushMode": "Tiempo para encontrar cada jugada. Ilimitado: se juega la primera jugada válida propuesta por el chat. Cada tiempo tiene su propia clasificación.",
+    "rushMode": "Tiempo para encontrar cada jugada. Cada tiempo tiene su propia clasificación.",
     "problemThemes": "Tipos de problemas (mate en 2, ataque doble, clavada…). Ninguno seleccionado: todos los temas.",
     "problemPause": "Espera entre dos problemas.",
     "monoColor": "El bando que juegas en el tablero; los inscritos votan por el otro.",

@@ -222,7 +222,7 @@
     "loading": "Rekorde werden geladen…",
     "mode": "Zeit zum Abstimmen",
     "modeUnlimited": "Unbegrenzt",
-    "modeHint": "Unbegrenzt: Der erste gültige Zug aus dem Chat wird gespielt. Jede Zeit hat ihre eigene Rangliste."
+    "modeHint": "Jede Zeit hat ihre eigene Rangliste."
   },
   "mono": {
     "desc": "Dein Chat hat 2 Minuten, um sich mit join anzumelden, dann startet die Partie.",
@@ -594,7 +594,7 @@
     "restrictions": "Beschränke die Abstimmung auf Follower und/oder Abonnenten. Streamer, Mods und VIPs können immer abstimmen. Für Follower musst du beim Verbinden mit Twitch den Zugriff auf deine Follower erlauben.",
     "rushRating": "Schwierigkeit des ersten Puzzles. Sie steigt mit jedem gelösten Puzzle.",
     "rushPause": "Wartezeit zwischen zwei Puzzles, zum Durchatmen und um die Lösung anzuschauen.",
-    "rushMode": "Zeit, um jeden Zug zu finden. Unbegrenzt: Der erste gültige Zug aus dem Chat wird gespielt. Jede Zeit hat ihre eigene Rangliste.",
+    "rushMode": "Zeit, um jeden Zug zu finden. Jede Zeit hat ihre eigene Rangliste.",
     "problemThemes": "Arten von Puzzles (Matt in 2, Gabel, Fesselung…). Nichts ausgewählt: alle Themen.",
     "problemPause": "Wartezeit zwischen zwei Puzzles.",
     "monoColor": "Die Seite, die du am Brett spielst; die angemeldeten Zuschauer stimmen für die andere ab.",

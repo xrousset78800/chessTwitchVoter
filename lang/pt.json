@@ -222,7 +222,7 @@
     "loading": "Carregando recordes…",
     "mode": "Tempo para votar",
     "modeUnlimited": "Ilimitado",
-    "modeHint": "Ilimitado: o primeiro lance válido sugerido pelo chat é jogado. Cada tempo tem seu próprio ranking."
+    "modeHint": "Cada tempo tem seu próprio ranking."
   },
   "mono": {
     "desc": "Seu chat tem 2 minutos para se inscrever digitando join, depois a partida começa.",
@@ -594,7 +594,7 @@
     "restrictions": "Limita os votos a seguidores e/ou inscritos. O streamer, os mods e os VIPs sempre podem votar. Seguidores exige permitir o acesso aos seguidores ao conectar a Twitch.",
     "rushRating": "Dificuldade do primeiro puzzle. Ela sobe a cada puzzle resolvido.",
     "rushPause": "Espera entre dois puzzles, para respirar e ver a solução.",
-    "rushMode": "Tempo para encontrar cada lance. Ilimitado: o primeiro lance válido sugerido pelo chat é jogado. Cada tempo tem seu próprio ranking.",
+    "rushMode": "Tempo para encontrar cada lance. Cada tempo tem seu próprio ranking.",
     "problemThemes": "Tipos de puzzle (mate em 2, garfo, cravada…). Nenhum selecionado: todos os temas.",
     "problemPause": "Espera entre dois puzzles.",
     "monoColor": "O lado que você joga no tabuleiro; os viewers inscritos votam pelo outro.",

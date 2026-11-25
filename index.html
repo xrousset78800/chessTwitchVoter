@@ -101,7 +101,7 @@
                             <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
                             <ol class="preset__how new-tab__how">
                                 <li data-i18n="newInfo.rush.how1">Un puzzle s'affiche sur l'échiquier : le chat propose des coups dans le tchat.</li>
-                                <li data-i18n="newInfo.rush.how2">En Illimité, le premier coup valide est joué ; avec un temps, c'est le coup le plus voté à la fin du minuteur.</li>
+                                <li data-i18n="newInfo.rush.how2">À la fin du minuteur, le coup le plus voté est joué.</li>
                                 <li data-i18n="newInfo.rush.how3">Chaque puzzle résolu en amène un plus difficile. Un mauvais coup, ou aucun vote à temps, compte comme une erreur.</li>
                                 <li data-i18n="newInfo.rush.how4">À la troisième erreur, le run s'arrête. Connecté avec Twitch, ton score entre dans le classement de ta chaîne.</li>
                             </ol>
@@ -593,12 +593,11 @@
                 <div class="battle-setup__card battle-setup__card--rush preset__card">
                         <h2 class="preset__subtitle" data-i18n="newInfo.rush.modesTitle">Choisis le temps pour voter</h2>
                         <div class="rush-modes" data-records="rush-page-records" role="group" aria-label="Temps pour voter">
-                            <button type="button" class="rush-mode" data-rush-mode="0" data-i18n="rushPage.modeUnlimited">Illimité</button>
                             <button type="button" class="rush-mode" data-rush-mode="30">30 s</button>
                             <button type="button" class="rush-mode" data-rush-mode="60">1 min</button>
                             <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
                         </div>
-                        <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.</p>
+                        <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Chaque temps a son propre classement.</p>
                         <button class="btn btn--primary btn--full btn--lg" id="rush-page-start">
                             <i class="fas fa-play"></i> <span data-i18n="rushPage.start">Lancer un run</span>
                         </button>

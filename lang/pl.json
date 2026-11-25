@@ -222,7 +222,7 @@
     "loading": "Wczytywanie rekordów…",
     "mode": "Czas na głos",
     "modeUnlimited": "Bez limitu",
-    "modeHint": "Bez limitu: gra pierwszy poprawny ruch zaproponowany przez czat. Każdy czas ma własny ranking."
+    "modeHint": "Każdy czas ma własny ranking."
   },
   "mono": {
     "desc": "Twój czat ma 2 minuty na zapisy, wpisując join, potem partia startuje.",
@@ -594,7 +594,7 @@
     "restrictions": "Ogranicz głosowanie do followersów i/lub subskrybentów. Streamer, modzi i VIP-y zawsze mogą głosować. Opcja followersów wymaga zgody na odczyt followersów przy łączeniu z Twitch.",
     "rushRating": "Trudność pierwszego zadania. Rośnie z każdym rozwiązanym zadaniem.",
     "rushPause": "Przerwa między zadaniami, żeby odetchnąć i obejrzeć rozwiązanie.",
-    "rushMode": "Czas na znalezienie każdego ruchu. Bez limitu: gra pierwszy poprawny ruch zaproponowany przez czat. Każdy czas ma własny ranking.",
+    "rushMode": "Czas na znalezienie każdego ruchu. Każdy czas ma własny ranking.",
     "problemThemes": "Rodzaje zadań (mat w 2, widełki, związanie…). Nic nie wybrano: wszystkie motywy.",
     "problemPause": "Przerwa między zadaniami.",
     "monoColor": "Strona, którą grasz na szachownicy; zapisani widzowie głosują za drugą.",

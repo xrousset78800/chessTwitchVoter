@@ -222,7 +222,7 @@
     "loading": "Caricamento dei record…",
     "mode": "Tempo per votare",
     "modeUnlimited": "Illimitato",
-    "modeHint": "Illimitato: viene giocata la prima mossa valida proposta dalla chat. Ogni tempo ha la sua classifica."
+    "modeHint": "Ogni tempo ha la sua classifica."
   },
   "mono": {
     "desc": "La tua chat ha 2 minuti per iscriversi scrivendo join, poi la partita inizia.",
@@ -594,7 +594,7 @@
     "restrictions": "Limita i voti ai follower e/o agli abbonati. Streamer, mod e VIP possono sempre votare. Per i follower bisogna autorizzare la lettura dei follower quando colleghi Twitch.",
     "rushRating": "Difficoltà del primo puzzle. Sale a ogni puzzle risolto.",
     "rushPause": "Attesa tra due puzzle, per tirare il fiato e guardare la soluzione.",
-    "rushMode": "Tempo per trovare ogni mossa. Illimitato: viene giocata la prima mossa valida proposta dalla chat. Ogni tempo ha la sua classifica.",
+    "rushMode": "Tempo per trovare ogni mossa. Ogni tempo ha la sua classifica.",
     "problemThemes": "Tipi di puzzle (matto in 2, forchetta, inchiodatura…). Nessuno selezionato: tutti i temi.",
     "problemPause": "Attesa tra due puzzle.",
     "monoColor": "Il lato che giochi sulla scacchiera; gli iscritti votano per l'altro.",

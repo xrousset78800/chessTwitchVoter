@@ -222,7 +222,7 @@
     "loading": "Loading records…",
     "mode": "Time to vote",
     "modeUnlimited": "Unlimited",
-    "modeHint": "Unlimited: the first valid move suggested by chat is played. Each time has its own leaderboard."
+    "modeHint": "Each time has its own leaderboard."
   },
   "mono": {
     "desc": "Your chat has 2 minutes to register by typing join, then the game starts.",
@@ -594,7 +594,7 @@
     "restrictions": "Limit votes to followers and/or subscribers. The streamer, mods and VIPs can always vote. Followers requires allowing follower access when connecting Twitch.",
     "rushRating": "Difficulty of the first puzzle. It goes up with each solved puzzle.",
     "rushPause": "Wait between two puzzles, to breathe and look at the solution.",
-    "rushMode": "Time to find each move. Unlimited: the first valid move suggested by chat is played. Each time has its own leaderboard.",
+    "rushMode": "Time to find each move. Each time has its own leaderboard.",
     "problemThemes": "Kinds of puzzles (mate in 2, fork, pin…). None selected: every theme.",
     "problemPause": "Wait between two puzzles.",
     "monoColor": "The side you play on the board; registered viewers vote for the other one.",
@@ -872,7 +872,7 @@
     "modeOptions": "Mode options",
     "rush": {
       "how1": "A puzzle appears on the board: your chat suggests moves in the chat.",
-      "how2": "In Unlimited, the first valid move is played; with a time limit, the most voted move is played when the timer ends.",
+      "how2": "When the timer ends, the most voted move is played.",
       "how3": "Every solved puzzle brings a harder one. A wrong move, or no vote in time, counts as a mistake.",
       "how4": "On the third mistake the run ends. Logged in with Twitch, your score goes into your channel's leaderboard.",
       "modesTitle": "Pick the voting time"

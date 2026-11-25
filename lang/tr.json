@@ -222,7 +222,7 @@
     "loading": "Rekorlar yükleniyor…",
     "mode": "Oylama süresi",
     "modeUnlimited": "Sınırsız",
-    "modeHint": "Sınırsız: chat'in önerdiği ilk geçerli hamle oynanır. Her sürenin kendi sıralaması var."
+    "modeHint": "Her sürenin kendi sıralaması var."
   },
   "mono": {
     "desc": "Chat'in join yazarak 2 dakika içinde kayıt olur, sonra oyun başlar.",
@@ -594,7 +594,7 @@
     "restrictions": "Oyları takipçilere ve/veya abonelere sınırla. Yayıncı, modlar ve VIP'ler her zaman oy verebilir. Takipçiler seçeneği, Twitch'i bağlarken takipçi erişimine izin vermeyi gerektirir.",
     "rushRating": "İlk bulmacanın zorluğu. Her çözülen bulmacayla artar.",
     "rushPause": "İki bulmaca arasındaki bekleme, nefes almak ve çözüme bakmak için.",
-    "rushMode": "Her hamleyi bulma süresi. Sınırsız: chat'in önerdiği ilk geçerli hamle oynanır. Her sürenin kendi sıralaması var.",
+    "rushMode": "Her hamleyi bulma süresi. Her sürenin kendi sıralaması var.",
     "problemThemes": "Bulmaca türleri (2 hamlede mat, çatal, açmaz…). Hiçbiri seçilmezse: tüm temalar.",
     "problemPause": "İki bulmaca arasındaki bekleme.",
     "monoColor": "Tahtada oynadığın taraf; kayıtlı izleyiciler diğeri için oy verir.",

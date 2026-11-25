@@ -204,11 +204,12 @@ const tr = (key, params) => window.i18n.t(key, params);
  * des pages de réglage : on peut naviguer ailleurs, elle continue, et le lien
  * "Partie en cours" de la nav y ramène. Seuls "Terminer" ou un nouveau lancement l'arrêtent.
  */
-// Puzzle Rush : temps pour voter, un classement par mode ('0' = illimité, le premier coup valide est joué)
-const RUSH_MODES = ['0', '30', '60', '120'];
+// Puzzle Rush : temps pour voter, un classement par mode. L'ancien mode '0' (illimité, premier coup valide joué)
+// ne se lance plus : ses records restent consultables dans Records.
+const RUSH_MODES = ['30', '60', '120'];
 const rushMode = () => {
-    const m = String(AppState.config.rushTimer ?? '0');
-    return RUSH_MODES.includes(m) ? m : '0';
+    const m = String(AppState.config.rushTimer ?? '30');
+    return RUSH_MODES.includes(m) ? m : '30';
 };
 const rushModeLabel = (m) => ({ '0': tr('rushPage.modeUnlimited'), '30': '30 s', '60': '1 min', '120': '2 min' }[m] || m);
 
@@ -2321,7 +2322,7 @@ const RushPage = {
     launch(route, mode = '0') {
         if (!GameSession.confirmReplace()) return;
         GameSession.clear();
-        AppState.config.rushTimer = RUSH_MODES.includes(mode) ? mode : '0';
+        AppState.config.rushTimer = RUSH_MODES.includes(mode) ? mode : '30';
         Storage.saveConfig();
         // Règles figées pour que les records restent comparables : rating de départ 100, pause 15 s.
         // Le temps pour voter vient du mode choisi. Rien de tout ça ne touche aux réglages de la partie libre.

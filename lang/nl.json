@@ -222,7 +222,7 @@
     "loading": "Records laden…",
     "mode": "Stemtijd",
     "modeUnlimited": "Onbeperkt",
-    "modeHint": "Onbeperkt: de eerste geldige zet die de chat voorstelt wordt gespeeld. Elke tijd heeft een eigen ranglijst."
+    "modeHint": "Elke tijd heeft een eigen ranglijst."
   },
   "mono": {
     "desc": "Je chat heeft 2 minuten om zich in te schrijven door join te typen, daarna begint de partij.",
@@ -594,7 +594,7 @@
     "restrictions": "Beperk stemmen tot followers en/of abonnees. De streamer, mods en VIP's kunnen altijd stemmen. Voor followers moet je bij het verbinden met Twitch toegang tot je followers geven.",
     "rushRating": "Moeilijkheid van de eerste puzzel. Die stijgt bij elke opgeloste puzzel.",
     "rushPause": "Wachttijd tussen twee puzzels, om op adem te komen en de oplossing te bekijken.",
-    "rushMode": "Tijd om elke zet te vinden. Onbeperkt: de eerste geldige zet die de chat voorstelt wordt gespeeld. Elke tijd heeft een eigen ranglijst.",
+    "rushMode": "Tijd om elke zet te vinden. Elke tijd heeft een eigen ranglijst.",
     "problemThemes": "Soorten puzzels (mat in 2, vork, penning…). Niets gekozen: alle thema's.",
     "problemPause": "Wachttijd tussen twee puzzels.",
     "monoColor": "De kant die jij op het bord speelt; ingeschreven kijkers stemmen voor de andere.",

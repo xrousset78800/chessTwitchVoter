@@ -222,7 +222,7 @@
     "loading": "Chargement des records…",
     "mode": "Temps pour voter",
     "modeUnlimited": "Illimité",
-    "modeHint": "Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement."
+    "modeHint": "Chaque temps a son propre classement."
   },
   "mono": {
     "desc": "Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.",
@@ -594,7 +594,7 @@
     "restrictions": "Limite les votes aux followers et/ou aux abonnés. Le streamer, les modos et les VIP peuvent toujours voter. Followers demande d'autoriser la lecture des followers à la connexion Twitch.",
     "rushRating": "Difficulté du premier puzzle. Elle monte à chaque puzzle réussi.",
     "rushPause": "Temps d'attente entre deux puzzles, pour souffler et regarder la solution.",
-    "rushMode": "Temps pour trouver chaque coup. Illimité : le premier coup valide proposé par le chat est joué. Chaque temps a son propre classement.",
+    "rushMode": "Temps pour trouver chaque coup. Chaque temps a son propre classement.",
     "problemThemes": "Types de puzzles proposés (mat en 2, fourchette, clouage…). Aucun choisi : tous les thèmes.",
     "problemPause": "Temps d'attente entre deux puzzles.",
     "monoColor": "Le camp que tu joues sur l'échiquier ; les inscrits votent pour l'autre.",
@@ -872,7 +872,7 @@
     "modeOptions": "Options du mode",
     "rush": {
       "how1": "Un puzzle s'affiche sur l'échiquier : le chat propose des coups dans le tchat.",
-      "how2": "En Illimité, le premier coup valide est joué ; avec un temps, c'est le coup le plus voté à la fin du minuteur.",
+      "how2": "À la fin du minuteur, le coup le plus voté est joué.",
       "how3": "Chaque puzzle résolu en amène un plus difficile. Un mauvais coup, ou aucun vote à temps, compte comme une erreur.",
       "how4": "À la troisième erreur, le run s'arrête. Connecté avec Twitch, ton score entre dans le classement de ta chaîne.",
       "modesTitle": "Choisis le temps pour voter"
