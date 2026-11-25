@@ -477,10 +477,6 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .test-tools__bot button { border: 0; background: none; color: inherit; opacity: .6; cursor: pointer; padding: 0 4px; font-size: 0.85rem; line-height: 1; }
 .test-tools__bot button:hover { opacity: 1; color: #f87171; }
 
-/* Choix de niveau : (stockfish) = joue par Stockfish, (todo) = simule sous son plancher */
-.sf-tag { margin-left: 4px; font-size: 0.7em; font-weight: 600; white-space: nowrap; }
-.sf-tag--ok { color: #34d399; }
-.sf-tag--todo { color: #9ca3af; font-style: italic; }
 
 /* Contre Stockfish : reflexion du moteur dans le bandeau des votes */
 .vote-ticker__item.engine-thinking { color: #facc15; font-style: italic; }

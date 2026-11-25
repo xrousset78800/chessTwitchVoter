@@ -2355,7 +2355,7 @@ const MonoPage = {
                     this.format === 'vsBot' ? '' : 'none';
             });
         });
-        // Stockfish contre les inscrits : niveaux étiquetés (stockfish) / (todo)
+        // Stockfish contre les inscrits : niveaux
         const elo = document.getElementById('mono-bot-elo');
         elo.innerHTML = (window.BotEngine?.LEVELS || [300, 600, 900, 1320, 1500, 1800, 2100, 2400])
             .map(v => `<option value="${v}"${v === 1320 ? ' selected' : ''}>${window.BotEngine?.levelOption(v) || v}</option>`).join('');
