@@ -37,6 +37,32 @@ function initTournamentBoard() {
     });
     window.BoardAnnotations?.attach('liveBoardT');
     window.addEventListener('resize', () => stateT.board?.resize());
+    // Les bandes autour de l'échiquier recopient la carte « Partie sélectionnée »
+    const card = document.getElementById('playerWhiteT')?.closest('.live-card');
+    if (card) new MutationObserver(renderBarsT).observe(card, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+    renderBarsT();
+}
+
+/** Bandes au-dessus et en dessous de l'échiquier : pendule, nom, Elo, score */
+function renderBarsT() {
+    const txt = id => document.getElementById(id)?.textContent.trim() || '';
+    const turn = stateT.chess?.turn();
+    for (const [C, side] of [['White', 'w'], ['Black', 'b']]) {
+        const name = txt(`player${C}T`);
+        const clock = txt(`clock${C}T`) || '—';
+        const set = (id, v) => { const el = document.getElementById(id); if (el && el.textContent !== v) el.textContent = v; };
+        set(`tBarName${C}`, name || '—');
+        set(`tBarElo${C}`, txt(`rating${C}T`));
+        set(`tBarScore${C}`, txt(`score${C}T`));
+        set(`tBarClock${C}`, clock);
+        const following = name && name !== '—';
+        const active = following && turn === side && !!stateT.clockInterval;
+        const pc = document.getElementById(`tBarClock${C}`);
+        pc?.classList.toggle('is-active', active);
+        const m = /^(\d+):(\d\d)$/.exec(clock);
+        pc?.classList.toggle('is-critical', active && !!m && +m[1] * 60 + +m[2] < 20);
+        document.getElementById(`tSide${C}`)?.classList.toggle('is-turn', following && turn === side);
+    }
 }
 
 async function loadTournament(input) {
@@ -939,6 +965,7 @@ function startClockT(whiteMs, blackMs) {
 function stopClockT() {
     clearInterval(stateT.clockInterval);
     stateT.clockInterval = null;
+    renderBarsT();
 }
 
 function renderClocksT() {

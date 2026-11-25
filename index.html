@@ -1281,10 +1281,13 @@
 
                     <!-- ══ COL 2 : Échiquier ══ -->
                     <div class="board-wrapper">
-                        <div id="liveBoardT"></div>
-                        <div style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--text-muted,#55556a);" id="fenDisplayT">
-                            FEN : —
+                        <!-- Échiquier entre deux bandes : pendule, joueur et Elo (Noirs en haut, Blancs en bas) -->
+                        <div class="t-boardcol">
+                            <div class="h24-side t-side t-side--top" id="tSideBlack"><span class="h24-pclock" id="tBarClockBlack">—</span><span class="h24-side__team h24-team--b"><span class="h24-team__swatch"></span><span class="t-side__name" id="tBarNameBlack">—</span></span><span class="t-side__elo" id="tBarEloBlack"></span><span class="h24-side__spacer"></span><span class="t-side__score" id="tBarScoreBlack"></span></div>
+                            <div id="liveBoardT"></div>
+                            <div class="h24-side t-side t-side--bottom" id="tSideWhite"><span class="h24-pclock" id="tBarClockWhite">—</span><span class="h24-side__team h24-team--w"><span class="h24-team__swatch"></span><span class="t-side__name" id="tBarNameWhite">—</span></span><span class="t-side__elo" id="tBarEloWhite"></span><span class="h24-side__spacer"></span><span class="t-side__score" id="tBarScoreWhite"></span></div>
                         </div>
+                        <span id="fenDisplayT" hidden></span>
                         <!-- Revue d'une partie terminée -->
                         <div class="t-review" id="tReview" style="display:none;">
                             <div class="t-review__nav">

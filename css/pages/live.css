@@ -504,6 +504,12 @@ input[type=range] {
     width: 100%;
     max-width: 560px;
 }
+/* Bandes joueur (pendule, nom, Elo) collées à l'échiquier, de sa largeur */
+#page-tournament .t-side { max-width: none; width: auto; margin-left: 24px; } /* 24px : colonne des rangées (boardCoords) */
+#page-tournament .t-side .h24-side__team { min-width: 0; }
+.t-side__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-side__elo { flex: none; font-size: 0.78rem; font-weight: 600; color: var(--text-muted, #7f736b); font-variant-numeric: tabular-nums; }
+.t-side__score { flex: none; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--accent-purple, #ff8a3d); }
 
 #liveBoardT {
     width: 100% !important;
@@ -709,9 +715,9 @@ input[type=range] {
 #page-tournament .t-list-toggle { order: 0; align-self: auto; margin: 0; }
 #page-tournament .board-wrapper { gap: 10px; }
 #page-tournament .board-wrapper .t-review { margin-top: 0; }
-/* Hauteur de l'échiquier limitée à ce qui reste sous l'en-tête (FEN + revue compris) */
+/* Hauteur de l'échiquier limitée à ce qui reste sous l'en-tête (bandes joueur + revue compris) */
 #page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child {
-    max-width: min(640px, max(300px, calc(100vh - 330px)));
+    max-width: min(640px, max(300px, calc(100vh - 400px)));
 }
 .t-review__nav .t-review__play { color: #22c55e; border-color: rgba(34, 197, 94, .5); padding: 5px 14px; }
 .t-review__nav .t-review__play.is-playing { color: #f59e0b; border-color: rgba(245, 158, 11, .5); }
