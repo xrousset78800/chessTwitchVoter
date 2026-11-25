@@ -179,6 +179,8 @@ const H24Page = {
             if (e.target.closest('[data-h24-login]')) { twitchAuth.login?.(); return; }
             const st = e.target.closest('[data-h24-style]');
             if (st) { this.setStyle(st.dataset.h24Style); return; }
+            const bg = e.target.closest('[data-h24-bg]');
+            if (bg) { this.setBg(bg.dataset.h24Bg); return; }
             if (e.target.closest('[data-h24-settings]')) { this.toggleSettings(); return; }
             const pal = e.target.closest('[data-h24-palette]');
             if (pal) { this.setPalette(pal.dataset.h24Palette); return; }
@@ -223,6 +225,7 @@ const H24Page = {
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.toggleSettings(false); });
         window.addEventListener('languageChanged', () => this.renderPalettes());
         this.renderPalettes();
+        this.setBg(document.documentElement.dataset.bg || 'dark');
     },
 
     // ------------------------------------------------------------------ paramètres du viewer
@@ -1238,6 +1241,15 @@ const H24Page = {
     },
 
     // ------------------------------------------------------------------ style du tirage
+    /** Fond du site (nuit, ardoise, bleu nuit) : retenu dans ce navigateur */
+    setBg(bg) {
+        bg = ['slate', 'blue'].includes(bg) ? bg : 'dark';
+        if (bg === 'dark') delete document.documentElement.dataset.bg;
+        else document.documentElement.dataset.bg = bg;
+        try { localStorage.setItem('cgBg', bg); } catch {}
+        document.querySelectorAll('[data-h24-bg]').forEach(b => b.classList.toggle('is-active', b.dataset.h24Bg === bg));
+    },
+
     setStyle(style) {
         style = style === 'wheel' ? 'wheel' : 'band';
         if (style === this.style) return;

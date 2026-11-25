@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crowd Gambit</title>
+    <!-- Fond choisi par le viewer (Paramètres du 24/24), appliqué avant l'affichage -->
+    <script>try { var cgBg = localStorage.getItem('cgBg'); if (cgBg && cgBg !== 'dark') document.documentElement.dataset.bg = cgBg; } catch (e) {}</script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -826,6 +828,14 @@
                                         <div class="h24-style" role="group">
                                             <button type="button" class="btn btn--sm" data-h24-style="band" title="Tirage : bande"><i class="fas fa-grip-lines"></i> <span data-i18n="h24.styleBand">Bande</span></button>
                                             <button type="button" class="btn btn--sm" data-h24-style="wheel" title="Tirage : roue"><i class="fas fa-dharmachakra"></i> <span data-i18n="h24.styleWheel">Roue</span></button>
+                                        </div>
+                                    </div>
+                                    <div class="h24-settings__row">
+                                        <span class="h24-settings__label" data-i18n="h24.settingsBg">Fond</span>
+                                        <div class="h24-style h24-bgs" role="group">
+                                            <button type="button" class="btn btn--sm" data-h24-bg="dark"><span class="h24-bg-dot" style="background:#100d0b"></span> <span data-i18n="h24.bgDark">Nuit</span></button>
+                                            <button type="button" class="btn btn--sm" data-h24-bg="slate"><span class="h24-bg-dot" style="background:#2b2926"></span> <span data-i18n="h24.bgSlate">Ardoise</span></button>
+                                            <button type="button" class="btn btn--sm" data-h24-bg="blue"><span class="h24-bg-dot" style="background:#1a1f27"></span> <span data-i18n="h24.bgBlue">Bleu nuit</span></button>
                                         </div>
                                     </div>
                                     <div class="h24-settings__row h24-settings__row--col">

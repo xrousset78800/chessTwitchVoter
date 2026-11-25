@@ -90,6 +90,16 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Fonds plus doux, au choix du viewer (Paramètres du 24/24) */
+:root[data-bg="slate"] {
+    --bg-dark: #262421; --bg-card: #2f2d2a; --bg-card-hover: #383532; --bg-input: #292724;
+    --border-subtle: #423e3a; --text-primary: #ebe6e0; --text-secondary: #b3aca5;
+}
+:root[data-bg="blue"] {
+    --bg-dark: #161a21; --bg-card: #1e232b; --bg-card-hover: #262c35; --bg-input: #1a1e25;
+    --border-subtle: #2e3540; --text-primary: #e8e9ec; --text-secondary: #a9afba;
+}
+
 body {
     font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg-dark);

@@ -215,6 +215,11 @@
 /* Pas de halo ni de flou autour de la roue : rien ne déborde sur la barre des votes ou les panneaux voisins */
 #page-h24 #h24-votes-panel { contain: paint; }
 #page-h24 #h24-wheel-area .wheel-canvas { box-shadow: 0 0 0 4px var(--border-subtle); }
+/* Roue qui tourne : anneau orange seul, sans lueur (elle était rognée en haut et en bas du panneau) */
+#page-h24 #h24-wheel-area .wheel-container.is-spinning .wheel-canvas { box-shadow: 0 0 0 4px var(--accent); }
+#page-h24 #h24-wheel-area .wheel-pointer { filter: none; }
+#page-h24 #h24-wheel-area .wheel-pointer::after, #page-h24 #h24-wheel-area .wheel-center { box-shadow: none; }
+.h24-bg-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35); vertical-align: -1px; }
 #page-h24 #h24-votes-panel.has-winner > #h24-wheel-area { filter: saturate(0.6); }
 #h24-votes-panel.is-live:not(.votes-slot--wheel) { min-height: 84px; display: grid; place-items: center; }
 /* Nombre de votes : en haut du bloc, gros et lisible, sans trait de séparation */
