@@ -461,8 +461,8 @@ const Router = {
         document.querySelectorAll('.nav__link:not(#nav-game)').forEach(link => {
             const linkPath = (link.dataset.navigate || '').split('?')[0];
             // Mono, Multi et Puzzle Rush sont des onglets de Nouveau (/sandbox)
-            const activePage = NEW_TABS.includes(pageName) ? 'sandbox' : pageName;
-            link.classList.toggle('is-active', Router.routes[linkPath] === activePage);
+            const group = p => NEW_TABS.includes(p) ? 'sandbox' : p;
+            link.classList.toggle('is-active', group(Router.routes[linkPath]) === group(pageName));
         });
         moveNavCursor();
 

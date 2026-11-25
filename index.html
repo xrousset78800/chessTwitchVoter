@@ -58,7 +58,7 @@
 
             <div class="nav__links">
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
-                <a class="nav__link" data-navigate="/sandbox" data-i18n="nav.new">Nouveau</a>
+                <a class="nav__link" data-navigate="/rush" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
                 <a class="nav__link" data-navigate="/records"><i class="fas fa-trophy"></i> <span data-i18n="nav.records">Records</span></a>
@@ -92,10 +92,11 @@
 
                 <!-- Onglets de Nouveau (déplacés par le router vers /rush, /mono, /multi) -->
                 <nav class="new-tabs" id="new-tabs">
-                    <a class="new-tab" data-navigate="/sandbox" data-new-tab="sandbox">🧪 <span data-i18n="newTabs.free">Partie libre</span></a>
+                    <!-- Puzzle Rush d'abord : le plus simple à essayer -->
+                    <a class="new-tab" data-navigate="/rush" data-new-tab="rush">🔥 Puzzle Rush</a>
                     <a class="new-tab" data-navigate="/mono" data-new-tab="mono">👥 Mono</a>
                     <a class="new-tab" data-navigate="/multi" data-new-tab="multi">⚔ Multi</a>
-                    <a class="new-tab" data-navigate="/rush" data-new-tab="rush">🔥 Puzzle Rush</a>
+                    <a class="new-tab" data-navigate="/sandbox" data-new-tab="sandbox">🧪 <span data-i18n="newTabs.free">Partie libre</span></a>
                 </nav>
 
                 <!-- Lancement (Nouveau) ; pendant la partie, la même carte sert de modale ⚙ -->
