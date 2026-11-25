@@ -45,7 +45,7 @@
     color: var(--text-primary); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
     animation: h24-guide 2.6s ease-in-out infinite;
 }
-#page-h24:not([data-phase="play"]) #h24-hint, #page-h24 #h24-hint:empty { display: none; }
+#page-h24 #h24-hint:empty { display: none; }
 /* Grand écran avec souris : dans la bande du menu (transparent tant qu'on ne le survole pas) */
 @media (hover: hover) and (min-width: 1101px) {
     #page-h24 .sandbox__main > #h24-hint {
