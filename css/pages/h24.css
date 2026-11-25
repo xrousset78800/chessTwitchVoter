@@ -590,6 +590,10 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-settings__row--col { flex-direction: column; align-items: stretch; }
 .h24-settings__label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-secondary, #cbd5e1); }
 .h24-settings .h24-style { margin-left: 0; }
+/* Fond : quatre choix en grille de deux, sous le titre (ils débordaient du menu) */
+.h24-settings__row:has(.h24-bgs) { flex-direction: column; align-items: stretch; }
+.h24-settings .h24-bgs { display: grid; grid-template-columns: 1fr 1fr; }
+.h24-bgs .btn { justify-content: flex-start; }
 .h24-palettes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .h24-palette {
     display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 8px; border: 1px solid var(--border-subtle); border-radius: 3px;

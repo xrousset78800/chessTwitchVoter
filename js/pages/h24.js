@@ -1276,7 +1276,7 @@ const H24Page = {
     // ------------------------------------------------------------------ style du tirage
     /** Fond du site (nuit, ardoise, bleu nuit) : retenu dans ce navigateur */
     setBg(bg) {
-        bg = ['slate', 'blue'].includes(bg) ? bg : 'dark';
+        bg = ['graphite', 'slate', 'blue'].includes(bg) ? bg : 'dark';
         if (bg === 'dark') delete document.documentElement.dataset.bg;
         else document.documentElement.dataset.bg = bg;
         try { localStorage.setItem('cgBg', bg); } catch {}

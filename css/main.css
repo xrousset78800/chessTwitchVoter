@@ -91,6 +91,10 @@ html {
 }
 
 /* Fonds plus doux, au choix du viewer (Paramètres du 24/24) */
+:root[data-bg="graphite"] {
+    --bg-dark: #1b1917; --bg-card: #24211e; --bg-card-hover: #2d2a27; --bg-input: #1f1c1a;
+    --border-subtle: #36322e; --text-primary: #ece7e1; --text-secondary: #b0a9a2;
+}
 :root[data-bg="slate"] {
     --bg-dark: #262421; --bg-card: #2f2d2a; --bg-card-hover: #383532; --bg-input: #292724;
     --border-subtle: #423e3a; --text-primary: #ebe6e0; --text-secondary: #b3aca5;
