@@ -149,6 +149,8 @@
 .player-row.white .player-color-dot { background: #f4eee8; border: 1px solid #555; }
 .player-row.black .player-color-dot { background: #1a1512; border: 1px solid #888; }
 
+.player-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--bg-input); }
+.player-photo[hidden] { display: none; }
 .player-name {
     font-weight: 600;
     font-size: 0.9rem;
@@ -948,13 +950,24 @@ input[type=range] {
 .tv-name { flex: 1; min-width: 0; font-size: 0.84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tv-src { font-size: 0.72rem; color: #9146ff; }
 .tv-move { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); }
-.tv-gain { font-size: 0.74rem; font-weight: 700; color: var(--accent); white-space: nowrap; animation: tvGain 1.2s ease-out calc(var(--i, 0) * 80ms + 250ms) both; }
-.tv-played {
-    display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 0.8rem; color: var(--text-secondary);
-    animation: tvPop 0.45s ease-out both;
+.tv-gain { font-size: 0.74rem; font-weight: 700; color: var(--accent); white-space: nowrap; animation: tvGain 1.2s ease-out calc(var(--i, 0) * 90ms + 400ms) both; }
+/* Résultat d'un coup : marque animée au bout de chaque ligne, gagnants mis en avant */
+.tv-mark { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font-size: 0.8rem; }
+.tv-mark.is-hit { color: var(--accent); animation: tvMarkIn 0.55s cubic-bezier(.3, 1.6, .5, 1) calc(var(--i, 0) * 90ms + 150ms) both; }
+.tv-mark.is-hit > .fa-check {
+    width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; font-size: 0.65rem;
 }
-.tv-played b { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--text-primary); }
-.tv-score { margin-left: auto; color: var(--accent); font-weight: 600; }
+.tv-mark.is-miss { color: var(--text-muted); animation: tvMarkMiss 0.45s ease-out calc(var(--i, 0) * 40ms + 200ms) both; }
+.tv-item.is-hit .tv-name { color: var(--text-primary); }
+.tv-pic.is-bot { background: color-mix(in srgb, var(--text-muted) 25%, var(--bg-card)); color: var(--text-secondary); font-size: 0.7rem; }
+.tv-src.is-bot { color: var(--text-muted); }
+.tv-headright { display: inline-flex; align-items: center; gap: 8px; }
+.tv-bots { background: none; border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; cursor: pointer; }
+.tv-bots[hidden] { display: none; }
+.tv-bots[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+@keyframes tvMarkIn { 0% { opacity: 0; transform: scale(0.3) rotate(-25deg); } 100% { opacity: 1; transform: none; } }
+@keyframes tvMarkMiss { 0% { opacity: 0; transform: translateX(-6px); } 100% { opacity: 1; transform: none; } }
 .tv-item.is-hit {
     border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
     animation: tvHit 0.9s ease-out calc(var(--i, 0) * 80ms) both;
@@ -972,14 +985,20 @@ input[type=range] {
 @keyframes tvPop { 0% { opacity: 0; transform: translateY(-4px); } 100% { opacity: 1; transform: none; } }
 @keyframes tvOut { to { opacity: 0; transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) {
-    .tv-item.is-hit, .tv-item.is-miss, .tv-gain, .tv-played, .tv-list.is-flash { animation: none; }
+    .tv-item.is-hit, .tv-item.is-miss, .tv-gain, .tv-mark, .tv-list.is-flash { animation: none; }
     .tv-item.is-miss { opacity: 0.35; }
 }
 
 /* ── Tournois : plus d'en-tête de page, titre à gauche et outils à droite ── */
 .t-sidehead { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; }
 .t-sidehead .live-header__title { margin: 0; font-size: 1.25rem; line-height: 1.2; }
-.t-righttools { display: flex; align-items: center; gap: 8px; min-height: 34px; flex-wrap: wrap; }
+.t-righttools { display: flex; align-items: center; gap: 6px; min-height: 34px; flex-wrap: nowrap; }
+/* Parties, Évaluation et Phantom sur une seule ligne */
+#page-tournament .t-righttools .t-list-toggle { padding: 4px 8px; font-size: 0.72rem; white-space: nowrap; flex: 0 0 auto; }
+#page-tournament .t-righttools .live-phantom-menu__btn { padding: 4px 9px; font-size: 0.74rem; white-space: nowrap; }
+/* Main ouverte sur les pièces qu'on peut faire glisser pour un prono */
+#liveBoardT img.can-grab { cursor: grab; }
+#liveBoardT img.can-grab:active { cursor: grabbing; }
 .t-righttools .live-phantom-menu { margin-left: auto; }
 .t-righttools .phantom-menu__panel { left: auto; right: 0; }
 

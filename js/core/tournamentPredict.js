@@ -252,6 +252,12 @@
         if (!logged()) { askLogin(); return false; }
         return piece?.[0] === (String(current().fen).split(' ')[1] === 'b' ? 'b' : 'w');
     }
+    /** Survol : main ouverte sur les pièces qu'on peut faire glisser (camp au trait, sans ouvrir la connexion) */
+    const canGrab = piece => canGuess() && !pred.busy && piece?.[0] === (String(current().fen).split(' ')[1] === 'b' ? 'b' : 'w');
+    document.addEventListener('mouseover', e => {
+        const img = e.target.closest?.('#liveBoardT img[data-piece]');
+        if (img) img.classList.toggle('can-grab', canGrab(img.dataset.piece));
+    });
     /** Échiquier (onDrop) : le coup part comme prono, la pièce revient à sa place */
     function dropMove(from, to) {
         const c = current();
@@ -412,6 +418,7 @@
     const picQueue = new Set();
     let picTimer = null;
     function picOf(v) {
+        if (v.src === 'bot') return null;
         if (v.pic && /^https:\/\//.test(v.pic)) { pics.set(v.login, v.pic); return v.pic; }
         if (pics.has(v.login)) return pics.get(v.login);
         if ((picTries.get(v.login) || 0) < 3 && !picQueue.has(v.login)) {
@@ -453,7 +460,7 @@
     function votersOf(key, fen) {
         const out = new Map();
         if (chat.key === key && boardOf(chat.fen) === boardOf(fen)) {
-            for (const [login, v] of chat.votes) out.set(login, { login, name: v.name, uci: v.uci, san: v.san, src: 'chat' });
+            for (const [login, v] of chat.votes) out.set(login, { login, name: v.name, uci: v.uci, san: v.san, src: v.bot ? 'bot' : 'chat' });
         }
         if (voters.key === key && boardOf(voters.fen) === boardOf(fen)) {
             for (const v of voters.site) out.set(v.login, { ...v, src: 'site' });
@@ -488,19 +495,109 @@
         el.dataset.sig = sig;
         el.querySelector('.tv-count').textContent = list.length ? String(list.length) : '';
         const face = v => {
+            if (v.src === 'bot') return '<span class="tv-pic is-bot"><i class="fas fa-robot"></i></span>';
             const url = picOf(v);
             return url ? `<img class="tv-pic" src="${esc(url)}" alt="" loading="lazy">`
                 : `<span class="tv-pic">${esc(String(v.name || v.login || '?')[0].toUpperCase())}</span>`;
         };
+        const src = v => v.src === 'chat' ? `<i class="fab fa-twitch tv-src" title="${esc(T('voters.chat', null, 'Chat Twitch'))}"></i>`
+            : v.src === 'bot' ? `<i class="fas fa-robot tv-src is-bot" title="${esc(T('voters.bot', null, 'Bot de test'))}"></i>` : '';
+        // Coup joué : chaque ligne reçoit sa marque animée (✓ et gain pour les gagnants, mis en avant ; ✗ pour les autres)
+        const mark = v => !flash ? '' : v.hit
+            ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${v.gain ? `<b class="tv-gain">+${v.gain} XP</b>` : ''}</span>`
+            : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
         const row = (v, i) => `<li class="tv-item${v.login === me ? ' is-me' : ''}${flash ? (v.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i}">
-                ${face(v)}<span class="tv-name">${esc(v.name || v.login)}</span>${v.src === 'chat' ? `<i class="fab fa-twitch tv-src" title="${esc(T('voters.chat', null, 'Chat Twitch'))}"></i>` : ''}
-                <span class="tv-move">${esc(sanLocal(v.san))}</span>${flash && v.hit ? `<span class="tv-gain">${v.gain ? '+' + v.gain + ' XP' : '<i class="fas fa-check"></i>'}</span>` : ''}</li>`;
+                ${face(v)}<span class="tv-name">${esc(v.name || v.login)}</span>${src(v)}
+                <span class="tv-move">${esc(sanLocal(v.san))}</span>${mark(v)}</li>`;
         el.querySelector('.tv-body').innerHTML = `
-            ${flash ? `<div class="tv-played"><span>${esc(T('voters.played', null, 'Coup joué'))}</span> <b>${esc(sanLocal(flash.played.san))}</b>
-                <span class="tv-score">${esc(flash.hits ? T('voters.hits', { n: flash.hits, total: flash.list.length }, `${flash.hits}/${flash.list.length}`) : T('voters.noHit', null, 'Personne n\'a vu juste'))}</span></div>` : ''}
             ${list.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${list.map(row).join('')}</ul>`
                 : `<p class="tp-hint">${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
             ${!flash && !c.ended && chatOn() ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}`;
+    }
+
+    // ───────────── Bots de test (régie) : votes simulés, sur cet écran seulement ─────────────
+    const BOT_KEY = 'cgTourBots';
+    const BOT_NAMES = ['PionFou', 'TourDeGarde', 'CavalierNoir', 'RoqueRapide', 'DameEnPrise', 'Fianchetto', 'ZugzwangFan', 'EnPassant', 'GambitDame', 'MatDuBerger'];
+    const bots = { on: false, key: null, fen: null, timers: [] };
+    try { bots.on = localStorage.getItem(BOT_KEY) === '1'; } catch { /* navigation privée */ }
+    function botsStop() { bots.timers.forEach(clearTimeout); bots.timers = []; bots.key = bots.fen = null; }
+    function setBots(on) {
+        bots.on = on;
+        try { localStorage.setItem(BOT_KEY, on ? '1' : '0'); } catch { /* navigation privée */ }
+        botsStop();
+        if (!on) {   // retire leurs votes de la liste
+            for (const [login, v] of chat.votes) if (v.bot) chat.votes.delete(login);
+            scheduleChat();
+        }
+        paintBotsBtn();
+    }
+    function paintBotsBtn() {
+        const b = document.querySelector('[data-tv-bots]');
+        if (!b) return;
+        b.hidden = !regie;
+        b.setAttribute('aria-pressed', String(bots.on && regie));
+    }
+    /** Coup d'un bot : souvent une prise ou un échec, parfois le coup déjà choisi par d'autres */
+    function botPick(fen) {
+        const ch = new Chess(fen);
+        const moves = ch.moves({ verbose: true });
+        if (!moves.length) return null;
+        const voted = [...chat.votes.values()];
+        if (voted.length && Math.random() < 0.35) {
+            const v = voted[Math.floor(Math.random() * voted.length)];
+            const m = moves.find(x => x.from + x.to + (x.promotion || '') === v.uci);
+            if (m) return m;
+        }
+        const w = moves.map(m => (m.captured ? 4 : 1) * (/[+#]/.test(m.san) ? 3 : 1) * (m.piece === 'k' ? 0.3 : 1));
+        let r = Math.random() * w.reduce((a, b) => a + b, 0);
+        for (let i = 0; i < moves.length; i++) { r -= w[i]; if (r <= 0) return moves[i]; }
+        return moves[moves.length - 1];
+    }
+    function botsTick(c) {
+        if (!bots.on || !regie || !c || c.ended || reviewT.game || !c.fen) { if (bots.key) botsStop(); return; }
+        if (bots.key === c.key && boardOf(bots.fen) === boardOf(c.fen)) return;
+        botsStop();
+        bots.key = c.key; bots.fen = c.fen;
+        const n = 5 + Math.floor(Math.random() * 4);
+        const names = [...BOT_NAMES].sort(() => Math.random() - 0.5).slice(0, n);
+        names.forEach(name => bots.timers.push(setTimeout(() => {
+            const now = current();
+            if (!bots.on || now?.key !== c.key || boardOf(now.fen) !== boardOf(c.fen)) return;
+            if (chat.key !== now.key || boardOf(chat.fen) !== boardOf(now.fen)) chatReset(now);
+            const m = botPick(now.fen);
+            if (!m) return;
+            chat.votes.set('bot_' + name.toLowerCase(), { uci: m.from + m.to + (m.promotion || ''), san: m.san, name, bot: true });
+            scheduleChat();
+        }, 400 + Math.random() * 7000)));
+    }
+
+    // ───────────── Photos des joueurs (id FIDE → photo Lichess), entre la couleur et le nom ─────────────
+    const photos = new Map();   // fideId -> { src, credit } | null | 'wait'
+    let photoQueue = new Set(), photoTimer = null;
+    async function fetchPhotos() {
+        photoTimer = null;
+        const ids = [...photoQueue].slice(0, 20);
+        photoQueue = new Set();
+        try {
+            const r = await fetch('/api/fide/photos?ids=' + ids.join(','));
+            const j = r.ok ? await r.json() : { photos: {} };
+            ids.forEach(id => photos.set(id, j.photos?.[id] || null));
+        } catch { ids.forEach(id => photos.delete(id)); }
+        paintPhotos();
+    }
+    function paintPhotos() {
+        const live = reviewT.game || (stateT.currentGame && (tournamentData?.games?.find(x => x.id === stateT.currentGame.id) || stateT.currentGame));
+        for (const side of ['white', 'black']) {
+            const img = document.getElementById(side === 'white' ? 'photoWhiteT' : 'photoBlackT');
+            if (!img) continue;
+            const id = String(live?.[side]?.fideId || '');
+            if (id && !photos.has(id)) { photos.set(id, 'wait'); photoQueue.add(id); photoTimer ||= setTimeout(fetchPhotos, 100); }
+            const p = id ? photos.get(id) : null;
+            const src = p && p !== 'wait' ? p.src : '';
+            if (img.getAttribute('src') !== src) { if (src) img.src = src; else img.removeAttribute('src'); }
+            img.title = p?.credit ? `Photo : ${p.credit}` : '';
+            img.hidden = !src;
+        }
     }
 
     // ───────────── Dernier coup surligné sur l'échiquier (aussi à l'ouverture d'une partie) ─────────────
@@ -573,6 +670,7 @@
         }
         const card = document.getElementById('tLogCard');
         if (card) card.hidden = !regie;
+        paintBotsBtn();
     }
 
     // ───────────── Branchements ─────────────
@@ -595,6 +693,7 @@
             if (mv) { if (!mv.disabled) sendGuess(mv.dataset.tpMove); return; }
             const pick = e.target.closest('[data-tp-pick]');
             if (pick) { const c = current(); if (c) voteWinner(c.room, c.g.id, pick.dataset.tpPick, c.key); return; }
+            if (e.target.closest('[data-tv-bots]')) { setBots(!bots.on); return; }
             if (e.target.closest('[data-tp-login]')) window.twitchAuth?.login();
         });
         // Survol d'un coup de la liste : flèche d'aperçu
@@ -619,6 +718,7 @@
             document.body.classList.toggle('t-following', !!c);
             trackLastMove(c, c?.key === lastKey ? lastFen : null);
             paintLastMove();
+            paintPhotos();
             if ((c?.key || null) !== lastKey || (stateT.lastFEN !== lastFen)) {
                 if (stateT.lastFEN !== lastFen && c?.key === lastKey && lastFen && stateT.lastFEN) {
                     votersResolve(lastKey, lastFen, stateT.lastFEN);
@@ -637,6 +737,7 @@
             if (tick % 4 === 0) loadGuesses();
             if (++tick % 5 === 0) pollState();
             if (tick % 30 === 0 && pageVisible()) loadLive();
+            botsTick(current());
         }, 1000);
         window.addEventListener('cg:page', e => { if (e.detail?.page === 'tournament') { loadLive(); renderPredict(); checkRegie(); } });
         window.addEventListener('twitchAuthChange', () => { renderPredict(); pollState(); checkRegie(); });

@@ -536,8 +536,9 @@ function updateListToggleT() {
     if (!grid || !btn) return;
     btn.style.display = grid.classList.contains('t-following') ? '' : 'none';
     btn.innerHTML = grid.classList.contains('t-list-open')
-        ? '<i class="fas fa-chevron-left"></i> Masquer la liste'
-        : '<i class="fas fa-list"></i> Parties du tournoi';
+        ? '<i class="fas fa-chevron-left"></i> Masquer'
+        : '<i class="fas fa-list"></i> Parties';
+    btn.title = grid.classList.contains('t-list-open') ? 'Masquer la liste' : 'Parties du tournoi';
 }
 
 function renderGames(games, roundId) {

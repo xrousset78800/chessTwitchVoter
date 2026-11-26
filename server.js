@@ -349,6 +349,27 @@ app.get('/api/twitch/avatars', (req, res) => {
     res.json({ pics: Object.fromEntries(logins.map(l => [l, twitchApi.avatar(l)])) });
 });
 
+// Photos des joueurs de tournoi (id FIDE) : API publique de Lichess, gardées en mémoire
+const fidePhotos = new Map(); // id -> { at, v: { src, credit } | null, p? }
+function fidePhoto(id) {
+    const c = fidePhotos.get(id);
+    if (c && (c.p || Date.now() - c.at < (c.v ? 86400000 : 3600000))) return c.p || Promise.resolve(c.v);
+    const p = fetch(`https://lichess.org/api/fide/player/${id}`, { headers: { 'User-Agent': 'CrowdGambit/1.0', Accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(j => (j?.photo?.small && /^https:\/\/image\.lichess\.org\//.test(j.photo.small)) ? { src: j.photo.small, credit: String(j.photo.credit || '').slice(0, 80) } : null)
+        .catch(() => null)
+        .then(v => { fidePhotos.set(id, { at: Date.now(), v }); return v; });
+    fidePhotos.set(id, { at: Date.now(), v: null, p });
+    if (fidePhotos.size > 3000) fidePhotos.delete(fidePhotos.keys().next().value);
+    return p;
+}
+app.get('/api/fide/photos', async (req, res) => {
+    const ids = [...new Set(String(req.query.ids || '').split(',').filter(x => /^\d{3,10}$/.test(x)))].slice(0, 20);
+    const out = {};
+    await Promise.all(ids.map(async id => { out[id] = await fidePhoto(id); }));
+    res.set('Cache-Control', 'public, max-age=3600').json({ photos: out });
+});
+
 app.get('/api/regie', requireTwitch, (req, res) => {
     res.json({ regie: !!station?.isRegie(req.twitch.login) });
 });

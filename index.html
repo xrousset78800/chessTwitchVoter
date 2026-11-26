@@ -1530,6 +1530,7 @@
                             <div class="live-card__title"><i class="fas fa-info-circle"></i> <span data-i18n="ui.tour.selected">Partie sélectionnée</span></div>
                             <div class="player-row black">
                                 <div class="player-color-dot"></div>
+                                <img class="player-photo" id="photoBlackT" alt="" hidden>
                                 <span class="player-name" id="playerBlackT">—</span>
                                 <span class="player-rating" id="ratingBlackT"></span>
                                 <span class="player-score" id="scoreBlackT"></span>
@@ -1537,6 +1538,7 @@
                             </div>
                             <div class="player-row white">
                                 <div class="player-color-dot"></div>
+                                <img class="player-photo" id="photoWhiteT" alt="" hidden>
                                 <span class="player-name" id="playerWhiteT">—</span>
                                 <span class="player-rating" id="ratingWhiteT"></span>
                                 <span class="player-score" id="scoreWhiteT"></span>
@@ -1546,7 +1548,7 @@
 
                         <!-- Votants du prochain coup : site et chat Twitch (js/core/tournamentPredict.js) -->
                         <div class="live-card tv-card" id="tVoters" hidden>
-                            <div class="live-card__title tv-head"><span><i class="fas fa-users"></i> <span data-i18n="voters.title">Votants</span></span> <small class="tv-count"></small></div>
+                            <div class="live-card__title tv-head"><span><i class="fas fa-users"></i> <span data-i18n="voters.title">Votants</span></span> <span class="tv-headright"><button type="button" class="tv-bots" data-tv-bots aria-pressed="false" hidden data-i18n-title="voters.botsTitle" title="Régie : des bots votent à chaque coup (sur ton écran seulement) pour simuler la liste"><i class="fas fa-robot"></i></button><small class="tv-count"></small></span></div>
                             <div class="tv-body"></div>
                         </div>
 

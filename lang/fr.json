@@ -1544,7 +1544,9 @@
     "chat": "Chat Twitch",
     "played": "Coup joué",
     "hits": "{n}/{total} bien vu",
-    "noHit": "Personne n'a vu juste"
+    "noHit": "Personne n'a vu juste",
+    "bot": "Bot de test",
+    "botsTitle": "Régie : des bots votent à chaque coup (sur ton écran seulement) pour simuler la liste"
   },
   "predict": {
     "chatTitle": "Vote du chat",

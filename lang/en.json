@@ -1544,7 +1544,9 @@
     "chat": "Twitch chat",
     "played": "Move played",
     "hits": "{n}/{total} called it",
-    "noHit": "Nobody called it"
+    "noHit": "Nobody called it",
+    "bot": "Test bot",
+    "botsTitle": "Control room: bots vote on every move (on your screen only) to preview the list"
   },
   "predict": {
     "chatTitle": "Chat vote",
