@@ -1347,6 +1347,33 @@
                             </span>
                         </div>
 
+                        <!-- Revue d'une partie terminée : en haut de la colonne, sous le titre -->
+                        <div class="t-review" id="tReview" style="display:none;">
+                            <div class="t-review__nav">
+                                <button id="tRevFirst" data-i18n-title="ui.review.first" title="Début (Origine)"><i class="fas fa-fast-backward"></i></button>
+                                <button id="tRevPrev" data-i18n-title="ui.review.prev" title="Coup précédent (←)"><i class="fas fa-step-backward"></i></button>
+                                <button id="tRevPlay" class="t-review__play" data-i18n-title="ui.review.play" title="Lecture automatique (Espace)"><i class="fas fa-play"></i></button>
+                                <span class="t-review__move" id="tRevMove">—</span>
+                                <button id="tRevNext" data-i18n-title="ui.review.next" title="Coup suivant (→)"><i class="fas fa-step-forward"></i></button>
+                                <button id="tRevLast" data-i18n-title="ui.review.last" title="Fin (Fin)"><i class="fas fa-fast-forward"></i></button>
+                            </div>
+                            <input type="range" id="tRevSlider" min="0" max="0" value="0">
+                            <div class="t-review__opts">
+                                <label data-i18n-title="ui.review.pauseTitle" title="Pause entre deux coups pendant la lecture. Si le Phantom suit la revue, on attend aussi qu'il ait fini de jouer le coup."><span data-i18n="ui.review.pause">Pause</span>
+                                    <select id="tRevDelay">
+                                        <option value="0" selected>0 s</option>
+                                        <option value="1">1 s</option>
+                                        <option value="2">2 s</option>
+                                        <option value="3">3 s</option>
+                                        <option value="5">5 s</option>
+                                        <option value="10">10 s</option>
+                                    </select>
+                                </label>
+                                <label><input type="checkbox" id="tRevPhantom"> <span data-i18n="ui.review.phantomFollows">Le Phantom suit la revue</span></label>
+                                <button id="tRevClose"><i class="fas fa-times"></i> <span data-i18n="ui.review.quit">Quitter la revue</span></button>
+                            </div>
+                        </div>
+
                         <!-- Bascule : matchs en direct / tournois en cours (js/core/tournamentPredict.js) -->
                         <div class="t-sidetabs" role="tablist">
                             <button type="button" role="tab" data-tside="live" aria-selected="true"><span class="tg-live-dot"></span> <span data-i18n="tlive.title">Matchs en direct</span></button>
@@ -1441,32 +1468,6 @@
                             <div class="h24-side t-side t-side--bottom" id="tSideWhite"><span class="h24-pclock" id="tBarClockWhite">—</span><span class="h24-side__team h24-team--w"><span class="h24-team__swatch"></span><img class="t-side__photo" id="tBarPhotoWhite" alt="" hidden><span class="t-side__name" id="tBarNameWhite">—</span></span><span class="t-side__elo" id="tBarEloWhite"></span><span class="h24-side__spacer"></span><span class="t-side__score" id="tBarScoreWhite"></span></div>
                         </div>
                         <span id="fenDisplayT" hidden></span>
-                        <!-- Revue d'une partie terminée -->
-                        <div class="t-review" id="tReview" style="display:none;">
-                            <div class="t-review__nav">
-                                <button id="tRevFirst" data-i18n-title="ui.review.first" title="Début (Origine)"><i class="fas fa-fast-backward"></i></button>
-                                <button id="tRevPrev" data-i18n-title="ui.review.prev" title="Coup précédent (←)"><i class="fas fa-step-backward"></i></button>
-                                <button id="tRevPlay" class="t-review__play" data-i18n-title="ui.review.play" title="Lecture automatique (Espace)"><i class="fas fa-play"></i></button>
-                                <span class="t-review__move" id="tRevMove">—</span>
-                                <button id="tRevNext" data-i18n-title="ui.review.next" title="Coup suivant (→)"><i class="fas fa-step-forward"></i></button>
-                                <button id="tRevLast" data-i18n-title="ui.review.last" title="Fin (Fin)"><i class="fas fa-fast-forward"></i></button>
-                            </div>
-                            <input type="range" id="tRevSlider" min="0" max="0" value="0">
-                            <div class="t-review__opts">
-                                <label data-i18n-title="ui.review.pauseTitle" title="Pause entre deux coups pendant la lecture. Si le Phantom suit la revue, on attend aussi qu'il ait fini de jouer le coup."><span data-i18n="ui.review.pause">Pause</span>
-                                    <select id="tRevDelay">
-                                        <option value="0" selected>0 s</option>
-                                        <option value="1">1 s</option>
-                                        <option value="2">2 s</option>
-                                        <option value="3">3 s</option>
-                                        <option value="5">5 s</option>
-                                        <option value="10">10 s</option>
-                                    </select>
-                                </label>
-                                <label><input type="checkbox" id="tRevPhantom"> <span data-i18n="ui.review.phantomFollows">Le Phantom suit la revue</span></label>
-                                <button id="tRevClose"><i class="fas fa-times"></i> <span data-i18n="ui.review.quit">Quitter la revue</span></button>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- ══ COL 3 : Phantom ══ -->

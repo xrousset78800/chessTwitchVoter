@@ -736,7 +736,9 @@ input[type=range] {
 #page-tournament .live-header__title { font-size: 1.3rem; }
 #page-tournament .t-list-toggle { order: 0; align-self: auto; margin: 0; }
 #page-tournament .board-wrapper { gap: 10px; }
-#page-tournament .board-wrapper .t-review { margin-top: 0; }
+/* Revue : dans la colonne de gauche, sous le titre */
+#tSideCol .t-review { margin-top: 0; max-width: none; }
+#tSideCol .t-review__nav button { padding: 5px 8px; }
 /* ── Tournoi : mode simulé ── */
 .t-review.is-sim-hidden { display: none !important; }
 #btnSimT.is-on { border-color: var(--accent); color: var(--accent); }

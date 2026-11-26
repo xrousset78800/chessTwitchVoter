@@ -542,7 +542,7 @@ function renderSimT() {
         el = document.createElement('div');
         el.id = 'tSim';
         el.className = 't-sim';
-        const after = document.getElementById('tReview') || document.querySelector('#page-tournament .t-boardcol');
+        const after = document.querySelector('#page-tournament .t-boardcol');
         after?.insertAdjacentElement('afterend', el);
         el.addEventListener('click', e => {
             const b = e.target.closest('[data-sim]');
