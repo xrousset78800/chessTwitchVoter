@@ -43,9 +43,17 @@ const clean = (m) => String(m || '').replace(/[+#!?]/g, '');
 const loadPalette = () => { try { const id = localStorage.getItem('h24Palette'); return isPalette(id) ? id : 'violet'; } catch { return 'violet'; } };
 let COLORS = PALETTES[loadPalette()];
 
+/** Parties proposées au vote « game » (prédiction) : clé g0…g4 → infos de la partie */
+let ballotGames = {};
+const playerName = (p) => [p?.title, p?.name].filter(Boolean).join(' ');
 /** Libellé d'un choix de vote (mode, durée du tour, décision, niveau) */
 function choiceLabel(ballot, c) {
-    if (ballot === 'mode') return t(`h24.mode.${c}`, null, c);
+    if (ballot === 'mode') return t(`h24.entry.${c}`, null, t(`h24.mode.${c}`, null, c));
+    if (ballot === 'opponent') return t(`h24.opponent.${c}`, null, c);
+    if (ballot === 'game') {
+        const g = ballotGames[c];
+        return g ? `${g.white?.name || '?'} – ${g.black?.name || '?'}` : String(c);
+    }
     if (ballot === 'turn') return t('h24.seconds', { n: c }, `${c} s`);
     if (ballot === 'decision') return t(`h24.decision.${c}`, null, c);
     if (ballot === 'votes') return t(Number(c) === 1 ? 'h24.votesOne' : 'h24.votesN', { n: c }, `${c} vote(s)`);
@@ -54,7 +62,7 @@ function choiceLabel(ballot, c) {
     if (ballot === 'elo') return Number(c) >= 2400 ? '2400+' : String(c);
     return String(c);
 }
-const CHOICE_ICON = { teams: 'fa-chess', rush: 'fa-bolt', bot: 'fa-robot', majority: 'fa-check-double', draw: 'fa-dice', none: 'fa-eye', secret: 'fa-eye-slash',
+const CHOICE_ICON = { classic: 'fa-chess', predict: 'fa-magic', teams: 'fa-users', rush: 'fa-bolt', bot: 'fa-robot', majority: 'fa-check-double', draw: 'fa-dice', none: 'fa-eye', secret: 'fa-eye-slash',
     fast: 'fa-forward', normal: 'fa-play', slow: 'fa-hourglass-half' };
 /** « 1, 2 ou 3 » */
 const numList = (n) => {
@@ -172,6 +180,8 @@ const H24Page = {
             const choice = e.target.closest('[data-h24-choice]');
             if (choice) { this.socket?.emit(this.me.regie ? 'h24:pick' : 'h24:ballot', { choice: choice.dataset.h24Choice }); return; }
             if (e.target.closest('[data-h24-signup]')) { this.socket?.emit('h24:signup'); return; }
+            const pw = e.target.closest('[data-h24-winner]');
+            if (pw) { if (!pw.disabled) this.socket?.emit('h24:winner', { pick: pw.dataset.h24Winner }); return; }
             const fp = e.target.closest('[data-h24-force]');
             if (fp) { this.socket?.emit('h24:force', { phase: fp.dataset.h24Force }); return; }
             if (e.target.closest('[data-h24-quit]')) { this.socket?.emit('h24:quit'); return; }
@@ -446,6 +456,8 @@ const H24Page = {
     myTurn() {
         const s = this.state;
         const g = s?.game;
+        // Prédiction : tout viewer connecté devine le coup suivant, tant que la partie dure
+        if (s?.mode === 'predict' && g?.predict) return s.phase === 'play' && !!this.me.login && !g.result && !!g.predict.open;
         if (!s || s.phase !== 'play' || !g || g.result || !g.turnEndsAt || !this.me.team) return false;
         if (s.mode === 'rush') return g.puzzle?.status === 'playing' && g.turn === g.puzzle.side;
         // Camp sans joueur : l'autre équipe joue aussi ses coups
@@ -455,6 +467,7 @@ const H24Page = {
     orientation() {
         const s = this.state;
         if (s?.mode === 'rush') return s.game?.puzzle?.side === 'b' ? 'black' : 'white';
+        if (s?.mode === 'predict') return 'white';
         // Contre Stockfish : toujours du côté des viewers
         if (s?.mode === 'bot') return s.vs?.side === 'b' ? 'black' : 'white';
         return this.me.team === 'b' ? 'black' : 'white';
@@ -542,6 +555,12 @@ const H24Page = {
     /** Issue de la partie en clair : icône, titre, détail, couleur */
     resultInfo(res) {
         if (!res) return null;
+        if (res.kind === 'predict') {
+            if (res.winner === 'w' || res.winner === 'b') return { tone: res.winner, icon: 'fa-crown', title: t('h24.pred.over', null, 'Partie terminée'),
+                sub: t(res.winner === 'w' ? 'h24.whiteWins' : 'h24.blackWins', null, res.winner === 'w' ? 'Victoire des Blancs' : 'Victoire des Noirs') };
+            if (res.winner === 'd') return { tone: 'draw', icon: 'fa-handshake', title: t('h24.pred.over', null, 'Partie terminée'), sub: t('h24.drawResult', null, 'Partie nulle') };
+            return { tone: 'draw', icon: 'fa-pause-circle', title: t('h24.pred.stopped', null, 'Partie interrompue'), sub: '' };
+        }
         if (res.kind === 'rush') return {
             tone: 'rush', icon: 'fa-flag-checkered',
             title: t('h24.endRush', null, 'Fin du rush'),
@@ -928,6 +947,7 @@ const H24Page = {
         const s = this.state, g = s?.game;
         if (!hint || !s) return;
         if (s.phase !== 'play' || !g) return this.setGuide(hint, ...this.stageGuide());
+        if (g.predict) return this.setGuide(hint, ...this.predictGuide(g));
         const hist = g.history || [];
         const last = hist.length ? t('h24.flowLast', { move: fmtMove(hist[hist.length - 1]) }, `Dernier coup : ${hist[hist.length - 1]}`) : '';
         const mine = this.myTurn();
@@ -967,6 +987,21 @@ const H24Page = {
         // Chat Twitch relié : les viewers votent aussi
         if (this.me.chat && mine && !s.paused && !g.draw && !g.chosen) msg += ' · ' + t('h24.guideViewersMove', null, 'tes viewers votent aussi dans ton chat (ex. e4)');
         this.setGuide(hint, msg, mine && !s.paused && !g.draw && !g.chosen, html);
+    },
+
+    /** Prédiction : deviner le coup suivant, ma devinette, le dernier coup et combien l'avaient trouvé → [message, à toi d'agir] */
+    predictGuide(g) {
+        if (g.result) return [this.resultInfo(g.result)?.title || '', false];
+        const side = t(g.turn === 'w' ? 'h24.sideW' : 'h24.sideB', null, g.turn === 'w' ? 'Blancs' : 'Noirs');
+        const h = g.predict.lastHit;
+        const last = h?.total ? t('h24.pred.lastHit', { move: fmtMove(h.san), n: h.n, total: h.total }, `${h.san} : ${h.n}/${h.total} l'avaient trouvé`) : '';
+        const mine = myVotes(this.me)[0];
+        let msg, go = false;
+        if (!this.me.login) msg = t('h24.pred.login', null, 'Connecte-toi avec Twitch pour deviner les coups');
+        else if (mine) msg = t('h24.pred.myGuess', { move: fmtMove(mine) }, `Ta devinette : ${mine}`);
+        else { msg = t('h24.pred.guess', { side }, `Devine le prochain coup des ${side}`); go = true; }
+        if (this.me.chat && this.me.login) msg += ' · ' + t('h24.pred.chat', null, 'tes viewers devinent aussi dans ton chat (ex. e4, blancs)');
+        return [[msg, last].filter(Boolean).join(' · '), go];
     },
 
     /** Entre deux parties : vote du mode et des options, inscription, récap → [message, à toi d'agir] */
@@ -1065,6 +1100,7 @@ const H24Page = {
         const s = this.state, g = s?.game;
         const els = document.querySelectorAll('#page-h24 [data-pclock]');
         if (!g || s.phase !== 'play' || !els.length) { cancelAnimationFrame(this.pclockRaf); this.pclockRaf = 0; return; }
+        if (g.predict) return this.paintPredictClocks(g, els);
         const at = g.draw || g.result ? null : g.turnEndsAt;
         const fmt = (sec) => sec < 10 ? `0:0${(Math.floor(sec * 10) / 10).toFixed(1)}`
             : `${Math.floor(Math.ceil(sec) / 60)}:${String(Math.ceil(sec) % 60).padStart(2, '0')}`;
@@ -1086,6 +1122,35 @@ const H24Page = {
         }
         if (!running) { cancelAnimationFrame(this.pclockRaf); this.pclockRaf = 0; }
         else if (!this.pclockRaf) this.pclockRaf = requestAnimationFrame(() => { this.pclockRaf = 0; this.paintPclocks(); });
+    },
+
+    /** Prédiction : pendules de la vraie partie (temps restant au dernier coup, le camp au trait décompte) */
+    paintPredictClocks(g, els) {
+        const c = g.predict.clocks;
+        const fmt = (ms) => {
+            const sec = Math.max(0, Math.floor(ms / 1000));
+            const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, x = sec % 60;
+            return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`;
+        };
+        let running = false;
+        for (const el of els) {
+            const side = el.dataset.pclock;
+            const active = !g.result && g.turn === side;
+            let html = '–', low = false;
+            if (c && Number.isFinite(c[side])) {
+                let ms = c[side];
+                if (active && c.turn === g.turn) { ms -= Math.max(0, Date.now() + (this.skew || 0) - c.at); running = true; }
+                html = fmt(ms);
+                low = ms < 60000;
+            }
+            if (el.innerHTML !== html) el.innerHTML = html;
+            el.classList.toggle('is-active', active);
+            el.classList.remove('is-paused');
+            el.classList.toggle('is-critical', active && low);
+        }
+        // Une seconde suffit : rafraîchi par le minuteur de la page (250 ms), pas à chaque image
+        cancelAnimationFrame(this.pclockRaf); this.pclockRaf = 0;
+        return running;
     },
 
     renderSteps() {
@@ -1129,7 +1194,8 @@ const H24Page = {
                 anonymity: [t('h24.opt.anonymity', null, 'Visibilité'), () => t(`h24.opt.anon.${o.anonymity}`, null, o.anonymity), () => CHOICE_ICON[o.anonymity] || 'fa-eye']
             };
             // Options du mode (toutes tant que le mode n'est pas choisi)
-            const keys = Object.keys(defs).filter(k => (!mode || (k === 'elo' ? mode === 'bot' : mode !== 'rush' || (k !== 'decision' && k !== 'spin'))) && (o[k] != null || pending.has(k)));
+            const keys = mode === 'predict' || mode === 'classic' ? []
+                : Object.keys(defs).filter(k => (!mode || (k === 'elo' ? mode === 'bot' : mode !== 'rush' || (k !== 'decision' && k !== 'spin'))) && (o[k] != null || pending.has(k)));
             const live = voting && b && b.winner == null ? b.id : null;
             const shown = s?.mode || voting ? keys : [];
             const els = new Map([...opts.querySelectorAll('[data-opt]')].map(e => [e.dataset.opt, e]));
@@ -1181,6 +1247,20 @@ const H24Page = {
         const s = this.state;
         const el = $('h24-teams');
         if (!el) return;
+        if (s?.mode === 'predict' && s.game?.predict) {
+            const board = s.game.predict.board || [];
+            const items = board.map((x, i) => {
+                const pic = x.p ? `<img class="h24-pboard__pic" src="${esc(x.p)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+                    : `<span class="h24-pboard__pic" style="background:${nameColor(x.login)}">${esc((x.login || '?')[0].toUpperCase())}</span>`;
+                return `<li class="${x.login === this.me.login ? 'is-me' : ''}"><span class="h24-pboard__rank">${i + 1}</span>${pic}<span class="h24-pboard__name" style="color:${nameColor(x.login)}">${esc(x.login)}</span>`
+                    + `<span class="h24-pboard__hits" title="${esc(t('h24.pred.hits', { n: x.hits }, `${x.hits} coup(s) trouvé(s)`))}"><i class="fas fa-bullseye"></i> ${x.hits}</span><span class="h24-pboard__pts">${x.pts}</span></li>`;
+            }).join('');
+            el.innerHTML = `<div class="h24-pboard">
+                <div class="h24-team__head"><i class="fas fa-magic"></i> ${esc(t('h24.pred.board', null, 'Devins'))}<span class="h24-team__count">${s.game.predict.players || 0}</span></div>
+                <ol class="h24-pboard__list">${items || `<li class="h24-team__empty">${esc(t('h24.pred.nobody', null, 'Personne n\'a encore marqué'))}</li>`}</ol></div>`;
+            this.renderSides();
+            return;
+        }
         const teams = s?.teams || { w: [], b: [] };
         const solo = s?.mode === 'rush';
         const list = (side) => {
@@ -1206,6 +1286,26 @@ const H24Page = {
         const on = s?.phase === 'play' && !!s.game;
         top.hidden = bottom.hidden = !on;
         if (!on) return;
+        if (s.game.predict) {
+            const P = s.game.predict, g = s.game;
+            this.loadFidePics([P.white?.fide, P.black?.fide]);
+            const fillP = (el, pos, side) => {
+                const p = (side === 'w' ? P.white : P.black) || {};
+                const turn = g.turn === side && !g.result;
+                const photo = p.fide && this.fidePics?.[p.fide]?.src;
+                el.className = `h24-side h24-side--${pos} h24-side--${side} h24-side--player${turn ? ' is-turn' : ''}`;
+                el.innerHTML = `<span class="h24-pclock" data-pclock="${side}"></span><span class="h24-side__spacer"></span>`
+                    + (photo ? `<img class="h24-side__photo" src="${esc(photo)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+                        : `<span class="h24-side__photo h24-side__photo--none"><i class="fas fa-user"></i></span>`)
+                    + `<span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span>${p.title ? `<b class="h24-side__title">${esc(p.title)}</b>` : ''}${esc(p.name || '?')}</span>`
+                    + (p.elo ? `<span class="h24-side__elo">${esc(p.elo)}</span>` : '')
+                    + (pos === 'top' ? `<span class="h24-side__event" title="${esc([P.event, P.roomName].filter(Boolean).join(' · '))}"><i class="fas fa-trophy"></i> ${esc(P.event || P.roomName || '')}</span>` : '');
+            };
+            fillP(top, 'top', 'b');
+            fillP(bottom, 'bottom', 'w');
+            this.renderClock();
+            return;
+        }
         const solo = s.mode === 'rush';
         const low = this.orientation() === 'black' ? 'b' : 'w';
         const login = this.me.login, team = this.me.team;
@@ -1243,11 +1343,29 @@ const H24Page = {
         this.renderClock();
     },
 
+    /** Photos FIDE des joueurs (API du serveur, gardées pour la session) ; la page se redessine à l'arrivée */
+    loadFidePics(ids) {
+        this.fidePics ||= {};
+        this.fideAsked ||= new Set();
+        const want = ids.filter(id => id && /^\d{3,10}$/.test(String(id)) && !this.fideAsked.has(String(id))).map(String);
+        if (!want.length) return;
+        want.forEach(id => this.fideAsked.add(id));
+        fetch('/api/fide/photos?ids=' + want.join(',')).then(r => r.ok ? r.json() : null).then(d => {
+            if (!d?.photos) return;
+            Object.assign(this.fidePics, d.photos);
+            this.render();
+        }).catch(() => {});
+    },
+
     renderAccount() {
         const el = $('h24-account');
         if (!el) return;
         const s = this.state;
         const login = this.me.login;
+        if (s?.mode === 'predict' && login) {
+            el.innerHTML = `<p class="h24-account__me"><strong>${esc(login)}</strong> · ${esc(t('h24.pred.pts', { n: this.me.pts || 0 }, `${this.me.pts || 0} pts`))}</p>`;
+            return;
+        }
         if (!login) {
             el.innerHTML = `<p class="h24-account__hint">${esc(t('h24.loginHint', null, 'Connecte-toi avec Twitch pour t\'inscrire et voter.'))}</p>
                 <button type="button" class="btn btn--sm btn--twitch h24-account__btn" data-h24-login><i class="fab fa-twitch"></i> ${esc(t('h24.login', null, 'Se connecter avec Twitch'))}</button>`;
@@ -1292,6 +1410,7 @@ const H24Page = {
             this.clearLive();
             this.podiumKey = null;
             $('h24-votes')?.querySelector('.podium')?.remove();
+            $('h24-votes')?.querySelector('.h24-plast')?.remove();
         }
     },
 
@@ -1382,6 +1501,8 @@ const H24Page = {
         const area = $('h24-wheel-area');
         if (!slot || !area || g.draw || g.result) return;
         if (this.wheel?.isSpinning || this.revealing) return;
+        if (g.predict) return this.predictPanel(g);
+        $('h24-votes')?.querySelector('.h24-plast')?.remove();
         if (this.podiumMode()) {
             if (slot.classList.contains('is-live')) { this.clearLive(); this.wheel = null; area.innerHTML = ''; }
             const list = $('h24-votes');
@@ -1414,6 +1535,29 @@ const H24Page = {
         const tot = $('h24-votes-total');
         if (tot) tot.textContent = total ? t(total > 1 ? 'watch.totalMany' : 'watch.totalOne', { n: total }, `${total} vote${total > 1 ? 's' : ''}`) : t('wheelStyle.waiting', null, '');
         this.tickerTotal(total);
+    },
+
+    /** Prédiction : nombre de devinettes du coup en cours, puis le dernier coup joué et ce que le chat avait deviné */
+    predictPanel(g) {
+        const slot = $('h24-votes-panel');
+        const area = $('h24-wheel-area');
+        if (slot?.classList.contains('is-live')) { this.clearLive(); this.wheel = null; if (area) area.innerHTML = ''; }
+        const list = $('h24-votes');
+        list?.querySelector('.podium')?.remove();
+        const n = g.predict.guessers || 0;
+        const tot = $('h24-votes-total');
+        if (tot) tot.textContent = t('h24.pred.guessers', { n }, `${n} devinette(s)`);
+        this.tickerTotal(n);
+        if (!list) return;
+        let box = list.querySelector('.h24-plast');
+        if (!box) { box = document.createElement('div'); box.className = 'h24-plast'; list.appendChild(box); }
+        const h = g.predict.lastHit;
+        const html = h ? `<div class="h24-plast__k">${esc(t('h24.pred.lastMove', null, 'Dernier coup'))}</div>
+            <div class="h24-plast__san">${esc(fmtMove(h.san))}</div>
+            <div class="h24-plast__line">${esc(h.total ? t('h24.pred.found', { n: h.n, total: h.total }, `${h.n} / ${h.total} l'avaient trouvé`) : t('h24.pred.noGuess', null, 'Personne n\'avait deviné'))}</div>
+            ${h.top?.length ? `<ul class="h24-plast__top">${h.top.map(x => `<li class="${x.move === h.san ? 'is-hit' : ''}"><span>${esc(fmtMove(x.move))}</span><small>${x.n}</small></li>`).join('')}</ul>` : ''}`
+            : `<div class="h24-plast__line">${esc(t('h24.pred.waiting', null, 'En attente du prochain coup…'))}</div>`;
+        if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; }
     },
 
     /** Mode bande : le total des votes du tour dans l'étiquette « Votes » (et plus en bas de la colonne de droite) */
@@ -1504,7 +1648,11 @@ const H24Page = {
             const mine = this.me.ballot;
             const decided = b.winner !== undefined && b.winner !== null;
             const canVote = !!this.me.login && !decided;
-            const buttons = b.choices.map((c, i) => {
+            if (b.id === 'game' && b.games) {
+                ballotGames = b.games;
+                this.loadFidePics(Object.values(b.games).flatMap(x => [x.white?.fide, x.black?.fide]));
+            }
+            const buttons = b.id === 'game' && b.games ? b.choices.map((c, i) => this.gameChoiceHtml(b, c, i, counts, mine, decided, canVote)).join('') : b.choices.map((c, i) => {
                 const n = counts[String(c)] || 0;
                 const pct = b.total ? Math.round(n * 100 / b.total) : 0;
                 const icon = CHOICE_ICON[c] ? `<i class="fas ${CHOICE_ICON[c]}"></i>` : '';
@@ -1514,16 +1662,17 @@ const H24Page = {
                     <span class="h24-choice__pct">${pct}%<small>${n}</small></span></button>`;
             }).join('');
             const gauge = this.gaugeHtml(b, decided);
+            const listCls = b.id === 'game' ? ' h24-choices--games' : '';
             const next = gauge || !(s.next || []).length ? '' : `<p class="h24-card__next">${esc(t('h24.nextBallots', { n: s.next.length }, `Encore ${s.next.length} vote(s)`))}</p>`;
             const votes = this.ballotVotesHtml(b);
             if (decided) {
                 const how = t(`h24.ballotHow.${b.how}`, null, '');
                 return `${clock}${gauge}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
-                    <div class="h24-choices is-decided">${buttons}</div>${votes}
+                    <div class="h24-choices${listCls} is-decided">${buttons}</div>${votes}
                     <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}${how ? ' · ' + esc(how) : ''}</p>${next}`;
             }
             return `${clock}${gauge}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
-                <div class="h24-choices">${buttons}</div>${votes}
+                <div class="h24-choices${listCls}">${buttons}</div>${votes}
                 <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}${canVote ? '' : ' · ' + esc(t('h24.loginToVote', null, 'connecte-toi pour voter'))}</p>${next}`;
         }
         if (s.phase === 'signup') {
@@ -1538,6 +1687,29 @@ const H24Page = {
                 ${cta}<p class="h24-card__total">${esc(t('h24.registeredCount', { n }, `${n} inscrit(s)`))}</p>`;
         }
         return `${clock}<p class="h24-card__sub">${esc(t('h24.loading', null, 'Chargement…'))}</p>`;
+    },
+
+    /** Une partie proposée au vote : tournoi, mini-échiquier, joueurs (photo, titre, Elo), cadence */
+    gameChoiceHtml(b, c, i, counts, mine, decided, canVote) {
+        const g = b.games[c] || {};
+        const n = counts[String(c)] || 0;
+        const pct = b.total ? Math.round(n * 100 / b.total) : 0;
+        const won = decided ? (String(b.winner) === String(c) ? ' is-winner' : ' is-loser') : '';
+        const tc = String(g.tc || '').replace(/^\d+\//, '').match(/^(\d+)(?:\+(\d+))?/);
+        const tcTxt = tc ? `${Math.round(Number(tc[1]) / 60)}′${tc[2] ? ` + ${tc[2]}″` : ''}` : '';
+        const player = (p, side) => {
+            const photo = p?.fide && this.fidePics?.[p.fide]?.src;
+            return `<span class="h24-gc__player h24-gc__player--${side}">${photo ? `<img class="h24-gc__photo" src="${esc(photo)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="h24-gc__photo h24-gc__photo--none"><i class="fas fa-user"></i></span>'}`
+                + `<span class="h24-gc__name">${p?.title ? `<b>${esc(p.title)}</b> ` : ''}${esc(p?.name || '?')}</span>${p?.elo ? `<span class="h24-gc__elo">${esc(p.elo)}</span>` : ''}</span>`;
+        };
+        const mini = typeof window.miniBoardHTML === 'function' && g.fen ? window.miniBoardHTML(g.fen) : '';
+        return `<button type="button" class="h24-choice h24-gc${String(mine) === String(c) ? ' is-mine' : ''}${won}" data-h24-choice="${esc(c)}" ${canVote ? '' : 'disabled'} style="--pct:${pct}%">
+            <span class="h24-gc__board">${mini}</span>
+            <span class="h24-gc__body">
+                <span class="h24-gc__event"><span class="h24-choice__num">${i + 1}</span><span class="h24-gc__ev" title="${esc([g.event, g.roomName].filter(Boolean).join(' · '))}">${esc(g.event || g.roomName || '')}</span>${tcTxt ? `<span class="h24-gc__tc"><i class="fas fa-clock"></i> ${esc(tcTxt)}</span>` : ''}</span>
+                ${player(g.white, 'w')}${player(g.black, 'b')}
+            </span>
+            <span class="h24-choice__pct">${pct}%<small>${n}</small></span></button>`;
     },
 
     /** Récap : MVP (le plus de coups retenus) et coup du match (le plus disputé) */
@@ -1558,6 +1730,7 @@ const H24Page = {
     },
 
     recapHtml(r) {
+        if (r.mode === 'predict' && r.predict) return this.predictRecapHtml(r);
         const info = this.resultInfo(r.result || { kind: 'draw' });
         const headline = [info.title, info.sub].filter(Boolean).join(' · ');
         const mins = Math.max(1, Math.round((r.durationMs || 0) / 60000));
@@ -1573,6 +1746,52 @@ const H24Page = {
             ${this.recapHighlights(r)}
             ${tops ? `<p class="h24-recap__label">${esc(t('h24.topVoters', null, 'Plus gros votants'))}</p><div class="h24-recap__tops">${tops}</div>` : ''}
             <p class="h24-card__next">${esc(t('h24.nextSoon', null, 'Vote du prochain mode juste après.'))}</p>`;
+    },
+
+    /** Récap de la prédiction : la partie, son issue, les meilleurs devins */
+    predictRecapHtml(r) {
+        const info = this.resultInfo(r.result);
+        const P = r.predict;
+        const headline = [info.title, info.sub].filter(Boolean).join(' · ');
+        const mins = Math.max(1, Math.round((r.durationMs || 0) / 60000));
+        const name = (p) => `${p?.title ? `<b>${esc(p.title)}</b> ` : ''}${esc(p?.name || '?')}${p?.elo ? ` <small>${esc(p.elo)}</small>` : ''}`;
+        const best = (P.board || []).map((x, i) => `<li class="${x.login === this.me.login ? 'is-me' : ''}"><span class="h24-pboard__rank">${i === 0 ? '<i class="fas fa-crown"></i>' : i + 1}</span>`
+            + `<span class="h24-pboard__name" style="color:${nameColor(x.login)}">${esc(x.login)}</span>`
+            + `<span class="h24-pboard__hits"><i class="fas fa-bullseye"></i> ${x.hits}</span>${x.win ? `<span class="h24-pboard__win" title="${esc(t('h24.pred.winnerOk', null, 'Bon vainqueur'))}"><i class="fas fa-trophy"></i> +${x.win}</span>` : ''}`
+            + `<span class="h24-pboard__pts">${x.pts}</span></li>`).join('');
+        return `<h2 class="h24-card__title">${esc(t('h24.pred.recapTitle', null, 'Fin de la prédiction'))}</h2>
+            <p class="h24-recap__game">${name(P.white)} <span>–</span> ${name(P.black)}</p>
+            ${P.event ? `<p class="h24-recap__event"><i class="fas fa-trophy"></i> ${esc(P.event)}</p>` : ''}
+            <p class="h24-recap__headline h24-recap__headline--${info.tone}"><i class="fas ${info.icon}"></i> ${esc(headline)}</p>
+            <div class="h24-recap__stats">
+                <span><strong>${Math.ceil((r.plies || 0) / 2)}</strong> ${esc(t('h24.moves', null, 'coups'))}</span>
+                <span><strong>${mins}</strong> min</span>
+                <span><strong>${P.players || 0}</strong> ${esc(t('h24.pred.players', null, 'devins'))}</span>
+                ${r.result?.winner ? `<span><strong>${P.rightWinner || 0}</strong> ${esc(t('h24.pred.rightWinner', null, 'bons pronostics'))}</span>` : ''}
+            </div>
+            ${best ? `<p class="h24-recap__label">${esc(t('h24.pred.bestGuessers', null, 'Meilleurs devins'))}</p><ol class="h24-pboard__list h24-pboard__list--recap">${best}</ol>` : ''}
+            <p class="h24-card__next">${esc(t('h24.nextSoon', null, 'Vote du prochain mode juste après.'))}</p>`;
+    },
+
+    /** Prédiction : qui gagne ? (une seule fois) et mes points */
+    predictScoreHtml(g) {
+        const c = g.predict.winners || { w: 0, d: 0, b: 0 };
+        const mine = this.me.winner;
+        const can = !!this.me.login && !mine && !g.result;
+        const total = c.w + c.d + c.b;
+        const btn = (k, label) => {
+            const pct = total ? Math.round(c[k] * 100 / total) : 0;
+            return `<button type="button" class="h24-pwin__btn h24-pwin__btn--${k}${mine === k ? ' is-mine' : ''}" data-h24-winner="${k}" ${can ? '' : 'disabled'} style="--pct:${pct}%">
+                <span>${esc(label)}</span><small>${c[k]}</small></button>`;
+        };
+        const ply = (g.history || []).length;
+        const pts = ply < 30 ? 10 : ply < 60 ? 6 : ply < 90 ? 3 : 1;
+        const hint = t('h24.pred.ptsHint', null, 'Bon vainqueur : 10 pts avant le coup 15, 6 avant le 30, 3 avant le 45, puis 1. Bon coup deviné : 1 pt.');
+        return `<div class="h24-pwin" title="${esc(hint)}">
+            <span class="h24-pwin__label"><i class="fas fa-trophy"></i> ${esc(mine ? t('h24.pred.yourWinner', null, 'Ton pronostic') : t('h24.pred.winner', { n: pts }, `Vainqueur ? (+${pts} pts)`))}</span>
+            <div class="h24-pwin__row">${btn('w', t('h24.white', null, 'Blancs'))}${btn('d', t('h24.pred.draw', null, 'Nulle'))}${btn('b', t('h24.black', null, 'Noirs'))}</div>
+            ${this.me.login ? `<span class="h24-pwin__pts"><i class="fas fa-star"></i> ${esc(t('h24.pred.pts', { n: this.me.pts || 0 }, `${this.me.pts || 0} pts`))}</span>` : ''}
+        </div>`;
     },
 
     renderPlay() {
@@ -1604,8 +1823,11 @@ const H24Page = {
         if (from) this.flyIntoHistory(card, from);
         const score = $('h24-score');
         if (score) {
-            score.hidden = s.mode !== 'rush';
-            if (g.score) {
+            score.hidden = s.mode !== 'rush' && !g.predict;
+            if (g.predict) {
+                const html = this.predictScoreHtml(g);
+                if (score.dataset.html !== html) { score.dataset.html = html; score.innerHTML = html; }
+            } else if (g.score) {
                 const max = g.score.maxStrikes || 3;
                 const lives = Array.from({ length: max }, (_, i) => `<i class="fas fa-heart${i < max - g.score.strikes ? '' : ' is-lost'}"></i>`).join('');
                 score.innerHTML = `<span class="h24-score__ok"><i class="fas fa-check"></i> ${g.score.solved}</span><span class="h24-score__lives" title="${esc(t('h24.lives', null, 'Erreurs restantes'))}">${lives}</span>`;

@@ -50,6 +50,19 @@ const DUR = {
 };
 
 const MODES = ['teams', 'rush', 'bot'];
+// Premier vote : les trois entrées (partie classique, problèmes, prédiction)
+const ENTRIES = ['classic', 'rush', 'predict'];
+// Mode Prédiction : le chat suit une vraie partie de tournoi, devine le coup suivant et le vainqueur
+const PREDICT = {
+    minBase: 600,          // cadence d'au moins 10 min (temps de base, en secondes)
+    cands: 5,              // parties proposées au vote (les plus fortes)
+    maxMove: Number(process.env.STATION_PRED_MAXMOVE) || 10, // seulement les parties qui commencent (10 coups joués au plus)
+    pollMs: 5000,          // position relue toutes les 5 s (30 s si personne ne regarde)
+    idlePollMs: 30000,
+    lostMs: 120000         // partie introuvable pendant 2 min : on arrête
+};
+/** Points d'un bon pronostic du vainqueur : plus il est tôt, plus il rapporte */
+const WINNER_PTS = (ply) => ply < 30 ? 10 : ply < 60 ? 6 : ply < 90 ? 3 : 1;
 // Contre Stockfish : niveaux proposés au vote, dans l'ordre (1320 par défaut)
 const VS_LEVELS = [300, 600, 900, 1320, 1500, 1800, 2100, 2400];
 const VS_DEFAULT = 1320;
@@ -68,6 +81,8 @@ const BALLOTS = {
     bot: [OPT.elo, OPT.turn, OPT.decision, OPT.spin, OPT.votes, OPT.anonymity],
     rush: [OPT.turn, OPT.spin, OPT.votes, OPT.anonymity]
 };
+// Partie classique : contre les bots (Stockfish) ou viewers entre eux (deux équipes)
+const OPPONENT = { id: 'opponent', choices: ['bot', 'teams'], def: 'teams' };
 const BOT_NAMES = ['bot_fou', 'bot_tour', 'bot_pion', 'bot_dame', 'bot_roque', 'bot_gambit', 'bot_zugzwang',
     'bot_cavalier', 'bot_echec', 'bot_fianchetto', 'bot_sicilienne', 'bot_pat', 'bot_mat', 'bot_prise', 'bot_clouage', 'bot_fourchette'];
 // Niveaux des bots ajoutés en nombre (sim.js h24-bots, + / - de la régie) : un mélange, du plus courant au plus rare
@@ -80,7 +95,7 @@ const pick = (arr) => arr[rand(arr.length)];
 /** chess.js 1.x lève une exception sur un coup illégal : null à la place */
 const tryMove = (chess, m) => { try { return chess.move(m); } catch { return null; } };
 
-module.exports = function station({ io, verifyTwitchToken, dataDir, log = console.log, durations = {} }) {
+module.exports = function station({ io, verifyTwitchToken, dataDir, log = console.log, durations = {}, liveGames = null, fetchRoom = null, fetchGame = null }) {
     Object.assign(DUR, durations);
 
     // ------------------------------------------------------------------ puzzles (CSV Lichess)
@@ -137,7 +152,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         options: { turn: 30, decision: 'majority', spin: 'normal', votes: 1, anonymity: 'none', elo: VS_DEFAULT },
         vsSide: 'w',           // contre Stockfish : camp des viewers (tiré au sort à chaque partie)
         teams: { w: [], b: [] },
-        ballot: { id: 'mode', choices: [...MODES], votes: new Map() },   // { id, choices, votes: Map(login → choix) }
+        ballot: { id: 'mode', choices: ['classic', 'rush'], def: 'classic', votes: new Map() },   // { id, choices, votes: Map(login → choix) }
         ballotQueue: [],
         game: null,
         recap: null,
@@ -368,7 +383,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             options: s.options,
             teams: s.teams,
             viewers: viewers(),
-            ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how,
+            ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, games: s.ballot.games || null, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how,
                 recent: (s.ballot.recent || []).slice(-20).map(r => tickerItem(r, { c: r.c })), recentN: s.ballot.recentN || 0 },
             bots: botCount(),
             botList: botList(),
@@ -376,6 +391,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             next: s.ballotQueue.map(b => b.id),
             // Réglages du mode en cours de vote : la jauge des étapes faites / restantes
             plan: s.phase === 'voteOptions' && BALLOTS[s.mode] ? BALLOTS[s.mode].map(b => b.id) : null,
+            // Prédiction : parties proposées au prochain vote du mode
+            predictCands: pred.cands.length,
             recap: s.recap,
             game: g && {
                 fen: g.chess.fen(),
@@ -387,7 +404,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 turnEndsAt: g.turnEndsAt,
                 settle: !!g.settle,
                 // Vote secret : rien de visible avant la fin du tour, seulement le nombre de votes
-                votes: hidden ? [] : tally(g.votes).map(({ k, n }) => ({ move: k, count: n })),
+                // (prédiction : les devinettes restent cachées jusqu'au coup joué)
+                votes: hidden || g.predict ? [] : tally(g.votes).map(({ k, n }) => ({ move: k, count: n })),
+                predict: g.predict ? predictPublic(g) : null,
                 secret: hidden ? [...g.votes.values()].reduce((a, v) => a + v.length, 0) : false,
                 masked: hidden ? tally(g.votes).map(({ n }) => n) : null,
                 voters: g.votes.size,
@@ -416,7 +435,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             votes: login && s.game ? s.game.votes.get(login) || [] : [],
             maxVotes: s.options.votes || 1,
             chat: !!login && chat.connected && chat.joined.has(login),   // son chat Twitch est lu
-            ballot: login && s.ballot ? s.ballot.votes.get(login) ?? null : null
+            ballot: login && s.ballot ? s.ballot.votes.get(login) ?? null : null,
+            // Prédiction : mon pronostic du vainqueur et mes points
+            winner: login && s.game?.winners ? s.game.winners.get(login)?.w || null : null,
+            pts: login && s.game?.scores ? s.game.scores.get(login)?.pts || 0 : 0
         });
     }
     function emitMeAll(login) {
@@ -432,8 +454,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
 
     function startModeVote() {
         s.recap = null;
-        s.ballot = { id: 'mode', choices: [...MODES], votes: new Map() };
+        // Prédiction proposée seulement s'il y a des parties longues en direct
+        s.ballot = { id: 'mode', choices: ENTRIES.filter(m => m !== 'predict' || pred.cands.length), def: 'classic', votes: new Map() };
         s.ballotQueue = [];
+        refreshCands();
         setPhase('voteMode', DUR.voteMode);
         emitMeAll();
     }
@@ -454,9 +478,23 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         s.endsAt = null;
         emit();
         later(BALLOT_REVEAL_MS, () => {
-            if (b.id === 'mode') {
+            const game = b.id === 'mode' && winner === 'predict' ? gameBallot() : null;
+            if (b.id === 'mode' && (winner === 'classic' || (winner === 'predict' && !game))) {
+                // Partie classique (ou plus de partie en direct à suivre) : contre les bots ou viewers entre eux
+                s.mode = 'classic';
+                s.ballotQueue = [{ ...OPPONENT }];
+            } else if (b.id === 'mode' && winner === 'predict') {
+                s.mode = 'predict';
+                s.ballotQueue = [game];
+            } else if (b.id === 'mode') {
                 s.mode = winner;
                 s.ballotQueue = BALLOTS[winner].map(x => ({ ...x }));
+            } else if (b.id === 'opponent') {
+                s.options.opponent = winner;
+                s.mode = winner;
+                s.ballotQueue = BALLOTS[winner].map(x => ({ ...x }));
+            } else if (b.id === 'game') {
+                s.predictPick = b.games?.[winner] || null;
             } else {
                 s.options[b.id] = winner;
             }
@@ -467,6 +505,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
 
     function nextBallot() {
         const b = s.ballotQueue.shift();
+        if (!b && s.mode === 'predict') return startPredict();
+        if (!b && s.mode === 'classic') s.mode = s.options.opponent || 'teams';
         if (!b) {
             s.teams = { w: [], b: [] };
             s.optOut.clear();
@@ -476,12 +516,14 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             emitMeAll();
             return;
         }
-        s.ballot = { id: b.id, choices: b.choices, def: b.def, votes: new Map() };
+        s.ballot = { id: b.id, choices: b.choices, def: b.def, games: b.games, votes: new Map() };
         setPhase('voteOptions', DUR.voteOption);
         emitMeAll();
     }
 
     function startGame() {
+        if (s.mode === 'classic') s.mode = s.options.opponent || 'teams';
+        if (s.mode === 'predict') return startPredict();
         s.cycle++;
         s.ballot = null;
         s.recap = null;
@@ -752,6 +794,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // ------------------------------------------------------------------ fin de partie
     function endGame() {
         const g = s.game;
+        if (g?.predict) return endPredict({ kind: 'stopped' });
         const c = g.chess;
         let result;
         if (s.mode === 'rush') {
@@ -786,6 +829,261 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         s.lastResult = result;
         try { recordGame(g, result); } catch (e) { log('📊 24/24 : partie non comptée', e.message); }
         setPhase('recap', DUR.recap);
+    }
+
+    // ------------------------------------------------------------------ prédiction (vraie partie de tournoi)
+    const pred = { cands: [], timer: null };
+    /** Parties candidates : en direct, cadence d'au moins 10 min, les plus fortes (somme des Elo) */
+    function refreshCands() {
+        if (!liveGames) return;
+        Promise.resolve().then(liveGames).then(list => {
+            pred.cands = (list || []).filter(x => parseInt(String(x.tc || '').replace(/^\d+\//, ''), 10) >= PREDICT.minBase && x.room?.slug && x.id && x.fen
+                && (parseInt(String(x.fen).split(' ')[5], 10) || 1) <= PREDICT.maxMove)
+                .slice(0, PREDICT.cands);
+            // Parties arrivées pendant le vote du mode (premier vote après un démarrage) : on ajoute la Prédiction
+            const b = s.ballot;
+            if (pred.cands.length && s.phase === 'voteMode' && b?.id === 'mode' && b.winner == null && !b.choices.includes('predict')) {
+                b.choices = [...b.choices, 'predict'];
+                emit();
+            }
+        }).catch(() => {});
+    }
+    refreshCands();
+    /** Vote de la partie à suivre : g0…g4 (le chat tape 1 à 5), la plus forte par défaut */
+    function gameBallot() {
+        if (!pred.cands.length) return null;
+        const games = {};
+        pred.cands.forEach((x, i) => {
+            games['g' + i] = { room: x.room.slug, roomName: x.room.name, event: x.event?.name || '', round: x.round, slug: x.slug, id: x.id,
+                white: x.white, black: x.black, fen: x.fen, tc: x.tc };
+        });
+        return { id: 'game', choices: Object.keys(games), def: 'g0', games };
+    }
+    const placeTurn = (fen) => String(fen).split(' ').slice(0, 2).join(' ');
+    function scoreOf(g, login) {
+        let sc = g.scores.get(login);
+        if (!sc) g.scores.set(login, sc = { pts: 0, hits: 0, win: 0 });
+        return sc;
+    }
+    /** Classement des devins : points, puis coups trouvés */
+    const predictBoard = (g, n) => [...g.scores.entries()].filter(([, x]) => x.pts > 0)
+        .sort((a, b) => b[1].pts - a[1].pts || b[1].hits - a[1].hits).slice(0, n)
+        .map(([login, x]) => ({ login, pts: x.pts, hits: x.hits, win: x.win, w: g.winners.get(login)?.w || null, p: /^(bot_|sim_)/.test(login) ? null : twitchApi.avatar(login) }));
+    function winnerCounts(g) {
+        const c = { w: 0, d: 0, b: 0 };
+        for (const x of g.winners.values()) c[x.w]++;
+        return c;
+    }
+    function predictPublic(g) {
+        return { ...g.predict, clocks: g.clocks, lastHit: g.lastHit, winners: winnerCounts(g), board: predictBoard(g, 8),
+            guessers: g.votes.size, players: g.scores.size, open: !g.result };
+    }
+    function startPredict() {
+        const info = s.predictPick || gameBallot()?.games.g0;
+        s.predictPick = null;
+        let chess = null;
+        try { chess = info && new Chess(info.fen); } catch { chess = null; }
+        if (!chess) {
+            // Plus de partie à suivre : partie classique entre viewers
+            s.mode = 'teams';
+            return nextBallot();
+        }
+        s.cycle++;
+        s.ballot = null;
+        s.ballotQueue = [];
+        s.recap = null;
+        s.teams = { w: [], b: [] };
+        const g = s.game = newGameState(chess);
+        g.predict = { room: info.room, roomName: info.roomName, event: info.event, round: info.round, slug: info.slug, id: info.id,
+            white: info.white, black: info.black, tc: info.tc };
+        g.winners = new Map();    // login → { w: 'w' | 'd' | 'b', ply }
+        g.scores = new Map();     // login → { pts, hits, win }
+        g.clocks = null;
+        g.lastHit = null;
+        g.seenAt = Date.now();
+        s.phase = 'play';
+        s.endsAt = null;
+        log(`🔮 24/24 : prédiction sur ${info.white?.name} - ${info.black?.name} (${info.event})`);
+        loadPredictHistory(g);
+        pollPredict(g);
+        emit();
+        emitMeAll();
+    }
+    /** Coups déjà joués (la salle ne donne que la position) : l'historique complet si la position concorde */
+    function loadPredictHistory(g) {
+        if (!fetchGame || !g.predict.round || !g.predict.slug) return;
+        Promise.resolve().then(() => fetchGame(g.predict.room, g.predict.round, g.predict.slug)).then(data => {
+            if (s.game !== g || g.result || g.history.length) return;
+            const c = new Chess();
+            const hist = [];
+            let last = null;
+            for (const cbn of data?.moves || []) {
+                const uci = String(cbn).split('_')[0];
+                const m = tryMove(c, { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] });
+                if (!m) return;
+                hist.push(m.san);
+                last = { from: m.from, to: m.to };
+            }
+            if (!hist.length || placeTurn(c.fen()) !== placeTurn(g.chess.fen())) return;
+            g.chess = c;
+            g.startFen = new Chess().fen();
+            g.history = hist;
+            g.hv = hist.map(() => null);
+            g.lastMove = last;
+            emit();
+        }).catch(() => {});
+    }
+    function pollPredict(g) {
+        if (s.game !== g || g.result || !fetchRoom) return;
+        const next = () => {
+            if (s.game !== g || g.result) return;
+            clearTimeout(pred.timer);
+            pred.timer = setTimeout(() => pollPredict(g), viewers() ? PREDICT.pollMs : PREDICT.idlePollMs);
+            pred.timer.unref?.();
+        };
+        Promise.resolve().then(() => fetchRoom(g.predict.room)).then(r => {
+            if (s.game !== g || g.result) return;
+            const x = r?.ok ? (r.body?.games || []).find(z => z.id === g.predict.id) : null;
+            if (!x) {
+                if (Date.now() - g.seenAt > PREDICT.lostMs) return endPredict({ kind: 'lost' });
+                return next();
+            }
+            g.seenAt = Date.now();
+            if (x.currentFEN) syncPredict(g, x.currentFEN);
+            // Pendules (ms restantes au dernier coup) : le client décompte pour le camp au trait
+            const w = Number(x.whiteClock), b = Number(x.blackClock);
+            if (Number.isFinite(w) && Number.isFinite(b) && (!g.clocks || g.clocks.w !== w || g.clocks.b !== b)) {
+                g.clocks = { w, b, at: Date.now(), turn: g.chess.turn() };
+                emit();
+            }
+            const res = String(x.result || '*');
+            if (res !== '*') return endPredict({ kind: 'final', winner: res === '1-0' ? 'w' : res === '0-1' ? 'b' : 'd' });
+            next();
+        }).catch(() => next());
+    }
+    /** Nouvelle position : le coup joué (ou les deux, si on en a manqué un), sinon on repart de la position */
+    function syncPredict(g, fen) {
+        const target = placeTurn(fen);
+        if (target === placeTurn(g.chess.fen())) return;
+        const test = new Chess(g.chess.fen());
+        for (const m1 of test.moves({ verbose: true })) {
+            test.move(m1);
+            if (placeTurn(test.fen()) === target) return predictMoves(g, [m1.san]);
+            for (const m2 of test.moves({ verbose: true })) {
+                test.move(m2);
+                const ok = placeTurn(test.fen()) === target;
+                test.undo();
+                if (ok) return predictMoves(g, [m1.san, m2.san]);
+            }
+            test.undo();
+        }
+        let chess;
+        try { chess = new Chess(fen); } catch { return; }
+        g.chess = chess;
+        g.startFen = fen;
+        g.history = [];
+        g.hv = [];
+        g.lastMove = null;
+        g.votes = new Map();
+        g.recent = [];
+        g.recentN = 0;
+        emit();
+        emitMeAll();
+        loadPredictHistory(g);
+    }
+    /** Coups joués dans la vraie partie : un point par devinette juste (sur le premier ; les devinettes portaient sur lui) */
+    function predictMoves(g, sans) {
+        sans.forEach((san, i) => {
+            const m = tryMove(g.chess, san);
+            if (!m) return;
+            if (i === 0) {
+                let total = 0, n = 0;
+                const counts = {};
+                for (const [login, list] of g.votes) {
+                    const guess = list[0];
+                    if (!guess) continue;
+                    total++;
+                    counts[guess] = (counts[guess] || 0) + 1;
+                    if (guess === m.san) {
+                        n++;
+                        const sc = scoreOf(g, login);
+                        sc.pts++;
+                        sc.hits++;
+                        g.hits.set(login, (g.hits.get(login) || 0) + 1);
+                    }
+                }
+                g.hv.push(total ? Math.round(n * 100 / total) : null);
+                g.lastHit = { san: m.san, n, total, ply: g.history.length, top: Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([move, k]) => ({ move, n: k })) };
+            } else g.hv.push(null);
+            g.history.push(m.san);
+            g.lastMove = { from: m.from, to: m.to };
+        });
+        g.votes = new Map();
+        g.recent = [];
+        g.recentN = 0;
+        if (g.tally) g.tally.peak = Math.max(g.tally.peak, viewers());
+        emit();
+        emitMeAll();
+    }
+    /** Devinette du coup suivant : une par coup, elle se change */
+    function guessMove(login, text, via, lang = 'en') {
+        const g = s.game;
+        if (s.phase !== 'play' || !g?.predict || g.result || !LOGIN_RE.test(login || '')) return false;
+        const m = Notation.match(g.chess.moves({ verbose: true }), text, Notation.PIECES[lang] ? lang : 'en');
+        if (!m) return false;
+        if (g.votes.get(login)?.[0] === m.san) return true;
+        g.votes.set(login, [m.san]);
+        scoreOf(g, login);
+        g.recent.push({ u: login, m: null, v: viaOf(login, via) });
+        g.recentN = (g.recentN || 0) + 1;
+        if (g.recent.length > 30) g.recent.shift();
+        g.voteCount.w.set(login, (g.voteCount.w.get(login) || 0) + 1);
+        emit();
+        emitMeAll(login);
+        return true;
+    }
+    /** Pronostic du vainqueur : une seule fois, il ne se change pas */
+    function pickWinner(login, w) {
+        const g = s.game;
+        if (s.phase !== 'play' || !g?.predict || g.result || !LOGIN_RE.test(login || '') || !['w', 'd', 'b'].includes(w)) return false;
+        if (g.winners.has(login)) return false;
+        g.winners.set(login, { w, ply: g.history.length });
+        scoreOf(g, login);
+        emit();
+        emitMeAll(login);
+        return true;
+    }
+    function endPredict(res) {
+        const g = s.game;
+        if (!g?.predict || g.result) return;
+        clearTimeout(pred.timer);
+        log(`🔮 24/24 : fin de la prédiction (${res.kind}${res.winner ? ' ' + res.winner : ''}, ${g.history.length} demi-coups)`);
+        const winner = res.kind === 'final' ? res.winner : null;
+        if (winner) for (const [login, p] of g.winners) {
+            if (p.w !== winner) continue;
+            const sc = scoreOf(g, login);
+            sc.win = WINNER_PTS(p.ply);
+            sc.pts += sc.win;
+        }
+        g.result = { kind: 'predict', winner, end: res.kind };
+        g.turnEndsAt = null;
+        const best = predictBoard(g, 10);
+        s.recap = {
+            mode: 'predict',
+            result: g.result,
+            plies: g.history.length,
+            durationMs: Date.now() - g.startedAt,
+            players: { w: g.scores.size, b: 0 },
+            top: { w: [], b: [] },
+            mvp: best[0] ? { login: best[0].login, n: best[0].pts } : null,
+            predict: { ...g.predict, board: best, winners: winnerCounts(g), players: g.scores.size,
+                rightWinner: winner ? [...g.winners.values()].filter(p => p.w === winner).length : 0 }
+        };
+        s.lastResult = g.result;
+        try { recordGame(g, g.result); } catch (e) { log('📊 24/24 : partie non comptée', e.message); }
+        refreshCands();
+        setPhase('recap', DUR.recap);
+        emitMeAll();
     }
 
     // ------------------------------------------------------------------ minuteur commun
@@ -829,7 +1127,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // ------------------------------------------------------------------ entrées (web aujourd'hui, chat Twitch demain)
     /** Inscription : l'équipe la moins nombreuse (rush : une seule équipe) ; possible en pleine partie */
     function join(login) {
-        if (!LOGIN_RE.test(login || '') || teamOf(login)) return false;
+        if (!LOGIN_RE.test(login || '') || teamOf(login) || s.mode === 'predict' || s.mode === 'classic') return false;
         const side = s.mode === 'rush' ? 'w' : s.mode === 'bot' ? s.vsSide
             : s.teams.w.length === s.teams.b.length ? pick(['w', 'b'])
             : s.teams.w.length < s.teams.b.length ? 'w' : 'b';
@@ -868,7 +1166,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             case 'voteMode': return startModeVote();
             case 'voteOptions':
                 s.ballot = null;
-                s.ballotQueue = BALLOTS[s.mode].map(x => ({ ...x }));
+                s.ballotQueue = s.mode === 'predict' ? [gameBallot()].filter(Boolean)
+                    : (BALLOTS[s.mode] || [OPPONENT]).map(x => ({ ...x }));
                 return nextBallot();
             case 'signup':
                 s.ballot = null;
@@ -892,6 +1191,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     /** `lang` : notation du texte (chat : H24_LANG ; page : langue du spectateur ; bots : 'en') */
     function voteMove(login, text, via, lang = 'en') {
         const g = s.game;
+        if (g?.predict) return guessMove(login, text, via, lang);
         if (s.phase !== 'play' || !g?.turnEndsAt || g.result) return false;
         const side = g.chess.turn();
         const team = teamOf(login);
@@ -980,6 +1280,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         const g = s.game;
         if (s.phase === 'signup') return { key: `signup:${s.cycle}`, until: s.endsAt };
         if ((s.phase === 'voteMode' || s.phase === 'voteOptions') && s.ballot) return { key: `ballot:${s.cycle}:${s.ballot.id}`, until: s.endsAt };
+        if (s.phase === 'play' && g?.predict && !g.result) return { key: `pmove:${s.cycle}:${g.history.length}`, until: Date.now() + 20000 };
         if (s.phase === 'play' && g?.turnEndsAt && !g.draw && !g.result) {
             return { key: `move:${s.cycle}:${g.puzzleIndex || 0}:${g.history.length}`, until: g.turnEndsAt };
         }
@@ -989,10 +1290,20 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (key.startsWith('signup')) return join(login);
         if (key.startsWith('ballot')) {
             const b = s.ballot;
-            const prefer = { mode: ['teams', 'teams', 'rush', 'bot'], decision: ['draw'] };
-            return voteBallot(login, pick(prefer[b.id] || b.choices));
+            const prefer = { mode: ['classic', 'classic', 'rush', 'predict'], opponent: ['teams', 'teams', 'bot'], decision: ['draw'] };
+            const ok = (prefer[b.id] || []).filter(c => b.choices.includes(c));
+            return voteBallot(login, pick(ok.length ? ok : b.choices));
         }
         const g = s.game;
+        if (key.startsWith('pmove')) {
+            // Prédiction : le vainqueur une fois (au hasard, un peu plus souvent les Blancs), puis le coup de Stockfish à son niveau
+            if (!g.winners.has(login) && Math.random() < 0.5) pickWinner(login, pick(['w', 'w', 'd', 'b']));
+            const fen = g.chess.fen();
+            Stockfish.botMove(fen, bots.elo.get(login) || 1500).then((san) => {
+                if (san && s.game === g && g.chess.fen() === fen && bots.list.includes(login)) guessMove(login, san);
+            }).catch(() => {});
+            return;
+        }
         const side = g.chess.turn();
         if (s.mode !== 'rush' && !canPlay(teamOf(login), side)) return;
         // Coup de Stockfish au niveau du bot (partie comme rush) ; voté seulement si le tour n'a pas changé entre-temps.
@@ -1078,6 +1389,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
         socket.on('h24:vote', (data = {}) => { const l = me(); if (l) voteMove(l, String(data.move || '').slice(0, 12), null, String(data.lang || 'en')); });
         socket.on('h24:ballot', (data = {}) => { const l = me(); if (l) voteBallot(l, String(data.choice ?? '').slice(0, 20)); });
+        socket.on('h24:winner', (data = {}) => { const l = me(); if (l) pickWinner(l, String(data.pick || '')); });
         // Régie : un clic sur une option la choisit tout de suite
         socket.on('h24:pick', (data = {}) => {
             const l = me(), b = s.ballot;
@@ -1241,6 +1553,14 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             chat.seen.delete(login);
             leave(login);
             return 'quit';
+        }
+        // Prédiction : vainqueur (« blancs », « nulle », « noirs », 1-0…) ou devinette du coup suivant
+        if (s.phase === 'play' && s.game?.predict && !s.game.result) {
+            const WIN = { blancs: 'w', blanc: 'w', white: 'w', '1-0': 'w', '1': 'w', nulle: 'd', draw: 'd', '1/2': 'd', '½': 'd', '2': 'd', noirs: 'b', noir: 'b', black: 'b', '0-1': 'b', '3': 'b' };
+            if (WIN[word]) return pickWinner(login, WIN[word]) ? `vainqueur ${WIN[word]}` : 'vainqueur déjà choisi';
+            if (!Notation.looksLikeMove(typed, H24_LANG)) return;
+            if (guessMove(login, typed, via, H24_LANG)) { chat.seen.set(login, Date.now()); return `devinette ${word}`; }
+            return 'refusé : coup illégal';
         }
         if (s.ballot && /^\d{1,2}$/.test(word)) {
             const c = s.ballot.choices[Number(word) - 1];

@@ -672,3 +672,77 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 @media (prefers-reduced-motion: reduce) {
     #page-h24 #h24-moves.is-wake, #page-h24 #h24-moves.is-wake::after, #page-h24 #h24-moves.is-wake .moves-group button { animation: none; }
 }
+
+/* ---- Prédiction : vote de la partie à suivre ---- */
+.h24-choices--games { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.h24-gc { align-items: stretch; gap: 10px; padding: 8px 10px; font-weight: 600; }
+.h24-gc__board { flex: 0 0 84px; width: 84px; align-self: center; }
+.h24-gc__board > * { width: 100%; }
+.h24-gc__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.h24-gc__event { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 0.75rem; color: var(--text-secondary); }
+.h24-gc__event .h24-choice__num { font-size: 0.75rem; }
+.h24-gc__ev { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h24-gc__tc { flex: none; white-space: nowrap; }
+.h24-gc__player { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 0.85rem; }
+.h24-gc__photo { flex: none; width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: rgba(255, 255, 255, 0.08); display: inline-grid; place-items: center; font-size: 0.7rem; color: var(--text-secondary); }
+.h24-gc__player--w .h24-gc__photo { box-shadow: 0 0 0 2px #f5f5f5; }
+.h24-gc__player--b .h24-gc__photo { box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 3px rgba(255, 255, 255, 0.3); }
+.h24-gc__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+.h24-gc__name b { color: #ffb27a; }
+.h24-gc__elo { flex: none; font-variant-numeric: tabular-nums; color: var(--text-secondary); font-size: 0.78rem; }
+.h24-gc .h24-choice__pct { align-self: center; display: flex; flex-direction: column; align-items: flex-end; }
+.h24-gc .h24-choice__pct small { margin: 0; }
+.h24-choice.is-loser { opacity: 0.5; }
+
+/* ---- Prédiction : bandeaux des vrais joueurs ---- */
+.h24-side--player { gap: 8px; }
+.h24-side__photo { flex: none; width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(255, 255, 255, 0.08); display: inline-grid; place-items: center; font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); }
+.h24-side__title { margin-right: 4px; color: #ffb27a; }
+.h24-side__elo { font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.6); font-weight: 700; }
+.h24-side__event { max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); }
+.h24-side--player .h24-pclock { order: 9; margin-left: auto; }
+.h24-side--player .h24-side__spacer { order: 8; }
+
+/* ---- Prédiction : pronostic du vainqueur et points ---- */
+#h24-score:has(.h24-pwin) { display: block; }
+.h24-pwin { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; font-weight: 600; }
+.h24-pwin__label { font-size: 0.85rem; color: var(--text-secondary); }
+.h24-pwin__row { display: flex; gap: 6px; }
+.h24-pwin__btn {
+    position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+    border: 1px solid var(--border-subtle); border-radius: 3px; background: rgba(255, 255, 255, 0.04);
+    color: inherit; font: inherit; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+}
+.h24-pwin__btn::before { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--pct, 0%); background: rgba(255, 138, 61, 0.2); transition: width 0.4s ease; }
+.h24-pwin__btn > * { position: relative; }
+.h24-pwin__btn small { color: var(--text-secondary); font-weight: 500; }
+.h24-pwin__btn:hover:not(:disabled) { border-color: var(--twitch-purple); }
+.h24-pwin__btn:disabled { cursor: default; }
+.h24-pwin__btn.is-mine { border-color: var(--twitch-purple); box-shadow: 0 0 0 1px var(--twitch-purple) inset; }
+.h24-pwin__pts { margin-left: auto; color: #ffb27a; font-weight: 800; }
+
+/* ---- Prédiction : dernier coup et devinettes (à la place du podium) ---- */
+.h24-plast { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; text-align: center; }
+.h24-plast__k { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.h24-plast__san { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 800; color: #fff; }
+.h24-plast__line { font-size: 0.85rem; color: var(--text-secondary); }
+.h24-plast__top { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
+.h24-plast__top li { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 2px; background: rgba(255, 255, 255, 0.06); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.85rem; }
+.h24-plast__top li small { color: var(--text-secondary); font-weight: 500; }
+.h24-plast__top li.is-hit { background: rgba(255, 138, 61, 0.25); color: #fff; }
+
+/* ---- Prédiction : classement des devins (visible pendant la partie) ---- */
+#page-h24[data-phase="play"][data-mode="predict"] .h24-teams-panel { display: block; }
+.h24-pboard__list { margin: 6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.h24-pboard__list li { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 2px; font-size: 0.85rem; }
+.h24-pboard__list li.is-me { background: rgba(255, 138, 61, 0.12); }
+.h24-pboard__rank { flex: none; width: 1.4em; text-align: center; font-weight: 800; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.h24-pboard__rank .fa-crown { color: #ffb27a; }
+.h24-pboard__pic { flex: none; width: 20px; height: 20px; border-radius: 50%; object-fit: cover; display: inline-grid; place-items: center; font-size: 0.7rem; font-weight: 800; color: #fff; }
+.h24-pboard__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.h24-pboard__hits, .h24-pboard__win { flex: none; font-size: 0.78rem; color: var(--text-secondary); }
+.h24-pboard__pts { flex: none; min-width: 2.2em; text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; color: #ffb27a; }
+.h24-recap__game { margin: 0; font-size: 1.15rem; font-weight: 700; }
+.h24-recap__game b { color: #ffb27a; }
+.h24-recap__game small, .h24-recap__game span { color: var(--text-secondary); font-weight: 500; }
+.h24-recap__event { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }

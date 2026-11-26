@@ -322,6 +322,7 @@ async function loadLiveGames() {
                         white: { name: g.white?.preferredShortName?.trim() || String(g.slug).split('-')[0], elo: g.whiteElo ?? null, title: g.whiteTitle || null, fide: g.white?.fideId ? String(g.white.fideId) : null },
                         black: { name: g.black?.preferredShortName?.trim() || String(g.slug).split('-')[1], elo: g.blackElo ?? null, title: g.blackTitle || null, fide: g.black?.fideId ? String(g.black.fideId) : null },
                         fen: g.currentFEN, startAt: g.startAt,
+                        tc: r.body.room?.timeControl || null,
                     });
                 }
             } catch { /* salle illisible : ignorée */ }
@@ -1231,6 +1232,8 @@ io.on('connection', (socket) => {
 // Station 24/24 : partie permanente des viewers (votes du web, puis du chat Twitch)
 const station = require('./station')({
     io, verifyTwitchToken, dataDir: DATA_DIR,
+    // Mode Prédiction : parties de tournoi en direct (chess.com)
+    liveGames: liveGamesList, fetchRoom: fetchChessEventRoom, fetchGame: fetchChessEventGame,
     // Tests locaux : phases raccourcies
     durations: process.env.STATION_FAST ? { recap: 5000, voteMode: 6000, voteOption: 5000, signup: 8000, turn: 6000 } : {}
 });
