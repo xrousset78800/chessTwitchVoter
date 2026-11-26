@@ -1636,7 +1636,10 @@ const H24Page = {
                     : `<p class="tp-hint">${esc(over ? t('predict.ended', null, 'Partie terminée') : t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
                 ${flash ? `<p class="tp-hint">${esc(fmtMove(flash.san))} · ${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</p>` : ''}
             </div></div>`;
-        const html = cardPred + cardGame + cardVoters;
+        // Pronostics dans la colonne de gauche, comme sur la page Tournois ; la partie et les votants à droite
+        const left = $('h24-pred');
+        if (left && left.dataset.html !== cardPred) { left.dataset.html = cardPred; left.innerHTML = cardPred; }
+        const html = cardGame + cardVoters;
         if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; this.paintPclocks(); }
     },
 

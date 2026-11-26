@@ -211,7 +211,14 @@
     /* La roue tient avec les panneaux au-dessus */
     #page-h24 #h24-votes-panel.votes-slot { --dock-size: min(380px, 82vw, calc(var(--sidebar-width) - 50px), 32vh); }
     /* Prédiction : les cartes prennent la place qui reste et défilent seules */
-    #page-h24[data-mode="predict"] .sandbox__sidebar > .votes-slot { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 0; scrollbar-width: thin; }
+    #page-h24[data-mode="predict"] .sandbox__sidebar > .votes-slot { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 0; scrollbar-width: thin; display: flex; flex-direction: column; }
+    /* …la partie sélectionnée en haut, les votants prennent tout le reste et défilent seuls */
+    #page-h24[data-mode="predict"] #h24-votes-panel .votes-slot__podium,
+    #page-h24[data-mode="predict"] #h24-votes { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; max-height: none; overflow: visible; }
+    #page-h24[data-mode="predict"] .h24-plast { flex: 1 1 auto; min-height: 0; }
+    #page-h24[data-mode="predict"] .h24-plast > .tv-card { flex: 1 1 auto; min-height: 160px; display: flex; flex-direction: column; }
+    #page-h24[data-mode="predict"] .h24-plast > .tv-card > .tv-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+    #page-h24[data-mode="predict"] .h24-plast .tv-list { max-height: none; }
     #page-h24 .h24-card { flex: none; }
 }
 
@@ -724,6 +731,9 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 /* ---- Prédiction : pronostics du vainqueur et devinettes (présentation de la page Tournois) ---- */
 .h24-plast { display: flex; flex-direction: column; gap: 12px; padding: 4px 2px; }
 .h24-plast > .live-card { margin: 0; }
+/* Pronostics à gauche (mode Prédiction en cours seulement) */
+.h24-pred > .live-card { margin: 0 0 12px; }
+#page-h24:not([data-mode="predict"]) .h24-pred, #page-h24:not([data-phase="play"]) .h24-pred { display: none; }
 /* Partie sélectionnée : comme la page Tournois (Elo en petit, pendule à droite) */
 .h24-pgame .player-row { gap: 8px; }
 .h24-pgame .player-name { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
