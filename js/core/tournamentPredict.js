@@ -19,6 +19,7 @@
     const fmtOdds = f => '×' + Number(f).toLocaleString(document.documentElement.lang || 'fr', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
     const sanLocal = san => (window.Notation?.local ? window.Notation.local(san) : san);
+    const NL2 = String.fromCharCode(10, 10);
 
     // ───────────── Matchs en direct ─────────────
     const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -329,27 +330,28 @@
                 <button type="button" class="btn-primary btn-connect tp-login" data-tp-login><i class="fab fa-twitch"></i> ${esc(T('predict.loginBtn', null, 'Se connecter avec Twitch'))}</button>`;
             return;
         }
+        // Compact : le vainqueur sur une ligne, les explications en infobulle, la liste des coups prend le reste
         const st = pred.stats;
-        const moveLine = c.ended ? T('predict.ended', null, 'Partie terminée')
-            : pred.move ? T('predict.yourGuess', { san: pred.move.san }, `Ton prono : ${pred.move.san}`)
-            : T('predict.noGuess', null, 'Pas encore de prono pour ce coup.');
+        const stat = card.querySelector('.tp-stat');
+        if (stat) {
+            stat.innerHTML = st ? `${st.moveHits}/${st.moveTotal}${st.streak ? ` · <i class="fas fa-fire"></i> ${st.streak}` : ''}` : '';
+            stat.title = st ? T('predict.stats', { hits: st.moveHits, total: st.moveTotal, streak: st.streak, whits: st.winnerHits, wtotal: st.winnerTotal }) : '';
+        }
+        const rulesText = T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, omin: fmtOdds(rules.oddsMin ?? 0.2), omax: fmtOdds(rules.oddsMax ?? 2) });
+        const winTip = T('predict.winnerTitle', null, 'Vainqueur') + ' — ' + T('predict.oddsHint') + (pred.winner && pred.f ? ' ' + T('predict.yourOdds', { odds: fmtOdds(pred.f) }) : '');
         body.innerHTML = `
-            <div class="tp-section">
-                <div class="tp-label"><i class="fas fa-crosshairs"></i> ${esc(T('predict.moveTitle', null, 'Prochain coup'))}</div>
-                <p class="tp-guess${pred.move ? ' is-set' : ''}">${esc(moveLine)}</p>
-                ${c.ended ? '' : `<p class="tp-hint">${esc(T('predict.moveHint', null, 'Fais glisser une pièce sur l\'échiquier, ou clique un coup de la liste.'))}</p><div class="tp-moves"></div>`}
+            <div class="tp-picks tp-win" role="group" title="${esc(winTip)}">
+                <i class="fas fa-trophy"></i>
+                ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended ? 'disabled' : ''}>${p === '1/2-1/2' ? '½' : p}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
             </div>
-            <div class="tp-section">
-                <div class="tp-label"><i class="fas fa-trophy"></i> ${esc(T('predict.winnerTitle', null, 'Vainqueur'))}</div>
-                <div class="tp-picks" role="group">
-                    ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" ${c.ended ? 'disabled' : ''}>${esc(T('predict.' + PICK_KEY[p]))}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
-                </div>
-                ${votesHTML(pred.votes)}
-                ${c.ended ? '' : `<p class="tp-hint">${esc(T('predict.oddsHint') + (pred.winner && pred.f ? ' ' + T('predict.yourOdds', { odds: fmtOdds(pred.f) }) : ''))}</p>`}
+            ${votesHTML(pred.votes)}
+            <div class="tp-guessrow">
+                <i class="fas fa-crosshairs"></i>
+                <span>${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('predict.moveTitle', null, 'Prochain coup'))}</span>
+                ${pred.move && !c.ended ? `<b class="tp-mine" title="${esc(T('predict.yourGuess', { san: pred.move.san }))}">${esc(sanLocal(pred.move.san))}</b>` : ''}
+                <i class="fas fa-circle-info tp-info" tabindex="0" title="${esc(T('predict.moveHint', null, '') + NL2 + rulesText)}"></i>
             </div>
-            <p class="tp-stats">${st ? esc(T('predict.stats', { hits: st.moveHits, total: st.moveTotal, streak: st.streak, whits: st.winnerHits, wtotal: st.winnerTotal })) : ''}</p>
-            <details class="tp-rules"><summary>${esc(T('predict.rulesTitle', null, 'Barème'))}</summary>
-                <p>${esc(T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, omin: fmtOdds(rules.oddsMin ?? 0.2), omax: fmtOdds(rules.oddsMax ?? 2) }))}</p></details>`;
+            ${c.ended ? '' : '<div class="tp-moves"></div>'}`;
         renderMoves();
     }
 
@@ -501,6 +503,48 @@
             ${!flash && !c.ended && chatOn() ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}`;
     }
 
+    // ───────────── Dernier coup surligné sur l'échiquier (aussi à l'ouverture d'une partie) ─────────────
+    const lastMv = { key: null, fen: null, from: null, to: null, loading: false };
+    function setLastMove(key, fen, uci) {
+        lastMv.key = key; lastMv.fen = fen;
+        lastMv.from = uci ? uci.slice(0, 2) : null; lastMv.to = uci ? uci.slice(2, 4) : null;
+        paintLastMove();
+    }
+    /** Coups de la partie : le dernier, s'il mène bien à la position affichée */
+    async function loadLastMove(c) {
+        if (lastMv.loading || typeof fetchGameMovesT !== 'function') return;
+        lastMv.loading = true;
+        try {
+            const moves = await fetchGameMovesT(c.g);
+            const ch = new Chess();
+            let uci = null;
+            for (const cbn of moves) {
+                const coords = String(cbn).split('_')[0];
+                ch.move({ from: coords.slice(0, 2), to: coords.slice(2, 4), promotion: coords[4] || 'q' });
+                uci = coords;
+            }
+            const now = current();
+            if (now?.key === c.key && boardOf(ch.fen()) === boardOf(now.fen)) setLastMove(c.key, now.fen, uci);
+        } catch { /* pas de surlignage */ }
+        lastMv.loading = false;
+    }
+    function trackLastMove(c, prevFen) {
+        if (!c) { setLastMove(null, null, null); return; }
+        if (lastMv.key === c.key && boardOf(lastMv.fen) === boardOf(c.fen)) return;
+        const played = prevFen && lastMv.key === c.key ? playedBetween(prevFen, c.fen) : null;
+        if (played) setLastMove(c.key, c.fen, played.uci);
+        else { setLastMove(c.key, c.fen, null); loadLastMove(c); }
+    }
+    /** Remet les cases en couleur si l'échiquier a été redessiné (hors revue d'une partie terminée) */
+    function paintLastMove() {
+        if (reviewT.game) return;
+        const want = [lastMv.from, lastMv.to].filter(Boolean);
+        document.querySelectorAll('#liveBoardT .highlight-last-move-live').forEach(el => {
+            if (!want.includes(el.dataset.square)) el.classList.remove('highlight-last-move-live');
+        });
+        for (const sq of want) document.querySelector(`#liveBoardT [data-square="${sq}"]`)?.classList.add('highlight-last-move-live');
+    }
+
     window.tournamentPredict = { chatVote, canDrag, dropMove };
 
     // ───────────── Colonne de gauche : tournois en cours / matchs en direct ─────────────
@@ -573,6 +617,8 @@
         setInterval(() => {
             const c = current();
             document.body.classList.toggle('t-following', !!c);
+            trackLastMove(c, c?.key === lastKey ? lastFen : null);
+            paintLastMove();
             if ((c?.key || null) !== lastKey || (stateT.lastFEN !== lastFen)) {
                 if (stateT.lastFEN !== lastFen && c?.key === lastKey && lastFen && stateT.lastFEN) {
                     votersResolve(lastKey, lastFen, stateT.lastFEN);
