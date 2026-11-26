@@ -56,7 +56,7 @@ const ENTRIES = ['classic', 'rush', 'predict'];
 const PREDICT = {
     minBase: 600,          // cadence d'au moins 10 min (temps de base, en secondes)
     cands: 5,              // parties proposées au vote (les plus fortes)
-    maxMove: Number(process.env.STATION_PRED_MAXMOVE) || 10, // seulement les parties qui commencent (10 coups joués au plus)
+    maxMove: Number(process.env.STATION_PRED_MAXMOVE) || 25, // parties qui commencent (25 coups joués au plus, les plus jeunes d'abord)
     pollMs: 5000,          // position relue toutes les 5 s (30 s si personne ne regarde)
     idlePollMs: 30000,
     lostMs: 120000         // partie introuvable pendant 2 min : on arrête
@@ -837,8 +837,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function refreshCands() {
         if (!liveGames) return;
         Promise.resolve().then(liveGames).then(list => {
+            // Les parties les plus jeunes d'abord (à égalité, l'ordre d'origine : les plus fortes)
+            const moveNo = (x) => parseInt(String(x.fen).split(' ')[5], 10) || 1;
             pred.cands = (list || []).filter(x => parseInt(String(x.tc || '').replace(/^\d+\//, ''), 10) >= PREDICT.minBase && x.room?.slug && x.id && x.fen
-                && (parseInt(String(x.fen).split(' ')[5], 10) || 1) <= PREDICT.maxMove)
+                && moveNo(x) <= PREDICT.maxMove)
+                .map((x, i) => ({ x, i })).sort((a, b) => moveNo(a.x) - moveNo(b.x) || a.i - b.i).map(o => o.x)
                 .slice(0, PREDICT.cands);
             // Parties arrivées pendant le vote du mode (premier vote après un démarrage) : on ajoute la Prédiction
             const b = s.ballot;
