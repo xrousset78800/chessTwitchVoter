@@ -674,8 +674,9 @@ input[type=range] {
 }
 /* Partie suivie : la colonne de choix se masque, l'échiquier prend la place */
 #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: 320px minmax(0, 1fr) 280px; }
-/* Partie suivie : la colonne de gauche ne garde que le titre et les pronostics */
-#page-tournament .live-content.t-following:not(.t-list-open) #tSideCol > :not(.t-sidehead):not(#tPredict) { display: none !important; }
+/* Partie suivie : la colonne de gauche ne garde que le titre, la revue et les pronostics */
+#page-tournament .live-content.t-following:not(.t-list-open) #tSideCol > :not(.t-sidehead):not(#tPredict):not(#tReview) { display: none !important; }
+#page-tournament .live-content.t-list-open #tReview { display: none !important; }
 #page-tournament .live-content:not(.t-following) #tPredict,
 #page-tournament .live-content.t-list-open #tPredict { display: none !important; }
 #page-tournament .live-content.t-following:not(.t-list-open) .board-wrapper > div:first-child { max-width: 640px; }
