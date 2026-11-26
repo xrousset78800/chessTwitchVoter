@@ -218,6 +218,15 @@ const H24Page = {
         this.bindTicker();
         $('h24-volume')?.addEventListener('input', (e) => this.setVolume(Number(e.target.value) / 100, Number(e.target.value) === 0));
         this.renderVolume();
+        // Volume changé depuis la page Tournoi (même réglage)
+        window.addEventListener('cgVolume', () => {
+            try {
+                const v = parseFloat(localStorage.getItem('h24Volume'));
+                if (Number.isFinite(v)) this.volume = Math.max(0, Math.min(1, v));
+                this.muted = localStorage.getItem('h24Muted') === '1';
+            } catch {}
+            this.renderVolume();
+        });
         // Panneau des paramètres : se ferme au clic ailleurs ou avec Échap
         // (chemin du clic figé au départ : un bouton redessiné pendant le clic compte toujours comme « dedans »)
         document.addEventListener('click', (e) => { if (!e.composedPath().some(n => n.classList?.contains('h24-settings'))) this.toggleSettings(false); });

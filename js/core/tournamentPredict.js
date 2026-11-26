@@ -100,18 +100,15 @@
             const isFollowed = followed === `${g.room.slug}:${g.id}`;
             const where = g.event.name + (g.room.name && g.room.name !== g.event.name ? ' · ' + g.room.name : '');
             if (compact) {
-                return `<article class="tl-card tl-row${isFollowed ? ' is-followed' : ''}" data-tl="${i}" title="${esc(where)}">
+                return `<article class="tl-card tl-row${isFollowed ? ' is-followed' : ''}" data-tl="${i}" data-tl-follow="${i}" title="${esc(where)}">
                 <button type="button" class="tl-row__main" data-tl-follow="${i}">${playerHTML(g.white, 'w')}${playerHTML(g.black, 'b')}</button>
             </article>`;
             }
-            return `<article class="tl-card${isFollowed ? ' is-followed' : ''}" data-tl="${i}">
-                <button type="button" class="tl-card__board" data-tl-follow="${i}" aria-label="${esc(T('tlive.follow', null, 'Suivre'))}">${miniBoardHTML(g.fen)}</button>
+            return `<article class="tl-card${isFollowed ? ' is-followed' : ''}" data-tl="${i}" data-tl-follow="${i}" role="button" tabindex="0" title="${esc(isFollowed ? T('tlive.following', null, 'Suivie') : T('tlive.follow', null, 'Suivre'))}">
+                <div class="tl-card__board">${miniBoardHTML(g.fen)}</div>
                 <div class="tl-card__body">
                     <div class="tl-card__event" title="${esc(where)}">${esc(g.event.name)}</div>
                     ${playerHTML(g.white, 'w')}${playerHTML(g.black, 'b')}
-                    <div class="tl-card__actions">
-                        <button type="button" class="tl-follow" data-tl-follow="${i}"><i class="fas fa-eye"></i> ${esc(isFollowed ? T('tlive.following', null, 'Suivie') : T('tlive.follow', null, 'Suivre'))}</button>
-                    </div>
                 </div>
             </article>`;
         }).join('');
@@ -611,7 +608,7 @@
     }
 
     // ───────────── Bots de test (régie) : votes simulés, sur cet écran seulement ─────────────
-    // Panneau « Régie · bots » en bas à gauche de la page Tournoi : nombre, rythme, suivisme,
+    // Panneau « Régie · bots » en haut de la colonne de droite de la page Tournoi : nombre, rythme, suivisme,
     // une vague tout de suite ou on vide. Rien n'est envoyé au serveur ni au chat.
     const BOT_KEY = 'cgTourBots';
     const BOT_A = ['Pion', 'Tour', 'Cavalier', 'Fou', 'Dame', 'Roque', 'Gambit', 'Zugzwang', 'Fianchetto', 'Mat', 'Echec', 'Sicilienne'];
@@ -652,7 +649,9 @@
             el = document.createElement('div');
             el.id = 'tBotsPanel';
             el.className = 'test-tools t-bots';
-            document.body.appendChild(el);
+            // En haut de la colonne de droite, sous les outils (Simuler, Évaluation, volume, Phantom)
+            const tools = document.querySelector('#page-tournament .t-righttools');
+            if (tools) tools.insertAdjacentElement('afterend', el); else document.body.appendChild(el);
             el.addEventListener('click', e => {
                 const act = e.target.closest('[data-tb]')?.dataset.tb;
                 if (act === 'toggle') { bots.open = !bots.open; saveBots(); paintBotsPanel(); }
@@ -861,6 +860,14 @@
         const page = document.getElementById('page-tournament');
         if (!page) return;
 
+        page.addEventListener('keydown', e => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const card = e.target.closest?.('article[data-tl-follow]');
+            if (!card || e.target !== card) return;
+            e.preventDefault();
+            const g = liveGames[+card.dataset.tlFollow];
+            if (g) openLiveGame(g);
+        });
         page.addEventListener('click', e => {
             const follow = e.target.closest('[data-tl-follow]');
             if (follow) { const g = liveGames[+follow.dataset.tlFollow]; if (g) openLiveGame(g); return; }

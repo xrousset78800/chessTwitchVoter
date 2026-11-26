@@ -842,8 +842,11 @@ input[type=range] {
     background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md, 8px);
 }
 .tl-card.is-followed { border-color: var(--accent); }
-.tl-card__board { flex: 0 0 92px; width: 92px; padding: 0; border: none; background: none; cursor: pointer; align-self: flex-start; }
-.tl-card__board:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tl-card__board { flex: 0 0 92px; width: 92px; padding: 0; border: none; background: none; align-self: flex-start; }
+/* Toute la carte ouvre la partie */
+.tl-card[data-tl-follow] { cursor: pointer; transition: border-color 0.12s, background 0.12s; }
+.tl-card[data-tl-follow]:hover, .tl-card[data-tl-follow]:focus-visible { outline: none; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--bg-card)); }
+.tl-card[data-tl-follow]:hover .tl-player__name { color: var(--accent); }
 .tl-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .tl-card__event { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tl-player { display: flex; align-items: center; gap: 5px; font-size: 0.86rem; min-width: 0; }
@@ -1056,7 +1059,21 @@ input[type=range] {
 /* ── Tournois : plus d'en-tête de page, titre à gauche et outils à droite ── */
 .t-sidehead { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; }
 .t-sidehead .live-header__title { margin: 0; font-size: 1.25rem; line-height: 1.2; }
-.t-righttools { display: flex; align-items: center; gap: 6px; min-height: 34px; flex-wrap: nowrap; }
+.t-righttools { display: flex; align-items: center; gap: 6px; min-height: 34px; flex-wrap: wrap; }
+/* Volume des sons de l'échiquier : bouton (couper / remettre), jauge au survol */
+.t-vol { position: relative; flex: none; }
+#page-tournament .t-righttools .t-vol__btn { padding: 4px 8px; width: 30px; display: grid; place-items: center; }
+.t-vol__btn.is-muted { color: var(--text-muted); }
+.t-vol__pop { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); z-index: 60; padding-top: 14px; }
+.t-vol:hover .t-vol__pop, .t-vol:focus-within .t-vol__pop { display: block; }
+.t-vol__range {
+    --v: 60%;
+    display: block; width: 96px; height: 6px; margin: 0; appearance: none; -webkit-appearance: none; border-radius: 2px; cursor: pointer;
+    background: linear-gradient(90deg, var(--accent) var(--v), rgba(255, 255, 255, 0.15) var(--v));
+    box-shadow: 0 0 0 9px var(--bg-card), 0 0 0 10px var(--border-subtle), 0 8px 20px 10px rgba(0, 0, 0, 0.35);
+}
+.t-vol__range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
+.t-vol__range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
 /* Parties, Évaluation et Phantom sur une seule ligne */
 #page-tournament .t-righttools .t-list-toggle { padding: 4px 8px; font-size: 0.72rem; white-space: nowrap; flex: 0 0 auto; }
 #page-tournament .t-righttools .live-phantom-menu__btn { padding: 4px 9px; font-size: 0.74rem; white-space: nowrap; }
@@ -1065,6 +1082,8 @@ input[type=range] {
 /* Régie · bots (votes simulés) : page Tournoi seulement */
 body:not([data-page="tournament"]) .t-bots { display: none; }
 .t-bots { max-width: 300px; display: flex; flex-direction: column; gap: 6px; }
+/* Dans la colonne de droite de la page Tournoi (plus en position fixe) */
+#page-tournament .test-tools.t-bots { position: static; max-width: none; box-shadow: none; }
 .t-bots[hidden] { display: none; }
 .t-bots label { display: inline-flex; align-items: center; gap: 4px; }
 .t-bots .btn--sm { padding: 3px 8px; font-size: 0.74rem; }

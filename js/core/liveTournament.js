@@ -452,13 +452,51 @@ function exitSimT(restore = true) {
 // ========== SONS DE L'ÉCHIQUIER ==========
 // Mêmes fichiers et même volume que la régie 24/24 (h24Volume / h24Muted)
 const SOUNDS_T = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', end: 'mp3/end.wav' };
-function playSoundT(kind) {
-    let vol = 0.6;
+function getVolT() {
+    let volume = 0.6, muted = false;
     try {
-        if (localStorage.getItem('h24Muted') === '1') return;
+        muted = localStorage.getItem('h24Muted') === '1';
         const v = parseFloat(localStorage.getItem('h24Volume'));
-        if (Number.isFinite(v)) vol = Math.max(0, Math.min(1, v));
+        if (Number.isFinite(v)) volume = Math.max(0, Math.min(1, v));
     } catch {}
+    return { volume, muted };
+}
+/** Règle le volume (partagé avec la régie 24/24, qui est prévenue par cgVolume) */
+function setVolT(volume, muted) {
+    try { localStorage.setItem('h24Volume', String(Math.max(0, Math.min(1, volume)))); localStorage.setItem('h24Muted', muted ? '1' : '0'); } catch {}
+    window.dispatchEvent(new Event('cgVolume'));
+}
+function renderVolT() {
+    const { volume, muted } = getVolT();
+    const vol = muted ? 0 : volume;
+    const range = document.getElementById('tVolRangeT');
+    if (range) {
+        range.value = String(Math.round(vol * 100));
+        range.style.setProperty('--v', `${Math.round(vol * 100)}%`);
+        range.title = `${window.tt?.('ui.volume') || 'Volume'} ${Math.round(vol * 100)} %`;
+    }
+    const btn = document.querySelector('[data-tvol-mute]');
+    btn?.classList.toggle('is-muted', !vol);
+    const icon = btn?.querySelector('i');
+    if (icon) icon.className = `fas fa-volume-${!vol ? 'mute' : vol < 0.4 ? 'down' : 'up'}`;
+}
+document.addEventListener('click', e => {
+    if (!e.target.closest?.('[data-tvol-mute]')) return;
+    const { volume, muted } = getVolT();
+    setVolT(muted && !volume ? 0.6 : volume, !muted);
+});
+document.addEventListener('input', e => {
+    if (e.target?.id !== 'tVolRangeT') return;
+    const v = Number(e.target.value);
+    setVolT(v / 100, v === 0);
+});
+window.addEventListener('cgVolume', renderVolT);
+window.addEventListener('languageChanged', renderVolT);
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderVolT); else renderVolT();
+
+function playSoundT(kind) {
+    const { volume, muted } = getVolT();
+    const vol = muted ? 0 : volume;
     if (!vol || !SOUNDS_T[kind]) return;
     try {
         const a = new Audio(SOUNDS_T[kind]);
