@@ -171,11 +171,9 @@
 
     function showResults(results) {
         for (const r of results) {
-            let html;
-            if (r.kind === 'move') html = r.hit
-                ? `<strong>${esc(T('predict.hit', { san: r.played }, 'Bien vu !'))}</strong>${esc(gainText(r.gain))}${r.streak > 1 ? ` · ${esc(T('predict.streak', { n: r.streak }, `série ${r.streak}`))}` : ''}`
-                : esc(T('predict.miss', { played: r.played, guess: r.guess }, 'Raté'));
-            else html = r.hit
+            // Coup : pas de message, la liste des votants l'anime déjà (✓ +XP / ✗)
+            if (r.kind === 'move') { if (r.hit) window.economy?.noteGain(r.gain); continue; }
+            const html = r.hit
                 ? `<strong>${esc(T('predict.winnerHit', { names: (r.names || []).join(' – ') }, 'Pronostic gagnant'))}</strong>${esc(gainText(r.gain))}`
                 : esc(T('predict.winnerMiss', { names: (r.names || []).join(' – ') }, 'Pronostic perdu'));
             window.AppToast?.show(html, r.hit ? 'success' : 'info', 4000);
