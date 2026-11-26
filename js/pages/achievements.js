@@ -41,7 +41,16 @@ function levelBlock(acc) {
     </div>`;
 }
 
-function card(def, done, stats) {
+let rules = null;   // gains par palier (/api/economy/rules), pour afficher la récompense à récupérer
+const rewardOf = (def) => rules?.achievement?.[def.tier] || rules?.achievement?.B || null;
+
+function claimBtn(def) {
+    const r = rewardOf(def);
+    const gain = r ? ` <small>+${fmtNum(r.xp)} XP · +${fmtNum(r.coins)} ♟</small>` : '';
+    return `<button type="button" class="btn btn--sm btn--primary ach-card__claim" data-ach-claim="${esc(def.id)}"><i class="fas fa-gift"></i> ${esc(t('claim'))}${gain}</button>`;
+}
+
+function card(def, done, stats, toClaim) {
     const hidden = def.secret && !done;
     const name = hidden ? t('secretName') : t(`list.${def.id}.name`);
     const desc = hidden ? t('secretDesc') : t(`list.${def.id}.desc`);
@@ -54,7 +63,7 @@ function card(def, done, stats) {
     }
     const reward = def.reward && !hidden
         ? `<div class="ach-card__reward"><i class="fas fa-gift"></i> ${esc(rewardLabel(def.reward))}</div>` : '';
-    return `<li class="ach-card ach-tier--${def.tier}${done ? ' is-done' : ''}${hidden ? ' is-secret' : ''}">
+    return `<li class="ach-card ach-tier--${def.tier}${done ? ' is-done' : ''}${hidden ? ' is-secret' : ''}${toClaim ? ' is-claimable' : ''}">
         <div class="ach-card__icon"><i class="fas ${done || !hidden ? TIER_ICON[def.tier] : 'fa-question'}"></i></div>
         <div class="ach-card__body">
             <div class="ach-card__head">
@@ -64,6 +73,7 @@ function card(def, done, stats) {
             <div class="ach-card__desc">${esc(desc)}</div>
             ${progress}${reward}
             ${done ? `<div class="ach-card__date"><i class="fas fa-check"></i> ${esc(fmtDate(done))}</div>` : ''}
+            ${toClaim ? claimBtn(def) : ''}
         </div>
     </li>`;
 }
@@ -75,6 +85,37 @@ const AchievementsPage = {
         const defs = await window.achievements?.ready;
         if (!defs) { root.innerHTML = `<div class="rec-empty">${esc(t('unavailable'))}</div>`; return; }
         this.render();
+        if (!rules) {
+            fetch('/api/economy/rules').then(r => r.json()).then(d => { rules = d.rules; if (isActive()) this.render(); }).catch(() => {});
+        }
+        if (!root.dataset.claimBound) {
+            root.dataset.claimBound = '1';
+            root.addEventListener('click', e => {
+                const b = e.target.closest('[data-ach-claim], [data-ach-claim-all]');
+                if (b) this.claim(b.dataset.achClaimAll != null ? window.achievements.toClaim() : [b.dataset.achClaim], b);
+            });
+        }
+    },
+
+    /** Récupère les récompenses : XP, pions et objets arrivent sur le compte */
+    async claim(ids, btn) {
+        if (!ids.length || this.claiming) return;
+        this.claiming = true;
+        if (btn) btn.disabled = true;
+        try {
+            const { claimed, gain } = await window.achievements.claim(ids);
+            if (claimed?.length && window.AppToast) {
+                const parts = [`+${fmtNum(gain.xp)} XP`, `+${fmtNum(gain.coins + (gain.daily || 0))} ♟`];
+                if (gain.items?.length) parts.push(gain.items.map(rewardLabel).join(', '));
+                window.AppToast.show(`<b>${esc(t('claimedToast', { n: claimed.length }))}</b> ${esc(parts.join(' · '))}`, 'success', 5000);
+            }
+        } catch (e) {
+            console.warn('🏆 Récompense non récupérée :', e.message);
+            window.AppToast?.show(esc(t('claimError')), 'error', 4000);
+            if (btn) btn.disabled = false;
+        } finally {
+            this.claiming = false;
+        }
     },
 
     render() {
@@ -86,15 +127,18 @@ const AchievementsPage = {
         const stats = acc?.stats || {};
         const total = defs.list.length;
         const doneCount = defs.list.filter(d => unlocked[d.id]).length;
+        const pending = new Set(window.achievements.toClaim());
 
         root.innerHTML = levelBlock(acc) +
-            `<div class="ach-summary">${esc(t('count', { n: doneCount, total }))}</div>` +
+            `<div class="ach-summary">${esc(t('count', { n: doneCount, total }))}`
+            + (pending.size ? ` <button type="button" class="btn btn--sm btn--primary ach-claim-all" data-ach-claim-all><i class="fas fa-gift"></i> ${esc(t('claimAll', { n: pending.size }))}</button>` : '')
+            + `</div>` +
             defs.categories.map(cat => {
                 const items = defs.list.filter(d => d.cat === cat);
                 const n = items.filter(d => unlocked[d.id]).length;
                 return `<section class="ach-cat">
                     <h2 class="ach-cat__title">${esc(t(`cat.${cat}`))} <span>${n} / ${items.length}</span></h2>
-                    <ul class="ach-grid">${items.map(d => card(d, unlocked[d.id], stats)).join('')}</ul>
+                    <ul class="ach-grid">${items.map(d => card(d, unlocked[d.id], stats, pending.has(d.id))).join('')}</ul>
                 </section>`;
             }).join('');
         root.querySelector('[data-ach-login]')?.addEventListener('click', () => window.twitchAuth?.login());
@@ -104,11 +148,22 @@ const AchievementsPage = {
 /** Pastille de la barre du haut : niveau et pions (lien vers la page Succès) */
 function renderNavLevel() {
     const acc = window.economy?.account;
+    // Pastille sur l'icône Succès : récompenses à récupérer
+    const n = window.achievements?.toClaim?.().length || 0;
+    document.querySelectorAll('.nav__icon[data-navigate="/achievements"]').forEach(a => {
+        let dot = a.querySelector('.nav__claim');
+        if (!n) { dot?.remove(); return; }
+        if (!dot) { dot = document.createElement('span'); dot.className = 'nav__claim'; a.appendChild(dot); }
+        if (dot.textContent !== String(n)) dot.textContent = n;
+        a.title = `${tr('nav.achievements')} · ${t('toClaim', { n })}`;
+    });
     document.querySelectorAll('.nav__level').forEach(el => {
         el.hidden = !acc;
         if (!acc) return;
-        el.innerHTML = `<span class="nav__level-lv">${esc(t('levelShort'))} ${acc.level}</span><span class="nav__level-coins">♟ ${fmtNum(acc.coins)}</span>`;
-        el.title = `${t('level')} ${acc.level} · ${fmtNum(acc.coins)} ${t('coins')}`;
+        const html = `<span class="nav__level-lv">${esc(t('levelShort'))} ${acc.level}</span><span class="nav__level-coins">♟ ${fmtNum(acc.coins)}</span>`;
+        if (el._html !== html) { el.innerHTML = html; el._html = html; }
+        const title = `${t('level')} ${acc.level} · ${fmtNum(acc.coins)} ${t('coins')}`;
+        if (el.title !== title) el.title = title;
     });
 }
 
@@ -120,5 +175,6 @@ for (const ev of ['economyChanged', 'achievementsChanged', 'languageChanged']) {
     });
 }
 renderNavLevel();
+window.achievements?.ready?.then(() => renderNavLevel()); // la pastille a besoin du registre
 
 export default AchievementsPage;

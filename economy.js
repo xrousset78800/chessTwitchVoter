@@ -148,7 +148,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
 
     const account = (login) => store.data[login] ||= {
         login, xp: 0, coins: 0, earned: 0, spent: 0,
-        owned: [], achievements: {},
+        owned: [], achievements: {}, claimed: {},
         day: null, dayCoins: 0, streak: 0, lastDay: null,
         keys: [], log: [], stats: {},
     };
@@ -251,16 +251,25 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         }
     }
 
-    /** Succès débloqué (palier B/A/O/P/S et récompense lus dans le registre) */
+    /** Succès débloqué : la récompense attend d'être récupérée sur la page Succès (claimAchievement) */
     function onAchievement(login, id) {
-        const def = ACH_BY_ID.get(id);
-        if (!def) return null;
-        const { tier, reward } = def;
+        if (!ACH_BY_ID.has(id)) return false;
         const a = account(login);
-        if (a.achievements[id]) return null;
+        if (a.achievements[id]) return false;
         a.achievements[id] = Date.now();
-        if (reward && !a.owned.includes(reward)) a.owned.push(reward);
-        return grant(login, 'achievement', { ...(RULES.achievement[tier] || RULES.achievement.B), key: `ach:${id}` });
+        store.save();
+        return true;
+    }
+
+    /** Récompense d'un succès débloqué (palier B/A/O/P/S et objet lus dans le registre), une seule fois */
+    function claimAchievement(login, id) {
+        const def = ACH_BY_ID.get(id);
+        const a = account(login);
+        const claimed = a.claimed ||= {};
+        if (!def || !a.achievements[id] || claimed[id]) return null;
+        claimed[id] = Date.now();
+        if (def.reward && !a.owned.includes(def.reward)) a.owned.push(def.reward);
+        return grant(login, 'achievement', { ...(RULES.achievement[def.tier] || RULES.achievement.B), key: `ach:${id}` }) || { xp: 0, coins: 0 };
     }
 
     function publicAccount(login) {
@@ -277,6 +286,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
             dailyCoinCap: RULES.dailyCoinCap,
             owned: a?.owned || [],
             achievements: a?.achievements || {},
+            claimed: a?.claimed || {},
             stats: a?.stats || {},
             log: (a?.log || []).slice(-20).reverse(),
         };
@@ -306,6 +316,23 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         res.json({ unlocked, account: publicAccount(login) });
     });
 
+    // Récupérer la récompense de succès débloqués (bouton sur la page Succès)
+    app.post('/api/achievements/claim', requireTwitch, (req, res) => {
+        const ids = Array.isArray(req.body?.ids) ? req.body.ids.slice(0, 200).map(String) : [];
+        const login = req.twitch.login;
+        const claimed = [], items = [];
+        let xp = 0, coins = 0, daily = 0, levelUp = false;
+        for (const id of ids) {
+            const g = claimAchievement(login, id);
+            if (!g) continue;
+            claimed.push(id);
+            if (ACH_BY_ID.get(id).reward) items.push(ACH_BY_ID.get(id).reward);
+            if (!g.duplicate) { xp += g.xp || 0; coins += g.coins || 0; daily += g.daily || 0; levelUp ||= !!g.levelUp; }
+        }
+        if (claimed.length) store.save();
+        res.json({ claimed, gain: { xp, coins, daily, levelUp, items }, account: publicAccount(login) });
+    });
+
     app.post('/api/economy/buy', requireTwitch, (req, res) => {
         const id = String(req.body?.item || '');
         const item = Object.hasOwn(CATALOG, id) ? CATALOG[id] : null;
@@ -323,7 +350,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         res.json(publicAccount(a.login));
     });
 
-    return { grant, checkAchievements, onTurns, onRushRun, onMultiResult, onAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store };
+    return { grant, checkAchievements, onTurns, onRushRun, onMultiResult, onAchievement, claimAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store };
 };
 module.exports.RULES = RULES;
 module.exports.levelInfo = levelInfo;

@@ -9,7 +9,9 @@
     "browse": "Bekijken",
     "game": "Lopende partij",
     "records": "Records",
-    "h24": "24/24"
+    "h24": "24/24",
+    "achievements": "Prestaties",
+    "shop": "Winkel"
   },
   "app": {
     "tagline": "Verbind je Phantom-schaakbord en je Twitch-account voor interactieve partijen met je community"
@@ -366,7 +368,15 @@
     "phantomHint": "Verbind de Phantom om de snelheid en synchronisatie in te stellen."
   },
   "newTabs": {
-    "free": "Vrij spel"
+    "free": "Vrij spel",
+    "title": "Nieuw spel",
+    "subtitle": "Kies hoe je chat gaat spelen, stel een paar dingen in en ga.",
+    "tag": {
+      "rush": "Tegen de klok",
+      "mono": "Inschrijving join",
+      "multi": "2 kanalen",
+      "free": "Op maat"
+    }
   },
   "browsePage": {
     "desc": "Lopende partijen. Om te spelen ga je naar Nieuw; de ranglijsten staan bij Records.",
@@ -663,7 +673,21 @@
     "fire": "Vuur",
     "ocean": "Oceaan",
     "muted": "Sober",
-    "access": "Kleurenblind"
+    "access": "Kleurenblind",
+    "sunset": "Zonsondergang",
+    "woods": "Bosgrond",
+    "candy": "Snoep",
+    "mono": "Zwart-wit",
+    "rainbow": "Regenboog",
+    "gold": "Goud",
+    "autumn": "Herfst",
+    "glacier": "Gletsjer",
+    "retro": "Retro",
+    "royal": "Koninklijk",
+    "synth": "Synthwave",
+    "pastel": "Pastel",
+    "earth": "Aarde",
+    "neon": "Neon"
   },
   "timerRing": {
     "seconds": "seconden",
@@ -1025,7 +1049,8 @@
       "endedAt": "Afgelopen om {time}",
       "inProgress": "Bezig",
       "roomEnded": "afgelopen",
-      "roomRound": "ronde {r} op {date}"
+      "roomRound": "ronde {r} op {date}",
+      "title": "Toernooien live"
     },
     "review": {
       "first": "Begin (Home)",
@@ -1055,7 +1080,61 @@
       "purple": "Lavendel",
       "rose": "Roze",
       "night": "Nachtblauw",
-      "black": "Zwart"
+      "black": "Zwart",
+      "aurora": "Aurora",
+      "mint": "Munt",
+      "sand": "Zand",
+      "forest": "Bos",
+      "petrol": "Petrol",
+      "ice": "IJs",
+      "coral": "Koraal",
+      "olive": "Olijf",
+      "coffee": "Koffie",
+      "bubblegum": "Kauwgom",
+      "cherry": "Kers",
+      "midnight": "Middernacht",
+      "gilded": "Verguld",
+      "lagoon": "Lagune",
+      "peach": "Perzik",
+      "matcha": "Matcha",
+      "steel": "Staal",
+      "wine": "Bordeaux",
+      "abyss": "Afgrond"
+    },
+    "emerald": "Smaragd",
+    "obsidian": "Obsidiaan",
+    "toxic": "Zuur",
+    "ice": "IJsvlakte",
+    "ruby": "Robijn",
+    "royal": "Koninklijk",
+    "synth": "Synthwave",
+    "themeTitle": "Thema van de site",
+    "theme": {
+      "dark": "Nacht",
+      "slate": "Leisteen",
+      "blue": "Nachtblauw",
+      "graphite": "Grafiet",
+      "mocha": "Mokka",
+      "forest": "Spar",
+      "petrol": "Petrol",
+      "plum": "Pruim",
+      "wine": "Bordeaux",
+      "ink": "Inkt"
+    },
+    "matTitle": "Textuur",
+    "mat": {
+      "none": "Geen",
+      "paper": "Papier",
+      "tile": "Tegels",
+      "felt": "Vilt",
+      "walnut": "Walnoot",
+      "lava": "Lava",
+      "mosaic": "Mozaïek",
+      "frost": "Rijp",
+      "carbon": "Carbon",
+      "marble": "Marmer",
+      "linen": "Linnen",
+      "stone": "Steen"
     }
   },
   "seo": {
@@ -1069,7 +1148,471 @@
       "browse": "Schaakpartijen die nu door Twitch-chats worden gespeeld: kijk live mee of doe mee aan een partij.",
       "records": "Puzzle Rush-records, duels tussen kanalen en de actiefste kijkers van de Twitch-chats die schaken.",
       "live": "Volg een Chess.com-partij live en speel die zet voor zet na op je Phantom-bord.",
-      "tournament": "Volg Chess.com-schaaktoernooien live, partij voor partij, en speel ze na op je Phantom-bord."
+      "tournament": "Volg Chess.com-schaaktoernooien live, partij voor partij, en speel ze na op je Phantom-bord.",
+      "h24": "Het 24/24-station: een eindeloze schaakpartij gespeeld door alle Twitch-chats die langskomen. Typ je zet en bekijk de stem live."
     }
+  },
+  "home": {
+    "tour": {
+      "badge": "Toernooien live",
+      "title": "Voorspel de grote toernooien",
+      "text": "De lopende partijen van chess.com-toernooien, live op de site. Kies een wedstrijd, volg hem zet voor zet en raad wat de spelers gaan spelen.",
+      "cta": "Bekijk de live wedstrijden",
+      "p1": "Raad de volgende zet",
+      "p1d": "Speel de zet op het bord voor de speler. Geraden: XP en pionnen, met een bonus na elke 5 goede antwoorden op rij.",
+      "p2": "Kies de winnaar",
+      "p2d": "Wit, remise of Zwart, op elk moment. De quotering volgt de evaluatie van de partij: inzetten op de underdog levert meer op.",
+      "p3": "Alle wedstrijden op één plek",
+      "p3d": "De lopende partijen met de stemmen van de community, en zoeken op spelersnaam."
+    },
+    "kicker": "Schaken gespeeld door de Twitch-chat",
+    "titleA": "Je chat wordt",
+    "titleB": "één enkele speler",
+    "lead": "Elke kijker typt zijn zet in de chat, de zet met de meeste stemmen wordt gespeeld. Problemen, Puzzle Rush, partijen tegen Stockfish of tegen een ander kanaal: jij start, je chat beslist.",
+    "cta": "Start een spel",
+    "how": "Hoe het werkt",
+    "note": "Gratis. Je kunt alleen proberen, zonder account, en Twitch koppelen wanneer je wilt.",
+    "demo": {
+      "title": "Stem van de chat",
+      "votes": "{n} stemmen"
+    },
+    "tuto": {
+      "kicker": "Tutorial · 4 stappen",
+      "title": "Hoe het werkt",
+      "s1": {
+        "title": "Koppel je kanaal",
+        "text": "Eén klik op « Twitch koppelen ». De site leest je chat, schrijft niets en vraagt geen wachtwoord.",
+        "chan": "jouw kanaal"
+      },
+      "s2": {
+        "title": "Kies een modus",
+        "text": "Puzzle Rush voor een sprint, Vrij spel tegen Stockfish of jezelf, Multi tegen een ander kanaal."
+      },
+      "s3": {
+        "title": "Je chat stemt",
+        "text": "De kijkers typen de zet in de chat (e4, Pf3, O-O…). Als de timer afloopt, wordt de zet met de meeste stemmen gespeeld."
+      },
+      "s4": {
+        "title": "Win en personaliseer",
+        "text": "Elke gespeelde zet levert XP en pionnen op. Ontgrendel prestaties en kleed daarna je bord aan in de winkel.",
+        "level": "Niv. 3"
+      }
+    },
+    "who": {
+      "streamTitle": "Stream je?",
+      "streamText": "Deel het tabblad van het spel in OBS. Het rad, de balk en het podium van de stemmen worden aan je kijkers getoond.",
+      "watchTitle": "Kijk je?",
+      "watchText": "Niets te installeren: typ je zet in de chat van het kanaal. Om XP en prestaties op jouw naam te krijgen, log hier in met Twitch."
+    },
+    "modes": {
+      "title": "Vier manieren om te spelen",
+      "play": "Spelen →",
+      "multi": "Jouw chat tegen die van een andere streamer, elk stemt over de zetten van zijn eigen kleur."
+    },
+    "live": {
+      "badge": "Live",
+      "title": "Het 24/24-kanaal",
+      "text": "Een partij die nooit stopt, gespeeld door iedereen die langskomt. De beste plek om de stem in actie te zien voordat je je eigen spel start.",
+      "watch": "Kijken",
+      "browse": "Partijen doorbladeren"
+    },
+    "progress": {
+      "title": "Jouw voortgang",
+      "ach": "XP, niveaus en pionnen om te ontgrendelen",
+      "records": "De beste chats in Puzzle Rush",
+      "shop": "Stukken, borden, texturen, kleuren van de trekking"
+    },
+    "final": {
+      "title": "Klaar om je chat te laten spelen?",
+      "text": "Een eerste spel start in minder dan een minuut.",
+      "try": "Probeer zonder account"
+    }
+  },
+  "phantomOwner": {
+    "title": "Phantom al in gebruik",
+    "text": "De Phantom volgt momenteel « {cur} ». Overschakelen naar « {next} »? Het fysieke bord wordt volledig op de nieuwe stelling gezet.",
+    "hint": "Als je hem laat staan, stuurt deze pagina niets naar de Phantom zolang je niet op « Synchroniseren » klikt.",
+    "switch": "Phantom overschakelen",
+    "keep": "Laten op « {cur} »",
+    "followWarn": "Let op: de Phantom volgt momenteel « {cur} ». Als je doorgaat, wordt hij volledig op deze partij gezet.",
+    "modeGame": "Twitch-spel",
+    "modeH24": "24/24 (regie)"
+  },
+  "achievements": {
+    "desc": "Ontgrendel prestaties door met je chat te spelen: elk levert XP en pionnen op, sommige geven stukken of borden.",
+    "loading": "Laden…",
+    "loginHint": "Koppel je Twitch-account om je prestaties, niveau en pionnen te bewaren. Prestaties die je zonder inloggen behaalde, worden aan je account toegevoegd.",
+    "level": "Niveau",
+    "levelShort": "Niv.",
+    "levelMax": "Maximaal niveau bereikt",
+    "xpToNext": "{xp} / {next} XP tot het volgende niveau",
+    "coins": "pionnen",
+    "streak": "dagen op rij",
+    "count": "{n} prestaties ontgrendeld van {total}",
+    "unlockedToast": "Prestatie ontgrendeld:",
+    "claim": "Ophalen",
+    "claimAll": "Alles ophalen ({n})",
+    "toClaim": "{n} beloning(en) op te halen",
+    "claimToast": "Haal je beloning op via de pagina Prestaties",
+    "claimedToast": "Beloning opgehaald ({n}):",
+    "claimError": "De beloning kon niet worden opgehaald, probeer het opnieuw",
+    "secretName": "Geheime prestatie",
+    "secretDesc": "Ontdek het al spelend…",
+    "unavailable": "Prestaties momenteel niet beschikbaar",
+    "cat": {
+      "start": "Eerste stappen",
+      "rush": "Puzzle Rush",
+      "votes": "Stemmen van de chat",
+      "predict": "Voorspellingen",
+      "moves": "Opmerkelijke zetten"
+    },
+    "tier": {
+      "B": "Brons",
+      "A": "Zilver",
+      "O": "Goud",
+      "P": "Platina",
+      "S": "Geheim"
+    },
+    "rewards": {
+      "title-touche-a-tout": "Titel « Duizendpoot »"
+    },
+    "list": {
+      "bienvenue": {
+        "name": "Welkom",
+        "desc": "Voor het eerst inloggen met Twitch"
+      },
+      "premier-coup": {
+        "name": "Eerste zet",
+        "desc": "Een eerste door de chat gestemde zet laten spelen"
+      },
+      "premier-run": {
+        "name": "Eerste run",
+        "desc": "Een eerste Puzzle Rush starten"
+      },
+      "premiere-inscription": {
+        "name": "Eerste inschrijving",
+        "desc": "De inschrijvingen van een Mono-spel openen"
+      },
+      "main-tendue": {
+        "name": "Uitgestoken hand",
+        "desc": "Een Multi-spel tegen een ander kanaal aanmaken"
+      },
+      "face-a-la-machine": {
+        "name": "Oog in oog met de machine",
+        "desc": "Een spel tegen Stockfish starten"
+      },
+      "bac-a-sable": {
+        "name": "Zandbak",
+        "desc": "Een Vrij spel openen"
+      },
+      "curieux": {
+        "name": "Nieuwsgierig",
+        "desc": "Een partij bekijken via de pagina Bladeren"
+      },
+      "dans-les-livres": {
+        "name": "In de boeken",
+        "desc": "De pagina Records bekijken"
+      },
+      "tour-du-proprietaire": {
+        "name": "Rondleiding van de eigenaar",
+        "desc": "Minstens één keer Puzzle Rush, Mono, Multi, Vrij spel en een spel tegen Stockfish starten"
+      },
+      "polyglotte": {
+        "name": "Polyglot",
+        "desc": "De interface in 3 verschillende talen gebruiken"
+      },
+      "relooking": {
+        "name": "Make-over",
+        "desc": "Van stukkenset of bordkleur veranderen"
+      },
+      "lien-partage": {
+        "name": "Gedeelde link",
+        "desc": "De inschrijflink van een spel kopiëren"
+      },
+      "premier-sang": {
+        "name": "Eerste bloed",
+        "desc": "Een eerste puzzel oplossen in Puzzle Rush"
+      },
+      "echauffement": {
+        "name": "Warming-up",
+        "desc": "Een score van 5 halen in één run"
+      },
+      "en-rythme": {
+        "name": "In het ritme",
+        "desc": "Een score van 10 halen in één run"
+      },
+      "machine-a-puzzles": {
+        "name": "Puzzelmachine",
+        "desc": "Een score van 20 halen in één run"
+      },
+      "cerveau-collectif": {
+        "name": "Collectief brein",
+        "desc": "Een score van 30 halen in één run"
+      },
+      "ruche-infaillible": {
+        "name": "Onfeilbare bijenkorf",
+        "desc": "Een score van 40 halen in één run"
+      },
+      "assidu-du-rush": {
+        "name": "Rush-trouwe",
+        "desc": "10 runs gespeeld"
+      },
+      "accro-du-rush": {
+        "name": "Rush-verslaafde",
+        "desc": "100 runs gespeeld"
+      },
+      "mille-puzzles": {
+        "name": "Duizend puzzels",
+        "desc": "In totaal 1 000 puzzels opgelost"
+      },
+      "premiere-vague": {
+        "name": "Eerste golf",
+        "desc": "In totaal 100 stemmen ontvangen"
+      },
+      "maree-montante": {
+        "name": "Opkomend tij",
+        "desc": "In totaal 1 000 stemmen ontvangen"
+      },
+      "raz-de-maree": {
+        "name": "Vloedgolf",
+        "desc": "In totaal 10 000 stemmen ontvangen"
+      },
+      "democratie-totale": {
+        "name": "Totale democratie",
+        "desc": "In totaal 100 000 stemmen ontvangen"
+      },
+      "salle-comble": {
+        "name": "Uitverkocht",
+        "desc": "Een beurt met 20 stemmers"
+      },
+      "stade": {
+        "name": "Stadion",
+        "desc": "Een beurt met 100 stemmers"
+      },
+      "concert": {
+        "name": "Concert",
+        "desc": "Een beurt met 500 stemmers"
+      },
+      "bon-oeil": {
+        "name": "Scherp oog",
+        "desc": "Een zet van een toernooipartij raden"
+      },
+      "lecteur-de-pensees": {
+        "name": "Gedachtenlezer",
+        "desc": "25 toernooizetten raden"
+      },
+      "oracle": {
+        "name": "Orakel",
+        "desc": "100 toernooizetten raden"
+      },
+      "dans-sa-tete": {
+        "name": "In zijn hoofd",
+        "desc": "5 zetten op rij raden"
+      },
+      "telepathe": {
+        "name": "Telepaat",
+        "desc": "10 zetten op rij raden"
+      },
+      "pronostiqueur": {
+        "name": "Voorspeller",
+        "desc": "De winnaar van een toernooipartij vinden"
+      },
+      "bookmaker": {
+        "name": "Bookmaker",
+        "desc": "De winnaar van 10 toernooipartijen vinden"
+      },
+      "petit-roque": {
+        "name": "Korte rokade",
+        "desc": "Rokeren aan koningszijde"
+      },
+      "grand-roque": {
+        "name": "Lange rokade",
+        "desc": "Rokeren aan damezijde"
+      },
+      "en-passant": {
+        "name": "En passant",
+        "desc": "En passant slaan"
+      },
+      "promotion": {
+        "name": "Promotie",
+        "desc": "Een pion promoveren"
+      },
+      "sous-promotion": {
+        "name": "Onderpromotie",
+        "desc": "Een pion promoveren tot paard"
+      },
+      "vraiment": {
+        "name": "Echt waar?",
+        "desc": "Een pion promoveren tot loper of toren"
+      },
+      "deux-dames": {
+        "name": "Twee dames",
+        "desc": "Twee dames op het bord hebben"
+      },
+      "echec-double": {
+        "name": "Dubbelschaak",
+        "desc": "Dubbelschaak geven"
+      },
+      "echec-a-la-decouverte": {
+        "name": "Ontdekt schaak",
+        "desc": "Ontdekt schaak geven"
+      },
+      "mat-du-couloir": {
+        "name": "Gangmat",
+        "desc": "Mat geven op de laatste rij met een toren of een dame"
+      },
+      "mat-du-berger": {
+        "name": "Herdersmat",
+        "desc": "Mat geven in 4 zetten of minder"
+      },
+      "mat-du-lion": {
+        "name": "Leeuwenmat",
+        "desc": "Mat geven in minder dan 10 zetten"
+      },
+      "mat-de-pion": {
+        "name": "Pionmat",
+        "desc": "Mat geven met een pion"
+      },
+      "mat-de-roi": {
+        "name": "Koningsmat",
+        "desc": "Mat geven door de koning te verplaatsen (ontdekt mat)"
+      }
+    }
+  },
+  "shop": {
+    "desc": "Geef je pionnen uit om je bord en de trekking van de stemmen aan te kleden. Pionnen verdien je door met je chat te spelen en prestaties te ontgrendelen.",
+    "loginHint": "Koppel je Twitch-account om pionnen te verdienen en voorwerpen te kopen.",
+    "balance": "pionnen beschikbaar",
+    "today": "Vandaag: {n} / {cap} pionnen uit zetten en puzzels",
+    "earnTitle": "Hoe verdien je pionnen",
+    "earn": {
+      "turn": "{n} pion per zet of puzzel gespeeld met minstens één stemmer (maximaal {cap} per dag)",
+      "daily": "Dagbonus: {n} pionnen, +{bonus} per dag reeks (tot {max})",
+      "rush": "Puzzle Rush: {n} pionnen per punt van de run, {rec} extra voor een persoonlijk record",
+      "multi": "Multi: {win} pionnen voor een winst, {draw} voor een remise, {loss} voor een verlies",
+      "ach": "Prestaties: {b} (brons), {a} (zilver), {o} (goud), {p} (platina)"
+    },
+    "cat": {
+      "pieces": "Stukkensets",
+      "boards": "Bordkleuren",
+      "mats": "Bordtexturen",
+      "palettes": "Kleuren van de trekking",
+      "themes": "Thema's van de site"
+    },
+    "catDesc": {
+      "pieces": "Op alle borden en alle kleine stukken van de site.",
+      "boards": "De twee kleuren van de velden.",
+      "mats": "Een textuur over je veldkleuren heen.",
+      "palettes": "Het rad, de balk en het podium van de stemmen, ook zichtbaar voor je kijkers.",
+      "themes": "De achtergrond en de kaarten van alle pagina's van de site, alleen voor jou."
+    },
+    "buy": "Kopen",
+    "confirm": "Bevestigen ({n} ♟)?",
+    "use": "Gebruiken",
+    "equipped": "Uitgerust",
+    "owned": "In bezit",
+    "free": "Gratis",
+    "loginToBuy": "Inloggen om te kopen · ♟ {n}",
+    "missing": "Je mist {n} ♟",
+    "exclusive": "Prestatie « {name} »",
+    "exclusiveShort": "Alleen via prestaties",
+    "exclusiveHint": "Niet te koop: ontgrendel de prestatie « {name} »",
+    "bought": "{name} gekocht en uitgerust!",
+    "errPoor": "Niet genoeg pionnen.",
+    "errBuy": "De aankoop is niet gelukt, probeer opnieuw.",
+    "unavailable": "Winkel momenteel niet beschikbaar",
+    "tab": {
+      "pieces": "Stukken",
+      "boards": "Borden",
+      "mats": "Texturen",
+      "palettes": "Trekking",
+      "themes": "Thema's"
+    },
+    "filter": {
+      "all": "Alles",
+      "buy": "Te koop",
+      "owned": "In bezit"
+    },
+    "fit": {
+      "title": "Paskamer",
+      "hint": "Klik op een voorwerp om het hier te passen voordat je het koopt.",
+      "reset": "Terug naar mijn uitrusting"
+    },
+    "empty": "Niets hier met dit filter."
+  },
+  "tlive": {
+    "title": "Live wedstrijden",
+    "hint": "Klik op een wedstrijd om hem te volgen en zetten te raden, of stem hier direct op de winnaar.",
+    "count": "{n} partijen",
+    "empty": "Er is op dit moment geen partij bezig.",
+    "follow": "Volgen",
+    "following": "Gevolgd",
+    "players": "Live partijen",
+    "noVotes": "Geen stemmen",
+    "filter": "Filter op speler of toernooi…",
+    "compact": "Compacte weergave",
+    "cards": "Weergave met borden",
+    "noMatch": "Geen wedstrijd gevonden."
+  },
+  "voters": {
+    "title": "Stemmers",
+    "none": "Nog geen voorspelling voor deze zet.",
+    "chat": "Twitch-chat",
+    "played": "Gespeelde zet",
+    "hits": "{n}/{total} goed geraden",
+    "noHit": "Niemand zat goed",
+    "bot": "Testbot",
+    "botsTitle": "Regie: bots stemmen bij elke zet (alleen op jouw scherm) om de lijst te simuleren",
+    "botsPanel": "Regie · bots",
+    "botsOn": "Bots actief",
+    "botsOff": "Bots gestopt",
+    "botsWave": "Golf nu",
+    "botsClear": "Wissen",
+    "botsCount": "Bots",
+    "botsPace": "Tempo",
+    "paceFast": "snel",
+    "paceNormal": "normaal",
+    "paceSlow": "traag",
+    "botsFollow": "Meelopen",
+    "botsNoGame": "Volg een livepartij om de bots te laten stemmen.",
+    "botsInfo": "{n} botstemmen op deze zet · alleen op jouw scherm"
+  },
+  "predict": {
+    "chatTitle": "Stem van de chat",
+    "chatHint": "De chat stelt de volgende zet voor door hem te typen (Pf3, e4, O-O…). Resultaat zodra de zet is gespeeld.",
+    "chatVotes": "{n} stem(men) van de chat",
+    "chatNone": "Nog geen stem van de chat voor deze zet.",
+    "chatPlayed": "Gespeelde zet: {san}",
+    "chatScore": "{hits} van {total} hadden het goed ({pct} %)",
+    "chatWinners": "Goed geraden: {names}",
+    "chatToast": "Chat: {hits}/{total} raadden {san}",
+    "title": "Voorspellingen",
+    "moveTitle": "Volgende zet",
+    "winnerTitle": "Winnaar",
+    "moveHint": "Sleep een stuk van de kleur die aan zet is op het bord, of klik op een zet in de lijst. Je mag van gedachten veranderen zolang de zet niet is gespeeld.",
+    "yourGuess": "Jouw voorspelling: {san}",
+    "noGuess": "Nog geen voorspelling voor deze zet.",
+    "white": "Wit",
+    "draw": "Remise",
+    "black": "Zwart",
+    "votes": "{n} stem(men)",
+    "oddsHint": "Quoteringen op basis van de Stockfish-evaluatie van de stelling: de minst waarschijnlijke uitslag levert het meest op. Jouw quotering ligt vast op het moment van stemmen.",
+    "oddsNow": "quotering {odds}",
+    "yourOdds": "Jouw quotering: {odds}.",
+    "voted": "Stem geregistreerd: {pick}",
+    "stats": "{hits}/{total} zetten geraden · reeks {streak} · winnaars {whits}/{wtotal}",
+    "loginText": "Raad de volgende zet en de winnaar om XP en pionnen te verdienen.",
+    "loginBtn": "Inloggen met Twitch",
+    "login": "Log in met Twitch om te voorspellen",
+    "hit": "Goed gezien! {san} is gespeeld",
+    "miss": "Mis: {played} gespeeld, jij zei {guess}",
+    "streak": "reeks van {n}",
+    "winnerHit": "Winnende voorspelling: {names}",
+    "winnerMiss": "Verloren voorspelling: {names}",
+    "gain": "+{xp} XP · +{coins} pionnen",
+    "moved": "De stelling is veranderd, doe je voorspelling opnieuw",
+    "ended": "Partij afgelopen",
+    "rulesTitle": "Puntentelling",
+    "rules": "Zet geraden: +{xp} XP en {coins} pionnen. Bij elke {every} goede antwoorden op rij: +{sxp} XP en {scoins} pionnen extra. Juiste winnaar: +{wxp} XP en {wcoins} pionnen (remise: +{dxp} XP en {dcoins} pionnen), vermenigvuldigd met de quotering op het moment van stemmen (van {omin} tot {omax}, op basis van de Stockfish-evaluatie). Pionnen tellen mee voor het dagmaximum."
   }
 }

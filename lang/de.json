@@ -9,7 +9,9 @@
     "browse": "Entdecken",
     "game": "Laufende Partie",
     "records": "Rekorde",
-    "h24": "24/24"
+    "h24": "24/24",
+    "achievements": "Erfolge",
+    "shop": "Shop"
   },
   "app": {
     "tagline": "Verbinde dein Phantom-Brett und deinen Twitch-Account für interaktive Partien mit deiner Community"
@@ -366,7 +368,15 @@
     "phantomHint": "Verbinde das Phantom, um Tempo und Sync einzustellen."
   },
   "newTabs": {
-    "free": "Freies Spiel"
+    "free": "Freies Spiel",
+    "title": "Neue Partie",
+    "subtitle": "Wähl, wie dein Chat spielt, stell zwei, drei Dinge ein, los geht's.",
+    "tag": {
+      "rush": "Auf Zeit",
+      "mono": "Anmeldung per join",
+      "multi": "2 Kanäle",
+      "free": "Nach Maß"
+    }
   },
   "browsePage": {
     "desc": "Laufende Partien. Zum Spielen geh auf Neu; die Ranglisten findest du unter Rekorde.",
@@ -663,7 +673,21 @@
     "fire": "Feuer",
     "ocean": "Ozean",
     "muted": "Dezent",
-    "access": "Farbenblind"
+    "access": "Farbenblind",
+    "sunset": "Sonnenuntergang",
+    "woods": "Unterholz",
+    "candy": "Bonbon",
+    "mono": "Schwarz-Weiß",
+    "rainbow": "Regenbogen",
+    "gold": "Gold",
+    "autumn": "Herbst",
+    "glacier": "Gletscher",
+    "retro": "Retro",
+    "royal": "Royal",
+    "synth": "Synthwave",
+    "pastel": "Pastell",
+    "earth": "Erde",
+    "neon": "Neon"
   },
   "timerRing": {
     "seconds": "Sekunden",
@@ -1025,7 +1049,8 @@
       "endedAt": "Beendet um {time}",
       "inProgress": "Läuft",
       "roomEnded": "beendet",
-      "roomRound": "Runde {r} am {date}"
+      "roomRound": "Runde {r} am {date}",
+      "title": "Live-Turniere"
     },
     "review": {
       "first": "Anfang (Pos1)",
@@ -1055,7 +1080,61 @@
       "purple": "Lavendel",
       "rose": "Rosa",
       "night": "Nachtblau",
-      "black": "Schwarz"
+      "black": "Schwarz",
+      "aurora": "Aurora",
+      "mint": "Minze",
+      "sand": "Sand",
+      "forest": "Wald",
+      "petrol": "Petrol",
+      "ice": "Eis",
+      "coral": "Koralle",
+      "olive": "Olive",
+      "coffee": "Kaffee",
+      "bubblegum": "Kaugummi",
+      "cherry": "Kirsche",
+      "midnight": "Mitternacht",
+      "gilded": "Vergoldet",
+      "lagoon": "Lagune",
+      "peach": "Pfirsich",
+      "matcha": "Matcha",
+      "steel": "Stahl",
+      "wine": "Bordeaux",
+      "abyss": "Abgrund"
+    },
+    "emerald": "Smaragd",
+    "obsidian": "Obsidian",
+    "toxic": "Säure",
+    "ice": "Packeis",
+    "ruby": "Rubin",
+    "royal": "Royal",
+    "synth": "Synthwave",
+    "themeTitle": "Seiten-Theme",
+    "theme": {
+      "dark": "Nacht",
+      "slate": "Schiefer",
+      "blue": "Nachtblau",
+      "graphite": "Graphit",
+      "mocha": "Mokka",
+      "forest": "Tanne",
+      "petrol": "Petrol",
+      "plum": "Pflaume",
+      "wine": "Bordeaux",
+      "ink": "Tinte"
+    },
+    "matTitle": "Material",
+    "mat": {
+      "none": "Keines",
+      "paper": "Papier",
+      "tile": "Fliesen",
+      "felt": "Filz",
+      "walnut": "Nussbaum",
+      "lava": "Lava",
+      "mosaic": "Mosaik",
+      "frost": "Raureif",
+      "carbon": "Carbon",
+      "marble": "Marmor",
+      "linen": "Leinen",
+      "stone": "Stein"
     }
   },
   "seo": {
@@ -1069,7 +1148,471 @@
       "browse": "Schachpartien, die gerade von Twitch-Chats gespielt werden: live zuschauen oder einer Partie beitreten.",
       "records": "Puzzle-Rush-Rekorde, Kanal-Duelle und die aktivsten Zuschauer der Twitch-Chats, die Schach spielen.",
       "live": "Verfolge eine Chess.com-Partie live und spiele sie Zug um Zug auf deinem Phantom-Brett nach.",
-      "tournament": "Verfolge Chess.com-Schachturniere live, Partie für Partie, und spiele sie auf deinem Phantom-Brett nach."
+      "tournament": "Verfolge Chess.com-Schachturniere live, Partie für Partie, und spiele sie auf deinem Phantom-Brett nach.",
+      "h24": "Die 24/7-Station: eine endlose Schachpartie, gespielt von allen Twitch-Chats, die vorbeikommen. Tipp deinen Zug und sieh die Abstimmung live."
     }
+  },
+  "home": {
+    "tour": {
+      "badge": "Live-Turniere",
+      "title": "Tippe auf die großen Turniere",
+      "text": "Die laufenden Partien der Chess.com-Turniere, live auf der Seite. Such dir ein Match aus, verfolge es Zug für Zug und errate, was die Spieler ziehen.",
+      "cta": "Live-Matches ansehen",
+      "p1": "Errate den nächsten Zug",
+      "p1d": "Spiel den Zug auf dem Brett, bevor der Spieler es tut. Richtig: XP und Münzen, mit einem Bonus alle 5 richtigen Tipps in Folge.",
+      "p2": "Wähl den Sieger",
+      "p2d": "Weiß, Remis oder Schwarz, jederzeit. Die Quote folgt der Bewertung der Partie: Auf den Außenseiter zu setzen bringt mehr.",
+      "p3": "Alle Matches an einem Ort",
+      "p3d": "Die laufenden Partien mit den Stimmen der Community und die Suche nach Spielernamen."
+    },
+    "kicker": "Schach, gespielt vom Twitch-Chat",
+    "titleA": "Dein Chat wird",
+    "titleB": "zu einem Spieler",
+    "lead": "Jeder Zuschauer tippt seinen Zug in den Chat, der meistgewählte wird gespielt. Aufgaben, Puzzle Rush, Partien gegen Stockfish oder gegen einen anderen Kanal: Du startest, dein Chat entscheidet.",
+    "cta": "Partie starten",
+    "how": "So funktioniert's",
+    "note": "Kostenlos. Du kannst allein und ohne Konto testen und Twitch verbinden, wann du willst.",
+    "demo": {
+      "title": "Chat-Abstimmung",
+      "votes": "{n} Stimmen"
+    },
+    "tuto": {
+      "kicker": "Anleitung · 4 Schritte",
+      "title": "So funktioniert's",
+      "s1": {
+        "title": "Verbinde deinen Kanal",
+        "text": "Ein Klick auf „Twitch verbinden“. Die Seite liest deinen Chat, schreibt nichts und fragt nach keinem Passwort.",
+        "chan": "dein Kanal"
+      },
+      "s2": {
+        "title": "Wähl einen Modus",
+        "text": "Puzzle Rush für einen Sprint, Freie Partie gegen Stockfish oder dich selbst, Multi gegen einen anderen Kanal."
+      },
+      "s3": {
+        "title": "Dein Chat stimmt ab",
+        "text": "Die Zuschauer tippen den Zug in den Chat (e4, Sf3, O-O…). Wenn der Timer abläuft, wird der meistgewählte Zug gespielt."
+      },
+      "s4": {
+        "title": "Gewinne und gestalte",
+        "text": "Jeder gespielte Zug bringt XP und Münzen. Schalte Erfolge frei und stattte dein Brett im Shop aus.",
+        "level": "Lv. 3"
+      }
+    },
+    "who": {
+      "streamTitle": "Du streamst?",
+      "streamText": "Teile den Spiel-Tab in OBS. Rad, Leiste und Podium der Stimmen werden für deine Zuschauer angezeigt.",
+      "watchTitle": "Du schaust zu?",
+      "watchText": "Nichts zu installieren: Tippe deinen Zug in den Chat des Kanals. Um XP und Erfolge auf deinen Namen zu sammeln, melde dich hier mit Twitch an."
+    },
+    "modes": {
+      "title": "Vier Arten zu spielen",
+      "play": "Spielen →",
+      "multi": "Dein Chat gegen den eines anderen Streamers, jeder stimmt über die Züge seiner Seite ab."
+    },
+    "live": {
+      "badge": "Live",
+      "title": "Der 24/7-Kanal",
+      "text": "Eine Partie, die nie endet, gespielt von allen, die vorbeikommen. Der beste Ort, um die Abstimmung in Aktion zu sehen, bevor du deine eigene Partie startest.",
+      "watch": "Zuschauen",
+      "browse": "Partien durchstöbern"
+    },
+    "progress": {
+      "title": "Dein Fortschritt",
+      "ach": "XP, Level und Münzen zum Freischalten",
+      "records": "Die besten Chats im Puzzle Rush",
+      "shop": "Figuren, Bretter, Materialien, Farben fürs Rad"
+    },
+    "final": {
+      "title": "Bereit, deinen Chat spielen zu lassen?",
+      "text": "Eine erste Partie startet in weniger als einer Minute.",
+      "try": "Ohne Konto testen"
+    }
+  },
+  "phantomOwner": {
+    "title": "Phantom bereits in Benutzung",
+    "text": "Das Phantom folgt gerade „{cur}“. Auf „{next}“ umschalten? Das physische Brett wird komplett auf die neue Stellung zurückgesetzt.",
+    "hint": "Wenn du es so lässt, sendet diese Seite nichts ans Phantom, bis du auf „Synchronisieren“ klickst.",
+    "switch": "Phantom umschalten",
+    "keep": "Bei „{cur}“ lassen",
+    "followWarn": "Achtung: Das Phantom folgt gerade „{cur}“. Wenn du fortfährst, wird es komplett auf diese Partie zurückgesetzt.",
+    "modeGame": "Twitch-Partie",
+    "modeH24": "24/7 (Regie)"
+  },
+  "achievements": {
+    "desc": "Schalte Erfolge frei, indem du mit deinem Chat spielst: Jeder bringt XP und Münzen, manche schenken Figuren oder Bretter.",
+    "loading": "Lädt…",
+    "loginHint": "Verbinde dein Twitch-Konto, um deine Erfolge, dein Level und deine Münzen zu behalten. Ohne Anmeldung erreichte Erfolge werden deinem Konto hinzugefügt.",
+    "level": "Level",
+    "levelShort": "Lv.",
+    "levelMax": "Maximales Level erreicht",
+    "xpToNext": "{xp} / {next} XP bis zum nächsten Level",
+    "coins": "Münzen",
+    "streak": "Tage in Folge",
+    "count": "{n} von {total} Erfolgen freigeschaltet",
+    "unlockedToast": "Erfolg freigeschaltet:",
+    "claim": "Abholen",
+    "claimAll": "Alle abholen ({n})",
+    "toClaim": "{n} Belohnung(en) abzuholen",
+    "claimToast": "Hol dir deine Belohnung auf der Erfolge-Seite",
+    "claimedToast": "Belohnung abgeholt ({n}):",
+    "claimError": "Die Belohnung konnte nicht abgeholt werden, versuch es nochmal",
+    "secretName": "Geheimer Erfolg",
+    "secretDesc": "Beim Spielen zu entdecken…",
+    "unavailable": "Erfolge im Moment nicht verfügbar",
+    "cat": {
+      "start": "Erste Schritte",
+      "rush": "Puzzle Rush",
+      "votes": "Chat-Stimmen",
+      "predict": "Tipps",
+      "moves": "Besondere Züge"
+    },
+    "tier": {
+      "B": "Bronze",
+      "A": "Silber",
+      "O": "Gold",
+      "P": "Platin",
+      "S": "Geheim"
+    },
+    "rewards": {
+      "title-touche-a-tout": "Titel „Allrounder“"
+    },
+    "list": {
+      "bienvenue": {
+        "name": "Willkommen",
+        "desc": "Zum ersten Mal mit Twitch anmelden"
+      },
+      "premier-coup": {
+        "name": "Erster Zug",
+        "desc": "Einen ersten vom Chat gewählten Zug spielen lassen"
+      },
+      "premier-run": {
+        "name": "Erster Run",
+        "desc": "Einen ersten Puzzle Rush starten"
+      },
+      "premiere-inscription": {
+        "name": "Erste Anmeldung",
+        "desc": "Die Anmeldung für eine Mono-Partie öffnen"
+      },
+      "main-tendue": {
+        "name": "Ausgestreckte Hand",
+        "desc": "Eine Multi-Partie gegen einen anderen Kanal erstellen"
+      },
+      "face-a-la-machine": {
+        "name": "Gegen die Maschine",
+        "desc": "Eine Partie gegen Stockfish starten"
+      },
+      "bac-a-sable": {
+        "name": "Sandkasten",
+        "desc": "Eine Freie Partie öffnen"
+      },
+      "curieux": {
+        "name": "Neugierig",
+        "desc": "Eine Partie über die Seite Durchstöbern ansehen"
+      },
+      "dans-les-livres": {
+        "name": "In den Büchern",
+        "desc": "Die Rekorde-Seite aufrufen"
+      },
+      "tour-du-proprietaire": {
+        "name": "Rundgang",
+        "desc": "Mindestens einmal Puzzle Rush, Mono, Multi, Freie Partie und eine Partie gegen Stockfish starten"
+      },
+      "polyglotte": {
+        "name": "Polyglott",
+        "desc": "Die Oberfläche in 3 verschiedenen Sprachen nutzen"
+      },
+      "relooking": {
+        "name": "Neuer Look",
+        "desc": "Das Figurenset oder die Brettfarbe wechseln"
+      },
+      "lien-partage": {
+        "name": "Geteilter Link",
+        "desc": "Den Anmeldelink einer Partie kopieren"
+      },
+      "premier-sang": {
+        "name": "Erstes Blut",
+        "desc": "Ein erstes Puzzle im Puzzle Rush lösen"
+      },
+      "echauffement": {
+        "name": "Aufwärmen",
+        "desc": "In einem Run einen Score von 5 erreichen"
+      },
+      "en-rythme": {
+        "name": "Im Rhythmus",
+        "desc": "In einem Run einen Score von 10 erreichen"
+      },
+      "machine-a-puzzles": {
+        "name": "Puzzle-Maschine",
+        "desc": "In einem Run einen Score von 20 erreichen"
+      },
+      "cerveau-collectif": {
+        "name": "Kollektives Gehirn",
+        "desc": "In einem Run einen Score von 30 erreichen"
+      },
+      "ruche-infaillible": {
+        "name": "Unfehlbarer Schwarm",
+        "desc": "In einem Run einen Score von 40 erreichen"
+      },
+      "assidu-du-rush": {
+        "name": "Rush-Stammgast",
+        "desc": "10 Runs gespielt"
+      },
+      "accro-du-rush": {
+        "name": "Rush-Süchtiger",
+        "desc": "100 Runs gespielt"
+      },
+      "mille-puzzles": {
+        "name": "Tausend Puzzles",
+        "desc": "Insgesamt 1.000 Puzzles gelöst"
+      },
+      "premiere-vague": {
+        "name": "Erste Welle",
+        "desc": "Insgesamt 100 Stimmen erhalten"
+      },
+      "maree-montante": {
+        "name": "Steigende Flut",
+        "desc": "Insgesamt 1.000 Stimmen erhalten"
+      },
+      "raz-de-maree": {
+        "name": "Flutwelle",
+        "desc": "Insgesamt 10.000 Stimmen erhalten"
+      },
+      "democratie-totale": {
+        "name": "Totale Demokratie",
+        "desc": "Insgesamt 100.000 Stimmen erhalten"
+      },
+      "salle-comble": {
+        "name": "Volles Haus",
+        "desc": "Eine Runde mit 20 Abstimmenden"
+      },
+      "stade": {
+        "name": "Stadion",
+        "desc": "Eine Runde mit 100 Abstimmenden"
+      },
+      "concert": {
+        "name": "Konzert",
+        "desc": "Eine Runde mit 500 Abstimmenden"
+      },
+      "bon-oeil": {
+        "name": "Gutes Auge",
+        "desc": "Einen Zug einer Turnierpartie erraten"
+      },
+      "lecteur-de-pensees": {
+        "name": "Gedankenleser",
+        "desc": "25 Turnierzüge erraten"
+      },
+      "oracle": {
+        "name": "Orakel",
+        "desc": "100 Turnierzüge erraten"
+      },
+      "dans-sa-tete": {
+        "name": "In seinem Kopf",
+        "desc": "5 Züge in Folge erraten"
+      },
+      "telepathe": {
+        "name": "Telepath",
+        "desc": "10 Züge in Folge erraten"
+      },
+      "pronostiqueur": {
+        "name": "Tipp-Profi",
+        "desc": "Den Sieger einer Turnierpartie finden"
+      },
+      "bookmaker": {
+        "name": "Buchmacher",
+        "desc": "Den Sieger von 10 Turnierpartien finden"
+      },
+      "petit-roque": {
+        "name": "Kurze Rochade",
+        "desc": "Auf der Königsseite rochieren"
+      },
+      "grand-roque": {
+        "name": "Lange Rochade",
+        "desc": "Auf der Damenseite rochieren"
+      },
+      "en-passant": {
+        "name": "En passant",
+        "desc": "En passant schlagen"
+      },
+      "promotion": {
+        "name": "Umwandlung",
+        "desc": "Einen Bauern umwandeln"
+      },
+      "sous-promotion": {
+        "name": "Unterverwandlung",
+        "desc": "Einen Bauern in einen Springer umwandeln"
+      },
+      "vraiment": {
+        "name": "Wirklich?",
+        "desc": "Einen Bauern in einen Läufer oder Turm umwandeln"
+      },
+      "deux-dames": {
+        "name": "Zwei Damen",
+        "desc": "Zwei Damen auf dem Brett haben"
+      },
+      "echec-double": {
+        "name": "Doppelschach",
+        "desc": "Ein Doppelschach geben"
+      },
+      "echec-a-la-decouverte": {
+        "name": "Abzugsschach",
+        "desc": "Ein Abzugsschach geben"
+      },
+      "mat-du-couloir": {
+        "name": "Grundreihenmatt",
+        "desc": "Mit einem Turm oder einer Dame auf der letzten Reihe mattsetzen"
+      },
+      "mat-du-berger": {
+        "name": "Schäfermatt",
+        "desc": "In 4 Zügen oder weniger mattsetzen"
+      },
+      "mat-du-lion": {
+        "name": "Löwenmatt",
+        "desc": "In weniger als 10 Zügen mattsetzen"
+      },
+      "mat-de-pion": {
+        "name": "Bauernmatt",
+        "desc": "Mit einem Bauern mattsetzen"
+      },
+      "mat-de-roi": {
+        "name": "Königsmatt",
+        "desc": "Durch einen Königszug mattsetzen (Mattsetzen durch Abzug)"
+      }
+    }
+  },
+  "shop": {
+    "desc": "Gib deine Münzen aus, um dein Brett und das Rad der Stimmen zu gestalten. Münzen verdienst du beim Spielen mit deinem Chat und durch freigeschaltete Erfolge.",
+    "loginHint": "Verbinde dein Twitch-Konto, um Münzen zu verdienen und Objekte zu kaufen.",
+    "balance": "verfügbare Münzen",
+    "today": "Heute: {n} / {cap} Münzen für Züge und Puzzles",
+    "earnTitle": "So verdienst du Münzen",
+    "earn": {
+      "turn": "{n} Münze pro gespieltem Zug oder Puzzle mit mindestens einem Abstimmenden (maximal {cap} pro Tag)",
+      "daily": "Tagesbonus: {n} Münzen, +{bonus} pro Tag der Serie (bis zu {max})",
+      "rush": "Puzzle Rush: {n} Münzen pro Punkt im Run, {rec} mehr für einen persönlichen Rekord",
+      "multi": "Multi: {win} Münzen für einen Sieg, {draw} für ein Remis, {loss} für eine Niederlage",
+      "ach": "Erfolge: {b} (Bronze), {a} (Silber), {o} (Gold), {p} (Platin)"
+    },
+    "cat": {
+      "pieces": "Figurensets",
+      "boards": "Brettfarben",
+      "mats": "Brettmaterialien",
+      "palettes": "Farben fürs Rad",
+      "themes": "Seiten-Themes"
+    },
+    "catDesc": {
+      "pieces": "Auf allen Brettern und allen kleinen Figuren der Seite.",
+      "boards": "Die beiden Farben der Felder.",
+      "mats": "Eine Textur über deinen Feldfarben.",
+      "palettes": "Das Rad, die Leiste und das Podium der Stimmen, auch für deine Zuschauer sichtbar.",
+      "themes": "Hintergrund und Karten aller Seiten, nur für dich."
+    },
+    "buy": "Kaufen",
+    "confirm": "Bestätigen ({n} ♟)?",
+    "use": "Benutzen",
+    "equipped": "Ausgerüstet",
+    "owned": "Im Besitz",
+    "free": "Gratis",
+    "loginToBuy": "Anmelden zum Kaufen · ♟ {n}",
+    "missing": "Es fehlen {n} ♟",
+    "exclusive": "Erfolg „{name}“",
+    "exclusiveShort": "Nur über Erfolge",
+    "exclusiveHint": "Nicht käuflich: Schalte den Erfolg „{name}“ frei",
+    "bought": "{name} gekauft und ausgerüstet!",
+    "errPoor": "Nicht genug Münzen.",
+    "errBuy": "Der Kauf ist fehlgeschlagen, versuch es nochmal.",
+    "unavailable": "Shop im Moment nicht verfügbar",
+    "tab": {
+      "pieces": "Figuren",
+      "boards": "Bretter",
+      "mats": "Materialien",
+      "palettes": "Rad",
+      "themes": "Themes"
+    },
+    "filter": {
+      "all": "Alle",
+      "buy": "Zu kaufen",
+      "owned": "Im Besitz"
+    },
+    "fit": {
+      "title": "Umkleidekabine",
+      "hint": "Klick auf ein Objekt, um es hier vor dem Kauf auszuprobieren.",
+      "reset": "Zurück zu meiner Ausrüstung"
+    },
+    "empty": "Hier ist mit diesem Filter nichts."
+  },
+  "tlive": {
+    "title": "Live-Matches",
+    "hint": "Klick auf ein Match, um es zu verfolgen und Züge zu erraten, oder stimm direkt hier für den Sieger ab.",
+    "count": "{n} Partien",
+    "empty": "Im Moment läuft keine Partie.",
+    "follow": "Folgen",
+    "following": "Gefolgt",
+    "players": "Live-Partien",
+    "noVotes": "Keine Stimmen",
+    "filter": "Nach Spieler oder Turnier filtern…",
+    "compact": "Kompakte Ansicht",
+    "cards": "Ansicht mit Brettern",
+    "noMatch": "Kein Match passt."
+  },
+  "voters": {
+    "title": "Abstimmende",
+    "none": "Noch kein Tipp für diesen Zug.",
+    "chat": "Twitch-Chat",
+    "played": "Gespielter Zug",
+    "hits": "{n}/{total} richtig",
+    "noHit": "Niemand lag richtig",
+    "bot": "Test-Bot",
+    "botsTitle": "Regie: Bots stimmen bei jedem Zug ab (nur auf deinem Bildschirm), um die Liste zu simulieren",
+    "botsPanel": "Regie · Bots",
+    "botsOn": "Bots aktiv",
+    "botsOff": "Bots gestoppt",
+    "botsWave": "Welle jetzt",
+    "botsClear": "Leeren",
+    "botsCount": "Bots",
+    "botsPace": "Tempo",
+    "paceFast": "schnell",
+    "paceNormal": "normal",
+    "paceSlow": "langsam",
+    "botsFollow": "Mitläufer",
+    "botsNoGame": "Folge einer Live-Partie, damit die Bots abstimmen.",
+    "botsInfo": "{n} Bot-Stimmen für diesen Zug · nur auf deinem Bildschirm"
+  },
+  "predict": {
+    "chatTitle": "Chat-Abstimmung",
+    "chatHint": "Der Chat schlägt den nächsten Zug vor, indem er ihn schreibt (Sf3, e4, O-O…). Ergebnis, sobald der Zug gespielt ist.",
+    "chatVotes": "{n} Stimme(n) des Chats",
+    "chatNone": "Noch keine Chat-Stimme für diesen Zug.",
+    "chatPlayed": "Gespielter Zug: {san}",
+    "chatScore": "{hits} von {total} lagen richtig ({pct} %)",
+    "chatWinners": "Richtig getippt: {names}",
+    "chatToast": "Chat: {hits}/{total} haben {san} gefunden",
+    "title": "Tipps",
+    "moveTitle": "Nächster Zug",
+    "winnerTitle": "Sieger",
+    "moveHint": "Zieh eine Figur der Seite am Zug auf dem Brett oder klick einen Zug in der Liste. Du kannst deine Meinung ändern, solange der Zug nicht gespielt ist.",
+    "yourGuess": "Dein Tipp: {san}",
+    "noGuess": "Noch kein Tipp für diesen Zug.",
+    "white": "Weiß",
+    "draw": "Remis",
+    "black": "Schwarz",
+    "votes": "{n} Stimme(n)",
+    "oddsHint": "Quoten nach der Stockfish-Bewertung der Stellung: Das unwahrscheinlichste Ergebnis bringt am meisten. Deine Quote wird beim Abstimmen festgehalten.",
+    "oddsNow": "Quote {odds}",
+    "yourOdds": "Deine Quote: {odds}.",
+    "voted": "Stimme gespeichert: {pick}",
+    "stats": "{hits}/{total} Züge erraten · Serie {streak} · Sieger {whits}/{wtotal}",
+    "loginText": "Errate den nächsten Zug und den Sieger, um XP und Münzen zu gewinnen.",
+    "loginBtn": "Mit Twitch anmelden",
+    "login": "Melde dich mit Twitch an, um zu tippen",
+    "hit": "Richtig! {san} wurde gespielt",
+    "miss": "Daneben: {played} gespielt, du hattest {guess} getippt",
+    "streak": "Serie von {n}",
+    "winnerHit": "Tipp gewonnen: {names}",
+    "winnerMiss": "Tipp verloren: {names}",
+    "gain": "+{xp} XP · +{coins} Münzen",
+    "moved": "Die Stellung hat sich geändert, tipp neu",
+    "ended": "Partie beendet",
+    "rulesTitle": "Punkteschema",
+    "rules": "Zug erraten: +{xp} XP und {coins} Münzen. Alle {every} richtigen Tipps in Folge: +{sxp} XP und {scoins} Münzen extra. Richtiger Sieger: +{wxp} XP und {wcoins} Münzen (Remis: +{dxp} XP und {dcoins} Münzen), multipliziert mit der Quote beim Abstimmen (von {omin} bis {omax}, nach der Stockfish-Bewertung). Die Münzen zählen zum Tageslimit."
   }
 }

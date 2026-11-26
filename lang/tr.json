@@ -9,7 +9,9 @@
     "browse": "Göz at",
     "game": "Süren oyun",
     "records": "Rekorlar",
-    "h24": "24/24"
+    "h24": "24/24",
+    "achievements": "Başarımlar",
+    "shop": "Mağaza"
   },
   "app": {
     "tagline": "Phantom tahtanı ve Twitch hesabını bağla, topluluğunla etkileşimli oyunlar oyna"
@@ -366,7 +368,15 @@
     "phantomHint": "Hızını ve eşitlemeyi ayarlamak için Phantom'u bağla."
   },
   "newTabs": {
-    "free": "Serbest oyun"
+    "free": "Serbest oyun",
+    "title": "Yeni oyun",
+    "subtitle": "Sohbetinin nasıl oynayacağını seç, iki üç ayar yap, başlat.",
+    "tag": {
+      "rush": "Zamana karşı",
+      "mono": "join ile kayıt",
+      "multi": "2 kanal",
+      "free": "Özel"
+    }
   },
   "browsePage": {
     "desc": "Canlı oyunlar. Oynamak için Yeni'ye git; sıralamalar Rekorlar'da.",
@@ -663,7 +673,21 @@
     "fire": "Ateş",
     "ocean": "Okyanus",
     "muted": "Sade",
-    "access": "Renk körü"
+    "access": "Renk körü",
+    "sunset": "Gün batımı",
+    "woods": "Ormanaltı",
+    "candy": "Şeker",
+    "mono": "Siyah beyaz",
+    "rainbow": "Gökkuşağı",
+    "gold": "Altın",
+    "autumn": "Sonbahar",
+    "glacier": "Buzul",
+    "retro": "Retro",
+    "royal": "Kraliyet",
+    "synth": "Synthwave",
+    "pastel": "Pastel",
+    "earth": "Toprak",
+    "neon": "Neon"
   },
   "timerRing": {
     "seconds": "saniye",
@@ -1025,7 +1049,8 @@
       "endedAt": "{time} itibarıyla bitti",
       "inProgress": "Devam ediyor",
       "roomEnded": "bitti",
-      "roomRound": "{r}. tur {date}"
+      "roomRound": "{r}. tur {date}",
+      "title": "Canlı turnuvalar"
     },
     "review": {
       "first": "Baş (Home)",
@@ -1055,7 +1080,61 @@
       "purple": "Lavanta",
       "rose": "Pembe",
       "night": "Gece mavisi",
-      "black": "Siyah"
+      "black": "Siyah",
+      "aurora": "Aurora",
+      "mint": "Nane",
+      "sand": "Kum",
+      "forest": "Orman",
+      "petrol": "Petrol",
+      "ice": "Buz",
+      "coral": "Mercan",
+      "olive": "Zeytin",
+      "coffee": "Kahve",
+      "bubblegum": "Sakız",
+      "cherry": "Kiraz",
+      "midnight": "Gece yarısı",
+      "gilded": "Yaldız",
+      "lagoon": "Lagün",
+      "peach": "Şeftali",
+      "matcha": "Matcha",
+      "steel": "Çelik",
+      "wine": "Bordo",
+      "abyss": "Uçurum"
+    },
+    "emerald": "Zümrüt",
+    "obsidian": "Obsidyen",
+    "toxic": "Asit",
+    "ice": "Buzul",
+    "ruby": "Yakut",
+    "royal": "Kraliyet",
+    "synth": "Synthwave",
+    "themeTitle": "Site teması",
+    "theme": {
+      "dark": "Gece",
+      "slate": "Arduvaz",
+      "blue": "Gece mavisi",
+      "graphite": "Grafit",
+      "mocha": "Mocha",
+      "forest": "Çam",
+      "petrol": "Petrol",
+      "plum": "Erik",
+      "wine": "Bordo",
+      "ink": "Mürekkep"
+    },
+    "matTitle": "Doku",
+    "mat": {
+      "none": "Yok",
+      "paper": "Kâğıt",
+      "tile": "Fayans",
+      "felt": "Keçe",
+      "walnut": "Ceviz",
+      "lava": "Lav",
+      "mosaic": "Mozaik",
+      "frost": "Kırağı",
+      "carbon": "Karbon",
+      "marble": "Mermer",
+      "linen": "Keten",
+      "stone": "Taş"
     }
   },
   "seo": {
@@ -1069,7 +1148,471 @@
       "browse": "Şu anda Twitch sohbetlerinin oynadığı satranç oyunları: canlı izle ya da bir oyuna katıl.",
       "records": "Puzzle Rush rekorları, kanal düelloları ve satranç oynayan Twitch sohbetlerinin en aktif izleyicileri.",
       "live": "Bir Chess.com oyununu canlı takip et ve Phantom tahtanda hamle hamle yeniden oynat.",
-      "tournament": "Chess.com satranç turnuvalarını oyun oyun canlı takip et ve Phantom tahtanda yeniden oynat."
+      "tournament": "Chess.com satranç turnuvalarını oyun oyun canlı takip et ve Phantom tahtanda yeniden oynat.",
+      "h24": "7/24 istasyon: uğrayan tüm Twitch sohbetlerinin oynadığı bitmeyen bir satranç oyunu. Hamleni yaz ve oylamayı canlı izle."
     }
+  },
+  "home": {
+    "tour": {
+      "badge": "Canlı turnuvalar",
+      "title": "Büyük turnuvalar için tahmin yap",
+      "text": "Devam eden chess.com turnuva oyunları sitede canlı. Bir maç seç, hamle hamle takip et ve oyuncuların ne oynayacağını tahmin et.",
+      "cta": "Canlı maçları gör",
+      "p1": "Sıradaki hamleyi tahmin et",
+      "p1d": "Hamleyi oyuncudan önce tahtada oyna. Bildin: XP ve piyonlar, üst üste her 5 doğru cevapta bonus.",
+      "p2": "Kazananı seç",
+      "p2d": "Beyaz, beraberlik ya da Siyah, istediğin an. Oran oyunun değerlendirmesini izler: ezik tarafa oynamak daha çok kazandırır.",
+      "p3": "Tüm maçlar tek yerde",
+      "p3d": "Devam eden oyunlar ve topluluğun oyları, ayrıca oyuncu adıyla arama."
+    },
+    "kicker": "Twitch sohbetinin oynadığı satranç",
+    "titleA": "Sohbetin",
+    "titleB": "tek bir oyuncu oluyor",
+    "lead": "Her izleyici hamlesini sohbete yazar, en çok oy alan oynanır. Bulmacalar, Puzzle Rush, Stockfish'e ya da başka bir kanala karşı oyunlar: sen başlatırsın, sohbetin karar verir.",
+    "cta": "Oyun başlat",
+    "how": "Nasıl çalışır",
+    "note": "Ücretsiz. Hesapsız tek başına deneyebilir, Twitch'i istediğin zaman bağlayabilirsin.",
+    "demo": {
+      "title": "Sohbet oyu",
+      "votes": "{n} oy"
+    },
+    "tuto": {
+      "kicker": "Eğitim · 4 adım",
+      "title": "Nasıl çalışır",
+      "s1": {
+        "title": "Kanalını bağla",
+        "text": "«Twitch'i bağla»ya tek tık. Site sohbetini okur, hiçbir şey yazmaz ve şifre istemez.",
+        "chan": "kanalın"
+      },
+      "s2": {
+        "title": "Bir mod seç",
+        "text": "Sprint için Puzzle Rush, Stockfish'e ya da kendine karşı Serbest oyun, başka bir kanala karşı Multi."
+      },
+      "s3": {
+        "title": "Sohbetin oy verir",
+        "text": "İzleyiciler hamleyi sohbete yazar (e4, Cf3, O-O…). Süre bitince en çok oy alan hamle oynanır."
+      },
+      "s4": {
+        "title": "Kazan ve kişiselleştir",
+        "text": "Oynanan her hamle XP ve piyon kazandırır. Başarımların kilidini aç, sonra tahtanı mağazada giydir.",
+        "level": "Sv. 3"
+      }
+    },
+    "who": {
+      "streamTitle": "Yayın mı yapıyorsun?",
+      "streamText": "Oyun sekmesini OBS'te paylaş. Çark, şerit ve oy podyumu izleyicilerinde görünür.",
+      "watchTitle": "İzliyor musun?",
+      "watchText": "Kurulacak bir şey yok: hamleni kanalın sohbetine yaz. XP ve başarımlar adına yazılsın istiyorsan burada Twitch ile giriş yap."
+    },
+    "modes": {
+      "title": "Oynamanın dört yolu",
+      "play": "Oyna →",
+      "multi": "Senin sohbetin başka bir yayıncının sohbetine karşı, herkes kendi tarafının hamlelerine oy verir."
+    },
+    "live": {
+      "badge": "Canlı",
+      "title": "7/24 kanal",
+      "text": "Hiç bitmeyen, uğrayan herkesin oynadığı bir oyun. Kendi oyununu başlatmadan önce oylamayı iş başında görmek için en iyi yer.",
+      "watch": "İzle",
+      "browse": "Oyunlara göz at"
+    },
+    "progress": {
+      "title": "İlerlemen",
+      "ach": "Açılacak XP, seviyeler ve piyonlar",
+      "records": "Puzzle Rush'ın en iyi sohbetleri",
+      "shop": "Taşlar, tahtalar, dokular, çekiliş renkleri"
+    },
+    "final": {
+      "title": "Sohbetinin oynamasına hazır mısın?",
+      "text": "İlk oyun bir dakikadan kısa sürede başlar.",
+      "try": "Hesapsız dene"
+    }
+  },
+  "phantomOwner": {
+    "title": "Phantom zaten kullanımda",
+    "text": "Phantom şu an «{cur}» oyununu izliyor. «{next}» oyununa geçirilsin mi? Fiziksel tahta tamamen yeni konuma göre yeniden dizilecek.",
+    "hint": "Bırakırsan, «Senkronize et»e tıklamadığın sürece bu sayfa Phantom'a hiçbir şey göndermez.",
+    "switch": "Phantom'u geçir",
+    "keep": "«{cur}» üzerinde bırak",
+    "followWarn": "Dikkat: Phantom şu an «{cur}» oyununu izliyor. Devam edersen tamamen bu oyuna göre yeniden dizilecek.",
+    "modeGame": "Twitch oyunu",
+    "modeH24": "7/24 (yönetim)"
+  },
+  "achievements": {
+    "desc": "Sohbetinle oynayarak başarımların kilidini aç: her biri XP ve piyon kazandırır, bazıları taş ya da tahta hediye eder.",
+    "loading": "Yükleniyor…",
+    "loginHint": "Başarımlarını, seviyeni ve piyonlarını korumak için Twitch hesabını bağla. Giriş yapmadan kazandığın başarımlar hesabına eklenir.",
+    "level": "Seviye",
+    "levelShort": "Sv.",
+    "levelMax": "En yüksek seviyeye ulaşıldı",
+    "xpToNext": "Sonraki seviyeye {xp} / {next} XP",
+    "coins": "piyon",
+    "streak": "gün üst üste",
+    "count": "{total} başarımdan {n} tanesi açıldı",
+    "unlockedToast": "Başarım açıldı:",
+    "claim": "Al",
+    "claimAll": "Hepsini al ({n})",
+    "toClaim": "Alınacak ödül: {n}",
+    "claimToast": "Ödülünü Başarılar sayfasından al",
+    "claimedToast": "Ödül alındı ({n}):",
+    "claimError": "Ödül alınamadı, tekrar dene",
+    "secretName": "Gizli başarım",
+    "secretDesc": "Oynayarak keşfet…",
+    "unavailable": "Başarımlar şu an kullanılamıyor",
+    "cat": {
+      "start": "İlk adımlar",
+      "rush": "Puzzle Rush",
+      "votes": "Sohbet oyları",
+      "predict": "Tahminler",
+      "moves": "Dikkat çeken hamleler"
+    },
+    "tier": {
+      "B": "Bronz",
+      "A": "Gümüş",
+      "O": "Altın",
+      "P": "Platin",
+      "S": "Gizli"
+    },
+    "rewards": {
+      "title-touche-a-tout": "«Her işin ustası» unvanı"
+    },
+    "list": {
+      "bienvenue": {
+        "name": "Hoş geldin",
+        "desc": "İlk kez Twitch ile giriş yap"
+      },
+      "premier-coup": {
+        "name": "İlk hamle",
+        "desc": "Sohbetin oyladığı ilk hamleyi oynat"
+      },
+      "premier-run": {
+        "name": "İlk koşu",
+        "desc": "İlk Puzzle Rush'ı başlat"
+      },
+      "premiere-inscription": {
+        "name": "İlk kayıt",
+        "desc": "Bir Mono oyununun kayıtlarını aç"
+      },
+      "main-tendue": {
+        "name": "Uzanan el",
+        "desc": "Başka bir kanala karşı Multi oyunu oluştur"
+      },
+      "face-a-la-machine": {
+        "name": "Makineye karşı",
+        "desc": "Stockfish'e karşı oyun başlat"
+      },
+      "bac-a-sable": {
+        "name": "Kum havuzu",
+        "desc": "Bir Serbest oyun aç"
+      },
+      "curieux": {
+        "name": "Meraklı",
+        "desc": "Göz at sayfasından bir oyunu izle"
+      },
+      "dans-les-livres": {
+        "name": "Kitaplara geçti",
+        "desc": "Rekorlar sayfasına bak"
+      },
+      "tour-du-proprietaire": {
+        "name": "Mülk turu",
+        "desc": "Puzzle Rush, Mono, Multi, Serbest oyun ve Stockfish'e karşı oyunu en az bir kez başlat"
+      },
+      "polyglotte": {
+        "name": "Çok dilli",
+        "desc": "Arayüzü 3 farklı dilde kullan"
+      },
+      "relooking": {
+        "name": "Yeni görünüm",
+        "desc": "Taş setini ya da tahta rengini değiştir"
+      },
+      "lien-partage": {
+        "name": "Paylaşılan bağlantı",
+        "desc": "Bir oyunun kayıt bağlantısını kopyala"
+      },
+      "premier-sang": {
+        "name": "İlk kan",
+        "desc": "Puzzle Rush'ta ilk bulmacayı çöz"
+      },
+      "echauffement": {
+        "name": "Isınma",
+        "desc": "Bir koşuda 5 puana ulaş"
+      },
+      "en-rythme": {
+        "name": "Ritimde",
+        "desc": "Bir koşuda 10 puana ulaş"
+      },
+      "machine-a-puzzles": {
+        "name": "Bulmaca makinesi",
+        "desc": "Bir koşuda 20 puana ulaş"
+      },
+      "cerveau-collectif": {
+        "name": "Ortak akıl",
+        "desc": "Bir koşuda 30 puana ulaş"
+      },
+      "ruche-infaillible": {
+        "name": "Şaşmaz kovan",
+        "desc": "Bir koşuda 40 puana ulaş"
+      },
+      "assidu-du-rush": {
+        "name": "Rush müdavimi",
+        "desc": "10 koşu oynandı"
+      },
+      "accro-du-rush": {
+        "name": "Rush bağımlısı",
+        "desc": "100 koşu oynandı"
+      },
+      "mille-puzzles": {
+        "name": "Bin bulmaca",
+        "desc": "Toplam 1.000 bulmaca çözüldü"
+      },
+      "premiere-vague": {
+        "name": "İlk dalga",
+        "desc": "Toplam 100 oy alındı"
+      },
+      "maree-montante": {
+        "name": "Kabaran gelgit",
+        "desc": "Toplam 1.000 oy alındı"
+      },
+      "raz-de-maree": {
+        "name": "Dev dalga",
+        "desc": "Toplam 10.000 oy alındı"
+      },
+      "democratie-totale": {
+        "name": "Tam demokrasi",
+        "desc": "Toplam 100.000 oy alındı"
+      },
+      "salle-comble": {
+        "name": "Tıklım tıklım",
+        "desc": "20 oy verenle bir tur"
+      },
+      "stade": {
+        "name": "Stadyum",
+        "desc": "100 oy verenle bir tur"
+      },
+      "concert": {
+        "name": "Konser",
+        "desc": "500 oy verenle bir tur"
+      },
+      "bon-oeil": {
+        "name": "İyi göz",
+        "desc": "Bir turnuva oyununda hamle tahmin et"
+      },
+      "lecteur-de-pensees": {
+        "name": "Zihin okuyucu",
+        "desc": "25 turnuva hamlesi tahmin et"
+      },
+      "oracle": {
+        "name": "Kâhin",
+        "desc": "100 turnuva hamlesi tahmin et"
+      },
+      "dans-sa-tete": {
+        "name": "Onun kafasında",
+        "desc": "Üst üste 5 hamle tahmin et"
+      },
+      "telepathe": {
+        "name": "Telepat",
+        "desc": "Üst üste 10 hamle tahmin et"
+      },
+      "pronostiqueur": {
+        "name": "Tahminci",
+        "desc": "Bir turnuva oyununun kazananını bil"
+      },
+      "bookmaker": {
+        "name": "Bahisçi",
+        "desc": "10 turnuva oyununun kazananını bil"
+      },
+      "petit-roque": {
+        "name": "Kısa rok",
+        "desc": "Şah tarafına rok yap"
+      },
+      "grand-roque": {
+        "name": "Uzun rok",
+        "desc": "Vezir tarafına rok yap"
+      },
+      "en-passant": {
+        "name": "En passant",
+        "desc": "En passant al"
+      },
+      "promotion": {
+        "name": "Terfi",
+        "desc": "Bir piyonu terfi ettir"
+      },
+      "sous-promotion": {
+        "name": "Alt terfi",
+        "desc": "Bir piyonu ata terfi ettir"
+      },
+      "vraiment": {
+        "name": "Gerçekten mi?",
+        "desc": "Bir piyonu file ya da kaleye terfi ettir"
+      },
+      "deux-dames": {
+        "name": "İki vezir",
+        "desc": "Tahtada iki vezirin olsun"
+      },
+      "echec-double": {
+        "name": "Çifte şah",
+        "desc": "Çifte şah çek"
+      },
+      "echec-a-la-decouverte": {
+        "name": "Açık şah",
+        "desc": "Açık şah çek"
+      },
+      "mat-du-couloir": {
+        "name": "Koridor matı",
+        "desc": "Son sırada kale ya da vezirle mat et"
+      },
+      "mat-du-berger": {
+        "name": "Çoban matı",
+        "desc": "4 hamlede ya da daha azında mat et"
+      },
+      "mat-du-lion": {
+        "name": "Aslan matı",
+        "desc": "10 hamleden kısa sürede mat et"
+      },
+      "mat-de-pion": {
+        "name": "Piyon matı",
+        "desc": "Piyonla mat et"
+      },
+      "mat-de-roi": {
+        "name": "Şah matı",
+        "desc": "Şahı oynatarak mat et (açık mat)"
+      }
+    }
+  },
+  "shop": {
+    "desc": "Piyonlarını tahtanı ve oy çekilişini giydirmek için harca. Piyonlar sohbetinle oynayarak ve başarımların kilidini açarak kazanılır.",
+    "loginHint": "Piyon kazanmak ve eşya almak için Twitch hesabını bağla.",
+    "balance": "piyon mevcut",
+    "today": "Bugün: hamle ve bulmacalardan {n} / {cap} piyon",
+    "earnTitle": "Piyon nasıl kazanılır",
+    "earn": {
+      "turn": "En az bir oy verenle oynanan her hamle ya da bulmaca için {n} piyon (günde en fazla {cap})",
+      "daily": "Günün bonusu: {n} piyon, seri her gün için +{bonus} ({max} sınırına kadar)",
+      "rush": "Puzzle Rush: koşunun her puanı için {n} piyon, kişisel rekor için {rec} daha",
+      "multi": "Multi: galibiyet için {win}, beraberlik için {draw}, yenilgi için {loss} piyon",
+      "ach": "Başarımlar: {b} (bronz), {a} (gümüş), {o} (altın), {p} (platin)"
+    },
+    "cat": {
+      "pieces": "Taş setleri",
+      "boards": "Tahta renkleri",
+      "mats": "Tahta dokuları",
+      "palettes": "Çekiliş renkleri",
+      "themes": "Site temaları"
+    },
+    "catDesc": {
+      "pieces": "Sitedeki tüm tahtalarda ve tüm küçük taşlarda.",
+      "boards": "Karelerin iki rengi.",
+      "mats": "Kare renklerinin üstüne konan bir doku.",
+      "palettes": "Oyların çarkı, şeridi ve podyumu, izleyicilerin de görür.",
+      "themes": "Sitenin tüm sayfalarının arka planı ve kartları, sadece sana."
+    },
+    "buy": "Satın al",
+    "confirm": "Onayla ({n} ♟)?",
+    "use": "Kullan",
+    "equipped": "Takılı",
+    "owned": "Sahipsin",
+    "free": "Ücretsiz",
+    "loginToBuy": "Satın almak için giriş yap · ♟ {n}",
+    "missing": "{n} ♟ eksik",
+    "exclusive": "«{name}» başarımı",
+    "exclusiveShort": "Sadece başarımlarla",
+    "exclusiveHint": "Satılmaz: «{name}» başarımını aç",
+    "bought": "{name} satın alındı ve takıldı!",
+    "errPoor": "Yeterli piyon yok.",
+    "errBuy": "Satın alma tamamlanamadı, tekrar dene.",
+    "unavailable": "Mağaza şu an kullanılamıyor",
+    "tab": {
+      "pieces": "Taşlar",
+      "boards": "Tahtalar",
+      "mats": "Dokular",
+      "palettes": "Çekiliş",
+      "themes": "Temalar"
+    },
+    "filter": {
+      "all": "Hepsi",
+      "buy": "Satın alınacak",
+      "owned": "Sahip olunan"
+    },
+    "fit": {
+      "title": "Deneme kabini",
+      "hint": "Satın almadan önce burada denemek için bir eşyaya tıkla.",
+      "reset": "Ekipmanıma dön"
+    },
+    "empty": "Bu filtreyle burada bir şey yok."
+  },
+  "tlive": {
+    "title": "Canlı maçlar",
+    "hint": "Bir maça tıklayıp takip et ve hamleleri tahmin et, ya da kazanan için doğrudan buradan oy ver.",
+    "count": "{n} oyun",
+    "empty": "Şu an devam eden oyun yok.",
+    "follow": "Takip et",
+    "following": "Takipte",
+    "players": "Canlı oyunlar",
+    "noVotes": "Oy yok",
+    "filter": "Oyuncuya ya da turnuvaya göre filtrele…",
+    "compact": "Kompakt görünüm",
+    "cards": "Tahtalı görünüm",
+    "noMatch": "Eşleşen maç yok."
+  },
+  "voters": {
+    "title": "Oy verenler",
+    "none": "Bu hamle için henüz tahmin yok.",
+    "chat": "Twitch sohbeti",
+    "played": "Oynanan hamle",
+    "hits": "{n}/{total} bildi",
+    "noHit": "Kimse bilemedi",
+    "bot": "Test botu",
+    "botsTitle": "Yönetim: botlar her hamlede oy verir (sadece senin ekranında), listeyi simüle etmek için",
+    "botsPanel": "Reji · botlar",
+    "botsOn": "Botlar açık",
+    "botsOff": "Botlar kapalı",
+    "botsWave": "Şimdi dalga",
+    "botsClear": "Temizle",
+    "botsCount": "Botlar",
+    "botsPace": "Tempo",
+    "paceFast": "hızlı",
+    "paceNormal": "normal",
+    "paceSlow": "yavaş",
+    "botsFollow": "Taklit",
+    "botsNoGame": "Botların oy vermesi için canlı bir partiyi takip et.",
+    "botsInfo": "Bu hamlede {n} bot oyu · sadece senin ekranında"
+  },
+  "predict": {
+    "chatTitle": "Sohbet oyu",
+    "chatHint": "Sohbet sıradaki hamleyi yazarak önerir (Cf3, e4, O-O…). Hamle oynanır oynanmaz sonuç.",
+    "chatVotes": "Sohbetten {n} oy",
+    "chatNone": "Bu hamle için sohbetten henüz oy yok.",
+    "chatPlayed": "Oynanan hamle: {san}",
+    "chatScore": "{total} kişiden {hits} bildi (%{pct})",
+    "chatWinners": "Bilenler: {names}",
+    "chatToast": "Sohbet: {hits}/{total} kişi {san} hamlesini bildi",
+    "title": "Tahminler",
+    "moveTitle": "Sıradaki hamle",
+    "winnerTitle": "Kazanan",
+    "moveHint": "Tahtada sırası gelen tarafın bir taşını sürükle ya da listeden bir hamleye tıkla. Hamle oynanmadan fikrini değiştirebilirsin.",
+    "yourGuess": "Tahminin: {san}",
+    "noGuess": "Bu hamle için henüz tahmin yok.",
+    "white": "Beyaz",
+    "draw": "Beraberlik",
+    "black": "Siyah",
+    "votes": "{n} oy",
+    "oddsHint": "Oranlar pozisyonun Stockfish değerlendirmesine göre: en az olası sonuç en çok kazandırır. Oranın oy verdiğin anda sabitlenir.",
+    "oddsNow": "oran {odds}",
+    "yourOdds": "Oranın: {odds}.",
+    "voted": "Oy kaydedildi: {pick}",
+    "stats": "{hits}/{total} hamle bilindi · seri {streak} · kazananlar {whits}/{wtotal}",
+    "loginText": "XP ve piyon kazanmak için sıradaki hamleyi ve kazananı tahmin et.",
+    "loginBtn": "Twitch ile giriş yap",
+    "login": "Tahmin etmek için Twitch ile giriş yap",
+    "hit": "Bildin! {san} oynandı",
+    "miss": "Kaçtı: {played} oynandı, sen {guess} demiştin",
+    "streak": "{n} seri",
+    "winnerHit": "Kazanan tahmin: {names}",
+    "winnerMiss": "Kaybeden tahmin: {names}",
+    "gain": "+{xp} XP · +{coins} piyon",
+    "moved": "Pozisyon değişti, tahminini yeniden yap",
+    "ended": "Oyun bitti",
+    "rulesTitle": "Puan tablosu",
+    "rules": "Bilinen hamle: +{xp} XP ve {coins} piyon. Üst üste her {every} doğru cevapta: ek +{sxp} XP ve {scoins} piyon. Doğru kazanan: +{wxp} XP ve {wcoins} piyon (beraberlik: +{dxp} XP ve {dcoins} piyon), oy verdiğin andaki oranla çarpılır ({omin} ile {omax} arası, Stockfish değerlendirmesine göre). Piyonlar günlük sınıra dahildir."
   }
 }

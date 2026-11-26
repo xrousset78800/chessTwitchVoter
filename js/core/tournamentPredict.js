@@ -254,9 +254,16 @@
     /** Survol : main ouverte sur les pièces qu'on peut faire glisser (camp au trait, sans ouvrir la connexion) */
     const canGrab = piece => canGuess() && !pred.busy && piece?.[0] === (String(current().fen).split(' ')[1] === 'b' ? 'b' : 'w');
     document.addEventListener('mouseover', e => {
-        const img = e.target.closest?.('#liveBoardT img[data-piece]');
-        if (img) img.classList.toggle('can-grab', canGrab(img.dataset.piece));
+        const sq = e.target.closest?.('#liveBoardT [data-square]');
+        if (!sq) return;
+        const piece = sq.querySelector('img[data-piece]')?.dataset.piece;
+        sq.classList.toggle('can-grab', !!piece && canGrab(piece));
     });
+    // Main fermée pendant qu'on fait glisser la pièce (elle suit la souris hors de l'échiquier)
+    document.addEventListener('mousedown', e => {
+        if (e.button === 0 && e.target.closest?.('#liveBoardT .can-grab')) document.body.classList.add('is-dragging-piece');
+    });
+    document.addEventListener('mouseup', () => document.body.classList.remove('is-dragging-piece'));
     /** Échiquier (onDrop) : le coup part comme prono, la pièce revient à sa place */
     function dropMove(from, to) {
         const c = current();
@@ -515,34 +522,92 @@
     }
 
     // ───────────── Bots de test (régie) : votes simulés, sur cet écran seulement ─────────────
+    // Panneau « Régie · bots » en bas à gauche de la page Tournoi : nombre, rythme, suivisme,
+    // une vague tout de suite ou on vide. Rien n'est envoyé au serveur ni au chat.
     const BOT_KEY = 'cgTourBots';
-    const BOT_NAMES = ['PionFou', 'TourDeGarde', 'CavalierNoir', 'RoqueRapide', 'DameEnPrise', 'Fianchetto', 'ZugzwangFan', 'EnPassant', 'GambitDame', 'MatDuBerger'];
-    const bots = { on: false, key: null, fen: null, timers: [] };
-    try { bots.on = localStorage.getItem(BOT_KEY) === '1'; } catch { /* navigation privée */ }
+    const BOT_A = ['Pion', 'Tour', 'Cavalier', 'Fou', 'Dame', 'Roque', 'Gambit', 'Zugzwang', 'Fianchetto', 'Mat', 'Echec', 'Sicilienne'];
+    const BOT_B = ['Fou', 'Rapide', 'Noir', 'Blanc', 'Malin', 'Perdu', 'Royal', 'Volant', 'Zen', 'Furieux'];
+    const BOT_NAMES = BOT_A.flatMap(x => BOT_B.map(y => x + y)).sort(() => Math.random() - 0.5);
+    const BOT_COUNTS = [3, 8, 15, 30, 60];
+    const BOT_PACE = { fast: 2500, normal: 7000, slow: 15000 };
+    const BOT_FOLLOW = [0, 0.35, 0.7];
+    const bots = { on: false, n: 8, pace: 'normal', follow: 0.35, open: true, key: null, fen: null, timers: [] };
+    try { Object.assign(bots, JSON.parse(localStorage.getItem(BOT_KEY + '2')) || {}, { key: null, fen: null, timers: [] }); } catch { /* navigation privée */ }
+    try { if (localStorage.getItem(BOT_KEY) === '1') bots.on = true; } catch { /* navigation privée */ }
+    const saveBots = () => { try { localStorage.setItem(BOT_KEY + '2', JSON.stringify({ on: bots.on, n: bots.n, pace: bots.pace, follow: bots.follow, open: bots.open })); localStorage.removeItem(BOT_KEY); } catch { /* navigation privée */ } };
     function botsStop() { bots.timers.forEach(clearTimeout); bots.timers = []; bots.key = bots.fen = null; }
+    function botsClear() {
+        for (const [login, v] of chat.votes) if (v.bot) chat.votes.delete(login);
+        scheduleChat();
+    }
     function setBots(on) {
         bots.on = on;
-        try { localStorage.setItem(BOT_KEY, on ? '1' : '0'); } catch { /* navigation privée */ }
+        saveBots();
         botsStop();
-        if (!on) {   // retire leurs votes de la liste
-            for (const [login, v] of chat.votes) if (v.bot) chat.votes.delete(login);
-            scheduleChat();
-        }
+        if (!on) botsClear();
+        else botsTick(current());
         paintBotsBtn();
     }
     function paintBotsBtn() {
         const b = document.querySelector('[data-tv-bots]');
-        if (!b) return;
-        b.hidden = !regie;
-        b.setAttribute('aria-pressed', String(bots.on && regie));
+        if (b) { b.hidden = !regie; b.setAttribute('aria-pressed', String(bots.on && regie)); }
+        paintBotsPanel();
     }
-    /** Coup d'un bot : souvent une prise ou un échec, parfois le coup déjà choisi par d'autres */
+    /** Panneau de la régie (créé à la demande, visible sur la page Tournoi seulement) */
+    function paintBotsPanel() {
+        let el = document.getElementById('tBotsPanel');
+        if (!regie) { if (el) el.hidden = true; return; }
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'tBotsPanel';
+            el.className = 'test-tools t-bots';
+            document.body.appendChild(el);
+            el.addEventListener('click', e => {
+                const act = e.target.closest('[data-tb]')?.dataset.tb;
+                if (act === 'toggle') { bots.open = !bots.open; saveBots(); paintBotsPanel(); }
+                else if (act === 'on') setBots(!bots.on);
+                else if (act === 'wave') botsWave(true);
+                else if (act === 'clear') { botsStop(); botsClear(); paintBotsPanel(); }
+            });
+            el.addEventListener('change', e => {
+                const s = e.target.closest('select[data-tb]');
+                if (!s) return;
+                if (s.dataset.tb === 'n') bots.n = +s.value;
+                if (s.dataset.tb === 'pace') bots.pace = s.value;
+                if (s.dataset.tb === 'follow') bots.follow = +s.value;
+                saveBots();
+                if (bots.on) botsWave(true);
+            });
+        }
+        el.hidden = false;
+        el.classList.toggle('is-collapsed', !bots.open);
+        const c = current();
+        const mine = [...chat.votes.values()].filter(v => v.bot).length;
+        const opt = (v, l, cur) => `<option value="${v}"${String(v) === String(cur) ? ' selected' : ''}>${esc(l)}</option>`;
+        const head = `<button type="button" class="test-tools__title test-tools__toggle" data-tb="toggle"><i class="fas fa-robot"></i> ${esc(T('voters.botsPanel', null, 'Régie · bots'))}${bots.on ? ` (${mine})` : ''} <span>${bots.open ? '▾' : '▸'}</span></button>`;
+        if (!bots.open) { if (el._html !== head) { el.innerHTML = head; el._html = head; } return; }
+        const html = head + `
+            <div class="test-tools__row">
+                <button type="button" class="btn btn--sm ${bots.on ? 'btn--primary' : ''}" data-tb="on" aria-pressed="${bots.on}">${esc(bots.on ? T('voters.botsOn', null, 'Bots actifs') : T('voters.botsOff', null, 'Bots arrêtés'))}</button>
+                <button type="button" class="btn btn--sm" data-tb="wave" ${!c || c.ended || reviewT.game ? 'disabled' : ''}>${esc(T('voters.botsWave', null, 'Vague maintenant'))}</button>
+                <button type="button" class="btn btn--sm" data-tb="clear" ${mine ? '' : 'disabled'}>${esc(T('voters.botsClear', null, 'Vider'))}</button>
+            </div>
+            <div class="test-tools__row">
+                <label>${esc(T('voters.botsCount', null, 'Bots'))} <select data-tb="n">${BOT_COUNTS.map(v => opt(v, v, bots.n)).join('')}</select></label>
+                <label>${esc(T('voters.botsPace', null, 'Rythme'))} <select data-tb="pace">${opt('fast', T('voters.paceFast', null, 'rapide'), bots.pace)}${opt('normal', T('voters.paceNormal', null, 'normal'), bots.pace)}${opt('slow', T('voters.paceSlow', null, 'lent'), bots.pace)}</select></label>
+                <label>${esc(T('voters.botsFollow', null, 'Suivisme'))} <select data-tb="follow">${BOT_FOLLOW.map(v => opt(v, Math.round(v * 100) + ' %', bots.follow)).join('')}</select></label>
+            </div>
+            <div class="test-tools__info">${esc(!c || reviewT.game ? T('voters.botsNoGame', null, 'Suis une partie en direct pour faire voter les bots.')
+                : T('voters.botsInfo', { n: mine }, '{n} votes de bots sur ce coup · sur ton écran seulement'))}</div>`;
+        if (el._html !== html) { el.innerHTML = html; el._html = html; }
+    }
+    /** Coup d'un bot : souvent une prise ou un échec, parfois le coup déjà choisi par d'autres (suivisme) */
     function botPick(fen) {
         const ch = new Chess(fen);
         const moves = ch.moves({ verbose: true });
         if (!moves.length) return null;
         const voted = [...chat.votes.values()];
-        if (voted.length && Math.random() < 0.35) {
+        if (voted.length && Math.random() < bots.follow) {
             const v = voted[Math.floor(Math.random() * voted.length)];
             const m = moves.find(x => x.from + x.to + (x.promotion || '') === v.uci);
             if (m) return m;
@@ -552,22 +617,31 @@
         for (let i = 0; i < moves.length; i++) { r -= w[i]; if (r <= 0) return moves[i]; }
         return moves[moves.length - 1];
     }
-    function botsTick(c) {
-        if (!bots.on || !regie || !c || c.ended || reviewT.game || !c.fen) { if (bots.key) botsStop(); return; }
-        if (bots.key === c.key && boardOf(bots.fen) === boardOf(c.fen)) return;
+    /** Fait voter les bots sur le coup en cours (now : tous dans la seconde, pour voir la liste se remplir) */
+    function botsWave(now) {
+        const c = current();
         botsStop();
+        if (!c || c.ended || reviewT.game || !c.fen) { paintBotsPanel(); return; }
         bots.key = c.key; bots.fen = c.fen;
-        const n = 5 + Math.floor(Math.random() * 4);
-        const names = [...BOT_NAMES].sort(() => Math.random() - 0.5).slice(0, n);
+        const names = BOT_NAMES.slice(0, bots.n);
+        const span = now ? 1200 : BOT_PACE[bots.pace] || 7000;
         names.forEach(name => bots.timers.push(setTimeout(() => {
-            const now = current();
-            if (!bots.on || now?.key !== c.key || boardOf(now.fen) !== boardOf(c.fen)) return;
-            if (chat.key !== now.key || boardOf(chat.fen) !== boardOf(now.fen)) chatReset(now);
-            const m = botPick(now.fen);
+            const cur = current();
+            if (cur?.key !== c.key || boardOf(cur.fen) !== boardOf(c.fen)) return;
+            if (chat.key !== cur.key || boardOf(chat.fen) !== boardOf(cur.fen)) chatReset(cur);
+            const m = botPick(cur.fen);
             if (!m) return;
             chat.votes.set('bot_' + name.toLowerCase(), { uci: m.from + m.to + (m.promotion || ''), san: m.san, name, bot: true });
             scheduleChat();
-        }, 400 + Math.random() * 7000)));
+            paintBotsPanel();
+        }, 300 + Math.random() * span)));
+        paintBotsPanel();
+    }
+    function botsTick(c) {
+        if (!regie) return;
+        if (!bots.on || !c || c.ended || reviewT.game || !c.fen) { if (bots.key) botsStop(); paintBotsPanel(); return; }
+        if (bots.key === c.key && boardOf(bots.fen) === boardOf(c.fen)) return;
+        botsWave(false);
     }
 
     // ───────────── Photos des joueurs (id FIDE → photo Lichess), entre la couleur et le nom ─────────────

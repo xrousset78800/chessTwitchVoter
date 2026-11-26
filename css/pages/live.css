@@ -1001,8 +1001,13 @@ input[type=range] {
 #page-tournament .t-righttools .t-list-toggle { padding: 4px 8px; font-size: 0.72rem; white-space: nowrap; flex: 0 0 auto; }
 #page-tournament .t-righttools .live-phantom-menu__btn { padding: 4px 9px; font-size: 0.74rem; white-space: nowrap; }
 /* Main ouverte sur les pièces qu'on peut faire glisser pour un prono */
-#liveBoardT img.can-grab { cursor: grab; }
-#liveBoardT img.can-grab:active { cursor: grabbing; }
+#liveBoardT .can-grab, #liveBoardT .can-grab img { cursor: grab; }
+/* Régie · bots (votes simulés) : page Tournoi seulement */
+body:not([data-page="tournament"]) .t-bots { display: none; }
+.t-bots { max-width: 300px; display: flex; flex-direction: column; gap: 6px; }
+.t-bots[hidden] { display: none; }
+.t-bots label { display: inline-flex; align-items: center; gap: 4px; }
+.t-bots .btn--sm { padding: 3px 8px; font-size: 0.74rem; }
 .t-righttools .live-phantom-menu { margin-left: auto; }
 .t-righttools .phantom-menu__panel { left: auto; right: 0; }
 

@@ -5,6 +5,10 @@
  *    POST /api/achievements/unlock. Sans connexion Twitch, ils sont gardés dans le navigateur
  *    (localStorage « achLocal ») et rattachés au compte à la connexion suivante.
  *  - Toast à chaque nouveau succès (comparaison des comptes successifs, js/core/economy.js).
+ *  - Rien n'est versé tout de suite : la récompense (XP, pions, objet) se récupère sur la page Succès.
+ *
+ *   window.achievements.toClaim()  → ids débloqués dont la récompense n'est pas encore récupérée
+ *   window.achievements.claim(ids) → récupère leurs récompenses
  *
  *   window.achievements.defs      → registre ({ tiers, categories, list })
  *   window.achievements.unlocked() → { id: timestamp } (compte, ou navigateur sans connexion)
@@ -36,6 +40,25 @@ const achievements = {
 
     has(id) {
         return !!this.unlocked()[id];
+    },
+
+    toClaim() {
+        const acc = window.economy?.account;
+        if (!acc || !this.defs) return [];
+        const claimed = acc.claimed || {};
+        return Object.keys(acc.achievements || {}).filter(id => this.byId.has(id) && !claimed[id]);
+    },
+
+    async claim(ids) {
+        const r = await fetch('/api/achievements/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...twitchAuth.authHeaders() },
+            body: JSON.stringify({ ids })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+        window.economy?._set(data.account);
+        return data;
     },
 
     /** Succès constaté par le navigateur */
@@ -92,7 +115,8 @@ const achievements = {
         const desc = tr(descKey);
         window.AppToast.show(
             `<b>${esc(tr('achievements.unlockedToast'))}</b> ${esc(name)} <span class="ach-toast__tier ach-tier--${def.tier}">${esc(tier)}</span>`
-            + (desc && desc !== descKey ? `<small class="ach-toast__desc">${esc(desc)}</small>` : ''),
+            + (desc && desc !== descKey ? `<small class="ach-toast__desc">${esc(desc)}</small>` : '')
+            + (twitchAuth.isLoggedIn ? `<small class="ach-toast__desc">${esc(tr('achievements.claimToast'))}</small>` : ''),
             'success', 7000
         )?.classList.add('ach-toast');
     },

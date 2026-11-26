@@ -64,6 +64,10 @@ export function setPaletteId(id) {
 }
 
 // Objets du compte chargés ou changés : la palette enregistrée redevient (ou cesse d'être) utilisable
-window.addEventListener('economyChanged', () => {
+let ownedSig = null;
+window.addEventListener('economyChanged', (e) => {
+    const sig = JSON.stringify([e.detail?.login || null, [...(e.detail?.owned || [])].sort()]);
+    if (sig === ownedSig) return;   // compte relu après un coup : rien de neuf à appliquer
+    ownedSig = sig;
     document.dispatchEvent(new CustomEvent('votePaletteChanged', { detail: { id: getPaletteId() } }));
 });

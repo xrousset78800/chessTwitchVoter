@@ -26,6 +26,15 @@
     white-space: nowrap;
 }
 .nav__level[hidden] { display: none; }
+/* Récompenses de succès à récupérer : pastille sur l'icône Succès */
+.nav__icon[data-navigate="/achievements"] { position: relative; }
+.nav__claim {
+    position: absolute; top: -2px; right: -4px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 999px; background: var(--accent); color: var(--on-accent);
+    font-size: 0.62rem; font-weight: 700; line-height: 16px; text-align: center;
+    pointer-events: none;
+}
 .nav__level:hover { border-color: var(--accent); }
 .nav__level-lv { color: var(--accent); }
 .nav__level-coins { color: var(--text-secondary); }
@@ -82,7 +91,11 @@
 .ach-level__stat b { font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; color: var(--text-primary); }
 .ach-level__stat span { font-size: 0.75rem; color: var(--text-muted); }
 
-.ach-summary { margin: 0 0 20px; color: var(--text-secondary); font-size: 0.9rem; }
+.ach-summary { margin: 0 0 20px; color: var(--text-secondary); font-size: 0.9rem; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ach-claim-all { margin-left: auto; }
+.ach-card__claim { margin-top: 8px; }
+.ach-card__claim small { opacity: 0.85; font-weight: 600; margin-left: 4px; }
+.ach-card.is-claimable { border-color: var(--accent); }
 
 /* ----- Catégories et cartes ----- */
 

@@ -285,9 +285,15 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenus(null); });
 
     // Objets débloqués (js/core/economy.js) : choix enregistrés réappliqués, menu reconstruit
-    window.addEventListener('economyChanged', () => {
+    // Le compte est relu après chaque coup compté (XP, pions) : on ne touche à rien si les objets
+    // possédés et les choix enregistrés n'ont pas changé (sinon le menu et le thème clignotent)
+    let lastSig = null;
+    window.addEventListener('economyChanged', (e) => {
         let ps = null, bt = null, bm = null, bg = null;
         try { ps = localStorage.getItem('pieceSet'); bt = localStorage.getItem('boardTheme'); bm = localStorage.getItem('boardMat'); bg = localStorage.getItem('cgBg'); } catch (e) { }
+        const sig = JSON.stringify([e.detail?.login || null, [...(e.detail?.owned || [])].sort(), ps, bt, bm, bg]);
+        if (sig === lastSig) return;
+        lastSig = sig;
         const prevSet = current.id;
         current = byId(ps || current.id);
         board = boardById(bt || board.id);
