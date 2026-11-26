@@ -151,6 +151,10 @@
 
 .player-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--bg-input); }
 .player-photo[hidden] { display: none; }
+/* Photos dans la liste des matchs et à côté du chrono */
+.tl-player__pic { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--bg-input); }
+.tl-player__pic[hidden], .t-side__photo[hidden] { display: none; }
+.t-side__photo { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: none; background: var(--bg-input); }
 .player-name {
     font-weight: 600;
     font-size: 0.9rem;

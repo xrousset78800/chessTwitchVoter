@@ -29,6 +29,7 @@ function logT(msg, type = 'info') {
 }
 
 function initTournamentBoard() {
+    if (stateT.board) return; // déjà prêt (une partie du lien a pu l'ouvrir avant la page)
     stateT.chess = new Chess();
     stateT.board = Chessboard('liveBoardT', {
         position: 'start',
@@ -1108,6 +1109,7 @@ function openPendingGameT() {
     const key = pendingGameT;
     pendingGameT = null;
     if (!key || !tournamentData) return;
+    initTournamentBoard(); // au rechargement, la partie s'ouvre parfois avant la page
     const g = tournamentData.games.find(x => gameKey(x) === key);
     if (!g) { logT('Partie du lien introuvable dans cette salle', 'warn'); return; }
     if (g.roundId !== activeRoundId) {

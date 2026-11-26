@@ -319,8 +319,8 @@ async function loadLiveGames() {
                         event: { slug: room.event.slug, name: room.event.name, index: room.event.type === 'index' },
                         room: { slug: room.slug, name: room.name },
                         id: g.id, slug: g.slug, round: round?.slug || null,
-                        white: { name: g.white?.preferredShortName?.trim() || String(g.slug).split('-')[0], elo: g.whiteElo ?? null, title: g.whiteTitle || null },
-                        black: { name: g.black?.preferredShortName?.trim() || String(g.slug).split('-')[1], elo: g.blackElo ?? null, title: g.blackTitle || null },
+                        white: { name: g.white?.preferredShortName?.trim() || String(g.slug).split('-')[0], elo: g.whiteElo ?? null, title: g.whiteTitle || null, fide: g.white?.fideId ? String(g.white.fideId) : null },
+                        black: { name: g.black?.preferredShortName?.trim() || String(g.slug).split('-')[1], elo: g.blackElo ?? null, title: g.blackTitle || null, fide: g.black?.fideId ? String(g.black.fideId) : null },
                         fen: g.currentFEN, startAt: g.startAt,
                     });
                 }
@@ -351,13 +351,18 @@ app.get('/api/twitch/avatars', (req, res) => {
 
 // Photos des joueurs de tournoi (id FIDE) : API publique de Lichess, gardées en mémoire
 const fidePhotos = new Map(); // id -> { at, v: { src, credit } | null, p? }
+// Au plus 4 appels à Lichess en même temps (la liste des matchs peut en demander une centaine)
+let fideActive = 0; const fideWait = [];
+const fideSlot = () => fideActive < 4 ? (fideActive++, Promise.resolve()) : new Promise(r => fideWait.push(r));
+const fideFree = () => { const n = fideWait.shift(); if (n) n(); else fideActive--; };
 function fidePhoto(id) {
     const c = fidePhotos.get(id);
     if (c && (c.p || Date.now() - c.at < (c.v ? 86400000 : 3600000))) return c.p || Promise.resolve(c.v);
-    const p = fetch(`https://lichess.org/api/fide/player/${id}`, { headers: { 'User-Agent': 'CrowdGambit/1.0', Accept: 'application/json' } })
+    const p = fideSlot().then(() => fetch(`https://lichess.org/api/fide/player/${id}`, { headers: { 'User-Agent': 'CrowdGambit/1.0', Accept: 'application/json' } })
         .then(r => r.ok ? r.json() : null)
         .then(j => (j?.photo?.small && /^https:\/\/image\.lichess\.org\//.test(j.photo.small)) ? { src: j.photo.small, credit: String(j.photo.credit || '').slice(0, 80) } : null)
         .catch(() => null)
+        .finally(fideFree))
         .then(v => { fidePhotos.set(id, { at: Date.now(), v }); return v; });
     fidePhotos.set(id, { at: Date.now(), v: null, p });
     if (fidePhotos.size > 3000) fidePhotos.delete(fidePhotos.keys().next().value);

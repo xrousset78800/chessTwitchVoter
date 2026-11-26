@@ -65,7 +65,15 @@
             <span class="tl-votes__n">${esc(T('predict.votes', { n }, `${n} vote(s)`))}</span></div>`;
     }
 
-    const playerHTML = (p, side) => `<div class="tl-player tl-player--${side}"><span class="tl-player__dot"></span>`
+    // Photos des joueurs (id FIDE → photo Lichess) : déclarées ici, la liste des matchs s'en sert aussi
+    const photos = new Map();   // fideId -> { src, credit } | null | 'wait'
+    const photoOf = id => { const p = id ? photos.get(String(id)) : null; return p && p !== 'wait' ? p : null; };
+    const picHTML = id => {
+        if (!id) return '';
+        const p = photoOf(id);
+        return `<img class="tl-player__pic" data-fide="${esc(id)}" alt=""${p ? ` src="${esc(p.src)}" title="${esc('Photo : ' + p.credit)}"` : ' hidden'}>`;
+    };
+    const playerHTML = (p, side) => `<div class="tl-player tl-player--${side}"><span class="tl-player__dot"></span>${picHTML(p.fide)}`
         + `${p.title ? `<span class="player-title">${esc(p.title)}</span> ` : ''}<span class="tl-player__name">${esc(p.name)}</span>`
         + `<span class="tl-player__elo">${esc(p.elo ?? '')}</span></div>`;
 
@@ -87,19 +95,13 @@
             grid.innerHTML = `<p class="tl-empty">${esc(T('tlive.noMatch', null, 'Aucun match ne correspond.'))}</p>`;
             return;
         }
-        const pickHTML = (g, i, odds, mine) => `<div class="tl-pick" role="group" aria-label="${esc(T('predict.winnerTitle', null, 'Vainqueur'))}">
-                ${PICKS.map(p => `<button type="button" data-tl-vote="${i}" data-pick="${p}" class="${mine === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]) + (odds ? ' · ' + T('predict.oddsNow', { odds: fmtOdds(odds[p]) }) : ''))}">${p === '1/2-1/2' ? '½' : p}${odds ? `<small>${fmtOdds(odds[p])}</small>` : ''}</button>`).join('')}
-            </div>`;
+        // Plus de vote à la volée depuis la liste : on vote sur la partie suivie
         grid.innerHTML = shown.map(({ g, i }) => {
-            const odds = g.odds;
-            const mine = myWinnerPicks[`${g.room.slug}:${g.id}`];
             const isFollowed = followed === `${g.room.slug}:${g.id}`;
             const where = g.event.name + (g.room.name && g.room.name !== g.event.name ? ' · ' + g.room.name : '');
             if (compact) {
                 return `<article class="tl-card tl-row${isFollowed ? ' is-followed' : ''}" data-tl="${i}" title="${esc(where)}">
                 <button type="button" class="tl-row__main" data-tl-follow="${i}">${playerHTML(g.white, 'w')}${playerHTML(g.black, 'b')}</button>
-                ${pickHTML(g, i, odds, mine)}
-                ${votesHTML(g.votes)}
             </article>`;
             }
             return `<article class="tl-card${isFollowed ? ' is-followed' : ''}" data-tl="${i}">
@@ -107,14 +109,13 @@
                 <div class="tl-card__body">
                     <div class="tl-card__event" title="${esc(where)}">${esc(g.event.name)}</div>
                     ${playerHTML(g.white, 'w')}${playerHTML(g.black, 'b')}
-                    ${votesHTML(g.votes)}
                     <div class="tl-card__actions">
                         <button type="button" class="tl-follow" data-tl-follow="${i}"><i class="fas fa-eye"></i> ${esc(isFollowed ? T('tlive.following', null, 'Suivie') : T('tlive.follow', null, 'Suivre'))}</button>
-                        ${pickHTML(g, i, odds, mine)}
                     </div>
                 </div>
             </article>`;
         }).join('');
+        paintPhotos();
     }
 
     /** Ouvre la partie comme depuis la liste du tournoi (suivi en direct) */
@@ -572,7 +573,6 @@
     }
 
     // ───────────── Photos des joueurs (id FIDE → photo Lichess), entre la couleur et le nom ─────────────
-    const photos = new Map();   // fideId -> { src, credit } | null | 'wait'
     let photoQueue = new Set(), photoTimer = null;
     async function fetchPhotos() {
         photoTimer = null;
@@ -584,20 +584,28 @@
             ids.forEach(id => photos.set(id, j.photos?.[id] || null));
         } catch { ids.forEach(id => photos.delete(id)); }
         paintPhotos();
+        if (photoQueue.size) photoTimer ||= setTimeout(fetchPhotos, 50);
+    }
+    /** Met une photo (ou rien) sur une image ; demande celles qu'on n'a pas encore */
+    function setPhoto(img, id) {
+        id = String(id || '');
+        if (id && !photos.has(id)) { photos.set(id, 'wait'); photoQueue.add(id); photoTimer ||= setTimeout(fetchPhotos, 100); }
+        const p = photoOf(id);
+        const src = p ? p.src : '';
+        if (img.getAttribute('src') !== src) { if (src) img.src = src; else img.removeAttribute('src'); }
+        img.title = p?.credit ? `Photo : ${p.credit}` : '';
+        img.hidden = !src;
     }
     function paintPhotos() {
         const live = reviewT.game || (stateT.currentGame && (tournamentData?.games?.find(x => x.id === stateT.currentGame.id) || stateT.currentGame));
         for (const side of ['white', 'black']) {
-            const img = document.getElementById(side === 'white' ? 'photoWhiteT' : 'photoBlackT');
-            if (!img) continue;
-            const id = String(live?.[side]?.fideId || '');
-            if (id && !photos.has(id)) { photos.set(id, 'wait'); photoQueue.add(id); photoTimer ||= setTimeout(fetchPhotos, 100); }
-            const p = id ? photos.get(id) : null;
-            const src = p && p !== 'wait' ? p.src : '';
-            if (img.getAttribute('src') !== src) { if (src) img.src = src; else img.removeAttribute('src'); }
-            img.title = p?.credit ? `Photo : ${p.credit}` : '';
-            img.hidden = !src;
+            const id = live?.[side]?.fideId;
+            for (const elId of side === 'white' ? ['photoWhiteT', 'tBarPhotoWhite'] : ['photoBlackT', 'tBarPhotoBlack']) {
+                const img = document.getElementById(elId);
+                if (img) setPhoto(img, id);
+            }
         }
+        document.querySelectorAll('#tLiveGrid img[data-fide]').forEach(img => setPhoto(img, img.dataset.fide));
     }
 
     // ───────────── Dernier coup surligné sur l'échiquier (aussi à l'ouverture d'une partie) ─────────────
@@ -681,12 +689,6 @@
         page.addEventListener('click', e => {
             const follow = e.target.closest('[data-tl-follow]');
             if (follow) { const g = liveGames[+follow.dataset.tlFollow]; if (g) openLiveGame(g); return; }
-            const vote = e.target.closest('[data-tl-vote]');
-            if (vote) {
-                const g = liveGames[+vote.dataset.tlVote];
-                if (g) voteWinner(g.room.slug, g.id, vote.dataset.pick, `${g.room.slug}:${g.id}`);
-                return;
-            }
             const side = e.target.closest('[data-tside]');
             if (side) { setSide(side.dataset.tside, true); return; }
             const mv = e.target.closest('[data-tp-move]');
