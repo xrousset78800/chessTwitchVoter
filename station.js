@@ -96,7 +96,7 @@ const pick = (arr) => arr[rand(arr.length)];
 /** chess.js 1.x lève une exception sur un coup illégal : null à la place */
 const tryMove = (chess, m) => { try { return chess.move(m); } catch { return null; } };
 
-module.exports = function station({ io, verifyTwitchToken, dataDir, log = console.log, durations = {}, liveGames = null, fetchRoom = null, fetchGame = null }) {
+module.exports = function station({ io, verifyTwitchToken, dataDir, log = console.log, durations = {}, liveGames = null, fetchRoom = null, fetchGame = null, economy = null }) {
     Object.assign(DUR, durations);
 
     // ------------------------------------------------------------------ puzzles (CSV Lichess)
@@ -442,7 +442,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             winner: login && s.game?.winners ? s.game.winners.get(login)?.w || null : null,
             pts: login && s.game?.scores ? s.game.scores.get(login)?.pts || 0 : 0,
             hits: login && s.game?.scores ? s.game.scores.get(login)?.hits || 0 : 0,
-            tries: login && s.game?.scores ? s.game.scores.get(login)?.tries || 0 : 0
+            tries: login && s.game?.scores ? s.game.scores.get(login)?.tries || 0 : 0,
+            coins: login && s.game?.scores ? s.game.scores.get(login)?.coins || 0 : 0
         });
     }
     function emitMeAll(login) {
@@ -871,8 +872,20 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const placeTurn = (fen) => String(fen).split(' ').slice(0, 2).join(' ');
     function scoreOf(g, login) {
         let sc = g.scores.get(login);
-        if (!sc) g.scores.set(login, sc = { pts: 0, hits: 0, win: 0 });
+        if (!sc) g.scores.set(login, sc = { pts: 0, hits: 0, win: 0, streak: 0, coins: 0, xp: 0 });
         return sc;
+    }
+    // Prédiction : XP et pions sur le compte du devin (site ou chat Twitch lu par le serveur), mêmes règles que la page Tournois.
+    // Le compte est créé au besoin : un viewer qui n'a jamais ouvert le site est crédité aussi. Les bots ne gagnent rien.
+    const PR = () => economy?.RULES?.predict;
+    function payPredict(g, login, sc, { xp, coins, key = null }) {
+        if (!economy || !PR() || /^(bot_|sim_)/.test(login) || !LOGIN_RE.test(login)) return;
+        try {
+            const r = economy.grant(login, 'predict', { xp, coins, capped: true, key });
+            sc.xp += r?.xp || 0;
+            sc.coins += r?.coins || 0;
+            economy.checkAchievements?.(login);
+        } catch (e) { log('🔮 24/24 : gain non crédité', login, e.message); }
     }
     /** Classement des devins : points, puis coups trouvés */
     const predictBoard = (g, n) => [...g.scores.entries()].filter(([, x]) => x.pts > 0)
@@ -886,7 +899,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function predictPublic(g) {
         const guesses = [...g.votes].slice(-60).map(([u, l]) => tickerItem({ u, v: g.guessVia?.get(u) || null }, { m: l[0] }));
         return { ...g.predict, clocks: g.clocks, lastHit: g.lastHit, winners: winnerCounts(g), board: predictBoard(g, 8),
-            guesses, guessers: g.votes.size, players: g.scores.size, open: !g.result };
+            guesses, guessers: g.votes.size, players: g.scores.size, open: !g.result, moveCoins: PR()?.move.coins || 0 };
     }
     function startPredict() {
         const info = s.predictPick || gameBallot()?.games.g0;
@@ -1033,7 +1046,12 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                         sc.pts++;
                         sc.hits++;
                         g.hits.set(login, (g.hits.get(login) || 0) + 1);
-                    }
+                        sc.streak = (sc.streak || 0) + 1;
+                        if (PR()) {
+                            const bonus = sc.streak % PR().streak.every === 0 ? PR().streak : { xp: 0, coins: 0 };
+                            payPredict(g, login, sc, { xp: PR().move.xp + bonus.xp, coins: PR().move.coins + bonus.coins });
+                        }
+                    } else sc0.streak = 0;
                 }
                 g.hv.push(total ? Math.round(n * 100 / total) : null);
                 who.sort((a, b) => b.hit - a.hit);
@@ -1090,6 +1108,12 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             const sc = scoreOf(g, login);
             sc.win = WINNER_PTS(p.ply);
             sc.pts += sc.win;
+            if (PR()) {
+                // Plus le pronostic est tôt, plus il rapporte (x1,7 avant le coup 15 … x0,2 après le 45)
+                const base = winner === 'd' ? PR().winnerDraw : PR().winner;
+                const f = Math.max(PR().oddsMin, Math.min(PR().oddsMax, sc.win / 6));
+                payPredict(g, login, sc, { xp: Math.max(1, Math.round(base.xp * f)), coins: Math.max(1, Math.round(base.coins * f)), key: `h24w:${g.startedAt}:${login}` });
+            }
         }
         g.result = { kind: 'predict', winner, end: res.kind };
         g.turnEndsAt = null;
@@ -1616,7 +1640,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             phase: s.phase, mode: s.mode, turn: s.game?.chess.turn() || null, turnOpen: !!s.game?.turnEndsAt,
             teams: { w: s.teams.w.length, b: s.teams.b.length },
             paused: s.paused, pauseReason: s.pauseReason || null, viewers: viewers(), phantom: regie.phantom, bots: bots.list.length,
-            predict: s.game?.predict ? { guessers: s.game.votes.size, winners: s.game.winners.size, ply: s.game.history.length, result: s.game.result || null } : undefined,
+            predict: s.game?.predict ? { guessers: s.game.votes.size, winners: s.game.winners.size, ply: s.game.history.length, result: s.game.result || null, coinsPaid: [...s.game.scores.values()].reduce((a, x) => a + (x.coins || 0), 0) } : undefined,
             login: login ? { login, team: teamOf(login), optOut: s.optOut.has(login) } : undefined,
             recent: chat.recent
         };

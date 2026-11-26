@@ -821,7 +821,7 @@
     "mode": { "bot": "Vs Stockfish", "teams": "Two teams", "rush": "Puzzle rush", "classic": "Classic game", "predict": "Prediction" },
     "entry": { "classic": "Classic game", "rush": "Puzzles", "predict": "Prediction" },
     "opponent": { "bot": "Against bots", "teams": "Viewers vs viewers" },
-    "pred": { "guess": "Guess {side}'s next move", "myGuess": "Your guess: {move}", "login": "Log in with Twitch to guess moves", "lastHit": "{move}: {n}/{total} found it", "lastMove": "Last move", "found": "{n} / {total} found it", "noGuess": "Nobody guessed it", "guessers": "{n} guess(es)", "winner": "Winner? (+{n} pts)", "yourWinner": "Your pick", "draw": "Draw", "pts": "{n} pts", "ptsHint": "Right winner: 10 pts before move 15, 6 before 30, 3 before 45, then 1. Right move guessed: 1 pt.", "board": "Guessers", "nobody": "Nobody has scored yet", "hits": "{n} move(s) found", "over": "Game over", "stopped": "Game interrupted", "recapTitle": "Prediction over", "bestGuessers": "Top guessers", "rightWinner": "right picks", "winnerOk": "Right winner", "players": "guessers", "chat": "your viewers can guess in your chat too (e.g. e4, white)", "waiting": "Waiting for the next move…", "nextMove": "Next move" },
+    "pred": { "guess": "Guess {side}'s next move", "myGuess": "Your guess: {move}", "login": "Log in with Twitch to guess moves", "lastHit": "{move}: {n}/{total} found it", "lastMove": "Last move", "found": "{n} / {total} found it", "noGuess": "Nobody guessed it", "guessers": "{n} guess(es)", "winner": "Winner? (+{n} pts)", "yourWinner": "Your pick", "draw": "Draw", "pts": "{n} pts", "ptsHint": "Right winner: 10 pts before move 15, 6 before 30, 3 before 45, then 1. Right move guessed: 1 pt. Every right move also earns pawns, the right winner even more: they go to your account, even if you guess in the chat.", "coinsHint": "Pawns earned in this game, credited to your account", "board": "Guessers", "nobody": "Nobody has scored yet", "hits": "{n} move(s) found", "over": "Game over", "stopped": "Game interrupted", "recapTitle": "Prediction over", "bestGuessers": "Top guessers", "rightWinner": "right picks", "winnerOk": "Right winner", "players": "guessers", "chat": "your viewers can guess in your chat too (e.g. e4, white)", "waiting": "Waiting for the next move…", "nextMove": "Next move" },
     "decision": { "majority": "Majority", "draw": "Random draw" },
     "level": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
     "ballot": { "elo": "Stockfish level?", "mode": "Next game mode?", "turn": "Turn length?", "decision": "How is the move chosen?", "votes": "How many votes per player per turn?", "anonymity": "Votes visible during the turn?", "spin": "Random draw speed?", "opponent": "Against whom?", "game": "Which game to follow?" },
@@ -1488,6 +1488,7 @@
       "daily": "Daily bonus: {n} pawns, +{bonus} per streak day (up to {max})",
       "rush": "Puzzle Rush: {n} pawns per run point, {rec} more for a personal best",
       "multi": "Multi: {win} pawns for a win, {draw} for a draw, {loss} for a loss",
+      "predict": "Predictions (Tournaments and 24/7): {n} pawns per move guessed, {w} for the right winner (more if you pick early), {s} bonus every {every} right answers in a row",
       "ach": "Achievements: {b} (bronze), {a} (silver), {o} (gold), {p} (platinum)"
     },
     "cat": {

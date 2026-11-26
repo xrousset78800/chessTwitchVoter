@@ -1552,7 +1552,8 @@ const H24Page = {
         const mine = this.me.winner;
         const can = !!me && !mine && !over;
         const rules = t('h24.pred.ptsHint', null, 'Bon vainqueur : 10 pts avant le coup 15, 6 avant le 30, 3 avant le 45, puis 1. Bon coup deviné : 1 pt.');
-        const stat = me ? `${this.me.hits || 0}/${this.me.tries || 0} · ${esc(t('h24.pred.pts', { n: this.me.pts || 0 }, `${this.me.pts || 0} pts`))}` : '';
+        const stat = me ? `${this.me.hits || 0}/${this.me.tries || 0} · ${esc(t('h24.pred.pts', { n: this.me.pts || 0 }, `${this.me.pts || 0} pts`))}`
+            + (this.me.coins ? ` · <span class="h24-coins" title="${esc(t('h24.pred.coinsHint', null, 'Pions gagnés dans cette partie, crédités sur ton compte'))}"><i class="fas fa-chess-pawn"></i> ${this.me.coins}</span>` : '') : '';
         const picks = keys.map(([k, c, lab]) => `<button type="button" data-h24-winner="${k}" class="${mine === k ? 'is-on' : ''}" title="${esc(t('predict.' + c, null, c))}" ${can ? '' : 'disabled'}>`
             + `${mine === k ? '<i class="fas fa-lock"></i> ' : ''}${lab}${mine ? '' : `<small>+${stake}</small>`}</button>`).join('');
         const segs = nw ? keys.filter(([k]) => w[k]).map(([k, c]) =>
@@ -1605,7 +1606,7 @@ const H24Page = {
         const MAXF = 10;
         const row = (gr, i) => {
             const mark = !flash ? '' : gr.hit
-                ? '<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1 pt</b></span>'
+                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1 pt${P.moveCoins ? ` · +${P.moveCoins} <i class="fas fa-chess-pawn"></i>` : ''}</b></span>`
                 : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
             const more = gr.list.length - MAXF;
             return `<li class="tv-item tv-grp${gr.list.some(v => v.u === me) ? ' is-me' : ''}${flash ? (gr.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i};--p:${Math.round(100 * gr.list.length / rows.length)}%">

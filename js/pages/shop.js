@@ -208,6 +208,7 @@ function wallet(acc) {
         t('earn.daily', { n: r.daily.coins, bonus: r.daily.streakBonus, max: r.daily.coins + r.daily.streakBonus * r.daily.streakMax }),
         t('earn.rush', { n: r.rushRun.coinsPerPoint, rec: r.rushRecord.coins }),
         t('earn.multi', { win: r.multi.win.coins, draw: r.multi.draw.coins, loss: r.multi.loss.coins }),
+        ...(r.predict ? [t('earn.predict', { n: r.predict.move.coins, w: r.predict.winner.coins, s: r.predict.streak.coins, every: r.predict.streak.every })] : []),
         t('earn.ach', { b: r.achievement.B.coins, a: r.achievement.A.coins, o: r.achievement.O.coins, p: r.achievement.P.coins }),
     ] : [];
     const how = `<details class="shop-earn"><summary><i class="fas fa-circle-info"></i> ${esc(t('earnTitle'))}</summary>
