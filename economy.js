@@ -42,7 +42,14 @@ const CATALOG = {
     orange: { kind: 'board', price: 300 },
     purple: { kind: 'board', price: 300 },
     rose:   { kind: 'board', price: 300 },
+    aurora: { kind: 'board', price: null },
+    'title-touche-a-tout': { kind: 'title', price: null },
 };
+
+// Succes (registre partage avec le client) : stat + goal = debloque cote serveur, sinon par le client
+const ACHIEVEMENTS = require('./js/core/achievements.json').list;
+const ACH_BY_ID = new Map(ACHIEVEMENTS.map(d => [d.id, d]));
+const CLIENT_ACH = new Set(ACHIEVEMENTS.filter(d => !d.stat && !d.requires).map(d => d.id));
 
 const MAX_LOG = 50;          // derniers gains gardés (affichage « historique »)
 const MAX_KEYS = 500;        // clés anti double comptage gardées par compte
@@ -73,8 +80,24 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         login, xp: 0, coins: 0, earned: 0, spent: 0,
         owned: [], achievements: {},
         day: null, dayCoins: 0, streak: 0, lastDay: null,
-        keys: [], log: [],
+        keys: [], log: [], stats: {},
     };
+    const stats = (a) => a.stats ||= {};
+
+    /** Debloque les succes atteints (compteurs, prerequis) ; retourne les ids nouveaux */
+    function checkAchievements(login) {
+        const a = account(login), st = stats(a), out = [];
+        for (let again = true; again;) {
+            again = false;
+            for (const d of ACHIEVEMENTS) {
+                if (a.achievements[d.id]) continue;
+                const ok = d.stat ? (st[d.stat] || 0) >= d.goal
+                    : d.requires ? d.requires.every(id => a.achievements[id]) : false;
+                if (ok && onAchievement(login, d.id)) { out.push(d.id); again = true; }
+            }
+        }
+        return out;
+    }
 
     /**
      * Verse un gain. capped : compte dans le plafond quotidien de pions.
@@ -121,12 +144,18 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
     /** Coups comptés par /api/stats/votes : liste de { puzzle, voters } */
     function onTurns(login, turns) {
         let xp = 0, coins = 0;
+        const st = stats(account(login));
         for (const t of turns) {
+            st.turns = (st.turns || 0) + 1;
+            st.votes = (st.votes || 0) + (t.voters || 0);
+            st.maxVoters = Math.max(st.maxVoters || 0, t.voters || 0);
             const r = t.puzzle ? RULES.puzzleTurn : RULES.turn;
             xp += r.xp + Math.min(RULES.turnCrowd.max, Math.floor(t.voters / RULES.turnCrowd.per)) * RULES.turnCrowd.xp;
             coins += r.coins;
         }
-        return xp || coins ? grant(login, 'turns', { xp, coins, capped: true }) : null;
+        const gain = xp || coins ? grant(login, 'turns', { xp, coins, capped: true }) : null;
+        const achievements = checkAchievements(login);
+        return achievements.length ? { ...(gain || { xp: 0, coins: 0 }), achievements } : gain;
     }
 
     /** Fin de run Puzzle Rush */
@@ -134,7 +163,14 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         const r = RULES.rushRun;
         let xp = score * r.xpPerPoint, coins = score * r.coinsPerPoint;
         if (isNewRecord && score > 0) { xp += RULES.rushRecord.xp; coins += RULES.rushRecord.coins; }
-        return grant(login, 'rush', { xp, coins, key: `rush:${mode}:${at}` });
+        const gain = grant(login, 'rush', { xp, coins, key: `rush:${mode}:${at}` });
+        if (gain?.duplicate) return gain;
+        const st = stats(account(login));
+        st.rushRuns = (st.rushRuns || 0) + 1;
+        st.rushPuzzles = (st.rushPuzzles || 0) + score;
+        st.rushBest = Math.max(st.rushBest || 0, score);
+        const achievements = checkAchievements(login);
+        return achievements.length ? { ...gain, achievements } : gain;
     }
 
     /** Résultat d'une bataille Multi (détecté par le serveur), pour les deux chaînes */
@@ -145,8 +181,11 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         }
     }
 
-    /** Succès débloqué (palier B/A/O/P/S) ; reward : id d'objet offert */
-    function onAchievement(login, id, tier, reward = null) {
+    /** Succès débloqué (palier B/A/O/P/S et récompense lus dans le registre) */
+    function onAchievement(login, id) {
+        const def = ACH_BY_ID.get(id);
+        if (!def) return null;
+        const { tier, reward } = def;
         const a = account(login);
         if (a.achievements[id]) return null;
         a.achievements[id] = Date.now();
@@ -168,6 +207,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
             dailyCoinCap: RULES.dailyCoinCap,
             owned: a?.owned || [],
             achievements: a?.achievements || {},
+            stats: a?.stats || {},
             log: (a?.log || []).slice(-20).reverse(),
         };
     }
@@ -187,6 +227,15 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         res.json({ login, ...levelInfo(a?.xp || 0) });
     });
 
+    // Succès constatés par le navigateur (premiers pas, coups remarquables) : pas d'anti-triche, cf. ticket #16
+    app.post('/api/achievements/unlock', requireTwitch, (req, res) => {
+        const ids = Array.isArray(req.body?.ids) ? req.body.ids.slice(0, 60).map(String) : [];
+        const login = req.twitch.login;
+        const unlocked = ids.filter(id => CLIENT_ACH.has(id) && onAchievement(login, id));
+        unlocked.push(...checkAchievements(login));
+        res.json({ unlocked, account: publicAccount(login) });
+    });
+
     app.post('/api/economy/buy', requireTwitch, (req, res) => {
         const id = String(req.body?.item || '');
         const item = Object.hasOwn(CATALOG, id) ? CATALOG[id] : null;
@@ -204,7 +253,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         res.json(publicAccount(a.login));
     });
 
-    return { grant, onTurns, onRushRun, onMultiResult, onAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store };
+    return { grant, checkAchievements, onTurns, onRushRun, onMultiResult, onAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store };
 };
 module.exports.RULES = RULES;
 module.exports.levelInfo = levelInfo;

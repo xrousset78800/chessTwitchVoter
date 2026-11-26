@@ -9,7 +9,8 @@
     "browse": "Browse",
     "game": "Game in progress",
     "records": "Records",
-    "h24": "24/24"
+    "h24": "24/24",
+    "achievements": "Achievements"
   },
   "app": {
     "tagline": "Connect your Phantom board and your Twitch account for interactive games with your community"
@@ -1055,7 +1056,213 @@
       "purple": "Lavender",
       "rose": "Rose",
       "night": "Midnight blue",
-      "black": "Black"
+      "black": "Black",
+      "aurora": "Aurora"
+    }
+  },
+  "achievements": {
+    "desc": "Unlock achievements by playing with your chat: each one gives XP and pawns, some offer piece sets or boards.",
+    "loginHint": "Connect your Twitch account to keep your achievements, level and pawns. Achievements earned while logged out will be added to your account.",
+    "level": "Level",
+    "levelShort": "Lv.",
+    "levelMax": "Maximum level reached",
+    "xpToNext": "{xp} / {next} XP to the next level",
+    "coins": "pawns",
+    "streak": "day streak",
+    "count": "{n} of {total} achievements unlocked",
+    "unlockedToast": "Achievement unlocked:",
+    "secretName": "Secret achievement",
+    "secretDesc": "Discover it by playing…",
+    "unavailable": "Achievements unavailable right now",
+    "cat": {
+      "start": "First steps",
+      "rush": "Puzzle Rush",
+      "votes": "Chat votes",
+      "moves": "Remarkable moves"
+    },
+    "tier": {
+      "B": "Bronze",
+      "A": "Silver",
+      "O": "Gold",
+      "P": "Platinum",
+      "S": "Secret"
+    },
+    "rewards": {
+      "title-touche-a-tout": "Title \"Jack of all trades\""
+    },
+    "list": {
+      "bienvenue": {
+        "name": "Welcome",
+        "desc": "Log in with Twitch for the first time"
+      },
+      "premier-coup": {
+        "name": "First move",
+        "desc": "Play a first move voted by the chat"
+      },
+      "premier-run": {
+        "name": "First run",
+        "desc": "Start a first Puzzle Rush"
+      },
+      "premiere-inscription": {
+        "name": "First sign-ups",
+        "desc": "Open sign-ups for a Mono game"
+      },
+      "main-tendue": {
+        "name": "Helping hand",
+        "desc": "Create a Multi game against another channel"
+      },
+      "face-a-la-machine": {
+        "name": "Man vs machine",
+        "desc": "Start a game against Stockfish"
+      },
+      "bac-a-sable": {
+        "name": "Sandbox",
+        "desc": "Open a Free game"
+      },
+      "curieux": {
+        "name": "Curious",
+        "desc": "Watch a game from the Browse page"
+      },
+      "dans-les-livres": {
+        "name": "In the books",
+        "desc": "Visit the Records page"
+      },
+      "tour-du-proprietaire": {
+        "name": "Grand tour",
+        "desc": "Start Puzzle Rush, Mono, Multi, a Free game and a game against Stockfish at least once"
+      },
+      "polyglotte": {
+        "name": "Polyglot",
+        "desc": "Use the interface in 3 different languages"
+      },
+      "relooking": {
+        "name": "Makeover",
+        "desc": "Change the piece set or board color"
+      },
+      "lien-partage": {
+        "name": "Shared link",
+        "desc": "Copy the sign-up link of a game"
+      },
+      "premier-sang": {
+        "name": "First blood",
+        "desc": "Solve a first puzzle in Puzzle Rush"
+      },
+      "echauffement": {
+        "name": "Warm-up",
+        "desc": "Reach a score of 5 in one run"
+      },
+      "en-rythme": {
+        "name": "In the groove",
+        "desc": "Reach a score of 10 in one run"
+      },
+      "machine-a-puzzles": {
+        "name": "Puzzle machine",
+        "desc": "Reach a score of 20 in one run"
+      },
+      "cerveau-collectif": {
+        "name": "Hive mind",
+        "desc": "Reach a score of 30 in one run"
+      },
+      "ruche-infaillible": {
+        "name": "Flawless hive",
+        "desc": "Reach a score of 40 in one run"
+      },
+      "assidu-du-rush": {
+        "name": "Rush regular",
+        "desc": "Play 10 runs"
+      },
+      "accro-du-rush": {
+        "name": "Rush addict",
+        "desc": "Play 100 runs"
+      },
+      "mille-puzzles": {
+        "name": "A thousand puzzles",
+        "desc": "Solve 1,000 puzzles in total"
+      },
+      "premiere-vague": {
+        "name": "First wave",
+        "desc": "Receive 100 votes in total"
+      },
+      "maree-montante": {
+        "name": "Rising tide",
+        "desc": "Receive 1,000 votes in total"
+      },
+      "raz-de-maree": {
+        "name": "Tidal wave",
+        "desc": "Receive 10,000 votes in total"
+      },
+      "democratie-totale": {
+        "name": "Total democracy",
+        "desc": "Receive 100,000 votes in total"
+      },
+      "salle-comble": {
+        "name": "Full house",
+        "desc": "A turn with 20 voters"
+      },
+      "stade": {
+        "name": "Stadium",
+        "desc": "A turn with 100 voters"
+      },
+      "concert": {
+        "name": "Concert",
+        "desc": "A turn with 500 voters"
+      },
+      "petit-roque": {
+        "name": "Short castle",
+        "desc": "Castle kingside"
+      },
+      "grand-roque": {
+        "name": "Long castle",
+        "desc": "Castle queenside"
+      },
+      "en-passant": {
+        "name": "En passant",
+        "desc": "Capture en passant"
+      },
+      "promotion": {
+        "name": "Promotion",
+        "desc": "Promote a pawn"
+      },
+      "sous-promotion": {
+        "name": "Underpromotion",
+        "desc": "Promote a pawn to a knight"
+      },
+      "vraiment": {
+        "name": "Really?",
+        "desc": "Promote a pawn to a bishop or a rook"
+      },
+      "deux-dames": {
+        "name": "Two queens",
+        "desc": "Have two queens on the board"
+      },
+      "echec-double": {
+        "name": "Double check",
+        "desc": "Give a double check"
+      },
+      "echec-a-la-decouverte": {
+        "name": "Discovered check",
+        "desc": "Give a discovered check"
+      },
+      "mat-du-couloir": {
+        "name": "Back-rank mate",
+        "desc": "Mate on the back rank with a rook or queen"
+      },
+      "mat-du-berger": {
+        "name": "Scholar's mate",
+        "desc": "Mate in 4 moves or fewer"
+      },
+      "mat-du-lion": {
+        "name": "Lightning mate",
+        "desc": "Mate in fewer than 10 moves"
+      },
+      "mat-de-pion": {
+        "name": "Pawn mate",
+        "desc": "Deliver mate with a pawn"
+      },
+      "mat-de-roi": {
+        "name": "King mate",
+        "desc": "Deliver mate by moving the king (discovered mate)"
+      }
     }
   },
   "seo": {

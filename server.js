@@ -39,7 +39,7 @@ const INDEX_HTML = require('fs').readFileSync(path.join(__dirname, 'index.html')
 
 // Adresses propres de l'appli (/24h, /records?c=x, /multi/hote/code…) : même page, le routeur côté client prend le relais.
 // Chaque langue a ses adresses (/en/rush, /de/records…) et reçoit la page déjà traduite (seo.js), avec robots.txt et sitemap.xml.
-const APP_ROUTES = /^\/(24h|sandbox|game|browse|records|watch|live|tournament|rush|mono|multi)(\/|$)/;
+const APP_ROUTES = /^\/(24h|sandbox|game|browse|records|watch|live|tournament|rush|mono|multi|achievements)(\/|$)/;
 require('./seo')({ app, rootDir: __dirname, indexHtml: INDEX_HTML, appRoutes: APP_ROUTES });
 
 // Fichiers publics seulement : jamais le code serveur, package.json ni les données (data/)

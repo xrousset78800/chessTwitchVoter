@@ -35,7 +35,7 @@ const economy = {
 
     /** Gain renvoyé par le serveur (fin de run, coups…) : on relit le compte */
     noteGain(gain) {
-        if (gain && (gain.xp || gain.coins || gain.daily)) this.refresh();
+        if (gain && (gain.xp || gain.coins || gain.daily || gain.achievements?.length)) this.refresh();
     },
 
     _set(account) {

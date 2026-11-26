@@ -1,0 +1,167 @@
+/* ============================================
+   SUCCÈS : niveau, pions, liste des succès
+   + pastille niveau / pions de la barre du haut
+   ============================================ */
+
+.ach-tier--B { --tier: #c98a52; }
+.ach-tier--A { --tier: #b9c3cf; }
+.ach-tier--O { --tier: #f5c542; }
+.ach-tier--P { --tier: #7fd8e8; }
+.ach-tier--S { --tier: #b58cff; }
+
+/* ----- Barre du haut ----- */
+
+.nav__level {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.nav__level[hidden] { display: none; }
+.nav__level:hover { border-color: var(--accent); }
+.nav__level-lv { color: var(--accent); }
+.nav__level-coins { color: var(--text-secondary); }
+
+/* ----- Niveau ----- */
+
+.ach-level {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+}
+
+.ach-level--guest { gap: 14px; }
+.ach-level--guest .fa-twitch { font-size: 1.6rem; color: var(--twitch-brand); }
+.ach-level--guest p { flex: 1; margin: 0; color: var(--text-secondary); }
+
+.ach-level__badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--gradient-hero);
+    color: var(--on-accent);
+    line-height: 1;
+}
+.ach-level__badge span { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.ach-level__badge b { font-family: 'Chakra Petch', sans-serif; font-size: 1.6rem; }
+
+.ach-level__main { flex: 1; min-width: 0; }
+.ach-level__bar, .ach-card__progress {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--bg-input);
+    overflow: hidden;
+}
+.ach-level__bar span, .ach-card__progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+}
+.ach-level__xp { margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
+
+.ach-level__stat { display: flex; flex-direction: column; align-items: flex-end; }
+.ach-level__stat b { font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; color: var(--text-primary); }
+.ach-level__stat span { font-size: 0.75rem; color: var(--text-muted); }
+
+.ach-summary { margin: 0 0 20px; color: var(--text-secondary); font-size: 0.9rem; }
+
+/* ----- Catégories et cartes ----- */
+
+.ach-cat { margin-bottom: 28px; }
+.ach-cat__title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+}
+.ach-cat__title span { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); }
+
+.ach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ach-card {
+    display: flex;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    opacity: 0.62;
+}
+.ach-card.is-done {
+    opacity: 1;
+    border-color: color-mix(in srgb, var(--tier) 45%, var(--border-subtle));
+}
+
+.ach-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+.ach-card.is-done .ach-card__icon {
+    background: color-mix(in srgb, var(--tier) 22%, transparent);
+    color: var(--tier);
+}
+
+.ach-card__body { flex: 1; min-width: 0; }
+.ach-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ach-card__name { font-weight: 600; color: var(--text-primary); }
+.ach-card__tier { font-size: 0.7rem; color: var(--tier); white-space: nowrap; }
+.ach-card__desc { margin-top: 2px; font-size: 0.82rem; color: var(--text-secondary); }
+.ach-card.is-secret .ach-card__desc { font-style: italic; }
+.ach-card__progress { margin-top: 8px; height: 5px; }
+.ach-card__count { margin-top: 3px; font-size: 0.72rem; color: var(--text-muted); }
+.ach-card__reward { margin-top: 6px; font-size: 0.78rem; color: var(--accent-light); }
+.ach-card__date { margin-top: 6px; font-size: 0.72rem; color: var(--text-muted); }
+.ach-card__date .fa-check { color: var(--accent-green); }
+
+/* ----- Toast de déblocage ----- */
+
+.ach-toast__tier {
+    margin-left: 4px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--tier);
+    color: var(--tier);
+    font-size: 0.72rem;
+}
+
+@media (max-width: 640px) {
+    .ach-level { flex-wrap: wrap; gap: 12px; }
+    .ach-level__main { flex-basis: calc(100% - 84px); }
+    .ach-level__stat { align-items: flex-start; }
+    .ach-grid { grid-template-columns: 1fr; }
+}

@@ -18,6 +18,8 @@ import { matchLegalMove, fmtMove } from './utils/moveMatch.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import './core/economy.js';
+import './core/achievements.js';
+import AchievementsPage from './pages/achievements.js';
 import RecordsPage from './pages/records.js';
 import WatchPage from './pages/watch.js';
 import H24Page from './pages/h24.js';
@@ -347,6 +349,7 @@ const Router = {
         '/rush': 'rush',
         '/mono': 'mono',
         '/multi': 'multi',
+        '/achievements': 'achievements',
     },
     started: false,
 
@@ -467,6 +470,7 @@ const Router = {
             link.classList.toggle('is-active', group(Router.routes[linkPath]) === group(pageName));
         });
         moveNavCursor();
+        window.dispatchEvent(new CustomEvent('cg:page', { detail: { page: pageName } }));
 
         // Quitter la page spectateur coupe son flux
         if (pageName !== 'watch') WatchPage.stop();
@@ -493,6 +497,8 @@ const Router = {
             MonoPage.init();
         } else if (pageName === 'multi') {
             MultiPage.init();
+        } else if (pageName === 'achievements') {
+            AchievementsPage.init();
         }
     },
 
@@ -672,6 +678,7 @@ async startConfiguredGame() {
     twitch.settings.subsOnly = !!AppState.config.subsOnly;
 
     if (gameEngine.updateVotingIndicator) gameEngine.updateVotingIndicator();
+    window.dispatchEvent(new CustomEvent('cg:gameStart', { detail: { mode: AppState.gameMode } }));
 
     if (AppState.gameMode === 'mono') {
         PresetGame.startMono();
@@ -2107,6 +2114,7 @@ const Toast = {
         toast.querySelector('.toast__close').addEventListener('click', leave);
         toast.querySelector('.toast__life').addEventListener('animationend', leave);
         this.container.appendChild(toast);
+        return toast;
     },
 
     success(msg) { this.show(msg, 'success'); },
@@ -2397,6 +2405,7 @@ const MultiPage = {
             if (PresetForm.needsLogin(options)) { twitchAuth.login(); return; }
             if (!GameSession.confirmReplace()) return;
             MultiRoom.open(normalizeLogin(twitchAuth.user.login), MultiRoom.newCode(), options, isPublic.checked);
+            window.dispatchEvent(new CustomEvent('cg:gameStart', { detail: { mode: 'multi' } }));
         });
     }
 };
@@ -2684,8 +2693,10 @@ const PresetGame = {
             'copy-link': () => {
                 // Salon Multi : le lien contient le code, il n'est jamais affiché (anti stream-hack)
                 const link = MultiRoom.room ? MultiRoom.inviteLink() : window.location.href;
-                navigator.clipboard.writeText(link).then(() =>
-                    Toast.success(tr(MultiRoom.room ? 'multi.linkCopied' : 'lobby.linkCopied')));
+                navigator.clipboard.writeText(link).then(() => {
+                    Toast.success(tr(MultiRoom.room ? 'multi.linkCopied' : 'lobby.linkCopied'));
+                    window.dispatchEvent(new CustomEvent('cg:linkCopied', { detail: {} }));
+                });
             },
             'login':     () => twitchAuth.login(),
             'rematch':   () => this.rematch(),

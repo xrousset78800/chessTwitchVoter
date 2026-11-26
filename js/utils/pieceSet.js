@@ -31,6 +31,7 @@
         { id: 'orange', key: 'orange', label: 'Braise', light: '#f6e2cc', dark: '#d2804f' },
         { id: 'purple', key: 'purple', label: 'Lavande', light: '#e9e1f3', dark: '#8f77b5' },
         { id: 'rose', key: 'rose', label: 'Rose', light: '#f5e1e4', dark: '#c27a87' },
+        { id: 'aurora', key: 'aurora', label: 'Aurore', light: '#d5efe6', dark: '#5f6fb0' },
     ];
     const boardById = id => BOARDS.find(b => b.id === id && unlocked(b)) || BOARDS[0];
     let board = BOARDS[0];

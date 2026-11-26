@@ -212,7 +212,7 @@ class GameEngine {
         if (this.engineKey !== key || !this.engineToMove() || `${this.chess.fen()}|${this.moveHistory.length}` !== key) return;
         this.engineKey = null;
         const san = BE?.uciToSan(this.chess, uci) || this.chess.moves()[0];
-        if (san) this.executeMove(san);
+        if (san) { this.engineMoving = true; try { this.executeMove(san); } finally { this.engineMoving = false; } }
     }
 
     canHumanPlay() {
@@ -921,6 +921,10 @@ showWheelAnimation(results) {
             if (this.pendingVote && this.pendingVote.move === moveStr) move.vote = this.pendingVote.v;
             this.pendingVote = null;
             this.moveHistory.push(move);
+            // Succès « coups remarquables » : coups du chat / du streamer, pas ceux de Stockfish ni de l'adversaire Multi
+            if (!fromNetwork && !this.engineMoving) {
+                window.dispatchEvent(new CustomEvent('cg:move', { detail: { move, chess: this.chess } }));
+            }
             this.playMoveSound(move);
             this.updateHistoryUI(move);
             this.syncPhantom();

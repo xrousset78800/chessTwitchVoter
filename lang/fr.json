@@ -9,7 +9,8 @@
     "browse": "Parcourir",
     "game": "Partie en cours",
     "records": "Records",
-    "h24": "24/24"
+    "h24": "24/24",
+    "achievements": "Succès"
   },
   "app": {
     "tagline": "Connecte ton échiquier Phantom et ton compte Twitch pour des parties interactives avec ta communauté"
@@ -1055,7 +1056,213 @@
       "purple": "Lavande",
       "rose": "Rose",
       "night": "Bleu nuit",
-      "black": "Noir"
+      "black": "Noir",
+      "aurora": "Aurore"
+    }
+  },
+  "achievements": {
+    "desc": "Débloque des succès en jouant avec ton chat : chacun rapporte de l'XP et des pions, certains offrent des pièces ou des échiquiers.",
+    "loginHint": "Connecte ton compte Twitch pour garder tes succès, ton niveau et tes pions. Les succès obtenus sans connexion seront ajoutés à ton compte.",
+    "level": "Niveau",
+    "levelShort": "Niv.",
+    "levelMax": "Niveau maximum atteint",
+    "xpToNext": "{xp} / {next} XP vers le niveau suivant",
+    "coins": "pions",
+    "streak": "jours de suite",
+    "count": "{n} succès débloqués sur {total}",
+    "unlockedToast": "Succès débloqué :",
+    "secretName": "Succès secret",
+    "secretDesc": "À découvrir en jouant…",
+    "unavailable": "Succès indisponibles pour le moment",
+    "cat": {
+      "start": "Premiers pas",
+      "rush": "Puzzle Rush",
+      "votes": "Votes du chat",
+      "moves": "Coups remarquables"
+    },
+    "tier": {
+      "B": "Bronze",
+      "A": "Argent",
+      "O": "Or",
+      "P": "Platine",
+      "S": "Secret"
+    },
+    "rewards": {
+      "title-touche-a-tout": "Titre « Touche-à-tout »"
+    },
+    "list": {
+      "bienvenue": {
+        "name": "Bienvenue",
+        "desc": "Se connecter avec Twitch pour la première fois"
+      },
+      "premier-coup": {
+        "name": "Premier coup",
+        "desc": "Faire jouer un premier coup voté par le chat"
+      },
+      "premier-run": {
+        "name": "Premier run",
+        "desc": "Lancer un premier Puzzle Rush"
+      },
+      "premiere-inscription": {
+        "name": "Première inscription",
+        "desc": "Ouvrir les inscriptions d'une partie Mono"
+      },
+      "main-tendue": {
+        "name": "Main tendue",
+        "desc": "Créer une partie Multi contre une autre chaîne"
+      },
+      "face-a-la-machine": {
+        "name": "Face à la machine",
+        "desc": "Lancer une partie contre Stockfish"
+      },
+      "bac-a-sable": {
+        "name": "Bac à sable",
+        "desc": "Ouvrir une Partie libre"
+      },
+      "curieux": {
+        "name": "Curieux",
+        "desc": "Regarder une partie depuis la page Parcourir"
+      },
+      "dans-les-livres": {
+        "name": "Dans les livres",
+        "desc": "Consulter la page Records"
+      },
+      "tour-du-proprietaire": {
+        "name": "Tour du propriétaire",
+        "desc": "Lancer au moins une fois Puzzle Rush, Mono, Multi, Partie libre et une partie contre Stockfish"
+      },
+      "polyglotte": {
+        "name": "Polyglotte",
+        "desc": "Utiliser l'interface dans 3 langues différentes"
+      },
+      "relooking": {
+        "name": "Relooking",
+        "desc": "Changer de set de pièces ou de couleur d'échiquier"
+      },
+      "lien-partage": {
+        "name": "Lien partagé",
+        "desc": "Copier le lien d'inscription d'une partie"
+      },
+      "premier-sang": {
+        "name": "Premier sang",
+        "desc": "Résoudre un premier puzzle en Puzzle Rush"
+      },
+      "echauffement": {
+        "name": "Échauffement",
+        "desc": "Atteindre un score de 5 en un run"
+      },
+      "en-rythme": {
+        "name": "En rythme",
+        "desc": "Atteindre un score de 10 en un run"
+      },
+      "machine-a-puzzles": {
+        "name": "Machine à puzzles",
+        "desc": "Atteindre un score de 20 en un run"
+      },
+      "cerveau-collectif": {
+        "name": "Cerveau collectif",
+        "desc": "Atteindre un score de 30 en un run"
+      },
+      "ruche-infaillible": {
+        "name": "Ruche infaillible",
+        "desc": "Atteindre un score de 40 en un run"
+      },
+      "assidu-du-rush": {
+        "name": "Assidu du Rush",
+        "desc": "10 runs joués"
+      },
+      "accro-du-rush": {
+        "name": "Accro du Rush",
+        "desc": "100 runs joués"
+      },
+      "mille-puzzles": {
+        "name": "Mille puzzles",
+        "desc": "1 000 puzzles résolus au total"
+      },
+      "premiere-vague": {
+        "name": "Première vague",
+        "desc": "100 votes reçus au total"
+      },
+      "maree-montante": {
+        "name": "Marée montante",
+        "desc": "1 000 votes reçus au total"
+      },
+      "raz-de-maree": {
+        "name": "Raz-de-marée",
+        "desc": "10 000 votes reçus au total"
+      },
+      "democratie-totale": {
+        "name": "Démocratie totale",
+        "desc": "100 000 votes reçus au total"
+      },
+      "salle-comble": {
+        "name": "Salle comble",
+        "desc": "Un tour avec 20 votants"
+      },
+      "stade": {
+        "name": "Stade",
+        "desc": "Un tour avec 100 votants"
+      },
+      "concert": {
+        "name": "Concert",
+        "desc": "Un tour avec 500 votants"
+      },
+      "petit-roque": {
+        "name": "Petit roque",
+        "desc": "Roquer côté roi"
+      },
+      "grand-roque": {
+        "name": "Grand roque",
+        "desc": "Roquer côté dame"
+      },
+      "en-passant": {
+        "name": "En passant",
+        "desc": "Prendre en passant"
+      },
+      "promotion": {
+        "name": "Promotion",
+        "desc": "Promouvoir un pion"
+      },
+      "sous-promotion": {
+        "name": "Sous-promotion",
+        "desc": "Promouvoir un pion en cavalier"
+      },
+      "vraiment": {
+        "name": "Vraiment ?",
+        "desc": "Promouvoir un pion en fou ou en tour"
+      },
+      "deux-dames": {
+        "name": "Deux dames",
+        "desc": "Avoir deux dames sur l'échiquier"
+      },
+      "echec-double": {
+        "name": "Échec double",
+        "desc": "Donner un échec double"
+      },
+      "echec-a-la-decouverte": {
+        "name": "Échec à la découverte",
+        "desc": "Donner un échec à la découverte"
+      },
+      "mat-du-couloir": {
+        "name": "Mat du couloir",
+        "desc": "Mater sur la dernière rangée avec une tour ou une dame"
+      },
+      "mat-du-berger": {
+        "name": "Mat du berger",
+        "desc": "Mater en 4 coups ou moins"
+      },
+      "mat-du-lion": {
+        "name": "Mat du lion",
+        "desc": "Mater en moins de 10 coups"
+      },
+      "mat-de-pion": {
+        "name": "Mat de pion",
+        "desc": "Donner mat avec un pion"
+      },
+      "mat-de-roi": {
+        "name": "Mat de roi",
+        "desc": "Donner mat en bougeant le roi (mat à la découverte)"
+      }
     }
   },
   "seo": {
