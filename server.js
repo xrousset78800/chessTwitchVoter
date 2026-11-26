@@ -382,7 +382,9 @@ app.get('/api/regie', requireTwitch, (req, res) => {
 
 app.get('/api/tournament/live', async (req, res) => {
     try {
-        const games = await liveGamesList();
+        // Cadences d'au moins 10 min seulement : le blitz va trop vite pour pronostiquer coup par coup
+        // (cadence inconnue : gardée)
+        const games = (await liveGamesList()).filter(g => !g.tc || predictBase(g.tc));
         predictions?.warm(games.map(g => g.fen));      // cotes des positions pas encore évaluées, en arrière-plan
         res.json({
             at: liveGamesLast?.at || Date.now(),
