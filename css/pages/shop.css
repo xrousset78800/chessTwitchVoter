@@ -1,0 +1,110 @@
+/* ============================================
+   BOUTIQUE : solde, comment gagner des pions, rayons d'objets
+   (aperçus de matières : variables --mat-* de css/components/boardTheme.css)
+   ============================================ */
+
+.shop-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: stretch;
+    margin-bottom: 22px;
+}
+
+.shop-wallet {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 170px;
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+}
+.shop-wallet b { font-family: 'Chakra Petch', sans-serif; font-size: 1.7rem; color: var(--text-primary); line-height: 1.1; }
+.shop-wallet span { font-size: 0.8rem; color: var(--text-muted); }
+.shop-wallet small { margin-top: 6px; font-size: 0.72rem; color: var(--text-muted); }
+.shop-wallet--guest { flex-direction: row; align-items: center; gap: 14px; flex: 1; }
+.shop-wallet--guest .fa-twitch { font-size: 1.6rem; color: var(--twitch-brand); }
+.shop-wallet--guest p { flex: 1; margin: 0; color: var(--text-secondary); }
+
+.shop-earn {
+    flex: 1;
+    min-width: 260px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+.shop-earn summary { cursor: pointer; font-weight: 600; color: var(--text-primary); }
+.shop-earn summary .fa-circle-info { color: var(--accent); margin-right: 4px; }
+.shop-earn ul { margin: 8px 0 0; padding-left: 18px; }
+.shop-earn li { margin: 3px 0; }
+
+.shop-cat { margin-bottom: 30px; }
+.shop-cat .ach-cat__title i { color: var(--accent); font-size: 0.95rem; }
+.shop-cat__desc { margin: -6px 0 12px; font-size: 0.82rem; color: var(--text-muted); }
+
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.shop-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+}
+.shop-card.is-equipped { border-color: color-mix(in srgb, var(--accent) 60%, var(--border-subtle)); }
+.shop-card.is-exclusive .shop-card__preview { opacity: 0.55; }
+
+.shop-card__preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 92px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    overflow: hidden;
+}
+.shop-card__name { font-weight: 600; color: var(--text-primary); }
+.shop-card__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: auto; min-height: 30px; }
+
+.shop-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.shop-board .sq-l { background-color: var(--sq-light); background-image: var(--mat-l, none); background-size: var(--mat-size-l, auto); }
+.shop-board .sq-d { background-color: var(--sq-dark); background-image: var(--mat-d, none); background-size: var(--mat-size-d, auto); }
+
+.shop-pieces { display: flex; gap: 2px; }
+.shop-pieces img { width: 36px; height: 36px; }
+
+.shop-palette { display: grid; grid-template-columns: repeat(4, 22px); gap: 4px; }
+.shop-palette span { width: 22px; height: 22px; border-radius: 50%; }
+
+.shop-price { font-family: 'Chakra Petch', sans-serif; font-weight: 700; color: var(--text-primary); }
+.shop-price.is-poor { color: var(--text-muted); }
+.shop-tag { font-size: 0.75rem; color: var(--text-muted); }
+.shop-tag--on { color: var(--accent-green); font-weight: 600; }
+.shop-tag--excl { color: var(--accent-light); }
+.shop-card .btn.is-confirm { background: var(--accent-green); border-color: var(--accent-green); }
+
+@media (max-width: 640px) {
+    .shop-grid { grid-template-columns: repeat(2, 1fr); }
+    .shop-pieces img { width: 30px; height: 30px; }
+}

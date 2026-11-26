@@ -4,3 +4,47 @@
 .black-3c85d { background-color: var(--sq-dark) !important; color: var(--sq-light) !important; }
 .white-1e1d7 .notation-322f9 { color: var(--sq-dark); }
 .black-3c85d .notation-322f9 { color: var(--sq-light); }
+
+/* ----- Matières (boutique) : texture posée sur les couleurs, html[data-board-mat] -----
+   Les variables --mat-l / --mat-d (images de fond des cases claires / foncées) sont aussi
+   portées par .mat--<id> pour les aperçus (boutique, menu Pièces). */
+.white-1e1d7 { background-image: var(--mat-l, none); background-size: var(--mat-size-l, auto); }
+.black-3c85d { background-image: var(--mat-d, none); background-size: var(--mat-size-d, auto); }
+
+.mat--none { --mat-l: none; --mat-d: none; --mat-size-l: auto; --mat-size-d: auto; }
+
+html[data-board-mat="paper"], .mat--paper {
+    --mat-l: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-d: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-size-l: 160px; --mat-size-d: 160px;
+}
+html[data-board-mat="tile"], .mat--tile {
+    --mat-l: radial-gradient(circle at 30% 25%, rgba(255,255,255,.28), transparent 55%), linear-gradient(135deg, rgba(255,255,255,.35) 0 6%, transparent 6% 94%, rgba(0,0,0,.22) 94%);
+    --mat-d: radial-gradient(circle at 30% 25%, rgba(255,255,255,.2), transparent 55%), linear-gradient(135deg, rgba(255,255,255,.22) 0 6%, transparent 6% 94%, rgba(0,0,0,.35) 94%);
+    --mat-size-l: 100% 100%; --mat-size-d: 100% 100%;
+}
+html[data-board-mat="felt"], .mat--felt {
+    --mat-l: radial-gradient(circle, transparent 55%, rgba(0,0,0,.12)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-d: radial-gradient(circle, transparent 55%, rgba(0,0,0,.18)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.4 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-size-l: 100% 100%, 120px; --mat-size-d: 100% 100%, 120px;
+}
+html[data-board-mat="walnut"], .mat--walnut {
+    --mat-l: linear-gradient(100deg, rgba(255,255,255,.14), transparent 45%, rgba(0,0,0,.08)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .22' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.45 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-d: linear-gradient(100deg, rgba(255,255,255,.08), transparent 45%, rgba(0,0,0,.14)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .22' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-size-l: 100% 100%, 160px; --mat-size-d: 100% 100%, 160px;
+}
+html[data-board-mat="lava"], .mat--lava {
+    --mat-l: linear-gradient(rgba(255,110,40,.14), rgba(255,110,40,.14)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.18 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-d: radial-gradient(circle at 25% 70%, rgba(255,120,0,.7), transparent 35%), radial-gradient(circle at 72% 30%, rgba(255,50,0,.55), transparent 30%), radial-gradient(circle at 82% 85%, rgba(255,200,0,.5), transparent 24%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.4 0 0 0 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-size-l: 100% 100%, 160px; --mat-size-d: 200% 200%, 200% 200%, 200% 200%, 120px;
+}
+html[data-board-mat="lava"] .black-3c85d, .mat--lava .sq-d {
+    animation: mat-lava 7s ease-in-out infinite alternate;
+}
+@keyframes mat-lava {
+    from { background-position: 0% 0%, 100% 0%, 0% 100%, 0 0; }
+    to   { background-position: 100% 100%, 0% 100%, 100% 0%, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    html[data-board-mat="lava"] .black-3c85d, .mat--lava .sq-d { animation: none; }
+}

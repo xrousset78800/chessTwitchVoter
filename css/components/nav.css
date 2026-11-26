@@ -417,3 +417,48 @@ body.game-mode .nav__page-title {
 .nav__pieces-swatch.is-active { border-color: var(--accent-purple, #ff8a3d); }
 .nav__pieces-swatch:focus-visible { outline: 2px solid rgba(255, 138, 61, 0.5); outline-offset: 1px; }
 .nav__pieces-preview img { width: 26px; height: 26px; display: block; }
+
+/* Records, Succès, Boutique : icônes seules, groupées à part */
+.nav__icons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-right: 10px;
+    border-right: 1px solid var(--border-subtle);
+}
+.nav__icons .nav__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1.05rem;
+}
+.nav__icons .nav__icon:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
+.nav__icons .nav__icon.is-active { color: var(--accent); background: rgba(255, 138, 61, 0.12); }
+@media (max-width: 768px) {
+    .nav__icons { border-right: 0; padding: 0; }
+    .nav__icons .nav__icon { width: 34px; height: 34px; font-size: 0.95rem; }
+}
+
+/* Menu Pièces : matières et lien vers la boutique */
+.nav__pieces-swatch.nav__pieces-mat {
+    background: var(--sq-dark);
+    background-image: var(--mat-d, none);
+    background-size: var(--mat-size-d, auto);
+}
+.nav__pieces-shop {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 8px 6px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px dashed var(--border-subtle, #3a322c);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+.nav__pieces-shop:hover { color: var(--text-primary); border-color: var(--accent); }

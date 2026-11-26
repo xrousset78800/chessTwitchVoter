@@ -138,6 +138,7 @@ window.addEventListener('cg:gameStart', (e) => {
 window.addEventListener('cg:linkCopied', () => achievements.unlock('lien-partage'));
 window.addEventListener('pieceSetChanged', () => achievements.unlock('relooking'));
 window.addEventListener('boardThemeChanged', () => achievements.unlock('relooking'));
+window.addEventListener('boardMatChanged', () => achievements.unlock('relooking'));
 
 function noteLang(lang) {
     if (!lang) return;

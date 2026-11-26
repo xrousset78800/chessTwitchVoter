@@ -19,6 +19,9 @@ function rewardLabel(id) {
 }
 
 function levelBlock(acc) {
+    if (!acc && window.twitchAuth?.isLoggedIn) {
+        return `<div class="ach-level ach-level--guest"><i class="fas fa-spinner fa-spin"></i><p>${esc(t('loading'))}</p></div>`;
+    }
     if (!acc) {
         return `<div class="ach-level ach-level--guest">
             <i class="fab fa-twitch"></i>

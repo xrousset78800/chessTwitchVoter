@@ -10,7 +10,8 @@
     "game": "Partie en cours",
     "records": "Records",
     "h24": "24/24",
-    "achievements": "Succès"
+    "achievements": "Succès",
+    "shop": "Boutique"
   },
   "app": {
     "tagline": "Connecte ton échiquier Phantom et ton compte Twitch pour des parties interactives avec ta communauté"
@@ -664,7 +665,13 @@
     "fire": "Feu",
     "ocean": "Océan",
     "muted": "Sobre",
-    "access": "Daltonien"
+    "access": "Daltonien",
+    "sunset": "Coucher de soleil",
+    "woods": "Sous-bois",
+    "candy": "Bonbon",
+    "mono": "Noir et blanc",
+    "rainbow": "Arc-en-ciel",
+    "gold": "Or"
   },
   "timerRing": {
     "seconds": "secondes",
@@ -1057,11 +1064,25 @@
       "rose": "Rose",
       "night": "Bleu nuit",
       "black": "Noir",
-      "aurora": "Aurore"
+      "aurora": "Aurore",
+      "mint": "Menthe",
+      "sand": "Sable",
+      "forest": "Forêt",
+      "petrol": "Pétrole"
+    },
+    "matTitle": "Matière",
+    "mat": {
+      "none": "Aucune",
+      "paper": "Papier",
+      "tile": "Carrelage",
+      "felt": "Feutrine",
+      "walnut": "Noyer",
+      "lava": "Lave"
     }
   },
   "achievements": {
     "desc": "Débloque des succès en jouant avec ton chat : chacun rapporte de l'XP et des pions, certains offrent des pièces ou des échiquiers.",
+    "loading": "Chargement…",
     "loginHint": "Connecte ton compte Twitch pour garder tes succès, ton niveau et tes pions. Les succès obtenus sans connexion seront ajoutés à ton compte.",
     "level": "Niveau",
     "levelShort": "Niv.",
@@ -1264,6 +1285,46 @@
         "desc": "Donner mat en bougeant le roi (mat à la découverte)"
       }
     }
+  },
+  "shop": {
+    "desc": "Dépense tes pions pour habiller ton échiquier et le tirage des votes. Les pions se gagnent en jouant avec ton chat et en débloquant des succès.",
+    "loginHint": "Connecte ton compte Twitch pour gagner des pions et acheter des objets.",
+    "balance": "pions disponibles",
+    "today": "Aujourd'hui : {n} / {cap} pions de coups et puzzles",
+    "earnTitle": "Comment gagner des pions",
+    "earn": {
+      "turn": "{n} pion par coup ou puzzle joué avec au moins un votant ({cap} par jour au maximum)",
+      "daily": "Bonus du jour : {n} pions, +{bonus} par jour de série (jusqu'à {max})",
+      "rush": "Puzzle Rush : {n} pions par point du run, {rec} de plus pour un record personnel",
+      "multi": "Multi : {win} pions pour une victoire, {draw} pour une nulle, {loss} pour une défaite",
+      "ach": "Succès : {b} (bronze), {a} (argent), {o} (or), {p} (platine)"
+    },
+    "cat": {
+      "pieces": "Sets de pièces",
+      "boards": "Couleurs d'échiquier",
+      "mats": "Matières d'échiquier",
+      "palettes": "Couleurs du tirage"
+    },
+    "catDesc": {
+      "pieces": "Sur tous les échiquiers et toutes les petites pièces du site.",
+      "boards": "Les deux couleurs des cases.",
+      "mats": "Une texture posée sur tes couleurs de cases.",
+      "palettes": "La roue, la bande et le podium des votes, vus aussi par tes spectateurs."
+    },
+    "buy": "Acheter",
+    "confirm": "Confirmer ({n} ♟) ?",
+    "use": "Utiliser",
+    "equipped": "Équipé",
+    "owned": "Possédé",
+    "free": "Gratuit",
+    "missing": "Il manque {n} ♟",
+    "exclusive": "Succès « {name} »",
+    "exclusiveShort": "Réservé aux succès",
+    "exclusiveHint": "Pas en vente : débloque le succès « {name} »",
+    "bought": "{name} acheté et équipé !",
+    "errPoor": "Pas assez de pions.",
+    "errBuy": "L'achat n'a pas abouti, réessaie.",
+    "unavailable": "Boutique indisponible pour le moment"
   },
   "seo": {
     "title": "Crowd Gambit — Les échecs joués par ton chat Twitch",

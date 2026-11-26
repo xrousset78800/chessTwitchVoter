@@ -20,13 +20,14 @@ import './core/viewerStats.js';
 import './core/economy.js';
 import './core/achievements.js';
 import AchievementsPage from './pages/achievements.js';
+import ShopPage from './pages/shop.js';
 import RecordsPage from './pages/records.js';
 import WatchPage from './pages/watch.js';
 import H24Page from './pages/h24.js';
 import BrowseTable from './pages/browseTable.js';
 import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
-import { PALETTES, PALETTE_IDS, getPaletteId, setPaletteId } from './components/votePalettes.js';
+import { PALETTES, PALETTE_IDS, getPaletteId, setPaletteId, paletteAvailable } from './components/votePalettes.js';
 import { initAnonymity, secretVotes, getAnonymity, forceAnonymity, ANON_MODES } from './components/voteAnonymity.js';
 import { initGreenScreen } from './components/greenScreen.js';
 import { VoteTicker } from './components/voteViews.js';
@@ -350,6 +351,7 @@ const Router = {
         '/mono': 'mono',
         '/multi': 'multi',
         '/achievements': 'achievements',
+        '/shop': 'shop',
     },
     started: false,
 
@@ -499,6 +501,8 @@ const Router = {
             MultiPage.init();
         } else if (pageName === 'achievements') {
             AchievementsPage.init();
+        } else if (pageName === 'shop') {
+            ShopPage.init();
         }
     },
 
@@ -1121,7 +1125,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         const renderPalettes = () => {
             if (!paletteSelect) return;
             const current = getPaletteId();
-            paletteSelect.innerHTML = PALETTE_IDS.map(id => `<option value="${id}"${id === current ? ' selected' : ''}>${tr(`palette.${id}`)}</option>`).join('');
+            paletteSelect.innerHTML = PALETTE_IDS.filter(paletteAvailable).map(id => `<option value="${id}"${id === current ? ' selected' : ''}>${tr(`palette.${id}`)}</option>`).join('');
             if (paletteSwatches) paletteSwatches.innerHTML = PALETTES[current].slice(0, 6).map(c => `<span style="background:${c}"></span>`).join('');
         };
         renderPalettes();
@@ -2951,6 +2955,8 @@ async function initApp() {
     // Session Twitch (traite un éventuel retour OAuth AVANT le router : le token
     // arrive dans le fragment d'URL, que le router utilise pour la navigation)
     await twitchAuth.init();
+    // Session restaurée sans événement twitchAuthChange : on charge le compte (niveau, pions, succès, objets)
+    window.economy?.refresh();
 
     // Init router
     Router.init();

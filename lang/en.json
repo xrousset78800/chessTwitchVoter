@@ -10,7 +10,8 @@
     "game": "Game in progress",
     "records": "Records",
     "h24": "24/24",
-    "achievements": "Achievements"
+    "achievements": "Achievements",
+    "shop": "Shop"
   },
   "app": {
     "tagline": "Connect your Phantom board and your Twitch account for interactive games with your community"
@@ -664,7 +665,13 @@
     "fire": "Fire",
     "ocean": "Ocean",
     "muted": "Muted",
-    "access": "Color-blind"
+    "access": "Color-blind",
+    "sunset": "Sunset",
+    "woods": "Woodland",
+    "candy": "Candy",
+    "mono": "Black & white",
+    "rainbow": "Rainbow",
+    "gold": "Gold"
   },
   "timerRing": {
     "seconds": "seconds",
@@ -1057,11 +1064,25 @@
       "rose": "Rose",
       "night": "Midnight blue",
       "black": "Black",
-      "aurora": "Aurora"
+      "aurora": "Aurora",
+      "mint": "Mint",
+      "sand": "Sand",
+      "forest": "Forest",
+      "petrol": "Petrol"
+    },
+    "matTitle": "Material",
+    "mat": {
+      "none": "None",
+      "paper": "Paper",
+      "tile": "Tile",
+      "felt": "Felt",
+      "walnut": "Walnut",
+      "lava": "Lava"
     }
   },
   "achievements": {
     "desc": "Unlock achievements by playing with your chat: each one gives XP and pawns, some offer piece sets or boards.",
+    "loading": "Loading…",
     "loginHint": "Connect your Twitch account to keep your achievements, level and pawns. Achievements earned while logged out will be added to your account.",
     "level": "Level",
     "levelShort": "Lv.",
@@ -1264,6 +1285,46 @@
         "desc": "Deliver mate by moving the king (discovered mate)"
       }
     }
+  },
+  "shop": {
+    "desc": "Spend your pawns to dress up your board and the vote draw. Pawns are earned by playing with your chat and unlocking achievements.",
+    "loginHint": "Connect your Twitch account to earn pawns and buy items.",
+    "balance": "pawns available",
+    "today": "Today: {n} / {cap} pawns from moves and puzzles",
+    "earnTitle": "How to earn pawns",
+    "earn": {
+      "turn": "{n} pawn per move or puzzle played with at least one voter (up to {cap} per day)",
+      "daily": "Daily bonus: {n} pawns, +{bonus} per streak day (up to {max})",
+      "rush": "Puzzle Rush: {n} pawns per run point, {rec} more for a personal best",
+      "multi": "Multi: {win} pawns for a win, {draw} for a draw, {loss} for a loss",
+      "ach": "Achievements: {b} (bronze), {a} (silver), {o} (gold), {p} (platinum)"
+    },
+    "cat": {
+      "pieces": "Piece sets",
+      "boards": "Board colors",
+      "mats": "Board materials",
+      "palettes": "Draw colors"
+    },
+    "catDesc": {
+      "pieces": "On every board and every small piece across the site.",
+      "boards": "The two square colors.",
+      "mats": "A texture laid over your square colors.",
+      "palettes": "The wheel, strip and podium of the votes, also seen by your viewers."
+    },
+    "buy": "Buy",
+    "confirm": "Confirm ({n} ♟)?",
+    "use": "Use",
+    "equipped": "Equipped",
+    "owned": "Owned",
+    "free": "Free",
+    "missing": "{n} ♟ short",
+    "exclusive": "Achievement \"{name}\"",
+    "exclusiveShort": "Achievement reward",
+    "exclusiveHint": "Not for sale: unlock the \"{name}\" achievement",
+    "bought": "{name} bought and equipped!",
+    "errPoor": "Not enough pawns.",
+    "errBuy": "The purchase didn't go through, try again.",
+    "unavailable": "Shop unavailable right now"
   },
   "seo": {
     "title": "Crowd Gambit — Chess played by your Twitch chat",

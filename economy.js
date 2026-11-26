@@ -25,24 +25,47 @@ const RULES = {
     achievement: { B: { xp: 50, coins: 25 }, A: { xp: 150, coins: 75 }, O: { xp: 400, coins: 200 }, P: { xp: 1000, coins: 500 }, S: { xp: 200, coins: 100 } },
     // Bonus de la première activité du jour, + par jour de série (plafonné)
     daily:       { coins: 50, streakBonus: 10, streakMax: 7 },
-    dailyCoinCap: 400,                         // pions max par jour venant des coups et puzzles
+    dailyCoinCap: 300,                         // pions max par jour venant des coups et puzzles
     // Niveau : passer du niveau n au niveau n+1 coûte base + step × (n − 1) XP
     level:       { base: 100, step: 50, max: 100 },
 };
 
-// Objets achetables. « achievement » : jamais en vente, débloqué uniquement par un succès.
-// Les ids sont ceux de js/utils/pieceSet.js (window.unlockedRewards). Prix provisoires.
+// Objets du magasin (page /shop). price null : jamais en vente, débloqué uniquement par un succès.
+// Les ids sont ceux du client (window.unlockedRewards) : js/utils/pieceSet.js (pièces, couleurs,
+// matières « mat-* ») et js/components/votePalettes.js (couleurs du tirage « pal-* »).
+// Repères : un stream de ~2 h rapporte ~300 pions (coups plafonnés + bonus du jour + Rush).
+//   commun 200–300 (≈ 1 stream), rare 400–600 (≈ 2 streams), épique 700–1500 (≈ 3 à 5 streams).
 const CATALOG = {
+    // Sets de pièces
     flat:   { kind: 'pieces', price: 300 },
-    neon:   { kind: 'pieces', price: 600 },
     token:  { kind: 'pieces', price: 400 },
+    neon:   { kind: 'pieces', price: 600 },
+    // Couleurs d'échiquier
     wood:   { kind: 'board', price: 200 },
     green:  { kind: 'board', price: 200 },
     blue:   { kind: 'board', price: 200 },
     orange: { kind: 'board', price: 300 },
     purple: { kind: 'board', price: 300 },
     rose:   { kind: 'board', price: 300 },
+    mint:   { kind: 'board', price: 300 },
+    sand:   { kind: 'board', price: 300 },
+    forest: { kind: 'board', price: 400 },
+    petrol: { kind: 'board', price: 400 },
     aurora: { kind: 'board', price: null },
+    // Matières d'échiquier (texture posée sur les couleurs)
+    'mat-paper':  { kind: 'mat', price: 500 },
+    'mat-tile':   { kind: 'mat', price: 500 },
+    'mat-felt':   { kind: 'mat', price: 700 },
+    'mat-walnut': { kind: 'mat', price: 900 },
+    'mat-lava':   { kind: 'mat', price: 1500 },
+    // Couleurs du tirage (roue, bande, podium des votes)
+    'pal-sunset':  { kind: 'palette', price: 300 },
+    'pal-woods':   { kind: 'palette', price: 300 },
+    'pal-candy':   { kind: 'palette', price: 300 },
+    'pal-mono':    { kind: 'palette', price: 300 },
+    'pal-rainbow': { kind: 'palette', price: 400 },
+    'pal-gold':    { kind: 'palette', price: 600 },
+    // Titres
     'title-touche-a-tout': { kind: 'title', price: null },
 };
 

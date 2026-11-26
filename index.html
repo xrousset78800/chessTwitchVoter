@@ -76,6 +76,7 @@
     <link rel="stylesheet" href="css/pages/browse.css">
     <link rel="stylesheet" href="css/pages/records.css">
     <link rel="stylesheet" href="css/pages/achievements.css">
+    <link rel="stylesheet" href="css/pages/shop.css">
     <link rel="stylesheet" href="css/pages/watch.css">
     <link rel="stylesheet" href="css/pages/h24.css">
     <link rel="stylesheet" href="css/pages/presets.css">
@@ -100,8 +101,6 @@
                 <a class="nav__link" data-navigate="/rush" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
-                <a class="nav__link" data-navigate="/records"><i class="fas fa-trophy"></i> <span data-i18n="nav.records">Records</span></a>
-                <a class="nav__link" data-navigate="/achievements"><i class="fas fa-medal"></i> <span data-i18n="nav.achievements">Succès</span></a>
                 <a class="nav__link nav__link--phantom" data-navigate="/live"><span class="nav__game-dot nav__follow-dot"></span><span data-i18n="nav.live">Live Chess</span></a>
                 <a class="nav__link nav__link--phantom" data-navigate="/tournament">
                     <span class="nav__game-dot nav__follow-dot"></span>
@@ -112,6 +111,12 @@
             </div>
 
             <div class="nav__status">
+                <!-- Records, Succès, Boutique : icônes seules, à part des autres liens -->
+                <div class="nav__icons">
+                    <a class="nav__link nav__icon" data-navigate="/records" data-i18n-title="nav.records" title="Records"><i class="fas fa-trophy" aria-hidden="true"></i><span class="visually-hidden" data-i18n="nav.records">Records</span></a>
+                    <a class="nav__link nav__icon" data-navigate="/achievements" data-i18n-title="nav.achievements" title="Succès"><i class="fas fa-medal" aria-hidden="true"></i><span class="visually-hidden" data-i18n="nav.achievements">Succès</span></a>
+                    <a class="nav__link nav__icon" data-navigate="/shop" data-i18n-title="nav.shop" title="Boutique"><i class="fas fa-store" aria-hidden="true"></i><span class="visually-hidden" data-i18n="nav.shop">Boutique</span></a>
+                </div>
                 <div class="nav__lang"></div>
                 <div class="nav__pieces"></div>
                 <a class="nav__level" href="/achievements" data-navigate="/achievements" hidden></a>
@@ -1054,6 +1059,18 @@
         </div>
 
         <!-- ==================== SUCCÈS ==================== -->
+        <div class="page" id="page-shop">
+            <div class="browse shop">
+                <div class="browse__header">
+                    <div>
+                        <h1 class="browse__title">🛒 <span data-i18n="nav.shop">Boutique</span></h1>
+                        <p class="browse__desc" data-i18n="shop.desc">Dépense tes pions pour habiller ton échiquier et le tirage des votes. Les pions se gagnent en jouant avec ton chat et en débloquant des succès.</p>
+                    </div>
+                </div>
+                <div id="shop-root"></div>
+            </div>
+        </div>
+
         <div class="page" id="page-achievements">
             <div class="browse achievements">
                 <div class="browse__header">

@@ -8,7 +8,8 @@
 (function () {
     // free : disponible pour tous. Les autres sont des récompenses de succès (ticket #16) :
     // ils n'apparaissent que lorsque window.unlockedRewards (Set d'ids) les contient.
-    const unlocked = x => !!x.free || !!window.unlockedRewards?.has?.(x.id);
+    // own : id de l'objet au magasin (economy.js, CATALOG) quand il diffère de l'id local
+    const unlocked = x => !!x.free || !!window.unlockedRewards?.has?.(x.own || x.id);
     const SETS = [
         { id: 'wikipedia', ext: 'png', key: 'classic', label: 'Classique', free: true },
         { id: 'flat', ext: 'svg', key: 'flat', label: 'Plat' },
@@ -31,6 +32,10 @@
         { id: 'orange', key: 'orange', label: 'Braise', light: '#f6e2cc', dark: '#d2804f' },
         { id: 'purple', key: 'purple', label: 'Lavande', light: '#e9e1f3', dark: '#8f77b5' },
         { id: 'rose', key: 'rose', label: 'Rose', light: '#f5e1e4', dark: '#c27a87' },
+        { id: 'mint', key: 'mint', label: 'Menthe', light: '#e3f4ec', dark: '#6fae95' },
+        { id: 'sand', key: 'sand', label: 'Sable', light: '#f3e7c9', dark: '#c9a46a' },
+        { id: 'forest', key: 'forest', label: 'Forêt', light: '#c9d8b6', dark: '#3f6b4a' },
+        { id: 'petrol', key: 'petrol', label: 'Pétrole', light: '#cfe0e3', dark: '#2f6670' },
         { id: 'aurora', key: 'aurora', label: 'Aurore', light: '#d5efe6', dark: '#5f6fb0' },
     ];
     const boardById = id => BOARDS.find(b => b.id === id && unlocked(b)) || BOARDS[0];
@@ -42,6 +47,25 @@
         s.setProperty('--sq-dark', board.dark);
     }
     applyBoard();
+
+    // Matières : texture posée sur les couleurs (html[data-board-mat], cf. css/components/boardTheme.css)
+    const MATS = [
+        { id: 'none', key: 'none', label: 'Aucune', free: true },
+        { id: 'paper', key: 'paper', label: 'Papier', own: 'mat-paper' },
+        { id: 'tile', key: 'tile', label: 'Carrelage', own: 'mat-tile' },
+        { id: 'felt', key: 'felt', label: 'Feutrine', own: 'mat-felt' },
+        { id: 'walnut', key: 'walnut', label: 'Noyer', own: 'mat-walnut' },
+        { id: 'lava', key: 'lava', label: 'Lave', own: 'mat-lava' },
+    ];
+    const matById = id => MATS.find(m => m.id === id && unlocked(m)) || MATS[0];
+    let mat = MATS[0];
+    try { mat = matById(localStorage.getItem('boardMat')); } catch (e) { }
+    function applyMat() {
+        const el = document.documentElement;
+        if (mat.id === 'none') delete el.dataset.boardMat;
+        else el.dataset.boardMat = mat.id;
+    }
+    applyMat();
 
     const url = (piece, set = current) => `/img/chesspieces/${set.id}/${piece}.${set.ext}`;
     window.pieceUrl = piece => url(piece);
@@ -57,6 +81,7 @@
     };
     const title = () => tr('pieces.title', 'Pièces');
     const boardLabel = b => tr(`pieces.board.${b.key}`, b.label);
+    const matLabel = m => tr(`pieces.mat.${m.key}`, m.label);
 
     // Toutes les images de pièces déjà affichées (échiquiers et petites icônes)
     const PIECE_SRC = /\/chesspieces\/[^/]+\/([wb][PNBRQK])\.(?:png|svg)(?:[?#].*)?$/;
@@ -89,6 +114,15 @@
                 el.title = boardLabel(b);
                 el.setAttribute('aria-label', boardLabel(b));
             });
+            box.querySelectorAll('[data-board-mat]').forEach(el => {
+                const m = matById(el.dataset.boardMat);
+                const on = m.id === mat.id;
+                el.classList.toggle('is-active', on);
+                el.setAttribute('aria-pressed', String(on));
+                el.title = matLabel(m);
+                el.setAttribute('aria-label', matLabel(m));
+            });
+            box.querySelectorAll('.nav__pieces-shop span').forEach(s => { s.textContent = tr('nav.shop', 'Boutique'); });
             box.querySelectorAll('.nav__pieces-heading').forEach(h => { h.textContent = tr(h.dataset.key, h.dataset.fb); });
         });
     }
@@ -111,8 +145,25 @@
     }
     window.setBoardTheme = setBoardTheme;
 
+    function setBoardMat(id) {
+        mat = matById(id);
+        try { localStorage.setItem('boardMat', mat.id); } catch (e) { }
+        applyMat();
+        render();
+        window.dispatchEvent(new CustomEvent('boardMatChanged', { detail: { id: mat.id } }));
+    }
+    window.setBoardMat = setBoardMat;
+
+    // Catalogue pour la page Boutique (js/pages/shop.js)
+    window.pieceCatalog = {
+        sets: SETS, boards: BOARDS, mats: MATS, unlocked, url,
+        label, boardLabel, matLabel,
+        current: () => current, board: () => board, mat: () => mat,
+    };
+
     function setup() {
         const sets = SETS.filter(unlocked);
+        const mats = MATS.filter(unlocked);
         document.querySelectorAll('.nav__pieces').forEach(box => {
             box.innerHTML = `
                 <button class="nav__pieces-current" type="button" aria-haspopup="listbox" aria-expanded="false"></button>
@@ -124,6 +175,9 @@
                     ${(sets.length > 1 ? sets : []).map(s => `<li><button type="button" role="option" class="nav__pieces-item" data-piece-set="${s.id}">
                         <span class="nav__pieces-preview">${['wK', 'wN', 'bQ', 'bP'].map(p => `<img src="${url(p, s)}" alt="" loading="lazy">`).join('')}</span>
                         <span class="nav__pieces-name"></span></button></li>`).join('')}
+                    ${mats.length > 1 ? `<li class="nav__pieces-heading" data-key="pieces.matTitle" data-fb="Matière"></li>
+                    <li class="nav__pieces-boards">${mats.map(m => `<button type="button" class="nav__pieces-swatch nav__pieces-mat mat--${m.id}" data-board-mat="${m.id}"></button>`).join('')}</li>` : ''}
+                    <li><a class="nav__pieces-shop" href="/shop"><i class="fas fa-store"></i> <span></span></a></li>
                 </ul>`;
             const btn = box.querySelector('.nav__pieces-current');
             const menu = box.querySelector('.nav__pieces-menu');
@@ -137,6 +191,9 @@
             menu.addEventListener('click', e => {
                 const sw = e.target.closest('[data-board-theme]');
                 if (sw) { e.stopPropagation(); setBoardTheme(sw.dataset.boardTheme); return; }   // le menu reste ouvert pour comparer
+                const mt = e.target.closest('[data-board-mat]');
+                if (mt) { e.stopPropagation(); setBoardMat(mt.dataset.boardMat); return; }
+                if (e.target.closest('.nav__pieces-shop')) { toggle(false); return; }
                 const item = e.target.closest('[data-piece-set]');
                 if (!item) return;
                 toggle(false);
@@ -155,12 +212,14 @@
 
     // Objets débloqués (js/core/economy.js) : choix enregistrés réappliqués, menu reconstruit
     window.addEventListener('economyChanged', () => {
-        let ps = null, bt = null;
-        try { ps = localStorage.getItem('pieceSet'); bt = localStorage.getItem('boardTheme'); } catch (e) { }
+        let ps = null, bt = null, bm = null;
+        try { ps = localStorage.getItem('pieceSet'); bt = localStorage.getItem('boardTheme'); bm = localStorage.getItem('boardMat'); } catch (e) { }
         const prevSet = current.id;
         current = byId(ps || current.id);
         board = boardById(bt || board.id);
+        mat = matById(bm || mat.id);
         applyBoard();
+        applyMat();
         setup();
         if (current.id !== prevSet) refreshImages();
     });
