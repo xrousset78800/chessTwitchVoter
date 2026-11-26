@@ -58,7 +58,9 @@ const PREDICT = {
     cands: 5,              // parties proposées au vote (les plus fortes)
     pollMs: 5000,          // position relue toutes les 5 s (30 s si personne ne regarde)
     idlePollMs: 30000,
-    lostMs: 120000         // partie introuvable pendant 2 min : on arrête
+    lostMs: 120000,        // partie introuvable pendant 2 min : on arrête
+    flagMs: 90000,         // pendule du camp au trait à zéro depuis 1 min 30 sans résultat saisi : perte au temps
+    staleMs: 90 * 60000    // aucun coup depuis 1 h 30 (diffusion figée, résultat jamais saisi) : on arrête
 };
 /** Points d'un bon pronostic du vainqueur : plus il est tôt, plus il rapporte */
 const WINNER_PTS = (ply) => ply < 30 ? 10 : ply < 60 ? 6 : ply < 90 ? 3 : 1;
@@ -340,9 +342,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emit();
     }
     /** Pourquoi la station attend : personne ne regarde, la régie a mis en pause, le Phantom bouge ou décroche */
+    // Prédiction : la partie suit la diffusion, le Phantom ne fait que la recopier ; il ne retient pas la station
     const holdReason = () => viewers() === 0 ? 'idle'
         : regie.paused ? 'regie'
-        : (regie.phantom === 'busy' || regie.phantom === 'error') ? 'phantom' : null;
+        : (regie.phantom === 'busy' || regie.phantom === 'error') && !(s.phase === 'play' && s.game?.predict) ? 'phantom' : null;
 
     const allPlayers = () => [...s.teams.w, ...s.teams.b];
     /** Une équipe joue son camp, et aussi l'autre tant qu'il n'a aucun joueur */
@@ -965,6 +968,15 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             }
             const res = String(x.result || '*');
             if (res !== '*') return endPredict({ kind: 'final', winner: res === '1-0' ? 'w' : res === '0-1' ? 'b' : 'd' });
+            // La diffusion ne saisit pas toujours le résultat (ou très tard) : pendule tombée = perte au temps
+            const c = g.clocks, turn = g.chess.turn();
+            if (c && Number.isFinite(c[turn]) && c[turn] - (Date.now() - c.at) < -PREDICT.flagMs && !g.chess.isGameOver()) {
+                return endPredict({ kind: 'flag', winner: turn === 'w' ? 'b' : 'w' });
+            }
+            if (g.chess.isCheckmate()) return endPredict({ kind: 'final', winner: turn === 'w' ? 'b' : 'w' });
+            if (g.chess.isGameOver()) return endPredict({ kind: 'final', winner: 'd' });
+            const last = Date.parse(x.lastMoveAt || x.updateAt || '');
+            if (Number.isFinite(last) && Date.now() - last > PREDICT.staleMs) return endPredict({ kind: 'lost' });
             next();
         }).catch(() => next());
     }
@@ -1072,7 +1084,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!g?.predict || g.result) return;
         clearTimeout(pred.timer);
         log(`🔮 24/24 : fin de la prédiction (${res.kind}${res.winner ? ' ' + res.winner : ''}, ${g.history.length} demi-coups)`);
-        const winner = res.kind === 'final' ? res.winner : null;
+        const winner = res.kind === 'final' || res.kind === 'flag' ? res.winner : null;
         if (winner) for (const [login, p] of g.winners) {
             if (p.w !== winner) continue;
             const sc = scoreOf(g, login);
@@ -1602,7 +1614,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             twitchApi: twitchApi.status(),
             regieChannel: regie.channel, chat: { client: !!chat.client, connected: chat.connected, joined: [...chat.joined], queue: chat.queue, received: chat.received, events: chat.events },
             phase: s.phase, mode: s.mode, turn: s.game?.chess.turn() || null, turnOpen: !!s.game?.turnEndsAt,
-            teams: { w: s.teams.w.length, b: s.teams.b.length }, login: login ? { login, team: teamOf(login), optOut: s.optOut.has(login) } : undefined,
+            teams: { w: s.teams.w.length, b: s.teams.b.length },
+            paused: s.paused, pauseReason: s.pauseReason || null, viewers: viewers(), phantom: regie.phantom, bots: bots.list.length,
+            predict: s.game?.predict ? { guessers: s.game.votes.size, winners: s.game.winners.size, ply: s.game.history.length, result: s.game.result || null } : undefined,
+            login: login ? { login, team: teamOf(login), optOut: s.optOut.has(login) } : undefined,
             recent: chat.recent
         };
     }
