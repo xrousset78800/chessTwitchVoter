@@ -406,7 +406,7 @@ body.game-mode .nav__page-title {
     padding: 6px 8px 4px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--text-muted, #8f857d);
 }
-.nav__pieces-boards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 2px 8px 8px; }
+.nav__pieces-boards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 2px 8px 8px; }
 .nav__pieces-swatch {
     aspect-ratio: 1; min-height: 30px; padding: 0; cursor: pointer;
     border: 2px solid transparent; border-radius: 6px;

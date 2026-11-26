@@ -6,22 +6,25 @@
  * Le sélecteur est construit dans chaque .nav__pieces (barre du haut, à côté de la langue).
  */
 (function () {
+    // free : disponible pour tous. Les autres sont des récompenses de succès (ticket #16) :
+    // ils n'apparaissent que lorsque window.unlockedRewards (Set d'ids) les contient.
+    const unlocked = x => !!x.free || !!window.unlockedRewards?.has?.(x.id);
     const SETS = [
-        { id: 'wikipedia', ext: 'png', key: 'classic', label: 'Classique' },
+        { id: 'wikipedia', ext: 'png', key: 'classic', label: 'Classique', free: true },
         { id: 'flat', ext: 'svg', key: 'flat', label: 'Plat' },
         { id: 'neon', ext: 'svg', key: 'neon', label: 'Néon' },
         { id: 'token', ext: 'svg', key: 'token', label: 'Jetons' },
     ];
-    const byId = id => SETS.find(s => s.id === id) || SETS[0];
+    const byId = id => SETS.find(s => s.id === id && unlocked(s)) || SETS[0];
     let current = SETS[0];
     try { current = byId(localStorage.getItem('pieceSet')); } catch (e) { }
 
     // Couleurs de l'échiquier (variables --sq-light / --sq-dark, cf. css/components/boardTheme.css)
-    // Le premier est le thème par défaut. Gratuits : Bleu nuit, Noir, Ardoise (les autres deviendront des récompenses de succès)
+    // Le premier est le thème par défaut
     const BOARDS = [
-        { id: 'night', key: 'night', label: 'Bleu nuit', light: '#9db0d3', dark: '#42598c' },
-        { id: 'black', key: 'black', label: 'Noir', light: '#a6a6a6', dark: '#474747' },
-        { id: 'grey', key: 'grey', label: 'Ardoise', light: '#dcdcdc', dark: '#8a8d93' },
+        { id: 'night', key: 'night', label: 'Bleu nuit', light: '#9db0d3', dark: '#42598c', free: true },
+        { id: 'black', key: 'black', label: 'Noir', light: '#a6a6a6', dark: '#474747', free: true },
+        { id: 'grey', key: 'grey', label: 'Ardoise', light: '#dcdcdc', dark: '#8a8d93', free: true },
         { id: 'wood', key: 'wood', label: 'Bois', light: '#f0d9b5', dark: '#b58863' },
         { id: 'green', key: 'green', label: 'Vert', light: '#eeeed2', dark: '#769656' },
         { id: 'blue', key: 'blue', label: 'Bleu', light: '#dee3e6', dark: '#8ca2ad' },
@@ -29,7 +32,7 @@
         { id: 'purple', key: 'purple', label: 'Lavande', light: '#e9e1f3', dark: '#8f77b5' },
         { id: 'rose', key: 'rose', label: 'Rose', light: '#f5e1e4', dark: '#c27a87' },
     ];
-    const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
+    const boardById = id => BOARDS.find(b => b.id === id && unlocked(b)) || BOARDS[0];
     let board = BOARDS[0];
     try { board = boardById(localStorage.getItem('boardTheme')); } catch (e) { }
     function applyBoard() {
@@ -108,15 +111,16 @@
     window.setBoardTheme = setBoardTheme;
 
     function setup() {
+        const sets = SETS.filter(unlocked);
         document.querySelectorAll('.nav__pieces').forEach(box => {
             box.innerHTML = `
                 <button class="nav__pieces-current" type="button" aria-haspopup="listbox" aria-expanded="false"></button>
                 <ul class="nav__pieces-menu" hidden>
                     <li class="nav__pieces-heading" data-key="pieces.boardTitle" data-fb="Échiquier"></li>
-                    <li class="nav__pieces-boards">${BOARDS.map(b => `<button type="button" class="nav__pieces-swatch" data-board-theme="${b.id}"
+                    <li class="nav__pieces-boards">${BOARDS.filter(unlocked).map(b => `<button type="button" class="nav__pieces-swatch" data-board-theme="${b.id}"
                         style="--l:${b.light};--d:${b.dark}"></button>`).join('')}</li>
-                    <li class="nav__pieces-heading" data-key="pieces.title" data-fb="Pièces"></li>
-                    ${SETS.map(s => `<li><button type="button" role="option" class="nav__pieces-item" data-piece-set="${s.id}">
+                    ${sets.length > 1 ? '<li class="nav__pieces-heading" data-key="pieces.title" data-fb="Pièces"></li>' : ''}
+                    ${(sets.length > 1 ? sets : []).map(s => `<li><button type="button" role="option" class="nav__pieces-item" data-piece-set="${s.id}">
                         <span class="nav__pieces-preview">${['wK', 'wN', 'bQ', 'bP'].map(p => `<img src="${url(p, s)}" alt="" loading="lazy">`).join('')}</span>
                         <span class="nav__pieces-name"></span></button></li>`).join('')}
                 </ul>`;
