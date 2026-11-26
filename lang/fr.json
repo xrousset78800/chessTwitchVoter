@@ -1538,6 +1538,14 @@
     "cards": "Vue avec échiquiers",
     "noMatch": "Aucun match ne correspond."
   },
+  "voters": {
+    "title": "Votants",
+    "none": "Pas encore de prono pour ce coup.",
+    "chat": "Chat Twitch",
+    "played": "Coup joué",
+    "hits": "{n}/{total} bien vu",
+    "noHit": "Personne n'a vu juste"
+  },
   "predict": {
     "chatTitle": "Vote du chat",
     "chatHint": "Le chat propose le prochain coup en l'écrivant (Cf3, e4, O-O…). Résultat dès que le coup est joué.",

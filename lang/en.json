@@ -1538,6 +1538,14 @@
     "cards": "View with boards",
     "noMatch": "No matching game."
   },
+  "voters": {
+    "title": "Voters",
+    "none": "No guess for this move yet.",
+    "chat": "Twitch chat",
+    "played": "Move played",
+    "hits": "{n}/{total} called it",
+    "noHit": "Nobody called it"
+  },
   "predict": {
     "chatTitle": "Chat vote",
     "chatHint": "Chat suggests the next move by typing it (Nf3, e4, O-O…). Results as soon as the move is played.",

@@ -266,9 +266,16 @@
         pred.busy = true;
         renderMoves();
         try {
-            const d = await postJSON('/api/predict/move', { room: c.room, game: c.g.id, round: c.round, slug: c.g.slug, fen: c.fen, uci });
+            const me = window.twitchAuth?.user;
+            const d = await postJSON('/api/predict/move', { room: c.room, game: c.g.id, round: c.round, slug: c.g.slug, fen: c.fen, uci, name: me?.displayName });
             pred.key = c.key;
             pred.move = d.move;
+            if (me?.login) {
+                if (voters.key !== c.key || boardOf(voters.fen) !== boardOf(c.fen)) { voters.key = c.key; voters.fen = c.fen; voters.site = []; }
+                voters.site = voters.site.filter(v => v.login !== me.login.toLowerCase())
+                    .concat({ login: me.login.toLowerCase(), name: me.displayName || me.login, uci: d.move.uci, san: d.move.san, pic: me.avatar });
+                renderVoters();
+            }
         } catch (err) {
             window.AppToast?.show(esc(errText(err)), 'error', 3000);
         }
@@ -381,18 +388,8 @@
         } catch { /* position illisible */ }
         return null;
     }
-    function chatResolve(key, prevFen, newFen) {
-        const voters = chat.key === key && boardOf(chat.fen) === boardOf(prevFen) ? [...chat.votes.values()] : [];
-        if (voters.length) {
-            const played = playedBetween(prevFen, newFen);
-            if (played) {
-                const hits = voters.filter(v => v.uci === played.uci);
-                chat.last = { key, at: Date.now(), played, total: voters.length, hits: hits.length,
-                    names: hits.slice(0, 6).map(v => v.name), top: chatTally().slice(0, 3) };
-                window.AppToast?.show(esc(T('predict.chatToast', { hits: hits.length, total: voters.length, san: played.san },
-                    `Chat : ${hits.length}/${voters.length}`)), hits.length ? 'success' : 'info', 4000);
-            }
-        }
+    /** Coup joué : le résultat du chat s'affiche dans la liste des votants (votersResolve), on repart à zéro */
+    function chatResolve() {
         chatReset(current());
     }
     let chatQueued = false;
@@ -401,33 +398,109 @@
         chatQueued = true;
         requestAnimationFrame(() => { chatQueued = false; renderChat(); });
     }
-    const pct = (n, t) => t ? Math.round(n * 100 / t) : 0;
     function renderChat() {
         renderMoves();
-        const el = document.querySelector('#tPredict .tp-chat');
+        renderVoters();
+    }
+
+    // ───────────── Votants du prochain coup (site + chat) : photo, pseudo, coup ─────────────
+    const voters = { key: null, fen: null, site: [], flash: null, timer: null, busy: false };
+    const pics = new Map();                     // login -> URL de la photo
+    const picTries = new Map();
+    const picQueue = new Set();
+    let picTimer = null;
+    function picOf(v) {
+        if (v.pic && /^https:\/\//.test(v.pic)) { pics.set(v.login, v.pic); return v.pic; }
+        if (pics.has(v.login)) return pics.get(v.login);
+        if ((picTries.get(v.login) || 0) < 3 && !picQueue.has(v.login)) {
+            picQueue.add(v.login);
+            picTimer ||= setTimeout(fetchPics, 800);
+        }
+        return null;
+    }
+    async function fetchPics() {
+        picTimer = null;
+        const list = [...picQueue].slice(0, 50);
+        list.forEach(l => { picQueue.delete(l); picTries.set(l, (picTries.get(l) || 0) + 1); });
+        if (!list.length) return;
+        try {
+            const r = await fetch('/api/twitch/avatars?l=' + encodeURIComponent(list.join(',')));
+            if (!r.ok) return;
+            let any = false;
+            for (const [l, u] of Object.entries((await r.json()).pics || {})) if (u && /^https:\/\//.test(u)) { pics.set(l, u); any = true; }
+            if (any) renderVoters();
+        } catch { /* initiales à la place */ }
+    }
+    async function loadGuesses() {
+        const c = current();
+        if (!c || c.ended || voters.busy || !pageVisible()) return;
+        voters.busy = true;
+        try {
+            const q = new URLSearchParams({ room: c.room, game: c.g.id, fen: c.fen });
+            const r = await fetch(`/api/predict/guesses?${q}`);
+            const now = current();
+            if (r.ok && now?.key === c.key && boardOf(now.fen) === boardOf(c.fen)) {
+                voters.key = c.key; voters.fen = c.fen;
+                voters.site = (await r.json()).guesses || [];
+                renderVoters();
+            }
+        } catch { /* nouvel essai au prochain tour */ }
+        voters.busy = false;
+    }
+    /** Votants d'une position : comptes du site, puis spectateurs du chat (un compte du site l'emporte) */
+    function votersOf(key, fen) {
+        const out = new Map();
+        if (chat.key === key && boardOf(chat.fen) === boardOf(fen)) {
+            for (const [login, v] of chat.votes) out.set(login, { login, name: v.name, uci: v.uci, san: v.san, src: 'chat' });
+        }
+        if (voters.key === key && boardOf(voters.fen) === boardOf(fen)) {
+            for (const v of voters.site) out.set(v.login, { ...v, src: 'site' });
+        }
+        return [...out.values()];
+    }
+    /** Coup joué : qui a vu juste (animation), puis la liste repart à zéro pour la nouvelle position */
+    function votersResolve(key, prevFen, newFen) {
+        const list = votersOf(key, prevFen);
+        voters.site = []; voters.fen = newFen;
+        if (!list.length) return;
+        const played = playedBetween(prevFen, newFen);
+        if (!played) return;
+        list.forEach(v => { v.hit = v.uci === played.uci; v.gain = v.hit && v.src === 'site' ? rules.move.xp : 0; });
+        list.sort((a, b) => b.hit - a.hit);
+        voters.flash = { key, at: Date.now(), played, list, hits: list.filter(v => v.hit).length };
+        clearTimeout(voters.timer);
+        voters.timer = setTimeout(() => { voters.flash = null; renderVoters(); }, 5000);
+        renderVoters();
+    }
+    function renderVoters() {
+        const el = document.getElementById('tVoters');
         if (!el) return;
         const c = current();
-        const last = c && chat.last?.key === c.key && Date.now() - chat.last.at < 120000 ? chat.last : null;
-        const live = !!c && !c.ended && chatOn();
-        el.hidden = !(live || last);
-        if (el.hidden) return;
-        const tally = chat.key === c.key && boardOf(chat.fen) === boardOf(c.fen) ? chatTally() : [];
-        const total = tally.reduce((s, e) => s + e.n, 0);
-        const bars = (rows, tot, hit) => rows.map(e => `<div class="tp-crow${hit && e.uci === hit ? ' is-hit' : ''}">
-                <span class="tp-csan">${esc(e.san)}</span><span class="tp-cbar"><i style="width:${pct(e.n, tot)}%"></i></span><span class="tp-cn">${e.n}</span></div>`).join('');
-        el.innerHTML = `
-            <div class="tp-label"><i class="fab fa-twitch"></i> ${esc(T('predict.chatTitle', null, 'Vote du chat'))}
-                ${live ? `<small>${esc(T('predict.chatVotes', { n: total }, `${total}`))}</small>` : ''}</div>
-            ${live ? (tally.length ? `<div class="tp-cbars">${bars(tally.slice(0, 5), total)}</div>`
-                : `<p class="tp-hint">${esc(T('predict.chatNone', null, 'Pas encore de vote du chat pour ce coup.'))}</p>`) : ''}
-            ${live ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}
-            ${last ? `<div class="tp-clast">
-                <p><strong>${esc(T('predict.chatPlayed', { san: last.played.san }, last.played.san))}</strong> ·
-                    ${esc(T('predict.chatScore', { hits: last.hits, total: last.total, pct: pct(last.hits, last.total) }))}</p>
-                <div class="tp-cbars">${bars(last.top, last.total, last.played.uci)}</div>
-                ${last.names.length ? `<p class="tp-hint">${esc(T('predict.chatWinners', { names: last.names.join(', ') }))}</p>` : ''}
-            </div>` : ''}`;
+        el.hidden = !c;
+        if (!c) return;
+        const flash = voters.flash?.key === c.key ? voters.flash : null;
+        const list = flash ? flash.list : votersOf(c.key, c.fen);
+        const me = window.twitchAuth?.user?.login?.toLowerCase();
+        const sig = JSON.stringify([flash?.at, c.ended, chatOn(), list.map(v => [v.login, v.uci, picOf(v)]), document.documentElement.lang]);
+        if (el.dataset.sig === sig) return;
+        el.dataset.sig = sig;
+        el.querySelector('.tv-count').textContent = list.length ? String(list.length) : '';
+        const face = v => {
+            const url = picOf(v);
+            return url ? `<img class="tv-pic" src="${esc(url)}" alt="" loading="lazy">`
+                : `<span class="tv-pic">${esc(String(v.name || v.login || '?')[0].toUpperCase())}</span>`;
+        };
+        const row = (v, i) => `<li class="tv-item${v.login === me ? ' is-me' : ''}${flash ? (v.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i}">
+                ${face(v)}<span class="tv-name">${esc(v.name || v.login)}</span>${v.src === 'chat' ? `<i class="fab fa-twitch tv-src" title="${esc(T('voters.chat', null, 'Chat Twitch'))}"></i>` : ''}
+                <span class="tv-move">${esc(sanLocal(v.san))}</span>${flash && v.hit ? `<span class="tv-gain">${v.gain ? '+' + v.gain + ' XP' : '<i class="fas fa-check"></i>'}</span>` : ''}</li>`;
+        el.querySelector('.tv-body').innerHTML = `
+            ${flash ? `<div class="tv-played"><span>${esc(T('voters.played', null, 'Coup joué'))}</span> <b>${esc(sanLocal(flash.played.san))}</b>
+                <span class="tv-score">${esc(flash.hits ? T('voters.hits', { n: flash.hits, total: flash.list.length }, `${flash.hits}/${flash.list.length}`) : T('voters.noHit', null, 'Personne n\'a vu juste'))}</span></div>` : ''}
+            ${list.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${list.map(row).join('')}</ul>`
+                : `<p class="tp-hint">${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
+            ${!flash && !c.ended && chatOn() ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}`;
     }
+
     window.tournamentPredict = { chatVote, canDrag, dropMove };
 
     // ───────────── Colonne de gauche : tournois en cours / matchs en direct ─────────────
@@ -501,17 +574,21 @@
             const c = current();
             document.body.classList.toggle('t-following', !!c);
             if ((c?.key || null) !== lastKey || (stateT.lastFEN !== lastFen)) {
-                if (stateT.lastFEN !== lastFen && c?.key === lastKey && lastFen && stateT.lastFEN) chatResolve(lastKey, lastFen, stateT.lastFEN);
-                else if ((c?.key || null) !== lastKey) chatReset(c);
+                if (stateT.lastFEN !== lastFen && c?.key === lastKey && lastFen && stateT.lastFEN) {
+                    votersResolve(lastKey, lastFen, stateT.lastFEN);
+                    chatResolve(lastKey, lastFen, stateT.lastFEN);
+                } else if ((c?.key || null) !== lastKey) { chatReset(c); voters.flash = null; voters.site = []; }
                 if (stateT.lastFEN !== lastFen && pred.move && boardOf(pred.move.fen) !== boardOf(stateT.lastFEN)) pred.move = null;
                 lastFen = stateT.lastFEN;
                 const keyChanged = (c?.key || null) !== lastKey;
                 lastKey = c?.key || null;
                 renderPredict();
                 if (keyChanged) { renderLive(); pollState(); }
+                loadGuesses();
                 renderChat();
             }
             if (tick % 3 === 0) renderChat();
+            if (tick % 4 === 0) loadGuesses();
             if (++tick % 5 === 0) pollState();
             if (tick % 30 === 0 && pageVisible()) loadLive();
         }, 1000);

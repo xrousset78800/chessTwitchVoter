@@ -665,11 +665,15 @@ input[type=range] {
     color: var(--accent-purple, #ff8a3d); font-size: .75rem; cursor: pointer;
 }
 /* Partie suivie : la colonne de choix se masque, l'échiquier prend la place */
-#page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: minmax(0, 1fr) 280px; }
-#page-tournament .live-content.t-following:not(.t-list-open) > :first-child { display: none !important; }
+#page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: 320px minmax(0, 1fr) 280px; }
+/* Partie suivie : la colonne de gauche ne garde que le titre et les pronostics */
+#page-tournament .live-content.t-following:not(.t-list-open) #tSideCol > :not(.t-sidehead):not(#tPredict) { display: none !important; }
+#page-tournament .live-content:not(.t-following) #tPredict,
+#page-tournament .live-content.t-list-open #tPredict { display: none !important; }
 #page-tournament .live-content.t-following:not(.t-list-open) .board-wrapper > div:first-child { max-width: 640px; }
 @media (max-width: 900px) {
     #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: 1fr; }
+    #page-tournament .live-content.t-following #tSideCol { order: 3; }
 }
 
 /* ── Tournoi : revue d'une partie terminée ── */
@@ -898,6 +902,52 @@ input[type=range] {
 .t-sidetabs button[aria-selected="true"] { color: var(--text-primary); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 0 0 1px var(--accent); }
 #tEventsCard[hidden], #tLiveGames[hidden] { display: none; }
 
+/* ── Votants du prochain coup (photo, pseudo, coup) et résultat animé ── */
+.tv-card[hidden] { display: none; }
+.tv-head { display: flex; justify-content: space-between; align-items: center; }
+.tv-count { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--text-muted); }
+.tv-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto; scrollbar-width: thin; }
+.tv-item {
+    display: flex; align-items: center; gap: 8px; padding: 4px 6px; min-width: 0;
+    border: 1px solid transparent; border-radius: 4px; background: rgba(255, 255, 255, 0.03);
+}
+.tv-item.is-me { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.tv-pic {
+    flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; object-fit: cover;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--accent) 22%, var(--bg-card)); color: var(--text-primary); font-size: 0.75rem; font-weight: 700;
+}
+.tv-name { flex: 1; min-width: 0; font-size: 0.84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv-src { font-size: 0.72rem; color: #9146ff; }
+.tv-move { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); }
+.tv-gain { font-size: 0.74rem; font-weight: 700; color: var(--accent); white-space: nowrap; animation: tvGain 1.2s ease-out calc(var(--i, 0) * 80ms + 250ms) both; }
+.tv-played {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 0.8rem; color: var(--text-secondary);
+    animation: tvPop 0.45s ease-out both;
+}
+.tv-played b { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--text-primary); }
+.tv-score { margin-left: auto; color: var(--accent); font-weight: 600; }
+.tv-item.is-hit {
+    border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
+    animation: tvHit 0.9s ease-out calc(var(--i, 0) * 80ms) both;
+}
+.tv-item.is-hit .tv-move { color: var(--accent); }
+.tv-item.is-miss { animation: tvMiss 0.6s ease-out 0.2s both; }
+.tv-list.is-flash { animation: tvOut 0.5s ease-in 4.5s both; }
+@keyframes tvHit {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); }
+    45% { transform: scale(1.04); }
+    100% { transform: none; box-shadow: 0 0 0 10px transparent; }
+}
+@keyframes tvMiss { to { opacity: 0.35; filter: grayscale(1); } }
+@keyframes tvGain { 0% { opacity: 0; transform: translateY(8px) scale(0.8); } 40% { opacity: 1; transform: translateY(-3px) scale(1.15); } 100% { opacity: 1; transform: none; } }
+@keyframes tvPop { 0% { opacity: 0; transform: translateY(-4px); } 100% { opacity: 1; transform: none; } }
+@keyframes tvOut { to { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) {
+    .tv-item.is-hit, .tv-item.is-miss, .tv-gain, .tv-played, .tv-list.is-flash { animation: none; }
+    .tv-item.is-miss { opacity: 0.35; }
+}
+
 /* ── Tournois : plus d'en-tête de page, titre à gauche et outils à droite ── */
 .t-sidehead { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; }
 .t-sidehead .live-header__title { margin: 0; font-size: 1.25rem; line-height: 1.2; }
@@ -937,7 +987,7 @@ input[type=range] {
     #page-tournament .live-content { max-width: 1480px; }
     #page-tournament .live-content { grid-template-columns: 320px minmax(0, 1fr) 300px; }
     #page-tournament .board-wrapper > div:first-child { max-width: min(780px, max(320px, calc(100vh - 205px))); }
-    #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: minmax(0, 1fr) 300px; }
+    #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: 320px minmax(0, 1fr) 300px; }
     #page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child,
     #page-tournament .live-content.t-following:not(.t-list-open) .board-wrapper > div:first-child {
         max-width: min(880px, max(320px, calc(100vh - 205px)));

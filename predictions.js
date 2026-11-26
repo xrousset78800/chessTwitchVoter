@@ -9,6 +9,7 @@
  */
 const path = require('path');
 const { Chess } = require('chess.js');
+const twitchApi = require('./twitchApi');
 
 const MAX_RESULTS = 30;               // derniers pronos jugés gardés par compte
 const PENDING_TTL = 2 * 86400e3;      // un prono jamais jugé (partie disparue) est oublié après 2 jours
@@ -203,6 +204,21 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
         } catch (err) { fail(res, err); }
     });
 
+    /** Pronos de tous les comptes sur la position donnée (liste des votants, publique) */
+    app.get('/api/predict/guesses', (req, res) => {
+        const key = `${str(req.query.room)}:${str(req.query.game)}`;
+        const board = boardOf(str(req.query.fen, 120));
+        const guesses = [];
+        for (const [login, u] of Object.entries(store.data)) {
+            const p = u?.moves?.[key];
+            if (!p || boardOf(p.fen) !== board) continue;
+            guesses.push({ login, name: p.name || login, uci: p.uci, san: p.san, pic: twitchApi.avatar(login), at: p.at });
+            if (guesses.length >= 200) break;
+        }
+        guesses.sort((a, b) => a.at - b.at);
+        res.json({ guesses });
+    });
+
     async function currentOdds(room, gameId) {
         if (!room || !gameId) return null;
         try {
@@ -228,7 +244,7 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             const key = `${room}:${gameId}`;
             user(login).moves[key] = {
                 room, gameId, round: str(req.body?.round), slug: str(req.body?.slug),
-                fen: game.currentFEN, uci, san: m.san, at: Date.now(),
+                fen: game.currentFEN, uci, san: m.san, at: Date.now(), name: str(req.body?.name, 40) || login,
             };
             store.save();
             res.json({ move: { fen: game.currentFEN, uci, san: m.san } });

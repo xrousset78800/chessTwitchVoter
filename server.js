@@ -342,6 +342,13 @@ function liveGamesList() {
     return liveGamesLast ? Promise.resolve(liveGamesLast.games) : liveGamesCache.promise;
 }
 // Régie (H24_REGIE) : outils réservés, comme le journal de la page Tournois
+// Photos de profil Twitch (votants du chat) : null tant que Twitch n'a pas répondu, redemander plus tard
+app.get('/api/twitch/avatars', (req, res) => {
+    const twitchApi = require('./twitchApi');
+    const logins = String(req.query.l || '').toLowerCase().split(',').filter(Boolean).slice(0, 60);
+    res.json({ pics: Object.fromEntries(logins.map(l => [l, twitchApi.avatar(l)])) });
+});
+
 app.get('/api/regie', requireTwitch, (req, res) => {
     res.json({ regie: !!station?.isRegie(req.twitch.login) });
 });

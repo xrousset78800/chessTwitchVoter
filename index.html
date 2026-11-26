@@ -1423,6 +1423,12 @@
                             </div>
                         </div>
 
+                        <!-- Pronostics sur la partie suivie, à la place des listes (js/core/tournamentPredict.js) -->
+                        <div class="live-card tp-card" id="tPredict" hidden>
+                            <div class="live-card__title"><i class="fas fa-bullseye"></i> <span data-i18n="predict.title">Pronostics</span></div>
+                            <div class="tp-body"></div>
+                        </div>
+
                         <!-- Matchs en cours, tous tournois confondus : suivre, pronostiquer, voter (js/core/tournamentPredict.js) -->
                         <div class="live-card tl-section" id="tLiveGames">
                             <div class="live-card__title tl-head">
@@ -1538,11 +1544,10 @@
                             </div>
                         </div>
 
-                        <!-- Pronostics sur la partie suivie (js/core/tournamentPredict.js) -->
-                        <div class="live-card tp-card" id="tPredict" hidden>
-                            <div class="live-card__title"><i class="fas fa-bullseye"></i> <span data-i18n="predict.title">Pronostics</span></div>
-                            <div class="tp-body"></div>
-                            <div class="tp-chat" hidden></div>
+                        <!-- Votants du prochain coup : site et chat Twitch (js/core/tournamentPredict.js) -->
+                        <div class="live-card tv-card" id="tVoters" hidden>
+                            <div class="live-card__title tv-head"><span><i class="fas fa-users"></i> <span data-i18n="voters.title">Votants</span></span> <small class="tv-count"></small></div>
+                            <div class="tv-body"></div>
                         </div>
 
 
