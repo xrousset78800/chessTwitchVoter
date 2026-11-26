@@ -513,6 +513,16 @@
     "loading": "Loading moves…",
     "replayUnavailable": "Moves unavailable"
   },
+  "phantomOwner": {
+    "title": "Phantom already in use",
+    "text": "The Phantom is currently following “{cur}”. Switch it to “{next}”? The physical board will be fully reset to the new position.",
+    "hint": "If you keep it, this page won’t send anything to the Phantom until you click “Sync”.",
+    "switch": "Switch the Phantom",
+    "keep": "Keep on “{cur}”",
+    "followWarn": "Warning: the Phantom is currently following “{cur}”. If you continue, it will be fully reset to this game.",
+    "modeGame": "Twitch game",
+    "modeH24": "24/7 (control room)"
+  },
   "phantomModal": {
     "title": "Phantom chessboard",
     "intro": "Phantom is a real wooden chessboard that moves its own pieces. Connected to the site, it plays out the moves voted by Twitch chat, or those of a Live Chess game or a followed tournament.",

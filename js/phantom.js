@@ -138,6 +138,9 @@ class PhantomChessboard {
         }
         if (provided) {
             this.log('📋 Partie suivie détectée, synchronisation...', 'info');
+            const mode = route === '24h' ? 'h24' : route;
+            window.PhantomOwner?.claim(mode);
+            if (window.PhantomOwner) window.PhantomOwner.src = mode;
             this.syncPosition(provided);
             return;
         }

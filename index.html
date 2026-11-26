@@ -102,11 +102,7 @@
                 <a class="nav__link" data-navigate="/rush" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
-                <a class="nav__link" data-navigate="/tournament">
-                    <span class="nav__game-dot nav__follow-dot"></span>
-                    <i class="fas fa-chess-board"></i>
-                    <span data-i18n="nav.tournament">Tournoi</span>
-                </a>
+                <a class="nav__link" data-navigate="/tournament"><span data-i18n="nav.tournament">Tournoi</span></a>
                 <span class="nav__cursor" aria-hidden="true"></span>
             </div>
 
@@ -1647,6 +1643,7 @@
             <div class="modal__body">
                 <p class="tf-title" id="tfTitle"></p>
                 <div class="tf-board" id="tfBoard"></div>
+                <p class="po-warn" id="tfConflict" hidden></p>
                 <p class="form-hint" data-i18n="tournamentFollow.hint">Placer directement cette position, ou remettre l'échiquier à zéro et rejouer la partie coup par coup. Le Phantom suit ensuite les coups joués.</p>
                 <div class="tf-actions">
                     <button class="btn btn--primary" id="tfConfirm"><i class="fas fa-chess-board"></i> <span data-i18n="tournamentFollow.confirm">Position actuelle</span></button>
@@ -1690,6 +1687,7 @@
     <script src="js/components/boardCoords.js"></script>
     <script src="js/components/evalBar.js"></script>
     <script src="js/phantom.js"></script>
+    <script src="js/core/phantomOwner.js"></script>
     <script src="js/core/liveTournament.js"></script>
     <script src="js/core/tournamentPredict.js"></script>
     <script src="js/config.js"></script>

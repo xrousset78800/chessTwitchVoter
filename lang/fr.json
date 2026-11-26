@@ -513,6 +513,16 @@
     "loading": "Chargement des coups…",
     "replayUnavailable": "Coups indisponibles"
   },
+  "phantomOwner": {
+    "title": "Phantom déjà utilisé",
+    "text": "Le Phantom suit actuellement « {cur} ». Le basculer sur « {next} » ? L'échiquier physique sera entièrement remis à la nouvelle position.",
+    "hint": "Si tu le laisses, cette page n'enverra rien au Phantom tant que tu ne cliques pas sur « Synchroniser ».",
+    "switch": "Basculer le Phantom",
+    "keep": "Laisser sur « {cur} »",
+    "followWarn": "Attention : le Phantom suit actuellement « {cur} ». En continuant, il sera entièrement remis à cette partie.",
+    "modeGame": "Partie Twitch",
+    "modeH24": "24/24 (régie)"
+  },
   "phantomModal": {
     "title": "Échiquier Phantom",
     "intro": "Phantom est un vrai échiquier en bois qui déplace ses pièces tout seul. Connecté au site, il rejoue sous tes yeux les coups votés par le chat Twitch, ceux d'une partie Live Chess ou d'un tournoi suivi.",

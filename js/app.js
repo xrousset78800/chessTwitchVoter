@@ -463,12 +463,7 @@ const Router = {
         this.placeNewTabs(pageName, target);
 
         // Mettre à jour la nav
-        const gameLink = document.getElementById('nav-game');
-        if (gameLink) {
-            gameLink.hidden = !GameSession.running;
-            gameLink.dataset.navigate = GameSession.hash.slice(1);
-            gameLink.classList.toggle('is-active', pageName === 'game');
-        }
+        updateNavCurrent(pageName);
         document.querySelectorAll('.nav__link:not(#nav-game)').forEach(link => {
             const linkPath = (link.dataset.navigate || '').split('?')[0];
             // Mono, Multi et Puzzle Rush sont des onglets de Nouveau (/sandbox)
@@ -568,6 +563,32 @@ function clampTurn(v) {
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? Math.min(120, Math.max(10, n)) : 30;
 }
+
+// Mode « partie Nouveau » pour le Phantom (les positions sans mode précisé sont les siennes)
+window.PhantomOwner?.register('game', {
+    pages: ['game', 'sandbox'],
+    active: () => GameSession.running,
+    label: () => tr('phantomOwner.modeGame') !== 'phantomOwner.modeGame' ? tr('phantomOwner.modeGame') : 'Partie Twitch',
+    url: () => GameSession.hash.slice(1),
+});
+
+/** Entrée « Partie en cours » du menu : ce qui tourne (Phantom d'abord, sinon le dernier mode visité) */
+function updateNavCurrent(pageName = document.body.dataset.page) {
+    const link = document.getElementById('nav-game');
+    if (!link) return;
+    const cur = window.PhantomOwner?.current()
+        || (GameSession.running ? { id: 'game', url: GameSession.hash.slice(1), label: '', pages: ['game'] } : null);
+    const wasHidden = link.hidden;
+    link.hidden = !cur;
+    if (cur) {
+        if (cur.url && link.dataset.navigate !== cur.url) { link.dataset.navigate = cur.url; link.setAttribute('href', cur.url); }
+        link.title = cur.label || tr('nav.game');
+        link.dataset.mode = cur.id;
+        link.classList.toggle('is-active', cur.pages.includes(pageName));
+    }
+    if (wasHidden !== link.hidden) moveNavCursor();
+}
+setInterval(() => updateNavCurrent(), 1000);
 
 /** Curseur du menu : glisse sous le lien actif (et suit le survol) */
 function moveNavCursor(target) {
@@ -1164,6 +1185,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         // Sync Phantom
         document.getElementById('btn-sync')?.addEventListener('click', () => {
             if (window.phantomChessboard?.isConnected) {
+                window.PhantomOwner?.claim('game');
                 window.phantomChessboard.syncPosition(gameEngine.getFen());
                 Toast.info(tr('ui.toast.syncSent'));
             }
@@ -1174,6 +1196,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             if (AppState.gameMode !== 'sandbox') return;
             gameEngine.reset();
             if (window.phantomChessboard?.isConnected) {
+                window.PhantomOwner?.claim('game');
                 window.phantomChessboard.syncPosition(gameEngine.getFen());
                 Toast.success(tr('ui.toast.resetSynced'));
             } else {

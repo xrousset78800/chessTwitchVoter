@@ -237,15 +237,15 @@
 }
 
 .nav__link--game.is-active {
-    background: rgba(16, 185, 129, 0.18);
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .nav__game-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--accent-green);
-    box-shadow: 0 0 8px var(--accent-green);
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
     animation: nav-game-pulse 1.6s ease-in-out infinite;
 }
 
@@ -274,8 +274,7 @@
 }
 
 /* Pastille verte « partie suivie » à côté de Live Chess / Tournoi */
-.nav__follow-dot { display: none; margin-right: 6px; vertical-align: middle; }
-.nav__link.is-following .nav__follow-dot { display: inline-block; }
+
 
 /* Curseur du menu : une pastille qui glisse vers le lien actif ou survolé */
 .nav__links { position: relative; isolation: isolate; }

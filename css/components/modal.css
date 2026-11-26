@@ -19,6 +19,14 @@
     transition: var(--transition-medium);
 }
 
+/* Conflit Phantom : avertissement avant de remettre l'échiquier physique à une autre partie */
+.po-warn { margin: 10px 0 0; padding: 8px 10px; border-radius: 8px; font-size: 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.po-warn[hidden] { display: none; }
+#modal-phantom-owner .modal__title .fa-triangle-exclamation { color: var(--accent); }
+#modal-phantom-owner .po-text { margin: 0 0 8px; line-height: 1.45; }
+.po-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
 .modal-overlay.is-active {
     opacity: 1;
     visibility: visible;

@@ -643,7 +643,7 @@ const H24Page = {
         if (fen === this.mirroredFen) return;
         this.mirroredFen = fen;
         p.enabled = true;
-        p.syncPosition(fen);
+        window.PhantomOwner ? window.PhantomOwner.sync('h24', fen) : p.syncPosition(fen);
     },
 
     async regieAction(action) {
@@ -660,9 +660,11 @@ const H24Page = {
             this.mirroredFen = null;
         } else if (action === 'live') {
             this.regie.live = !this.regie.live;
+            if (this.regie.live) window.PhantomOwner?.claim('h24');
             this.mirroredFen = null;
             this.saveRegie();
         } else if (action === 'sync') {
+            window.PhantomOwner?.claim('h24');
             this.mirroredFen = null;
             if (p) p.lastFenSent = null;
         } else if (action === 'pause') {
@@ -1677,3 +1679,10 @@ export default H24Page;
 // À la connexion du Phantom depuis le menu, c'est la partie 24/24 qu'il faut poser sur l'échiquier
 window.phantomPositionProviders = window.phantomPositionProviders || {};
 window.phantomPositionProviders['24h'] = () => (H24Page.me.regie && H24Page.regie.live && H24Page.state?.game?.fen) || null;
+// Mode « 24/24 (régie) » : le Phantom suit la partie 24/24
+window.PhantomOwner?.register('h24', {
+    pages: ['h24'],
+    active: () => !!(H24Page.me.regie && H24Page.regie.live && window.phantomChessboard?.isConnected),
+    label: () => t('phantomOwner.modeH24', null, '24/24 (régie)'),
+    url: () => '/24h',
+});

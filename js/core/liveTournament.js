@@ -469,7 +469,7 @@ async function showReviewStepT(i, fromPlayer = false) {
     document.getElementById('tRevFirst').disabled = document.getElementById('tRevPrev').disabled = i === 0;
     document.getElementById('tRevLast').disabled = document.getElementById('tRevNext').disabled = i === last;
     if (document.getElementById('tRevPhantom')?.checked && window.phantomChessboard?.isConnected) {
-        await window.phantomChessboard.syncPosition(fen);
+        await PhantomOwner.sync('tournament', fen);
     }
 }
 
@@ -591,6 +591,7 @@ function renderGames(games, roundId) {
                 hidePreviewT();
                 const choice = await confirmFollowT(g, wName, bName);
                 if (!choice) return;
+                if (window.phantomChessboard?.isConnected) PhantomOwner.claim('tournament');
                 // L'état interne doit suivre l'échiquier affiché : c'est lui que Synchroniser envoie au Phantom
                 stateT.chess.load(g.currentFEN);
                 setBoardPositionT(g.currentFEN);
@@ -739,6 +740,13 @@ function confirmFollowT(g, wName, bName, { force = false, fen = g.currentFEN } =
     if (!modal || (!phantomWillMove && !force)) return Promise.resolve({ replay: null });
 
     document.getElementById('tfTitle').textContent = `${wName} – ${bName}`;
+    // Le Phantom suit déjà autre chose (partie Nouveau, régie 24/24) : on prévient avant de tout remettre en place
+    const conflict = document.getElementById('tfConflict');
+    if (conflict) {
+        const other = PhantomOwner.conflictWith('tournament');
+        conflict.hidden = !other;
+        conflict.textContent = other ? trT('phantomOwner.followWarn', 'Attention : le Phantom suit actuellement « {cur} ». En continuant, il sera entièrement remis à cette partie.').replace('{cur}', other) : '';
+    }
     document.getElementById('tfBoard').innerHTML = miniBoardHTML(fen);
     modal.classList.add('is-active');
 
@@ -801,9 +809,10 @@ async function placePhantomOnFollowedT() {
     }
     if (stateT.currentGame !== g || !window.phantomChessboard?.isConnected) return;
     if (!choice) { logT('Phantom : position non envoyée (bouton Synchroniser pour la poser)', 'warn'); return; }
+    PhantomOwner.claim('tournament');
     if (choice.replay) { runPhantomReplayT(g, choice.replay, choice.delay); return; }
     // Position la plus récente (des coups ont pu être joués pendant le choix)
-    const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
+    const sent = await PhantomOwner.sync('tournament', stateT.chess.fen());
     logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
 }
 
@@ -828,7 +837,7 @@ async function runPhantomReplayT(g, fens, delayS = 0) {
                 if (!alive()) return;
                 if (i > 0 && delayS) await wait(delayS * 1000);
                 if (!alive()) return;
-                await phantom.syncPosition(fens[i]);
+                if (await PhantomOwner.sync('tournament', fens[i]) === false) return;
                 await idle();
                 const n = fens.length - 1;
                 if (i > 0 && (i % 10 === 0 || i === n)) logT(`Phantom : coup ${i}/${n} rejoué`, 'info');
@@ -843,19 +852,31 @@ async function runPhantomReplayT(g, fens, delayS = 0) {
             } catch { /* coups indisponibles : on pose directement la position */ }
             if (!alive()) return;
             const prefixOk = more && more.length > fens.length && sameBoardT(more[fens.length - 1], fens.at(-1));
-            if (!prefixOk) { await phantom.syncPosition(live); await idle(); break; }
+            if (!prefixOk) { await PhantomOwner.sync('tournament', live); await idle(); break; }
             logT(`Phantom : rattrapage de ${more.length - fens.length} coup(s) joué(s) entre-temps`, 'info');
             fens = more;
         }
         if (alive()) {
             // Dernière vérification : un coup a pu tomber pendant le dernier déplacement
-            if (!sameBoardT(fens.at(-1), stateT.chess.fen())) await phantom.syncPosition(stateT.chess.fen());
+            if (!sameBoardT(fens.at(-1), stateT.chess.fen())) await PhantomOwner.sync('tournament', stateT.chess.fen());
             logT('Phantom à jour : suivi en direct', 'ok');
         }
     } finally {
         if (stateT.phantomReplay === token) stateT.phantomReplay = null;
     }
 }
+
+// Mode « Tournoi » pour le Phantom et l'entrée « Partie en cours » du menu
+PhantomOwner.register('tournament', {
+    pages: ['tournament'],
+    active: () => !!(stateT.polling && stateT.currentGame) || !!(reviewT.game && document.getElementById('tRevPhantom')?.checked),
+    label: () => {
+        const w = document.getElementById('playerWhiteT')?.textContent.trim(), b = document.getElementById('playerBlackT')?.textContent.trim();
+        const name = trT('nav.tournament', 'Tournoi');
+        return w && b && w !== '—' ? `${name} : ${w} – ${b}` : name;
+    },
+    url: () => document.querySelector('.nav__link:not(#nav-game)[data-navigate^="/tournament"]')?.dataset.navigate || '/tournament',
+});
 
 // À la connexion du Phantom, c'est la partie suivie ici qu'il faut poser sur l'échiquier
 window.phantomPositionProviders = window.phantomPositionProviders || {};
@@ -952,8 +973,8 @@ async function pollGame() {
                 // Phantom
                 if (window.phantomChessboard?.isConnected
                     && !stateT.choosingPhantom && !stateT.phantomReplay) {
-                    const sent = await window.phantomChessboard.syncPosition(updatedGame.currentFEN);
-                    logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
+                    const sent = await PhantomOwner.sync('tournament', updatedGame.currentFEN);
+                    logT(sent === false ? 'Phantom non synchronisé (inactif ou utilisé ailleurs)' : 'Phantom synchronisé', sent === false ? 'warn' : 'ok');
                 }
             }
             renderTournament(data, { refresh: true });
@@ -1098,7 +1119,7 @@ function updateUrlT() {
 
 /** Le lien du menu garde l'adresse de la partie : en revenant sur l'onglet (ou en le rouvrant), on la retrouve */
 function setNavUrl(route, url) {
-    const link = document.querySelector(`.nav__link[data-navigate^="${route}"]`);
+    const link = document.querySelector(`.nav__link:not(#nav-game)[data-navigate^="${route}"]`);
     if (!link || link.dataset.navigate === url) return;
     link.dataset.navigate = url;
     link.setAttribute('href', url);
@@ -1236,7 +1257,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tRevPlay')?.addEventListener('click', () => setReviewPlayingT(!reviewT.playToken));
     document.getElementById('tRevPhantom')?.addEventListener('change', async function () {
         if (!this.checked || !reviewT.game || !window.phantomChessboard?.isConnected) return;
-        const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
+        PhantomOwner.claim('tournament');
+        const sent = await PhantomOwner.sync('tournament', stateT.chess.fen());
         logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom : position de la revue', sent === false ? 'warn' : 'ok');
     });
     document.addEventListener('keydown', e => {
@@ -1337,7 +1359,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!window.phantomChessboard?.isConnected) { logT('Phantom non connecté', 'warn'); return; }
         if (!stateT.chess) return;
         if (stateT.phantomReplay) { stateT.phantomReplay = null; logT('Replay du Phantom interrompu', 'warn'); }
-        const sent = await window.phantomChessboard.syncPosition(stateT.chess.fen());
+        PhantomOwner.claim('tournament');
+        const sent = await PhantomOwner.sync('tournament', stateT.chess.fen());
         logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Synchronisation envoyée', sent === false ? 'warn' : 'ok');
     });
 
@@ -1361,8 +1384,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('clockBlackT').textContent = '—';
         setStatusT('idle', 'En attente');
         if (window.phantomChessboard?.isConnected) {
+            PhantomOwner.claim('tournament');
             window.phantomChessboard.sendGameStart();
-            await window.phantomChessboard.syncPosition(stateT.chess.fen());
+            await PhantomOwner.sync('tournament', stateT.chess.fen());
             logT('Échiquier réinitialisé et synchronisé', 'ok');
         } else {
             logT('Échiquier réinitialisé', 'ok');
@@ -1423,19 +1447,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('click', e => menus.forEach(m => { if (!m.contains(e.target)) setMenu(m, false); }));
     document.addEventListener('keydown', e => { if (e.key === 'Escape') menus.forEach(m => setMenu(m, false)); });
-    // Pastille verte quand le Phantom est connecté ; pastille « partie suivie » dans le menu de navigation
+    // Pastille quand le Phantom est connecté (la partie suivie, elle, apparaît dans « Partie en cours » du menu)
     setInterval(() => {
         const on = !!window.phantomChessboard?.isConnected;
         menus.forEach(m => m.classList.toggle('is-connected', on));
         document.querySelectorAll('.status-dot--phantom').forEach(d => d.classList.toggle('is-connected', on));
-        const following = {
-            '/tournament': !!(stateT.polling && stateT.currentGame),
-        };
-        for (const [route, isOn] of Object.entries(following)) {
-            const link = document.querySelector(`.nav__link[data-navigate="${route}"]`);
-            if (!link) continue;
-            link.classList.toggle('is-following', isOn);
-            link.title = isOn ? 'Partie suivie en direct' : '';
-        }
     }, 1000);
 });
