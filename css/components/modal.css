@@ -191,7 +191,7 @@
 
 @keyframes toast-life { to { transform: scaleX(0); } }
 
-.toast--success { --tone: #22c55e; }
+.toast--success { --tone: var(--accent-green); }
 .toast--error { --tone: #ef4444; }
 .toast--warning { --tone: #eab308; }
 .toast--info { --tone: #ff8a3d; }

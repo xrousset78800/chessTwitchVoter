@@ -612,7 +612,7 @@ input[type=range] {
 .round-btn.is-done:not(.is-active) { opacity: .5; }
 .round-btn.is-upcoming:not(.is-active) { border-style: dashed; }
 .round-btn.is-live:not(.is-active) { border-color: rgba(239, 68, 68, .6); color: var(--text-primary, #e2e8f0); }
-.round-btn__check { font-size: .6rem; color: #22c55e; }
+.round-btn__check { font-size: .6rem; color: var(--accent-green); }
 .round-btn.is-active .round-btn__check { color: inherit; }
 .round-btn__dot {
     width: 6px; height: 6px; border-radius: 50%;
@@ -633,7 +633,7 @@ input[type=range] {
 }
 .t-event:hover { background: rgba(255, 138, 61, .12); }
 .t-event.is-selected { background: rgba(255, 138, 61, .2); border-color: var(--accent-purple, #ff8a3d); }
-.t-event__status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: #22c55e; }
+.t-event__status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--accent-green); }
 .t-event.is-upcoming .t-event__status { background: transparent; border: 1px solid var(--text-muted, #7f736b); }
 .t-event__name {
     flex: 1; min-width: 0;
@@ -651,7 +651,7 @@ input[type=range] {
     background: rgba(255, 138, 61, .08);
     font-size: .8rem;
 }
-.t-summary > i { color: #22c55e; }
+.t-summary > i { color: var(--accent-green); }
 .t-summary__name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .t-summary__change {
     background: none; border: 1px solid var(--border-subtle, #2b2420);
@@ -706,7 +706,7 @@ input[type=range] {
 
 /* ── Menu Phantom dans l'en-tête (Live, Tournoi) ── */
 .live-phantom-menu { margin-left: auto; }
-.live-phantom-menu.is-connected .phantom-menu__dot { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+.live-phantom-menu.is-connected .phantom-menu__dot { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
 .live-phantom-menu .phantom-menu__panel { width: 300px; }
 .live-phantom-menu .phantom-menu__panel > * + * { margin-top: 10px; }
 .live-phantom-menu .btn-connect { width: 100%; }
@@ -729,7 +729,7 @@ input[type=range] {
 #page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child {
     max-width: min(640px, max(300px, calc(100vh - 400px)));
 }
-.t-review__nav .t-review__play { color: #22c55e; border-color: rgba(34, 197, 94, .5); padding: 5px 14px; }
+.t-review__nav .t-review__play { color: var(--accent-green); border-color: color-mix(in srgb, var(--accent-green) 50%, transparent); padding: 5px 14px; }
 .t-review__nav .t-review__play.is-playing { color: #f59e0b; border-color: rgba(245, 158, 11, .5); }
 .t-review__opts select {
     background: var(--bg-card, #1a1512); color: var(--text-primary, #e2e8f0);

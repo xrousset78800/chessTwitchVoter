@@ -48,3 +48,24 @@ html[data-board-mat="lava"] .black-3c85d, .mat--lava .sq-d {
 @media (prefers-reduced-motion: reduce) {
     html[data-board-mat="lava"] .black-3c85d, .mat--lava .sq-d { animation: none; }
 }
+
+html[data-board-mat="mosaic"], .mat--mosaic {
+    --mat-l: linear-gradient(rgba(0,0,0,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.16) 1px, transparent 1px), linear-gradient(135deg, rgba(255,255,255,.14), transparent 70%);
+    --mat-d: linear-gradient(rgba(0,0,0,.26) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.26) 1px, transparent 1px), linear-gradient(135deg, rgba(255,255,255,.1), transparent 70%);
+    --mat-size-l: 25% 25%, 25% 25%, 100% 100%; --mat-size-d: 25% 25%, 25% 25%, 100% 100%;
+}
+html[data-board-mat="frost"], .mat--frost {
+    --mat-l: linear-gradient(160deg, rgba(255,255,255,.45), rgba(255,255,255,0) 55%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.4 0 0 0 -.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-d: linear-gradient(160deg, rgba(255,255,255,.3), rgba(255,255,255,0) 55%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.4 0 0 0 -.45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-size-l: 100% 100%, 120px; --mat-size-d: 100% 100%, 120px;
+}
+html[data-board-mat="carbon"], .mat--carbon {
+    --mat-l: linear-gradient(160deg, rgba(255,255,255,.16), transparent 50%), repeating-linear-gradient(45deg, rgba(0,0,0,.14) 0 2px, transparent 2px 4px), repeating-linear-gradient(-45deg, rgba(0,0,0,.08) 0 2px, transparent 2px 4px);
+    --mat-d: linear-gradient(160deg, rgba(255,255,255,.12), transparent 50%), repeating-linear-gradient(45deg, rgba(0,0,0,.3) 0 2px, transparent 2px 4px), repeating-linear-gradient(-45deg, rgba(255,255,255,.06) 0 2px, transparent 2px 4px);
+    --mat-size-l: 100% 100%, auto, auto; --mat-size-d: 100% 100%, auto, auto;
+}
+html[data-board-mat="marble"], .mat--marble {
+    --mat-l: linear-gradient(135deg, rgba(255,255,255,.22), transparent 60%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='.012 .03' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .35 0 0 0 0 .38 -4 0 0 0 .6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-d: linear-gradient(135deg, rgba(255,255,255,.16), transparent 60%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='.012 .03' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -4 0 0 0 .55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-size-l: 100% 100%, 240px; --mat-size-d: 100% 100%, 240px;
+}

@@ -743,7 +743,12 @@
     "candy": "Bonbon",
     "mono": "Noir et blanc",
     "rainbow": "Arc-en-ciel",
-    "gold": "Or"
+    "gold": "Or",
+    "autumn": "Automne",
+    "glacier": "Glacier",
+    "retro": "Rétro",
+    "royal": "Royal",
+    "synth": "Synthwave"
   },
   "timerRing": {
     "seconds": "secondes",
@@ -1125,6 +1130,10 @@
     "flat": "Plat",
     "neon": "Néon",
     "token": "Jetons",
+    "ice": "Banquise",
+    "ruby": "Rubis",
+    "royal": "Royal",
+    "synth": "Synthwave",
     "boardTitle": "Échiquier",
     "board": {
       "wood": "Bois",
@@ -1140,7 +1149,15 @@
       "mint": "Menthe",
       "sand": "Sable",
       "forest": "Forêt",
-      "petrol": "Pétrole"
+      "petrol": "Pétrole",
+      "ice": "Glace",
+      "coral": "Corail",
+      "olive": "Olive",
+      "coffee": "Café",
+      "bubblegum": "Chewing-gum",
+      "cherry": "Cerise",
+      "midnight": "Minuit",
+      "gilded": "Doré"
     },
     "matTitle": "Matière",
     "mat": {
@@ -1149,7 +1166,11 @@
       "tile": "Carrelage",
       "felt": "Feutrine",
       "walnut": "Noyer",
-      "lava": "Lave"
+      "lava": "Lave",
+      "mosaic": "Mosaïque",
+      "frost": "Givre",
+      "carbon": "Carbone",
+      "marble": "Marbre"
     }
   },
   "achievements": {
@@ -1389,6 +1410,7 @@
     "equipped": "Équipé",
     "owned": "Possédé",
     "free": "Gratuit",
+    "loginToBuy": "Connexion pour acheter · ♟ {n}",
     "missing": "Il manque {n} ♟",
     "exclusive": "Succès « {name} »",
     "exclusiveShort": "Réservé aux succès",
@@ -1396,7 +1418,24 @@
     "bought": "{name} acheté et équipé !",
     "errPoor": "Pas assez de pions.",
     "errBuy": "L'achat n'a pas abouti, réessaie.",
-    "unavailable": "Boutique indisponible pour le moment"
+    "unavailable": "Boutique indisponible pour le moment",
+    "tab": {
+      "pieces": "Pièces",
+      "boards": "Échiquiers",
+      "mats": "Matières",
+      "palettes": "Tirage"
+    },
+    "filter": {
+      "all": "Tout",
+      "buy": "À acheter",
+      "owned": "Possédés"
+    },
+    "fit": {
+      "title": "Cabine d'essayage",
+      "hint": "Clique un objet pour l'essayer ici avant de l'acheter.",
+      "reset": "Revenir à mon équipement"
+    },
+    "empty": "Rien ici avec ce filtre."
   },
   "seo": {
     "title": "Crowd Gambit — Les échecs joués par ton chat Twitch",

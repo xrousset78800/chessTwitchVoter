@@ -20,6 +20,11 @@ export const PALETTES = {
     candy:   ['#ff8fab', '#a0e7e5', '#b4f8c8', '#fbe7c6', '#cdb4db', '#ffc8dd', '#bde0fe', '#ffafcc', '#caffbf', '#fdffb6', '#9bf6ff', '#ffd6a5'],
     mono:    ['#f5f5f5', '#d4d4d4', '#a3a3a3', '#737373', '#525252', '#e5e5e5', '#bdbdbd', '#8c8c8c', '#666666', '#cfcfcf', '#999999', '#404040'],
     rainbow: ['#ff3b30', '#ff9500', '#ffd60a', '#34c759', '#00c7be', '#0a84ff', '#5e5ce6', '#bf5af2', '#ff2d92', '#30d158', '#64d2ff', '#ff9f0a'],
+    autumn:  ['#d9480f', '#f08c00', '#a61e4d', '#e8590c', '#c92a2a', '#fab005', '#862e9c', '#e67700', '#b5651d', '#ff922b', '#7f1d1d', '#ffa94d'],
+    glacier: ['#a5d8ff', '#74c0fc', '#e7f5ff', '#4dabf7', '#99e9f2', '#3bc9db', '#d0ebff', '#1c7ed6', '#c5f6fa', '#228be6', '#66d9e8', '#1864ab'],
+    retro:   ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#264653', '#ff6f59', '#457b9d', '#f1faee', '#a8dadc', '#8338ec', '#fb8500', '#219ebc'],
+    royal:   ['#7048e8', '#f5cf5c', '#5f3dc4', '#ffe066', '#9775fa', '#e8b923', '#4c2a9c', '#fff3bf', '#b197fc', '#c99700', '#3b1f80', '#ffd43b'],
+    synth:   ['#ff3fb4', '#22e5ff', '#b14dff', '#ffe14d', '#ff7ccc', '#5cf0ff', '#7b2cff', '#ff9e3d', '#ff4d6d', '#00ffc6', '#d45cff', '#3d8bff'],
     gold:    ['#ffd700', '#f5c542', '#e6b422', '#ffdf6e', '#d4a017', '#fff0a5', '#c9a227', '#ffcc33', '#b8860b', '#f0d58c', '#daa520', '#ffe680'],
 };
 

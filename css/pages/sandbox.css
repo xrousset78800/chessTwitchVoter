@@ -641,8 +641,8 @@ body:not(.sandbox-launch) .sandbox-setup__grid {
 }
 
 body.phantom-connected .phantom-menu__dot {
-    background: #22c55e;
-    box-shadow: 0 0 6px #22c55e;
+    background: var(--accent-green);
+    box-shadow: 0 0 6px var(--accent-green);
 }
 
 .phantom-menu__panel {
@@ -666,7 +666,7 @@ body.phantom-connected .phantom-menu__dot {
 .phantom-menu__status {
     margin: 0 0 10px;
     font-size: 0.8rem;
-    color: #22c55e;
+    color: var(--accent-green);
 }
 
 .phantom-menu__status--off {

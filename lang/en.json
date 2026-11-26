@@ -743,7 +743,12 @@
     "candy": "Candy",
     "mono": "Black & white",
     "rainbow": "Rainbow",
-    "gold": "Gold"
+    "gold": "Gold",
+    "autumn": "Autumn",
+    "glacier": "Glacier",
+    "retro": "Retro",
+    "royal": "Royal",
+    "synth": "Synthwave"
   },
   "timerRing": {
     "seconds": "seconds",
@@ -1125,6 +1130,10 @@
     "flat": "Flat",
     "neon": "Neon",
     "token": "Tokens",
+    "ice": "Pack ice",
+    "ruby": "Ruby",
+    "royal": "Royal",
+    "synth": "Synthwave",
     "boardTitle": "Board",
     "board": {
       "wood": "Wood",
@@ -1140,7 +1149,15 @@
       "mint": "Mint",
       "sand": "Sand",
       "forest": "Forest",
-      "petrol": "Petrol"
+      "petrol": "Petrol",
+      "ice": "Ice",
+      "coral": "Coral",
+      "olive": "Olive",
+      "coffee": "Coffee",
+      "bubblegum": "Bubblegum",
+      "cherry": "Cherry",
+      "midnight": "Midnight",
+      "gilded": "Gilded"
     },
     "matTitle": "Material",
     "mat": {
@@ -1149,7 +1166,11 @@
       "tile": "Tile",
       "felt": "Felt",
       "walnut": "Walnut",
-      "lava": "Lava"
+      "lava": "Lava",
+      "mosaic": "Mosaic",
+      "frost": "Frost",
+      "carbon": "Carbon",
+      "marble": "Marble"
     }
   },
   "achievements": {
@@ -1389,6 +1410,7 @@
     "equipped": "Equipped",
     "owned": "Owned",
     "free": "Free",
+    "loginToBuy": "Log in to buy · ♟ {n}",
     "missing": "{n} ♟ short",
     "exclusive": "Achievement \"{name}\"",
     "exclusiveShort": "Achievement reward",
@@ -1396,7 +1418,24 @@
     "bought": "{name} bought and equipped!",
     "errPoor": "Not enough pawns.",
     "errBuy": "The purchase didn't go through, try again.",
-    "unavailable": "Shop unavailable right now"
+    "unavailable": "Shop unavailable right now",
+    "tab": {
+      "pieces": "Pieces",
+      "boards": "Boards",
+      "mats": "Materials",
+      "palettes": "Draw"
+    },
+    "filter": {
+      "all": "All",
+      "buy": "To buy",
+      "owned": "Owned"
+    },
+    "fit": {
+      "title": "Fitting room",
+      "hint": "Click an item to try it here before buying.",
+      "reset": "Back to my gear"
+    },
+    "empty": "Nothing here with this filter."
   },
   "seo": {
     "title": "Crowd Gambit — Chess played by your Twitch chat",

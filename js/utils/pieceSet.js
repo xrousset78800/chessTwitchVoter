@@ -15,6 +15,10 @@
         { id: 'flat', ext: 'svg', key: 'flat', label: 'Plat' },
         { id: 'neon', ext: 'svg', key: 'neon', label: 'Néon' },
         { id: 'token', ext: 'svg', key: 'token', label: 'Jetons' },
+        { id: 'ice', ext: 'svg', key: 'ice', label: 'Banquise' },
+        { id: 'ruby', ext: 'svg', key: 'ruby', label: 'Rubis' },
+        { id: 'royal', ext: 'svg', key: 'royal', label: 'Royal' },
+        { id: 'synth', ext: 'svg', key: 'synth', label: 'Synthwave' },
     ];
     const byId = id => SETS.find(s => s.id === id && unlocked(s)) || SETS[0];
     let current = SETS[0];
@@ -37,6 +41,14 @@
         { id: 'forest', key: 'forest', label: 'Forêt', light: '#c9d8b6', dark: '#3f6b4a' },
         { id: 'petrol', key: 'petrol', label: 'Pétrole', light: '#cfe0e3', dark: '#2f6670' },
         { id: 'aurora', key: 'aurora', label: 'Aurore', light: '#d5efe6', dark: '#5f6fb0' },
+        { id: 'ice', key: 'ice', label: 'Glace', light: '#e6f2f8', dark: '#7fa7c2' },
+        { id: 'coral', key: 'coral', label: 'Corail', light: '#fbe3d6', dark: '#e07a5f' },
+        { id: 'olive', key: 'olive', label: 'Olive', light: '#e8e6c8', dark: '#8a8c4a' },
+        { id: 'coffee', key: 'coffee', label: 'Café', light: '#e6d2bc', dark: '#6f4e37' },
+        { id: 'bubblegum', key: 'bubblegum', label: 'Chewing-gum', light: '#ffe3f1', dark: '#e48fbf' },
+        { id: 'cherry', key: 'cherry', label: 'Cerise', light: '#f6dede', dark: '#9e2a3a' },
+        { id: 'midnight', key: 'midnight', label: 'Minuit', light: '#5a6788', dark: '#1f2538' },
+        { id: 'gilded', key: 'gilded', label: 'Doré', light: '#f7e7b0', dark: '#b8902c' },
     ];
     const boardById = id => BOARDS.find(b => b.id === id && unlocked(b)) || BOARDS[0];
     let board = BOARDS[0];
@@ -56,6 +68,10 @@
         { id: 'felt', key: 'felt', label: 'Feutrine', own: 'mat-felt' },
         { id: 'walnut', key: 'walnut', label: 'Noyer', own: 'mat-walnut' },
         { id: 'lava', key: 'lava', label: 'Lave', own: 'mat-lava' },
+        { id: 'mosaic', key: 'mosaic', label: 'Mosaïque', own: 'mat-mosaic' },
+        { id: 'frost', key: 'frost', label: 'Givre', own: 'mat-frost' },
+        { id: 'carbon', key: 'carbon', label: 'Carbone', own: 'mat-carbon' },
+        { id: 'marble', key: 'marble', label: 'Marbre', own: 'mat-marble' },
     ];
     const matById = id => MATS.find(m => m.id === id && unlocked(m)) || MATS[0];
     let mat = MATS[0];

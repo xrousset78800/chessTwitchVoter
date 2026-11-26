@@ -920,7 +920,7 @@ body.showTimer .board-timer-container {
 .timer-display {
     font-size: 2rem;
     font-weight: bold;
-    color: #4ade80;
+    color: var(--accent-green);
     font-family: 'Courier New', monospace;
     margin-bottom: 8px;
 }
