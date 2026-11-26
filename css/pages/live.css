@@ -740,7 +740,9 @@ input[type=range] {
 /* ── Tournoi : mode simulé ── */
 .t-review.is-sim-hidden { display: none !important; }
 #btnSimT.is-on { border-color: var(--accent); color: var(--accent); }
-.t-boardcol.is-sim #liveBoardT { outline: 2px dashed var(--accent); outline-offset: 3px; border-radius: 2px; }
+.t-boardcol.is-sim #liveBoardT { outline: 2px dashed var(--accent); outline-offset: 3px; border-radius: 2px; position: relative; }
+/* Léger voile blanc : on voit tout de suite qu'on est en simulation (les clics passent au travers) */
+.t-boardcol.is-sim #liveBoardT::after { content: ''; position: absolute; inset: 0; background: rgba(255, 255, 255, 0.14); pointer-events: none; z-index: 5; border-radius: inherit; }
 .t-sim {
     width: 100%; max-width: 640px; box-sizing: border-box;
     padding: 8px 10px; border: 1px solid var(--accent); border-radius: var(--radius-md, 3px);

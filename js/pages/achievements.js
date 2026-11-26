@@ -44,10 +44,12 @@ function levelBlock(acc) {
 let rules = null;   // gains par palier (/api/economy/rules), pour afficher la récompense à récupérer
 const rewardOf = (def) => rules?.achievement?.[def.tier] || rules?.achievement?.B || null;
 
-function claimBtn(def) {
+/** Récompense du succès (XP et pions), en bas à droite de la carte */
+function gainTag(def, done, toClaim) {
     const r = rewardOf(def);
-    const gain = r ? ` <small>+${fmtNum(r.xp)} XP · +${fmtNum(r.coins)} ♟</small>` : '';
-    return `<button type="button" class="btn btn--sm btn--primary ach-card__claim" data-ach-claim="${esc(def.id)}"><i class="fas fa-gift"></i> ${esc(t('claim'))}${gain}</button>`;
+    if (!r) return '';
+    const icon = toClaim ? 'fa-gift' : done ? 'fa-check' : 'fa-star';
+    return `<span class="ach-card__gain"><i class="fas ${icon}"></i> +${fmtNum(r.xp)} XP · +${fmtNum(r.coins)} ♟</span>`;
 }
 
 function card(def, done, stats, toClaim) {
@@ -63,7 +65,8 @@ function card(def, done, stats, toClaim) {
     }
     const reward = def.reward && !hidden
         ? `<div class="ach-card__reward"><i class="fas fa-gift"></i> ${esc(rewardLabel(def.reward))}</div>` : '';
-    return `<li class="ach-card ach-tier--${def.tier}${done ? ' is-done' : ''}${hidden ? ' is-secret' : ''}${toClaim ? ' is-claimable' : ''}">
+    const claimAttrs = toClaim ? ` data-ach-claim="${esc(def.id)}" role="button" tabindex="0" title="${esc(t('claim'))}"` : '';
+    return `<li class="ach-card ach-tier--${def.tier}${done ? ' is-done' : ''}${hidden ? ' is-secret' : ''}${toClaim ? ' is-claimable' : ''}"${claimAttrs}>
         <div class="ach-card__icon"><i class="fas ${done || !hidden ? TIER_ICON[def.tier] : 'fa-question'}"></i></div>
         <div class="ach-card__body">
             <div class="ach-card__head">
@@ -72,8 +75,10 @@ function card(def, done, stats, toClaim) {
             </div>
             <div class="ach-card__desc">${esc(desc)}</div>
             ${progress}${reward}
-            ${done ? `<div class="ach-card__date"><i class="fas fa-check"></i> ${esc(fmtDate(done))}</div>` : ''}
-            ${toClaim ? claimBtn(def) : ''}
+            <div class="ach-card__foot">
+                ${done ? `<span class="ach-card__date"><i class="fas fa-check"></i> ${esc(fmtDate(done))}</span>` : '<span></span>'}
+                ${gainTag(def, done, toClaim)}
+            </div>
         </div>
     </li>`;
 }
@@ -95,6 +100,10 @@ const AchievementsPage = {
                 const b = e.target.closest('[data-ach-claim], [data-ach-claim-all]');
                 if (b) this.claim(b.dataset.achClaimAll != null ? window.achievements.toClaim() : [b.dataset.achClaim], b);
             });
+            page.addEventListener('keydown', e => {
+                const b = (e.key === 'Enter' || e.key === ' ') && e.target.closest?.('li[data-ach-claim]');
+                if (b) { e.preventDefault(); this.claim([b.dataset.achClaim], b); }
+            });
         }
     },
 
@@ -102,7 +111,7 @@ const AchievementsPage = {
     async claim(ids, btn) {
         if (!ids.length || this.claiming) return;
         this.claiming = true;
-        if (btn) btn.disabled = true;
+        if (btn) { btn.disabled = true; btn.classList.add('is-busy'); }
         try {
             const { claimed, gain } = await window.achievements.claim(ids);
             if (claimed?.length && window.AppToast) {
@@ -113,7 +122,7 @@ const AchievementsPage = {
         } catch (e) {
             console.warn('🏆 Récompense non récupérée :', e.message);
             window.AppToast?.show(esc(t('claimError')), 'error', 4000);
-            if (btn) btn.disabled = false;
+            if (btn) { btn.disabled = false; btn.classList.remove('is-busy'); }
         } finally {
             this.claiming = false;
         }

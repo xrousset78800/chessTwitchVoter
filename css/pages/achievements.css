@@ -108,18 +108,22 @@
 .ach-level--guest p { font-size: 0.82rem; }
 
 .ach-summary { margin: 0; padding: 0 2px; color: var(--text-secondary); font-size: 0.82rem; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-height: 28px; }
-.ach-claim-all, .ach-card__claim { padding: 5px 12px; font-size: 0.78rem; gap: 6px; border-radius: 999px; }
-.ach-card__claim {
-    margin-top: 8px;
-    max-width: 100%;
-    white-space: normal;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    text-align: left;
-    row-gap: 0;
+.ach-claim-all { padding: 5px 12px; font-size: 0.78rem; gap: 6px; border-radius: 999px; }
+
+/* Succès à récupérer : toute la carte est cliquable */
+.ach-card.is-claimable {
+    border-color: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent), 0 4px 16px color-mix(in srgb, var(--accent) 18%, transparent);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
-.ach-card__claim small { opacity: 0.85; font-weight: 600; font-size: 0.7rem; white-space: nowrap; }
-.ach-card.is-claimable { border-color: var(--accent); }
+.ach-card.is-claimable:hover, .ach-card.is-claimable:focus-visible {
+    outline: none;
+    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+    box-shadow: 0 0 0 1px var(--accent), 0 6px 20px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.ach-card.is-busy { pointer-events: none; opacity: 0.6; }
 
 /* ----- Catégories et cartes ----- */
 
@@ -173,7 +177,7 @@
     color: var(--tier);
 }
 
-.ach-card__body { flex: 1; min-width: 0; }
+.ach-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ach-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .ach-card__name { font-weight: 600; color: var(--text-primary); }
 .ach-card__tier { font-size: 0.7rem; color: var(--tier); white-space: nowrap; }
@@ -182,7 +186,17 @@
 .ach-card__progress { margin-top: 8px; height: 5px; }
 .ach-card__count { margin-top: 3px; font-size: 0.72rem; color: var(--text-muted); }
 .ach-card__reward { margin-top: 6px; font-size: 0.78rem; color: var(--accent-light); }
-.ach-card__date { margin-top: 6px; font-size: 0.72rem; color: var(--text-muted); }
+.ach-card__foot { margin-top: auto; padding-top: 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ach-card__date { font-size: 0.72rem; color: var(--text-muted); }
+.ach-card__gain { margin-left: auto; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.ach-card__gain .fas { font-size: 0.65rem; }
+.ach-card.is-done .ach-card__gain { color: var(--text-secondary); }
+.ach-card.is-claimable .ach-card__gain {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--gradient-hero);
+    color: var(--on-accent);
+}
 .ach-card__date .fa-check { color: var(--accent); }
 
 /* ----- Toast de déblocage ----- */
