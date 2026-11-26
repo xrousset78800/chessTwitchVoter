@@ -700,8 +700,6 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-side__title { margin-right: 4px; color: #ffb27a; }
 .h24-side__elo { font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, 0.6); font-weight: 700; }
 .h24-side__event { max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); }
-.h24-side--player .h24-pclock { order: 9; margin-left: auto; }
-.h24-side--player .h24-side__spacer { order: 8; }
 
 /* ---- Prédiction : pronostic du vainqueur et points ---- */
 #h24-score:has(.h24-pwin) { display: block; }
@@ -721,15 +719,16 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-pwin__btn.is-mine { border-color: var(--twitch-purple); box-shadow: 0 0 0 1px var(--twitch-purple) inset; }
 .h24-pwin__pts { margin-left: auto; color: #ffb27a; font-weight: 800; }
 
-/* ---- Prédiction : dernier coup et devinettes (à la place du podium) ---- */
-.h24-plast { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; text-align: center; }
-.h24-plast__k { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
-.h24-plast__san { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 800; color: #fff; }
-.h24-plast__line { font-size: 0.85rem; color: var(--text-secondary); }
-.h24-plast__top { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
-.h24-plast__top li { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 2px; background: rgba(255, 255, 255, 0.06); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.85rem; }
-.h24-plast__top li small { color: var(--text-secondary); font-weight: 500; }
-.h24-plast__top li.is-hit { background: rgba(255, 138, 61, 0.25); color: #fff; }
+/* ---- Prédiction : pronostics du vainqueur et devinettes (présentation de la page Tournois) ---- */
+.h24-plast { display: flex; flex-direction: column; gap: 12px; padding: 4px 2px; }
+.h24-pwbars { font-size: 0.78rem; }
+.h24-pwbars .tp-wbar__bar { height: 20px; }
+.h24-pwbars .tp-wbar__seg { font-size: 0.72rem; }
+.h24-pv { display: flex; flex-direction: column; gap: 6px; }
+.h24-pv__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
+.h24-pv__san { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: #fff; }
+.h24-pv__empty { margin: 0; font-size: 0.82rem; color: var(--text-muted); }
+.h24-pv .tv-list { max-height: 420px; }
 
 /* ---- Prédiction : classement des devins (visible pendant la partie) ---- */
 #page-h24[data-phase="play"][data-mode="predict"] .h24-teams-panel { display: block; }

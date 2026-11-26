@@ -878,8 +878,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         return c;
     }
     function predictPublic(g) {
+        const guesses = [...g.votes].slice(-60).map(([u, l]) => tickerItem({ u, v: g.guessVia?.get(u) || null }, { m: l[0] }));
         return { ...g.predict, clocks: g.clocks, lastHit: g.lastHit, winners: winnerCounts(g), board: predictBoard(g, 8),
-            guessers: g.votes.size, players: g.scores.size, open: !g.result };
+            guesses, guessers: g.votes.size, players: g.scores.size, open: !g.result };
     }
     function startPredict() {
         const info = s.predictPick || gameBallot()?.games.g0;
@@ -1002,10 +1003,12 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             if (i === 0) {
                 let total = 0, n = 0;
                 const counts = {};
+                const who = [];
                 for (const [login, list] of g.votes) {
                     const guess = list[0];
                     if (!guess) continue;
                     total++;
+                    if (who.length < 60) who.push(tickerItem({ u: login, v: g.guessVia?.get(login) || null }, { m: guess, hit: guess === m.san }));
                     counts[guess] = (counts[guess] || 0) + 1;
                     if (guess === m.san) {
                         n++;
@@ -1016,12 +1019,14 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                     }
                 }
                 g.hv.push(total ? Math.round(n * 100 / total) : null);
-                g.lastHit = { san: m.san, n, total, ply: g.history.length, top: Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([move, k]) => ({ move, n: k })) };
+                who.sort((a, b) => b.hit - a.hit);
+                g.lastHit = { san: m.san, n, total, ply: g.history.length, at: Date.now(), who, top: Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([move, k]) => ({ move, n: k })) };
             } else g.hv.push(null);
             g.history.push(m.san);
             g.lastMove = { from: m.from, to: m.to };
         });
         g.votes = new Map();
+        g.guessVia = new Map();
         g.recent = [];
         g.recentN = 0;
         if (g.tally) g.tally.peak = Math.max(g.tally.peak, viewers());
@@ -1036,8 +1041,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!m) return false;
         if (g.votes.get(login)?.[0] === m.san) return true;
         g.votes.set(login, [m.san]);
+        (g.guessVia ||= new Map()).set(login, viaOf(login, via));
         scoreOf(g, login);
-        g.recent.push({ u: login, m: null, v: viaOf(login, via) });
+        g.recent.push({ u: login, m: m.san, v: viaOf(login, via) });
         g.recentN = (g.recentN || 0) + 1;
         if (g.recent.length > 30) g.recent.shift();
         g.voteCount.w.set(login, (g.voteCount.w.get(login) || 0) + 1);
@@ -1560,7 +1566,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         // Prédiction : vainqueur (« blancs », « nulle », « noirs », 1-0…) ou devinette du coup suivant
         if (s.phase === 'play' && s.game?.predict && !s.game.result) {
             const WIN = { blancs: 'w', blanc: 'w', white: 'w', '1-0': 'w', '1': 'w', nulle: 'd', draw: 'd', '1/2': 'd', '½': 'd', '2': 'd', noirs: 'b', noir: 'b', black: 'b', '0-1': 'b', '3': 'b' };
-            if (WIN[word]) return pickWinner(login, WIN[word]) ? `vainqueur ${WIN[word]}` : 'vainqueur déjà choisi';
+            const wk = word.replace(/^!\s*/, '').replace(/^(1\/2|½)-(1\/2|½)$/, '1/2');
+            if (WIN[wk]) return pickWinner(login, WIN[wk]) ? `vainqueur ${WIN[wk]}` : 'vainqueur déjà choisi';
             if (!Notation.looksLikeMove(typed, H24_LANG)) return;
             if (guessMove(login, typed, via, H24_LANG)) { chat.seen.set(login, Date.now()); return `devinette ${word}`; }
             return 'refusé : coup illégal';

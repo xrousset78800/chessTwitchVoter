@@ -1537,26 +1537,58 @@ const H24Page = {
         this.tickerTotal(total);
     },
 
-    /** Prédiction : nombre de devinettes du coup en cours, puis le dernier coup joué et ce que le chat avait deviné */
+    /** Prédiction : comme la page Tournois. Pronostics du vainqueur (barre Blancs / Nulle / Noirs),
+     *  puis les devinettes du coup en cours (photo, pseudo, coup) ; au coup joué, ✓ / ✗ pendant 5 s */
     predictPanel(g) {
         const slot = $('h24-votes-panel');
         const area = $('h24-wheel-area');
         if (slot?.classList.contains('is-live')) { this.clearLive(); this.wheel = null; if (area) area.innerHTML = ''; }
         const list = $('h24-votes');
         list?.querySelector('.podium')?.remove();
-        const n = g.predict.guessers || 0;
+        const P = g.predict;
+        const n = P.guessers || 0;
         const tot = $('h24-votes-total');
         if (tot) tot.textContent = t('h24.pred.guessers', { n }, `${n} devinette(s)`);
         this.tickerTotal(n);
         if (!list) return;
         let box = list.querySelector('.h24-plast');
         if (!box) { box = document.createElement('div'); box.className = 'h24-plast'; list.appendChild(box); }
-        const h = g.predict.lastHit;
-        const html = h ? `<div class="h24-plast__k">${esc(t('h24.pred.lastMove', null, 'Dernier coup'))}</div>
-            <div class="h24-plast__san">${esc(fmtMove(h.san))}</div>
-            <div class="h24-plast__line">${esc(h.total ? t('h24.pred.found', { n: h.n, total: h.total }, `${h.n} / ${h.total} l'avaient trouvé`) : t('h24.pred.noGuess', null, 'Personne n\'avait deviné'))}</div>
-            ${h.top?.length ? `<ul class="h24-plast__top">${h.top.map(x => `<li class="${x.move === h.san ? 'is-hit' : ''}"><span>${esc(fmtMove(x.move))}</span><small>${x.n}</small></li>`).join('')}</ul>` : ''}`
-            : `<div class="h24-plast__line">${esc(t('h24.pred.waiting', null, 'En attente du prochain coup…'))}</div>`;
+        // Barre des pronostics du vainqueur
+        const w = P.winners || { w: 0, d: 0, b: 0 };
+        const keys = [['w', 'white'], ['d', 'draw'], ['b', 'black']];
+        const nw = w.w + w.d + w.b;
+        const pct = (k) => Math.round(100 * (w[k] || 0) / nw);
+        const segs = nw ? keys.filter(([k]) => w[k]).map(([k, c]) =>
+            `<span class="tp-wbar__seg tp-wbar__seg--${c}" style="flex:${w[k]}" title="${esc(`${t('predict.' + c, null, c)} : ${pct(k)} % (${w[k]})`)}">${pct(k) >= 14 ? pct(k) + ' %' : ''}</span>`).join('')
+            : `<span class="tp-wbar__empty">${esc(t('tlive.noVotes', null, 'Aucun vote'))}</span>`;
+        const bars = `<div class="tp-winbars h24-pwbars"><div class="tp-wbars__title"><span>${esc(t('predict.winBars', null, 'Pronostics en cours'))}</span>
+                <span class="tp-wbars__legend">${keys.map(([, c]) => `<i class="tp-wbar__dot tp-wbar__seg--${c}"></i>${esc(t('predict.' + c, null, c))}`).join(' ')}</span></div>
+            <div class="tp-wbar"><div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${esc(t('predict.votes', { n: nw }, nw + ' vote(s)'))}</span></div>
+            ${g.result ? '' : `<div class="tp-wbar__hint">${esc(t('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>`}</div>`;
+        // Devinettes : celles du coup en cours, ou le résultat du coup joué pendant 5 s
+        const h = P.lastHit;
+        const flash = h?.who?.length && Date.now() + (this.skew || 0) - (h.at || 0) < 5000 ? h : null;
+        clearTimeout(this.pvTimer);
+        if (flash) this.pvTimer = setTimeout(() => this.render(), 5100 - (Date.now() + (this.skew || 0) - flash.at));
+        const rows = flash ? flash.who : (P.guesses || []);
+        const me = this.me.login;
+        const face = (v) => v.v === 'bot' ? '<span class="tv-pic is-bot"><i class="fas fa-robot"></i></span>'
+            : v.p ? `<img class="tv-pic" src="${esc(v.p)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+            : `<span class="tv-pic" style="background:${nameColor(v.u)};color:#fff">${esc((v.u || '?')[0].toUpperCase())}</span>`;
+        const src = (v) => v.v === 'chat' ? `<i class="fab fa-twitch tv-src" title="${esc(t('voters.chat', null, 'Chat Twitch'))}"></i>`
+            : v.v === 'bot' ? `<i class="fas fa-robot tv-src is-bot" title="${esc(t('voters.bot', null, 'Bot de test'))}"></i>` : '';
+        const mark = (v) => !flash ? '' : v.hit
+            ? '<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1</b></span>'
+            : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
+        const row = (v, i) => `<li class="tv-item${v.u === me ? ' is-me' : ''}${flash ? (v.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i}">
+                ${face(v)}<span class="tv-name" style="color:${nameColor(v.u)}">${esc(v.u)}</span>${src(v)}
+                <span class="tv-move">${esc(fmtMove(v.m))}</span>${mark(v)}</li>`;
+        const head = flash
+            ? `<div class="h24-pv__head"><span>${esc(t('h24.pred.lastMove', null, 'Dernier coup'))} <b class="h24-pv__san">${esc(fmtMove(flash.san))}</b></span><span>${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</span></div>`
+            : `<div class="h24-pv__head"><span>${esc(t('h24.pred.nextMove', null, 'Prochain coup'))}</span><span class="tv-count">${n || ''}</span></div>`;
+        const body = rows.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${rows.map(row).join('')}</ul>`
+            : `<p class="h24-pv__empty">${esc(g.result ? t('h24.pred.over', null, 'Partie terminée') : t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`;
+        const html = bars + `<div class="h24-pv">${head}${body}</div>`;
         if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; }
     },
 
