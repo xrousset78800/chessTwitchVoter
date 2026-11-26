@@ -205,17 +205,13 @@
     /* …sans rogner le chrono quand il pulse (il grossit de quelques pixels au-dessus de la colonne) */
     @supports (overflow-clip-margin: 8px) { #page-h24 .sandbox__sidebar { overflow: clip; overflow-clip-margin: 8px; } }
     #page-h24 .sandbox__sidebar > * { flex-shrink: 0; }
-    #page-h24 .h24-history { flex: 1 1 0; min-height: 130px; display: flex; flex-direction: column; overflow: hidden; }
-    #page-h24 .h24-history.is-folded { min-height: 0; }
     /* Régie ouverte ou longues équipes sur un petit écran : ces blocs rétrécissent et défilent eux-mêmes plutôt que de pousser le podium */
     #page-h24 .sandbox__sidebar > .h24-regie { flex: 0 1 auto; min-height: 44px; overflow-y: auto; scrollbar-width: thin; }
     #page-h24 .sandbox__sidebar > .h24-teams-panel { flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
     /* La roue tient avec les panneaux au-dessus */
     #page-h24 #h24-votes-panel.votes-slot { --dock-size: min(380px, 82vw, calc(var(--sidebar-width) - 50px), 32vh); }
-    /* Pas de marge en haut : l'en-tête collant (# Blancs Noirs) reste collé au bord, sans coups qui passent au-dessus */
-    #page-h24 .h24-history .panel__content { flex: 1; min-height: 0; overflow-y: auto; padding-top: 0; }
-    /* Un seul défilement : celui du panneau, pas en plus celui de la liste */
-    #page-h24 #h24-history { max-height: none; overflow: visible; }
+    /* Prédiction : les cartes prennent la place qui reste et défilent seules */
+    #page-h24[data-mode="predict"] .sandbox__sidebar > .votes-slot { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 0; scrollbar-width: thin; }
     #page-h24 .h24-card { flex: none; }
 }
 
@@ -246,7 +242,6 @@
 .h24-fold__chev { margin-left: auto; opacity: 0.7; }
 #page-h24 [data-h24-panel].is-folded > .panel__content { display: none; }
 #page-h24 [data-h24-panel].is-folded > .h24-fold { border-bottom-width: 0; }
-#page-h24 .h24-history.is-folded { flex: none; }
 @media (min-width: 901px) { #page-h24 .sandbox__sidebar > .votes-slot { margin-top: auto; } }
 
 /* Plus de podium : la roue (style roue) ou le nombre de votes (style bande) tiennent sa place, sans bouger */
@@ -468,7 +463,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .podium.is-masked .podium__move { font-size: 1.3rem; opacity: 0.75; }
 
 /* ------------------------------------------- Puzzle rush : pas d'historique (chaque puzzle repart de zéro) */
-#page-h24[data-mode="rush"] .h24-history { display: none; }
+#page-h24[data-mode="rush"] .h24-histbtn { display: none; }
 /* …le podium remonte donc sous la régie au lieu de rester collé en bas de la colonne */
 @media (min-width: 901px) { #page-h24[data-mode="rush"] .sandbox__sidebar > .votes-slot { margin-top: 0; } }
 
@@ -623,6 +618,13 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
     animation: h24-settings-in 0.18s ease-out;
 }
 .h24-settings__pop[hidden] { display: none; }
+/* Historique des coups : petit bouton, la liste s'ouvre en dessous */
+.h24-histbtn { position: relative; }
+.h24-histbtn .h24-settings__btn[aria-expanded="true"] i { transform: none; }
+.h24-histpop { width: 300px; gap: 6px; padding: 10px 0 6px; }
+.h24-histpop__title { padding: 0 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-secondary, #cbd5e1); }
+#page-h24 .h24-histpop__sc { max-height: 60vh; overflow-y: auto; padding: 0 12px; scrollbar-width: thin; }
+#page-h24 .h24-histpop #h24-history { max-height: none; overflow: visible; }
 @keyframes h24-settings-in { from { opacity: 0; transform: translateY(-4px); } }
 .h24-settings__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .h24-settings__row--col { flex-direction: column; align-items: stretch; }
@@ -721,14 +723,15 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 
 /* ---- Prédiction : pronostics du vainqueur et devinettes (présentation de la page Tournois) ---- */
 .h24-plast { display: flex; flex-direction: column; gap: 12px; padding: 4px 2px; }
-.h24-pwbars { font-size: 0.78rem; }
-.h24-pwbars .tp-wbar__bar { height: 20px; }
-.h24-pwbars .tp-wbar__seg { font-size: 0.72rem; }
-.h24-pv { display: flex; flex-direction: column; gap: 6px; }
-.h24-pv__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); }
-.h24-pv__san { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: #fff; }
-.h24-pv__empty { margin: 0; font-size: 0.82rem; color: var(--text-muted); }
-.h24-pv .tv-list { max-height: 420px; }
+.h24-plast > .live-card { margin: 0; }
+/* Partie sélectionnée : comme la page Tournois (Elo en petit, pendule à droite) */
+.h24-pgame .player-row { gap: 8px; }
+.h24-pgame .player-name { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h24-pgame .player-rating { font-size: .68rem; color: var(--text-muted, #7f736b); flex-shrink: 0; }
+.h24-pgame .player-clock { margin-left: auto; flex-shrink: 0; }
+.h24-pgame .h24-side__title { margin-right: 4px; }
+.h24-pgame__ev { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h24-plast .tv-list { max-height: 420px; }
 
 /* ---- Prédiction : classement des devins (visible pendant la partie) ---- */
 #page-h24[data-phase="play"][data-mode="predict"] .h24-teams-panel { display: block; }

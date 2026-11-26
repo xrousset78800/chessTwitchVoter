@@ -437,7 +437,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             ballot: login && s.ballot ? s.ballot.votes.get(login) ?? null : null,
             // Prédiction : mon pronostic du vainqueur et mes points
             winner: login && s.game?.winners ? s.game.winners.get(login)?.w || null : null,
-            pts: login && s.game?.scores ? s.game.scores.get(login)?.pts || 0 : 0
+            pts: login && s.game?.scores ? s.game.scores.get(login)?.pts || 0 : 0,
+            hits: login && s.game?.scores ? s.game.scores.get(login)?.hits || 0 : 0,
+            tries: login && s.game?.scores ? s.game.scores.get(login)?.tries || 0 : 0
         });
     }
     function emitMeAll(login) {
@@ -1009,6 +1011,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                     const guess = list[0];
                     if (!guess) continue;
                     total++;
+                    const sc0 = scoreOf(g, login);
+                    sc0.tries = (sc0.tries || 0) + 1;
                     if (who.length < 60) who.push(tickerItem({ u: login, v: g.guessVia?.get(login) || null }, { m: guess, hit: guess === m.san }));
                     counts[guess] = (counts[guess] || 0) + 1;
                     if (guess === m.san) {

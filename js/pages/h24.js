@@ -191,6 +191,7 @@ const H24Page = {
             const bg = e.target.closest('[data-h24-bg]');
             if (bg) { this.setBg(bg.dataset.h24Bg); return; }
             if (e.target.closest('[data-h24-settings]')) { this.toggleSettings(); return; }
+            if (e.target.closest('[data-h24-hist]')) { this.toggleHist(); return; }
             const pal = e.target.closest('[data-h24-palette]');
             if (pal) { this.setPalette(pal.dataset.h24Palette); return; }
             const rg = e.target.closest('[data-h24-regie]');
@@ -240,7 +241,8 @@ const H24Page = {
         // Panneau des paramètres : se ferme au clic ailleurs ou avec Échap
         // (chemin du clic figé au départ : un bouton redessiné pendant le clic compte toujours comme « dedans »)
         document.addEventListener('click', (e) => { if (!e.composedPath().some(n => n.classList?.contains('h24-settings'))) this.toggleSettings(false); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.toggleSettings(false); });
+        document.addEventListener('click', (e) => { if (!e.composedPath().some(n => n.classList?.contains('h24-histbtn'))) this.toggleHist(false); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { this.toggleSettings(false); this.toggleHist(false); } });
         window.addEventListener('languageChanged', () => this.renderPalettes());
         this.renderPalettes();
         this.renderBgs();
@@ -255,6 +257,17 @@ const H24Page = {
         if (open === !pop.hidden) return;
         pop.hidden = !open;
         document.querySelector('[data-h24-settings]')?.setAttribute('aria-expanded', String(open));
+    },
+
+    /** Historique des coups : fenêtre sous le bouton de la barre d'outils, calée sur le dernier coup */
+    toggleHist(open) {
+        const pop = $('h24-histpop');
+        if (!pop) return;
+        open = open ?? pop.hidden;
+        if (open === !pop.hidden) return;
+        pop.hidden = !open;
+        document.querySelector('[data-h24-hist]')?.setAttribute('aria-expanded', String(open));
+        if (open) this.historyToBottom();
     },
 
     renderPalettes() {
@@ -1537,8 +1550,9 @@ const H24Page = {
         this.tickerTotal(total);
     },
 
-    /** Prédiction : comme la page Tournois. Pronostics du vainqueur (barre Blancs / Nulle / Noirs),
-     *  puis les devinettes du coup en cours (photo, pseudo, coup) ; au coup joué, ✓ / ✗ pendant 5 s */
+    /** Prédiction : les cartes de la page Tournois, à l'identique.
+     *  Pronostics (vainqueur : 1-0 · ½ · 0-1 avec les points en jeu, barre des pronostics en cours),
+     *  Partie sélectionnée (joueurs, Elo, pendules), Votants du prochain coup (✓ / ✗ pendant 5 s au coup joué) */
     predictPanel(g) {
         const slot = $('h24-votes-panel');
         const area = $('h24-wheel-area');
@@ -1548,48 +1562,82 @@ const H24Page = {
         const P = g.predict;
         const n = P.guessers || 0;
         const tot = $('h24-votes-total');
-        if (tot) tot.textContent = t('h24.pred.guessers', { n }, `${n} devinette(s)`);
+        if (tot) tot.textContent = '';
         this.tickerTotal(n);
         if (!list) return;
         let box = list.querySelector('.h24-plast');
         if (!box) { box = document.createElement('div'); box.className = 'h24-plast'; list.appendChild(box); }
-        // Barre des pronostics du vainqueur
+        const me = this.me.login;
+        const over = !!g.result;
+        // --- Pronostics
         const w = P.winners || { w: 0, d: 0, b: 0 };
-        const keys = [['w', 'white'], ['d', 'draw'], ['b', 'black']];
+        const keys = [['w', 'white', '1-0'], ['d', 'draw', '½'], ['b', 'black', '0-1']];
         const nw = w.w + w.d + w.b;
         const pct = (k) => Math.round(100 * (w[k] || 0) / nw);
+        const ply = (g.history || []).length;
+        const stake = ply < 30 ? 10 : ply < 60 ? 6 : ply < 90 ? 3 : 1;
+        const mine = this.me.winner;
+        const can = !!me && !mine && !over;
+        const rules = t('h24.pred.ptsHint', null, 'Bon vainqueur : 10 pts avant le coup 15, 6 avant le 30, 3 avant le 45, puis 1. Bon coup deviné : 1 pt.');
+        const stat = me ? `${this.me.hits || 0}/${this.me.tries || 0} · ${esc(t('h24.pred.pts', { n: this.me.pts || 0 }, `${this.me.pts || 0} pts`))}` : '';
+        const picks = keys.map(([k, c, lab]) => `<button type="button" data-h24-winner="${k}" class="${mine === k ? 'is-on' : ''}" title="${esc(t('predict.' + c, null, c))}" ${can ? '' : 'disabled'}>`
+            + `${mine === k ? '<i class="fas fa-lock"></i> ' : ''}${lab}${mine ? '' : `<small>+${stake}</small>`}</button>`).join('');
         const segs = nw ? keys.filter(([k]) => w[k]).map(([k, c]) =>
             `<span class="tp-wbar__seg tp-wbar__seg--${c}" style="flex:${w[k]}" title="${esc(`${t('predict.' + c, null, c)} : ${pct(k)} % (${w[k]})`)}">${pct(k) >= 14 ? pct(k) + ' %' : ''}</span>`).join('')
             : `<span class="tp-wbar__empty">${esc(t('tlive.noVotes', null, 'Aucun vote'))}</span>`;
-        const bars = `<div class="tp-winbars h24-pwbars"><div class="tp-wbars__title"><span>${esc(t('predict.winBars', null, 'Pronostics en cours'))}</span>
-                <span class="tp-wbars__legend">${keys.map(([, c]) => `<i class="tp-wbar__dot tp-wbar__seg--${c}"></i>${esc(t('predict.' + c, null, c))}`).join(' ')}</span></div>
-            <div class="tp-wbar"><div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${esc(t('predict.votes', { n: nw }, nw + ' vote(s)'))}</span></div>
-            ${g.result ? '' : `<div class="tp-wbar__hint">${esc(t('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>`}</div>`;
-        // Devinettes : celles du coup en cours, ou le résultat du coup joué pendant 5 s
+        const myGuess = !over && this.me.votes?.[0];
+        const cardPred = `<div class="live-card tp-card">
+            <div class="live-card__title tp-head"><span><i class="fas fa-bullseye"></i> ${esc(t('predict.title', null, 'Pronostics'))}</span> <small class="tp-stat" title="${esc(rules)}">${stat}</small></div>
+            <div class="tp-body">
+                <div class="tp-picks tp-win" role="group" title="${esc(rules)}"><i class="fas fa-trophy"></i>${picks}</div>
+                <div class="tp-winbars"><div class="tp-wbars__title"><span>${esc(t('predict.winBars', null, 'Pronostics en cours'))}</span>
+                    <span class="tp-wbars__legend">${keys.map(([, c]) => `<i class="tp-wbar__dot tp-wbar__seg--${c}"></i>${esc(t('predict.' + c, null, c))}`).join(' ')}</span></div>
+                <div class="tp-wbar"><div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${esc(t('predict.votes', { n: nw }, nw + ' vote(s)'))}</span></div>
+                ${over ? '' : `<div class="tp-wbar__hint">${esc(t('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>`}</div>
+                <div class="tp-guessrow"><i class="fas fa-crosshairs"></i><span>${esc(over ? t('predict.ended', null, 'Partie terminée') : t('predict.moveTitle', null, 'Prochain coup'))}</span>
+                    ${myGuess ? `<b class="tp-mine">${esc(fmtMove(myGuess))}</b>` : ''}<i class="fas fa-circle-info tp-info" tabindex="0" title="${esc(rules)}"></i></div>
+            </div></div>`;
+        // --- Partie sélectionnée
+        const prow = (side) => {
+            const pl = (side === 'w' ? P.white : P.black) || {};
+            const photo = pl.fide && this.fidePics?.[pl.fide]?.src;
+            const turn = g.turn === side && !over;
+            return `<div class="player-row ${side === 'w' ? 'white' : 'black'}${turn ? ' is-turn' : ''}"><div class="player-color-dot"></div>`
+                + (photo ? `<img class="player-photo" src="${esc(photo)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '')
+                + `<span class="player-name">${pl.title ? `<b class="h24-side__title">${esc(pl.title)}</b>` : ''}${esc(pl.name || '?')}</span>`
+                + `<span class="player-rating">${pl.elo ? esc(pl.elo) : ''}</span><span class="player-clock h24-pc" data-pclock="${side}"></span></div>`;
+        };
+        const ev = [P.event, P.roomName].filter(Boolean).join(' · ');
+        const cardGame = `<div class="live-card h24-pgame">
+            <div class="live-card__title"><i class="fas fa-info-circle"></i> ${esc(t('ui.tour.selected', null, 'Partie sélectionnée'))}</div>
+            ${prow('b')}${prow('w')}
+            ${ev ? `<p class="tp-hint h24-pgame__ev" title="${esc(ev)}"><i class="fas fa-trophy"></i> ${esc(ev)}</p>` : ''}</div>`;
+        // --- Votants : devinettes du coup en cours, ou résultat du coup joué pendant 5 s
         const h = P.lastHit;
         const flash = h?.who?.length && Date.now() + (this.skew || 0) - (h.at || 0) < 5000 ? h : null;
         clearTimeout(this.pvTimer);
         if (flash) this.pvTimer = setTimeout(() => this.render(), 5100 - (Date.now() + (this.skew || 0) - flash.at));
         const rows = flash ? flash.who : (P.guesses || []);
-        const me = this.me.login;
         const face = (v) => v.v === 'bot' ? '<span class="tv-pic is-bot"><i class="fas fa-robot"></i></span>'
             : v.p ? `<img class="tv-pic" src="${esc(v.p)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
-            : `<span class="tv-pic" style="background:${nameColor(v.u)};color:#fff">${esc((v.u || '?')[0].toUpperCase())}</span>`;
+            : `<span class="tv-pic">${esc((v.u || '?')[0].toUpperCase())}</span>`;
         const src = (v) => v.v === 'chat' ? `<i class="fab fa-twitch tv-src" title="${esc(t('voters.chat', null, 'Chat Twitch'))}"></i>`
             : v.v === 'bot' ? `<i class="fas fa-robot tv-src is-bot" title="${esc(t('voters.bot', null, 'Bot de test'))}"></i>` : '';
         const mark = (v) => !flash ? '' : v.hit
-            ? '<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1</b></span>'
+            ? '<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1 pt</b></span>'
             : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
         const row = (v, i) => `<li class="tv-item${v.u === me ? ' is-me' : ''}${flash ? (v.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i}">
-                ${face(v)}<span class="tv-name" style="color:${nameColor(v.u)}">${esc(v.u)}</span>${src(v)}
+                ${face(v)}<span class="tv-name">${esc(v.u)}</span>${src(v)}
                 <span class="tv-move">${esc(fmtMove(v.m))}</span>${mark(v)}</li>`;
-        const head = flash
-            ? `<div class="h24-pv__head"><span>${esc(t('h24.pred.lastMove', null, 'Dernier coup'))} <b class="h24-pv__san">${esc(fmtMove(flash.san))}</b></span><span>${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</span></div>`
-            : `<div class="h24-pv__head"><span>${esc(t('h24.pred.nextMove', null, 'Prochain coup'))}</span><span class="tv-count">${n || ''}</span></div>`;
-        const body = rows.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${rows.map(row).join('')}</ul>`
-            : `<p class="h24-pv__empty">${esc(g.result ? t('h24.pred.over', null, 'Partie terminée') : t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`;
-        const html = bars + `<div class="h24-pv">${head}${body}</div>`;
-        if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; }
+        const cardVoters = `<div class="live-card tv-card">
+            <div class="live-card__title tv-head"><span><i class="fas fa-users"></i> ${esc(t('voters.title', null, 'Votants'))}</span> <span class="tv-headright"><small class="tv-count">${rows.length || ''}</small></span></div>
+            <div class="tv-body">
+                ${rows.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${rows.map(row).join('')}</ul>`
+                    : `<p class="tp-hint">${esc(over ? t('predict.ended', null, 'Partie terminée') : t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
+                ${flash ? `<p class="tp-hint">${esc(fmtMove(flash.san))} · ${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</p>` : ''}
+            </div></div>`;
+        const html = cardPred + cardGame + cardVoters;
+        if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; this.paintPclocks(); }
     },
 
     /** Mode bande : le total des votes du tour dans l'étiquette « Votes » (et plus en bas de la colonne de droite) */
@@ -1805,27 +1853,6 @@ const H24Page = {
             <p class="h24-card__next">${esc(t('h24.nextSoon', null, 'Vote du prochain mode juste après.'))}</p>`;
     },
 
-    /** Prédiction : qui gagne ? (une seule fois) et mes points */
-    predictScoreHtml(g) {
-        const c = g.predict.winners || { w: 0, d: 0, b: 0 };
-        const mine = this.me.winner;
-        const can = !!this.me.login && !mine && !g.result;
-        const total = c.w + c.d + c.b;
-        const btn = (k, label) => {
-            const pct = total ? Math.round(c[k] * 100 / total) : 0;
-            return `<button type="button" class="h24-pwin__btn h24-pwin__btn--${k}${mine === k ? ' is-mine' : ''}" data-h24-winner="${k}" ${can ? '' : 'disabled'} style="--pct:${pct}%">
-                <span>${esc(label)}</span><small>${c[k]}</small></button>`;
-        };
-        const ply = (g.history || []).length;
-        const pts = ply < 30 ? 10 : ply < 60 ? 6 : ply < 90 ? 3 : 1;
-        const hint = t('h24.pred.ptsHint', null, 'Bon vainqueur : 10 pts avant le coup 15, 6 avant le 30, 3 avant le 45, puis 1. Bon coup deviné : 1 pt.');
-        return `<div class="h24-pwin" title="${esc(hint)}">
-            <span class="h24-pwin__label"><i class="fas fa-trophy"></i> ${esc(mine ? t('h24.pred.yourWinner', null, 'Ton pronostic') : t('h24.pred.winner', { n: pts }, `Vainqueur ? (+${pts} pts)`))}</span>
-            <div class="h24-pwin__row">${btn('w', t('h24.white', null, 'Blancs'))}${btn('d', t('h24.pred.draw', null, 'Nulle'))}${btn('b', t('h24.black', null, 'Noirs'))}</div>
-            ${this.me.login ? `<span class="h24-pwin__pts"><i class="fas fa-star"></i> ${esc(t('h24.pred.pts', { n: this.me.pts || 0 }, `${this.me.pts || 0} pts`))}</span>` : ''}
-        </div>`;
-    },
-
     renderPlay() {
         const s = this.state;
         const g = s.game;
@@ -1855,11 +1882,8 @@ const H24Page = {
         if (from) this.flyIntoHistory(card, from);
         const score = $('h24-score');
         if (score) {
-            score.hidden = s.mode !== 'rush' && !g.predict;
-            if (g.predict) {
-                const html = this.predictScoreHtml(g);
-                if (score.dataset.html !== html) { score.dataset.html = html; score.innerHTML = html; }
-            } else if (g.score) {
+            score.hidden = s.mode !== 'rush';
+            if (g.score && !g.predict) {
                 const max = g.score.maxStrikes || 3;
                 const lives = Array.from({ length: max }, (_, i) => `<i class="fas fa-heart${i < max - g.score.strikes ? '' : ' is-lost'}"></i>`).join('');
                 score.innerHTML = `<span class="h24-score__ok"><i class="fas fa-check"></i> ${g.score.solved}</span><span class="h24-score__lives" title="${esc(t('h24.lives', null, 'Erreurs restantes'))}">${lives}</span>`;

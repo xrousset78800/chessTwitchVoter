@@ -1093,6 +1093,14 @@
                                 <button type="button" class="h24-volume__btn" data-h24-mute data-i18n-title="ui.mute" title="Couper le son"><i class="fas fa-volume-up"></i></button>
                                 <input type="range" class="h24-volume__range" id="h24-volume" min="0" max="100" step="5" data-i18n-title="ui.volume" title="Volume">
                             </div>
+                            <!-- Historique des coups : derrière un petit bouton -->
+                            <div class="h24-histbtn">
+                                <button type="button" class="h24-settings__btn" data-h24-hist aria-expanded="false" aria-haspopup="true" data-i18n-title="watch.historyTitle" title="Historique"><i class="fas fa-history"></i></button>
+                                <div class="h24-settings__pop h24-histpop" id="h24-histpop" hidden>
+                                    <div class="h24-histpop__title" data-i18n="watch.historyTitle">Historique</div>
+                                    <div class="panel__content h24-histpop__sc"><div class="history-list" id="h24-history"></div></div>
+                                </div>
+                            </div>
                             <!-- Réglages du viewer (tirage, couleurs) regroupés derrière la roue crantée -->
                             <div class="h24-settings">
                                 <button type="button" class="h24-settings__btn" data-h24-settings aria-expanded="false" aria-haspopup="true"><i class="fas fa-cog"></i> <span data-i18n="h24.settings">Paramètres</span></button>
@@ -1123,10 +1131,6 @@
                                 <div class="h24-account" id="h24-account"></div>
                                 <div class="h24-teams" id="h24-teams"></div>
                             </div>
-                        </div>
-                        <div class="panel h24-history" data-h24-panel="history">
-                            <button type="button" class="panel__header h24-fold" data-h24-fold="history" aria-expanded="true"><i class="fas fa-history"></i> <span data-i18n="watch.historyTitle">Historique</span><i class="fas fa-chevron-up h24-fold__chev"></i></button>
-                            <div class="panel__content"><div class="history-list" id="h24-history"></div></div>
                         </div>
                         <!-- Podium des votes ; la roue classique prend sa place au tirage, puis le coup tiré en grand -->
                         <div class="votes-slot" id="h24-votes-panel">
