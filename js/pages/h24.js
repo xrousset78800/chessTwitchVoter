@@ -210,13 +210,6 @@ const H24Page = {
             this.annotations?.setHover?.(m);
         });
         movesList?.addEventListener('pointerleave', () => this.annotations?.setHover?.(null));
-        $('h24-move-form')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const input = $('h24-move-input');
-            const move = input.value.trim();
-            if (move) this.socket?.emit('h24:vote', { move, lang: window.i18n?.currentLang || 'fr' });
-            input.value = '';
-        });
         window.addEventListener('resize', () => { if (this.socket) this.board?.resize(); });
         this.applyFolds();
         this.bindTicker();
@@ -1400,7 +1393,6 @@ const H24Page = {
                 turn.className = `watch__status h24-turn${end ? ` h24-turn--end h24-turn--end-${end.tone}` : ''}`;
             }
             this.renderGuide();
-            $('h24-move-form').hidden = true;
             $('h24-score').hidden = true;
             this.hideDraw();
             this.clearLive();
@@ -1561,7 +1553,6 @@ const H24Page = {
         const segs = nw ? keys.filter(([k]) => w[k]).map(([k, c]) =>
             `<span class="tp-wbar__seg tp-wbar__seg--${c}" style="flex:${w[k]}" title="${esc(`${t('predict.' + c, null, c)} : ${pct(k)} % (${w[k]})`)}">${pct(k) >= 14 ? pct(k) + ' %' : ''}</span>`).join('')
             : `<span class="tp-wbar__empty">${esc(t('tlive.noVotes', null, 'Aucun vote'))}</span>`;
-        const myGuess = !over && this.me.votes?.[0];
         const cardPred = `<div class="live-card tp-card">
             <div class="live-card__title tp-head"><span><i class="fas fa-bullseye"></i> ${esc(t('predict.title', null, 'Pronostics'))}</span> <small class="tp-stat" title="${esc(rules)}">${stat}</small></div>
             <div class="tp-body">
@@ -1570,8 +1561,7 @@ const H24Page = {
                     <span class="tp-wbars__legend">${keys.map(([, c]) => `<i class="tp-wbar__dot tp-wbar__seg--${c}"></i>${esc(t('predict.' + c, null, c))}`).join(' ')}</span></div>
                 <div class="tp-wbar"><div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${esc(t('predict.votes', { n: nw }, nw + ' vote(s)'))}</span></div>
                 ${over ? '' : `<div class="tp-wbar__hint">${esc(t('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>`}</div>
-                <div class="tp-guessrow"><i class="fas fa-crosshairs"></i><span>${esc(over ? t('predict.ended', null, 'Partie terminée') : t('predict.moveTitle', null, 'Prochain coup'))}</span>
-                    ${myGuess ? `<b class="tp-mine">${esc(fmtMove(myGuess))}</b>` : ''}<i class="fas fa-circle-info tp-info" tabindex="0" title="${esc(rules)}"></i></div>
+                ${over ? `<div class="tp-guessrow"><i class="fas fa-crosshairs"></i><span>${esc(t('predict.ended', null, 'Partie terminée'))}</span></div>` : ''}
             </div></div>`;
         // --- Votants : devinettes du coup en cours, ou résultat du coup joué pendant 5 s
         const h = P.lastHit;
@@ -1839,7 +1829,8 @@ const H24Page = {
             side.className = `watch__status h24-turn h24-turn--${g.turn}`;
         }
         this.renderGuide();
-        $('h24-move-form')?.toggleAttribute('hidden', !this.myTurn());
+        // Prédiction : pas de tirage au sort, donc pas de choix roue / bande
+        document.querySelector('[data-h24-style-toggle]')?.toggleAttribute('hidden', s.mode === 'predict');
         this.renderDraw(g);
         this.liveWheel(g);
         const first = (g.startFen || '').split(' ')[1] === 'b' ? 'b' : 'w';

@@ -357,7 +357,8 @@
         }
         const rulesText = T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, omin: fmtOdds(rules.oddsMin ?? 0.2), omax: fmtOdds(rules.oddsMax ?? 2) });
         const winTip = T('predict.winnerTitle', null, 'Vainqueur') + ' — ' + T('predict.oddsHint') + (pred.winner && pred.f ? ' ' + T('predict.yourOdds', { odds: fmtOdds(pred.f) }) : '')
-            + ' ' + T(pred.winner ? 'predict.winnerLocked' : 'predict.winnerFinal', null, '');
+            + ' ' + T(pred.winner ? 'predict.winnerLocked' : 'predict.winnerFinal', null, '')
+            + NL2 + T('predict.moveHint', null, '') + NL2 + rulesText;
         const cp = pred.confirm;
         const confirmHTML = !cp ? '' : `<div class="tp-confirm" role="dialog">
                 <p><strong>${esc(T('predict.confirmTitle', { pick: T('predict.' + PICK_KEY[cp]) }, 'Confirmer : ' + cp))}${pred.odds ? ` (${fmtOdds(pred.odds[cp])})` : ''}</strong><br>${esc(T('predict.confirmText', null, 'Un vote pour le vainqueur est définitif : tu ne pourras plus le changer pour ce match.'))}</p>
@@ -370,12 +371,7 @@
             </div>
             ${confirmHTML}
             <div class="tp-winbars"></div>
-            <div class="tp-guessrow">
-                <i class="fas fa-crosshairs"></i>
-                <span>${esc(c.ended ? T('ui.tour.ended', { result }, `Terminée (${result})`) : T('predict.moveTitle', null, 'Prochain coup'))}</span>
-                ${pred.move && !c.ended ? `<b class="tp-mine" title="${esc(T('predict.yourGuess', { san: pred.move.san }))}">${esc(sanLocal(pred.move.san))}</b>` : ''}
-                <i class="fas fa-circle-info tp-info" tabindex="0" title="${esc(T('predict.moveHint', null, '') + NL2 + rulesText)}"></i>
-            </div>
+            ${c.ended ? `<div class="tp-guessrow"><i class="fas fa-crosshairs"></i><span>${esc(T('ui.tour.ended', { result }, `Terminée (${result})`))}</span></div>` : ''}
             ${c.ended ? '' : '<div class="tp-moves"></div>'}`;
         renderMoves();
         renderWinBars();

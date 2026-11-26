@@ -759,3 +759,4 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-recap__game b { color: #ffb27a; }
 .h24-recap__game small, .h24-recap__game span { color: var(--text-secondary); font-weight: 500; }
 .h24-recap__event { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }
+.h24-settings__btn[hidden] { display: none; }
