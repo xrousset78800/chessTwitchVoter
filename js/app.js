@@ -3001,7 +3001,11 @@ async function initApp() {
 
     // Écouter les votes Twitch
     if (twitch) {
-        twitch.onMessage = (message) => lobby.handleMessage(message);
+        twitch.onMessage = (message) => {
+            // Tournoi suivi : « !1-0 », « !1/2 », « !0-1 » = pronostic du chat sur le vainqueur
+            if (AppState.currentPage === 'tournament' && window.tournamentPredict?.chatWinner(message)) return;
+            lobby.handleMessage(message);
+        };
 
         twitch.onVote = (voteContext) => {
             // ---- Tournoi suivi : le chat pronostique le prochain coup ----

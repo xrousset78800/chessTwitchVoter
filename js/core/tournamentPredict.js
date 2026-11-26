@@ -356,7 +356,7 @@
                 <i class="fas fa-trophy"></i>
                 ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended ? 'disabled' : ''}>${p === '1/2-1/2' ? '½' : p}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
             </div>
-            ${votesHTML(pred.votes)}
+            <div class="tp-winbars"></div>
             <div class="tp-guessrow">
                 <i class="fas fa-crosshairs"></i>
                 <span>${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('predict.moveTitle', null, 'Prochain coup'))}</span>
@@ -365,6 +365,84 @@
             </div>
             ${c.ended ? '' : '<div class="tp-moves"></div>'}`;
         renderMoves();
+        renderWinBars();
+    }
+
+    // ───────────── Vote du chat sur le vainqueur : !1-0, !1/2, !0-1 (ou blancs / nulle / noirs) ─────────────
+    // Un vote par spectateur et par partie, modifiable jusqu'à la fin ; décompte gardé sur cet écran.
+    const CW_KEY = 'cgChatWinner';
+    const chatWin = new Map();              // clé salle:partie -> Map(login -> { pick, name, bot })
+    try {
+        for (const [k, list] of Object.entries(JSON.parse(localStorage.getItem(CW_KEY)) || {})) chatWin.set(k, new Map(list));
+    } catch { /* navigation privée */ }
+    function saveChatWin() {
+        try {
+            const o = {};
+            for (const [k, m] of [...chatWin.entries()].slice(-20)) {
+                const l = [...m].filter(([, v]) => !v.bot);
+                if (l.length) o[k] = l;
+            }
+            localStorage.setItem(CW_KEY, JSON.stringify(o));
+        } catch { /* navigation privée */ }
+    }
+    const WIN_WORDS = {
+        '1-0': ['1-0', 'blancs', 'blanc', 'white', 'weiss', 'weiß', 'blancas', 'bianco', 'bianchi', 'wit', 'biale', 'białe', 'brancas', 'белые', 'beyaz'],
+        '1/2-1/2': ['1/2', '1/2-1/2', '½', '½-½', 'nulle', 'nul', 'draw', 'remis', 'remise', 'tablas', 'empate', 'patta', 'ничья', 'berabere'],
+        '0-1': ['0-1', 'noirs', 'noir', 'black', 'schwarz', 'negras', 'nero', 'neri', 'zwart', 'czarne', 'pretas', 'черные', 'чёрные', 'siyah'],
+    };
+    const WIN_OF = new Map(Object.entries(WIN_WORDS).flatMap(([p, l]) => l.map(w => [w, p])));
+    /** « !blancs », « !1-0 », « 1-0 » seul… -> résultat, sinon null */
+    function parseWinner(text) {
+        const t = String(text || '').trim().toLowerCase();
+        const m = t.match(/^!\s*(\S+)$/);
+        if (m) return WIN_OF.get(m[1]) || null;
+        return ['1-0', '0-1', '1/2', '½', '1/2-1/2'].includes(t) ? WIN_OF.get(t) : null;
+    }
+    /** app.js (twitch.onMessage, page Tournoi) : true si le message était un vote vainqueur */
+    function chatWinner(msg) {
+        const pick = parseWinner(msg?.message);
+        if (!pick) return false;
+        const c = current();
+        if (!c || c.ended || reviewT.game) return true;
+        const login = String(msg.username || '').toLowerCase();
+        if (!login) return true;
+        if (!chatWin.has(c.key)) chatWin.set(c.key, new Map());
+        chatWin.get(c.key).set(login, { pick, name: msg.displayName || login });
+        saveChatWin();
+        renderWinBars();
+        return true;
+    }
+    function chatWinTally(key) {
+        const t = { '1-0': 0, '1/2-1/2': 0, '0-1': 0 };
+        for (const v of chatWin.get(key)?.values() || []) t[v.pick]++;
+        return t;
+    }
+    /** Barre horizontale : part de chaque résultat, pourcentage dans le segment quand il y a la place */
+    function winBarHTML(icon, label, v) {
+        const n = PICKS.reduce((s, p) => s + (v?.[p] || 0), 0);
+        const pct = p => Math.round(100 * (v[p] || 0) / n);
+        const segs = n ? PICKS.filter(p => v[p]).map(p => {
+            const tip = `${T('predict.' + PICK_KEY[p])} : ${pct(p)} % (${v[p]})`;
+            return `<span class="tp-wbar__seg tp-wbar__seg--${PICK_KEY[p]}" style="flex:${v[p]}" title="${esc(tip)}">${pct(p) >= 14 ? pct(p) + ' %' : ''}</span>`;
+        }).join('') : `<span class="tp-wbar__empty">${esc(T('tlive.noVotes', null, 'Aucun vote'))}</span>`;
+        return `<div class="tp-wbar"><span class="tp-wbar__src"><i class="${icon}"></i> ${esc(label)}</span>
+            <div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${n}</span></div>`;
+    }
+    function renderWinBars() {
+        const box = document.querySelector('#tPredict .tp-winbars');
+        if (!box) return;
+        const c = current();
+        if (!c) { box.innerHTML = ''; return; }
+        const cv = chatWinTally(c.key);
+        const showChat = chatOn() || PICKS.some(p => cv[p]);
+        const hint = showChat && !c.ended
+            ? `<div class="tp-wbar__hint">${esc(T('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>` : '';
+        const html = `<div class="tp-wbars__title"><span>${esc(T('predict.winBars', null, 'Pronostics en cours'))}</span>
+                <span class="tp-wbars__legend">${PICKS.map(p => `<i class="tp-wbar__dot tp-wbar__seg--${PICK_KEY[p]}"></i>${esc(T('predict.' + PICK_KEY[p]))}`).join(' ')}</span></div>`
+            + winBarHTML('fas fa-globe', T('predict.siteVotes', null, 'Site'), pred.votes)
+            + (showChat ? winBarHTML('fab fa-twitch', T('predict.chatVotes', null, 'Chat'), cv) : '')
+            + hint;
+        if (box._html !== html) { box.innerHTML = html; box._html = html; }
     }
 
     // ───────────── Vote du chat Twitch sur le prochain coup ─────────────
@@ -538,6 +616,8 @@
     function botsStop() { bots.timers.forEach(clearTimeout); bots.timers = []; bots.key = bots.fen = null; }
     function botsClear() {
         for (const [login, v] of chat.votes) if (v.bot) chat.votes.delete(login);
+        for (const m of chatWin.values()) for (const [login, v] of m) if (v.bot) m.delete(login);
+        renderWinBars();
         scheduleChat();
     }
     function setBots(on) {
@@ -617,6 +697,13 @@
         for (let i = 0; i < moves.length; i++) { r -= w[i]; if (r <= 0) return moves[i]; }
         return moves[moves.length - 1];
     }
+    /** Vainqueur d'un bot : plus probable quand la cote est basse */
+    function botWinPick() {
+        const w = PICKS.map(p => pred.odds?.[p] ? 1 / pred.odds[p] : (p === '1/2-1/2' ? 0.6 : 1));
+        let r = Math.random() * w.reduce((a, b) => a + b, 0);
+        for (let i = 0; i < PICKS.length; i++) { r -= w[i]; if (r <= 0) return PICKS[i]; }
+        return PICKS[0];
+    }
     /** Fait voter les bots sur le coup en cours (now : tous dans la seconde, pour voir la liste se remplir) */
     function botsWave(now) {
         const c = current();
@@ -632,6 +719,11 @@
             const m = botPick(cur.fen);
             if (!m) return;
             chat.votes.set('bot_' + name.toLowerCase(), { uci: m.from + m.to + (m.promotion || ''), san: m.san, name, bot: true });
+            const id = 'bot_' + name.toLowerCase();
+            if (!chatWin.has(cur.key)) chatWin.set(cur.key, new Map());
+            const cw = chatWin.get(cur.key);
+            if (!cw.has(id) || Math.random() < 0.1) cw.set(id, { pick: botWinPick(), name, bot: true });
+            renderWinBars();
             scheduleChat();
             paintBotsPanel();
         }, 300 + Math.random() * span)));
@@ -722,7 +814,7 @@
         for (const sq of want) document.querySelector(`#liveBoardT [data-square="${sq}"]`)?.classList.add('highlight-last-move-live');
     }
 
-    window.tournamentPredict = { chatVote, canDrag, dropMove };
+    window.tournamentPredict = { chatVote, chatWinner, canDrag, dropMove };
 
     // ───────────── Colonne de gauche : tournois en cours / matchs en direct ─────────────
     const SIDE_KEY = 'cgTourSide';

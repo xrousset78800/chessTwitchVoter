@@ -892,6 +892,22 @@ input[type=range] {
 .tp-win button { flex: 1; padding: 4px 2px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; white-space: nowrap; }
 .tp-picks.tp-win button small { display: inline; margin: 0 0 0 4px; font-size: 0.68rem; }
 #tPredict .tl-votes { margin: 0; }
+/* Pronostics vainqueur en cours : une barre horizontale par source (site, chat) */
+.tp-winbars { display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; color: var(--text-muted); }
+.tp-winbars:empty { display: none; }
+.tp-wbars__title { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 600; color: var(--text-secondary, var(--text-muted)); }
+.tp-wbars__legend { font-weight: 400; display: inline-flex; align-items: center; gap: 4px; }
+.tp-wbar__dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-left: 4px; border: 1px solid var(--border-subtle); }
+.tp-wbar { display: flex; align-items: center; gap: 6px; }
+.tp-wbar__src { flex: 0 0 52px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tp-wbar__bar { flex: 1; display: flex; height: 16px; border-radius: 4px; overflow: hidden; background: var(--border-subtle); }
+.tp-wbar__seg { display: flex; align-items: center; justify-content: center; min-width: 3px; font-size: 0.66rem; font-weight: 700; white-space: nowrap; transition: flex 0.4s ease; }
+.tp-wbar__seg--white { background: #e9e4dc; color: #2a2320; }
+.tp-wbar__seg--draw { background: #8a8079; color: #fff; }
+.tp-wbar__seg--black { background: #3a3330; color: #f2ece4; }
+.tp-wbar__empty { margin: auto; font-size: 0.66rem; }
+.tp-wbar__n { flex: 0 0 auto; min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; }
+.tp-wbar__hint { font-size: 0.68rem; opacity: 0.85; }
 #tPredict .tl-votes.is-empty { display: none; }
 .tp-guessrow { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); }
 .tp-guessrow > .fa-crosshairs { color: var(--accent); }
