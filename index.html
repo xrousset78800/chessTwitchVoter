@@ -102,8 +102,7 @@
                 <a class="nav__link" data-navigate="/rush" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
-                <a class="nav__link nav__link--phantom" data-navigate="/live"><span class="nav__game-dot nav__follow-dot"></span><span data-i18n="nav.live">Live Chess</span></a>
-                <a class="nav__link nav__link--phantom" data-navigate="/tournament">
+                <a class="nav__link" data-navigate="/tournament">
                     <span class="nav__game-dot nav__follow-dot"></span>
                     <i class="fas fa-chess-board"></i>
                     <span data-i18n="nav.tournament">Tournoi</span>
@@ -250,6 +249,24 @@
                             <p data-i18n="newInfo.free.desc">Tout le chat vote, sans inscription : vote libre, problèmes, contre Stockfish, chat contre chat…</p>
                             <span class="home-mode__go" data-i18n="home.modes.play">Jouer →</span>
                         </a>
+                    </div>
+                </section>
+
+                <section class="home-band">
+                    <div class="home-wrap home-tour">
+                        <div class="home-tour__text">
+                            <span class="home-live__badge"><span class="home-dot"></span> <span data-i18n="home.tour.badge">Tournois en direct</span></span>
+                            <h2 class="home-h2" data-i18n="home.tour.title">Pronostique les grands tournois</h2>
+                            <p data-i18n="home.tour.text">Les parties des tournois chess.com en cours, en direct sur le site. Choisis un match, suis-le coup par coup et devine ce que les joueurs vont jouer.</p>
+                            <div class="home-actions">
+                                <a class="home-btn home-btn--primary" data-navigate="/tournament" data-i18n="home.tour.cta">Voir les matchs en direct</a>
+                            </div>
+                        </div>
+                        <ul class="home-tour__points">
+                            <li><i class="fas fa-crosshairs" aria-hidden="true"></i><span><strong data-i18n="home.tour.p1">Devine le prochain coup</strong><small data-i18n="home.tour.p1d">Clique le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.</small></span></li>
+                            <li><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="home.tour.p2">Choisis le vainqueur</strong><small data-i18n="home.tour.p2d">Blancs, nulle ou Noirs, jusqu'au 10e coup. Un bon pronostic rapporte encore plus.</small></span></li>
+                            <li><i class="fas fa-magnifying-glass" aria-hidden="true"></i><span><strong data-i18n="home.tour.p3">Tous les matchs au même endroit</strong><small data-i18n="home.tour.p3d">Les parties en cours avec les votes de la communauté, et la recherche par nom de joueur.</small></span></li>
+                        </ul>
                     </div>
                 </section>
 
@@ -1326,141 +1343,12 @@
                 </div>
             </div>
         </div>
-        <div id="page-live" class="page">
-            <div class="live-page">
-
-                <!-- Header -->
-                <div class="live-header">
-                    <h1 class="live-header__title">Phantom Live</h1>
-                    <span class="live-badge idle" id="statusBadge">
-                        <span class="dot"></span>
-                        <span id="statusText" data-i18n="live.status.idle">En attente</span>
-                    </span>
-                    <div class="phantom-menu live-phantom-menu">
-                        <button class="btn btn--sm live-phantom-menu__btn" aria-haspopup="true" aria-expanded="false">
-                            <span class="phantom-menu__dot"></span> Phantom <i class="fas fa-caret-down"></i>
-                        </button>
-                        <div class="phantom-menu__panel" role="menu">
-                            <div class="phantom-status disconnected" id="phantomStatus">
-                                <i class="fas fa-times-circle"></i> <span data-i18n="ui.disconnected">Déconnecté</span>
-                            </div>
-
-                            <button class="btn-primary btn-connect" id="btnPhantom"><i class="fas fa-robot"></i> <span data-i18n="live.phantom.connect">Connecter Phantom</span></button>
-                            <div class="phantom-actions">
-                                <button class="phantom-action phantom-action--sync" id="btnSyncLive"><i class="fas fa-sync"></i> <span data-i18n="actions.sync">Synchroniser</span></button>
-                                <button class="phantom-action phantom-action--reset" id="btnResetLive"><i class="fas fa-undo"></i> Reset + Sync</button>
-                                <button class="phantom-action phantom-action--end" id="btnGameEndLive"><i class="fas fa-stop"></i> <span data-i18n="actions.gameEnd">Fin de partie</span></button>
-                            </div>
-                            <details class="ph-troubleshoot">
-                                <summary><i class="fas fa-wrench"></i> <span data-i18n="setup.troubleshoot">Dépannage</span></summary>
-                                <div class="phantom-actions">
-                                    <button class="phantom-action phantom-action--calibrate" id="btnSnapCenterLive"><i class="fas fa-crosshairs"></i> <span data-i18n="setup.snapCenter">Centrer les pièces</span></button>
-                                    <button class="phantom-action phantom-action--calibrate" id="btnCalibrateLive"><i class="fas fa-tools"></i> <span data-i18n="setup.calibrate">Calibrer</span></button>
-                                    <button class="phantom-action phantom-action--danger" id="btnRepairLive" data-i18n-title="ui.phantom.repairTitle" title="Pièces posées à côté des cases : réinitialisation usine puis remise en place"><i class="fas fa-exclamation-triangle"></i> <span data-i18n="setup.repairCentering">Réparer le centrage</span></button>
-                                </div>
-                            </details>
-
-                            <div class="ph-settings">
-                                <div class="ph-settings__row"><span data-i18n="setup.phantomSpeed">Vitesse</span><div class="ph-speed" data-ph-speed role="group" aria-label="Vitesse"><button type="button" data-speed="1">1</button><button type="button" data-speed="2">2</button><button type="button" data-speed="3">3</button><button type="button" data-speed="4">4</button><button type="button" data-speed="5">5</button></div></div>
-                                <div class="ph-settings__row"><span data-i18n="setup.phantomWebcam">Webcam sur l'échiquier</span><button type="button" class="ph-webcam" data-ph-webcam aria-pressed="false"><i class="fas fa-video"></i> <span data-i18n="setup.webcamOff">Off</span></button></div>
-                                <div class="ph-settings__row"><span data-i18n="setup.autoRecal" data-i18n-title="setup.autoRecalTitle" title="Recalibre la mécanique tous les N coups joués par le Phantom (entre deux coups), pour éviter que les pièces se décalent peu à peu">Recalibration auto (coups)</span><select class="ph-autorecal" data-ph-autorecal aria-label="Recalibration auto"><option value="0" data-i18n="setup.autoRecalOff">Jamais</option><option value="20">20</option><option value="40" selected>40</option><option value="60">60</option><option value="100">100</option></select></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="live-content">
-
-                    <!-- ══ COL 1 : Contrôles ══ -->
-                    <div style="display:flex; flex-direction:column; gap:16px;">
-
-                        <!-- Connexion partie -->
-                        <div class="live-card">
-                            <div class="live-card__title" data-i18n="live.card.game">...</div>
-
-                            <div class="input-group">
-                                <label data-i18n="live.input.label">ID ou URL de la partie</label>
-                                <input type="text" class="live-input" id="gameInput"
-                                       data-i18n-placeholder="live.input.placeholder"
-                                       placeholder="ex: 123456789">
-                                <small data-i18n="live.input.hint" ...>URL chess.com/game/live/123456789 ou ID seul</small>
-
-                            </div>
-                            <div class="input-group" style="flex-direction:row; align-items:center; gap:8px; margin-top:4px;">
-                                <input type="checkbox" id="isDailyGame" style="width:16px; height:16px; cursor:pointer; accent-color:var(--accent-purple,#8b5cf6);">
-                                <label for="isDailyGame" style="cursor:pointer; font-size:0.85rem;" data-i18n="live.daily.label">Partie daily</label>
-                            </div>
-
-                            <div class="input-group">
-                                <label data-i18n="live.polling.label">Intervalle de polling</label>
-                                <input type="number" class="live-input" id="pollInterval"
-                                       value="3" min="1" max="60" style="width:80px;">
-                                <small data-i18n="live.polling.unit">secondes</small>
-                            </div>
-
-                            <button class="btn-primary btn-connect" id="btnConnect"><i class="fas fa-play"></i> <span data-i18n="live.btn.connect">Connecter</span></button>
-                            <button class="btn-primary btn-stop" id="btnStop"><i class="fas fa-stop"></i> <span data-i18n="live.btn.stop">Arrêter</span></button>
-
-                        </div>
-
-                        <!-- Infos partie -->
-                        <div class="live-card" id="gameInfoCard">
-                            <div class="live-card__title"><i class="fas fa-info-circle"></i> <span data-i18n="ui.live.gameInfo">Infos partie</span></div>
-
-                            <div class="player-row white">
-                                <div class="player-color-dot"></div>
-                                <span class="player-name" id="playerWhite">—</span>
-                                <span class="player-rating" id="ratingWhite"></span>
-                            </div>
-                            <div class="player-row black">
-                                <div class="player-color-dot"></div>
-                                <span class="player-name" id="playerBlack">—</span>
-                                <span class="player-rating" id="ratingBlack"></span>
-                            </div>
-
-                            <div class="game-meta" id="gameMeta"></div>
-                        </div>
-
-                    </div>
-
-                    <!-- ══ COL 2 : Échiquier ══ -->
-                    <div class="board-wrapper">
-                        <!-- Échiquier entre deux bandes : pendule, joueur et Elo (Noirs en haut, Blancs en bas) -->
-                        <div class="t-boardcol">
-                            <div class="h24-side t-side t-side--top" id="lSideBlack"><span class="h24-pclock" id="lBarClockBlack">—</span><span class="h24-side__team h24-team--b"><span class="h24-team__swatch"></span><span class="t-side__name" id="lBarNameBlack">—</span></span><span class="t-side__elo" id="lBarEloBlack"></span><span class="h24-side__spacer"></span></div>
-                            <div id="liveBoard"></div>
-                            <div class="h24-side t-side t-side--bottom" id="lSideWhite"><span class="h24-pclock" id="lBarClockWhite">—</span><span class="h24-side__team h24-team--w"><span class="h24-team__swatch"></span><span class="t-side__name" id="lBarNameWhite">—</span></span><span class="t-side__elo" id="lBarEloWhite"></span><span class="h24-side__spacer"></span></div>
-                        </div>
-                        <span id="fenDisplay" hidden></span>
-                    </div>
-
-                    <!-- ══ COL 3 : Coups + Phantom ══ -->
-                    <div style="display:flex; flex-direction:column; gap:16px;">
-
-                        <!-- Moves -->
-                        <div class="live-card" style="flex:1;">
-                            <div class="live-card__title" data-i18n="live.card.moves">Coups joués</div>
-                            <div class="moves-list" id="movesList">
-                                <span data-i18n="live.moves.empty" style="color:var(--text-muted,#55556a); font-size:0.8rem;">Aucun coup pour l'instant</span>
-                            </div>
-                        </div>
-
-                        <!-- Log -->
-                        <div class="live-card">
-                            <div class="live-card__title" data-i18n="live.card.log">Log</div>
-                            <div class="live-log" id="liveLog"></div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
         <div id="page-tournament" class="page">
             <div class="live-page">
 
                 <!-- Header -->
                 <div class="live-header">
-                    <h1 class="live-header__title">Phantom Tournament</h1>
+                    <h1 class="live-header__title" data-i18n="ui.tour.title">Tournois en direct</h1>
                     <span class="live-badge idle" id="statusBadgeT">
                         <span class="dot"></span>
                         <span id="statusTextT" data-i18n="live.status.idle">En attente</span>
@@ -1526,8 +1414,10 @@
                             <div id="tEventPicker">
                             <!-- Filtre texte -->
                             <input type="text" class="live-input" id="eventSearchInput"
-                                   placeholder="Filtrer les tournois…" data-i18n-placeholder="ui.tour.filter"
+                                   placeholder="Filtrer les tournois ou un joueur…" data-i18n-placeholder="ui.tour.filter"
                                    style="margin-bottom:6px; width:100%; box-sizing:border-box;">
+                            <!-- Joueurs trouvés dans les matchs en direct (js/core/tournamentPredict.js) -->
+                            <div class="tp-hits" id="tPlayerHits" hidden></div>
 
                             <!-- Liste des événements -->
                             <div id="eventsList" style="max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; margin-bottom:8px;">
@@ -1624,15 +1514,32 @@
                             </div>
                         </div>
 
+                        <!-- Pronostics sur la partie suivie (js/core/tournamentPredict.js) -->
+                        <div class="live-card tp-card" id="tPredict" hidden>
+                            <div class="live-card__title"><i class="fas fa-bullseye"></i> <span data-i18n="predict.title">Pronostics</span></div>
+                            <div class="tp-body"></div>
+                            <div class="tp-chat" hidden></div>
+                        </div>
 
-                        <!-- Log -->
-                        <div class="live-card">
+
+                        <!-- Log : régie uniquement (js/core/tournamentPredict.js) -->
+                        <div class="live-card" id="tLogCard" hidden>
                             <div class="live-card__title" data-i18n="live.card.log">Log</div>
                             <div class="live-log" id="liveLogT"></div>
                         </div>
 
                     </div>
                 </div>
+
+                <!-- Matchs en cours, tous tournois confondus : suivre, pronostiquer, voter -->
+                <section class="tl-section" id="tLiveGames">
+                    <div class="tl-head">
+                        <h2 class="tl-title"><span class="tg-live-dot"></span> <span data-i18n="tlive.title">Matchs en direct</span> <small class="tl-count" id="tLiveCount"></small></h2>
+                        <p class="tl-hint" data-i18n="tlive.hint">Clique un match pour le suivre et deviner les coups, ou vote pour le vainqueur directement ici.</p>
+                        <button type="button" class="tl-refresh" id="btnRefreshLive" data-i18n-title="records.refresh" title="Actualiser"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    <div class="tl-grid" id="tLiveGrid"><p class="tl-empty" data-i18n="ui.loading">Chargement…</p></div>
+                </section>
             </div>
         </div>
     </div>
@@ -1762,8 +1669,8 @@
     <script src="js/components/boardCoords.js"></script>
     <script src="js/components/evalBar.js"></script>
     <script src="js/phantom.js"></script>
-    <script src="js/phantomLive.js"></script>
     <script src="js/core/liveTournament.js"></script>
+    <script src="js/core/tournamentPredict.js"></script>
     <script src="js/config.js"></script>
     <script src="js/phantom-form.js"></script>
 

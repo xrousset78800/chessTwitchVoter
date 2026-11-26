@@ -379,6 +379,18 @@
     }
   },
   "home": {
+    "tour": {
+      "badge": "Live tournaments",
+      "title": "Predict the big tournaments",
+      "text": "Games from ongoing chess.com tournaments, live on the site. Pick a game, follow it move by move and guess what the players will play.",
+      "cta": "See live games",
+      "p1": "Guess the next move",
+      "p1d": "Click the move on the board before the player does. Got it: XP and pawns, with a bonus every 5 correct guesses in a row.",
+      "p2": "Pick the winner",
+      "p2d": "White, draw or Black, until move 10. A correct prediction pays even more.",
+      "p3": "Every game in one place",
+      "p3d": "Ongoing games with the community votes, and search by player name."
+    },
     "kicker": "Chess played by Twitch chat",
     "titleA": "Your chat becomes",
     "titleB": "a single player",
@@ -1083,7 +1095,8 @@
     "tour": {
       "events": "Ongoing tournaments",
       "change": "Change",
-      "filter": "Filter tournaments…",
+      "title": "Live tournaments",
+      "filter": "Filter tournaments or a player…",
       "manualSlug": "Enter a slug manually",
       "eval": "Evaluation",
       "evalTitle": "Show or hide the evaluation bar (Stockfish)",
@@ -1219,6 +1232,7 @@
       "start": "First steps",
       "rush": "Puzzle Rush",
       "votes": "Chat votes",
+      "predict": "Predictions",
       "moves": "Remarkable moves"
     },
     "tier": {
@@ -1347,6 +1361,34 @@
       "concert": {
         "name": "Concert",
         "desc": "A turn with 500 voters"
+      },
+      "bon-oeil": {
+        "name": "Sharp eye",
+        "desc": "Guess a move in a tournament game"
+      },
+      "lecteur-de-pensees": {
+        "name": "Mind reader",
+        "desc": "Guess 25 tournament moves"
+      },
+      "oracle": {
+        "name": "Oracle",
+        "desc": "Guess 100 tournament moves"
+      },
+      "dans-sa-tete": {
+        "name": "In their head",
+        "desc": "Guess 5 moves in a row"
+      },
+      "telepathe": {
+        "name": "Telepath",
+        "desc": "Guess 10 moves in a row"
+      },
+      "pronostiqueur": {
+        "name": "Tipster",
+        "desc": "Pick the winner of a tournament game"
+      },
+      "bookmaker": {
+        "name": "Bookmaker",
+        "desc": "Pick the winner of 10 tournament games"
       },
       "petit-roque": {
         "name": "Short castle",
@@ -1481,5 +1523,52 @@
       "tournament": "Follow Chess.com chess tournaments live, game by game, and replay them on your Phantom board.",
       "h24": "The 24/7 station: an endless chess game played by every Twitch chat passing by. Type your move and watch the vote live."
     }
+  },
+  "tlive": {
+    "title": "Live games",
+    "hint": "Click a game to follow it and guess the moves, or vote for the winner right here.",
+    "count": "{n} games",
+    "empty": "No game in progress right now.",
+    "follow": "Follow",
+    "following": "Followed",
+    "players": "Live games",
+    "noVotes": "No votes"
+  },
+  "predict": {
+    "chatTitle": "Chat vote",
+    "chatHint": "Chat suggests the next move by typing it (Nf3, e4, O-O…). Results as soon as the move is played.",
+    "chatVotes": "{n} chat vote(s)",
+    "chatNone": "No chat vote for this move yet.",
+    "chatPlayed": "Move played: {san}",
+    "chatScore": "{hits} of {total} got it ({pct}%)",
+    "chatWinners": "Well spotted: {names}",
+    "chatToast": "Chat: {hits}/{total} found {san}",
+    "title": "Predictions",
+    "moveTitle": "Next move",
+    "winnerTitle": "Winner",
+    "moveHint": "Click a piece of the side to move on the board, then its target square. You can change your mind until the move is played.",
+    "yourGuess": "Your guess: {san}",
+    "noGuess": "No guess for this move yet.",
+    "white": "White",
+    "draw": "Draw",
+    "black": "Black",
+    "votes": "{n} vote(s)",
+    "locked": "Voting closed after move {n}",
+    "lockIn": "Voting open until move {n}",
+    "voted": "Vote saved: {pick}",
+    "stats": "{hits}/{total} moves guessed · streak {streak} · winners {whits}/{wtotal}",
+    "loginText": "Guess the next move and the winner to earn XP and pawns.",
+    "loginBtn": "Log in with Twitch",
+    "login": "Log in with Twitch to make predictions",
+    "hit": "Nailed it! {san} was played",
+    "miss": "Missed: {played} was played, you said {guess}",
+    "streak": "streak of {n}",
+    "winnerHit": "Winning prediction: {names}",
+    "winnerMiss": "Lost prediction: {names}",
+    "gain": "+{xp} XP · +{coins} pawns",
+    "moved": "The position changed, make your guess again",
+    "ended": "Game over",
+    "rulesTitle": "Scoring",
+    "rules": "Correct move: +{xp} XP and {coins} pawns. Every {every} correct guesses in a row: +{sxp} XP and {scoins} more pawns. Correct winner: +{wxp} XP and {wcoins} pawns (draw: +{dxp} XP and {dcoins} pawns). Pawns count toward the daily cap."
   }
 }

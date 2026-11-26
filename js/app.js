@@ -347,7 +347,7 @@ const Router = {
         '/records': 'records',
         '/watch': 'watch',
         '/24h': 'h24',
-        '/live': 'live',
+        '/live': 'tournament',   // ancienne page Live, fondue dans Tournois
         '/tournament': 'tournament',
         '/rush': 'rush',
         '/mono': 'mono',
@@ -441,6 +441,8 @@ const Router = {
 
         // Activer/désactiver les variantes de la page échiquier sur le body
         document.body.classList.toggle('game-mode', pageName === 'game');
+        // Page affichée : le menu ne s'escamote que pendant une partie (css/components/nav.css)
+        document.body.dataset.page = pageName;
         // Nouveau affiche toujours l'écran de lancement : la partie, elle, est sur #/game
         document.body.classList.toggle('sandbox-launch', pageName === 'sandbox');
         // L'écran Nouveau a pu changer de mode entre-temps : la partie garde le sien
@@ -494,8 +496,6 @@ const Router = {
             WatchPage.init();
         } else if (pageName === 'h24') {
             H24Page.init();
-        } else if (pageName === 'live') {
-            LivePage.init();
         } else if (pageName === 'tournament') {
             TournamentPage.init();
         } else if (pageName === 'rush') {
@@ -549,15 +549,6 @@ const TournamentPage = {
     }
 };
 
-const LivePage = {
-    initialized: false,
-    init() {
-        if (!this.initialized) {
-            initBoard();  // fonction du script de phantomLive
-            this.initialized = true;
-        }
-    }
-};
 
 
 // ============================================
@@ -2975,6 +2966,12 @@ async function initApp() {
         twitch.onMessage = (message) => lobby.handleMessage(message);
 
         twitch.onVote = (voteContext) => {
+            // ---- Tournoi suivi : le chat pronostique le prochain coup ----
+            if (AppState.currentPage === 'tournament') {
+                window.tournamentPredict?.chatVote(voteContext, chess => matchLegalMove(chess, voteContext.move));
+                return;
+            }
+
             // ---- Mode problèmes ----
             if (isPuzzleMode() && problemsManager.isActive) {
                 const accepted = problemsManager.receiveVote(voteContext);

@@ -776,3 +776,106 @@ input[type=range] {
     padding: 2px 4px;
     font: inherit;
 }
+
+/* ══ Matchs en direct (tous tournois) : js/core/tournamentPredict.js ══ */
+.tl-section { margin-top: 24px; }
+.tl-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+.tl-title { margin: 0; font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
+.tl-count { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 400; color: var(--text-muted); }
+.tl-hint { margin: 0; flex: 1 1 260px; color: var(--text-secondary); font-size: 0.88rem; }
+.tl-refresh { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; }
+.tl-refresh:hover { color: var(--accent); }
+.tl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.tl-empty { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+.tl-card {
+    display: flex; gap: 10px; padding: 10px; min-width: 0;
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md, 8px);
+}
+.tl-card.is-followed { border-color: var(--accent); }
+.tl-card__board { flex: 0 0 92px; width: 92px; padding: 0; border: none; background: none; cursor: pointer; align-self: flex-start; }
+.tl-card__board:hover { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tl-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.tl-card__event { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-player { display: flex; align-items: center; gap: 5px; font-size: 0.86rem; min-width: 0; }
+.tl-player__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; border: 1px solid #777; }
+.tl-player--w .tl-player__dot { background: #f2f2f2; }
+.tl-player--b .tl-player__dot { background: #222; }
+.tl-player__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.tl-player__elo { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: var(--text-muted); }
+.tl-votes { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 0.7rem; color: var(--text-muted); }
+.tl-votes__bar { flex: 1; display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--border-subtle); }
+.tl-votes__seg--white { background: #e9e4dc; }
+.tl-votes__seg--draw { background: #8a8079; }
+.tl-votes__seg--black { background: #3a3330; }
+.tl-votes__n { white-space: nowrap; }
+.tl-card__actions { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 4px; }
+.tl-follow, .tl-pick button, .tp-picks button {
+    font: inherit; font-size: 0.76rem; cursor: pointer; border-radius: 4px;
+    border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary); padding: 3px 7px;
+}
+.tl-follow { color: var(--text-primary); }
+.tl-follow:hover, .tl-pick button:not(:disabled):hover, .tp-picks button:not(:disabled):hover { border-color: var(--accent); color: var(--text-primary); }
+.tl-pick { display: flex; gap: 3px; margin-left: auto; }
+.tl-pick button { font-family: 'JetBrains Mono', monospace; padding: 3px 6px; }
+.tl-pick button.is-on, .tp-picks button.is-on { background: var(--accent); border-color: var(--accent); color: #1a1310; font-weight: 700; }
+.tl-pick button:disabled, .tp-picks button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Joueurs trouvés depuis le champ de filtre */
+.tp-hits { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.tp-hits[hidden] { display: none; }
+.tp-hits__title { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.tp-hit {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; cursor: pointer;
+    font: inherit; padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border-subtle); background: transparent; color: var(--text-primary);
+}
+.tp-hit:hover { border-color: var(--accent); }
+.tp-hit__names { font-size: 0.84rem; font-weight: 600; }
+.tp-hit__names small { font-weight: 400; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.tp-hit__event { font-size: 0.72rem; color: var(--text-muted); }
+
+/* Carte Pronostics */
+.tp-card[hidden] { display: none; }
+.tp-body { display: flex; flex-direction: column; gap: 12px; }
+.tp-section { display: flex; flex-direction: column; gap: 6px; }
+.tp-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); display: flex; gap: 6px; align-items: center; }
+.tp-label i { color: var(--accent); }
+.tp-guess { margin: 0; font-size: 0.95rem; color: var(--text-muted); }
+.tp-guess.is-set { color: var(--accent-green); font-weight: 700; }
+.tp-hint { margin: 0; font-size: 0.76rem; color: var(--text-muted); }
+.tp-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.tp-picks button { padding: 6px 4px; font-size: 0.82rem; }
+.tp-stats { margin: 0; font-size: 0.78rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+.tp-stats:empty { display: none; }
+.tp-rules summary { cursor: pointer; font-size: 0.76rem; color: var(--text-muted); }
+.tp-rules p { margin: 6px 0 0; font-size: 0.76rem; color: var(--text-secondary); }
+.tp-login { align-self: flex-start; }
+.tp-chat { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color, rgba(255,255,255,0.08)); }
+.tp-chat[hidden] { display: none; }
+.tp-chat .tp-label small { margin-left: auto; font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+.tp-chat .tp-label .fa-twitch { color: #9146ff; }
+.tp-cbars { display: flex; flex-direction: column; gap: 3px; }
+.tp-crow { display: grid; grid-template-columns: 52px 1fr 32px; gap: 6px; align-items: center; font-size: 0.8rem; }
+.tp-csan { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.tp-cbar { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--text-muted) 18%, transparent); overflow: hidden; }
+.tp-cbar i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.tp-cn { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); }
+.tp-crow.is-hit .tp-csan { color: var(--accent-green); }
+.tp-crow.is-hit .tp-cbar i { background: var(--accent-green); }
+.tp-clast { display: flex; flex-direction: column; gap: 6px; }
+.tp-clast p { margin: 0; font-size: 0.84rem; }
+#tLogCard[hidden] { display: none; }
+
+/* Échiquier : sélection du prono */
+.board-wrapper.tp-armed #liveBoardT [data-square] { cursor: pointer; }
+#liveBoardT .tp-from { box-shadow: inset 0 0 0 3px var(--accent); }
+#liveBoardT .tp-dest { position: relative; }
+#liveBoardT .tp-dest::after {
+    content: ''; position: absolute; inset: 37%; border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 70%, transparent); pointer-events: none;
+}
+#liveBoardT .tp-guess { box-shadow: inset 0 0 0 3px var(--accent-green); }
+
+@media (max-width: 480px) {
+    .tl-grid { grid-template-columns: 1fr; }
+    .tl-card__board { flex-basis: 80px; width: 80px; }
+}

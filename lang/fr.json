@@ -379,6 +379,18 @@
     }
   },
   "home": {
+    "tour": {
+      "badge": "Tournois en direct",
+      "title": "Pronostique les grands tournois",
+      "text": "Les parties des tournois chess.com en cours, en direct sur le site. Choisis un match, suis-le coup par coup et devine ce que les joueurs vont jouer.",
+      "cta": "Voir les matchs en direct",
+      "p1": "Devine le prochain coup",
+      "p1d": "Clique le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.",
+      "p2": "Choisis le vainqueur",
+      "p2d": "Blancs, nulle ou Noirs, jusqu'au 10e coup. Un bon pronostic rapporte encore plus.",
+      "p3": "Tous les matchs au même endroit",
+      "p3d": "Les parties en cours avec les votes de la communauté, et la recherche par nom de joueur."
+    },
     "kicker": "Échecs joués par le chat Twitch",
     "titleA": "Ton chat devient",
     "titleB": "un seul joueur",
@@ -1083,7 +1095,8 @@
     "tour": {
       "events": "Tournois en cours",
       "change": "Changer",
-      "filter": "Filtrer les tournois…",
+      "title": "Tournois en direct",
+      "filter": "Filtrer les tournois ou un joueur…",
       "manualSlug": "Entrer un slug manuellement",
       "eval": "Évaluation",
       "evalTitle": "Afficher ou masquer la jauge d'évaluation (Stockfish)",
@@ -1219,6 +1232,7 @@
       "start": "Premiers pas",
       "rush": "Puzzle Rush",
       "votes": "Votes du chat",
+      "predict": "Pronostics",
       "moves": "Coups remarquables"
     },
     "tier": {
@@ -1347,6 +1361,34 @@
       "concert": {
         "name": "Concert",
         "desc": "Un tour avec 500 votants"
+      },
+      "bon-oeil": {
+        "name": "Bon œil",
+        "desc": "Deviner un coup d'une partie de tournoi"
+      },
+      "lecteur-de-pensees": {
+        "name": "Lecteur de pensées",
+        "desc": "Deviner 25 coups de tournoi"
+      },
+      "oracle": {
+        "name": "Oracle",
+        "desc": "Deviner 100 coups de tournoi"
+      },
+      "dans-sa-tete": {
+        "name": "Dans sa tête",
+        "desc": "Deviner 5 coups d'affilée"
+      },
+      "telepathe": {
+        "name": "Télépathe",
+        "desc": "Deviner 10 coups d'affilée"
+      },
+      "pronostiqueur": {
+        "name": "Pronostiqueur",
+        "desc": "Trouver le vainqueur d'une partie de tournoi"
+      },
+      "bookmaker": {
+        "name": "Bookmaker",
+        "desc": "Trouver le vainqueur de 10 parties de tournoi"
       },
       "petit-roque": {
         "name": "Petit roque",
@@ -1481,5 +1523,52 @@
       "tournament": "Suis les tournois d'échecs Chess.com en direct, partie par partie, et rejoue-les sur ton échiquier Phantom.",
       "h24": "La station 24/24 : une partie d'échecs sans fin jouée par tous les chats Twitch qui passent. Tape ton coup et regarde le vote en direct."
     }
+  },
+  "tlive": {
+    "title": "Matchs en direct",
+    "hint": "Clique un match pour le suivre et deviner les coups, ou vote pour le vainqueur directement ici.",
+    "count": "{n} parties",
+    "empty": "Aucune partie en cours pour l'instant.",
+    "follow": "Suivre",
+    "following": "Suivie",
+    "players": "Parties en direct",
+    "noVotes": "Aucun vote"
+  },
+  "predict": {
+    "chatTitle": "Vote du chat",
+    "chatHint": "Le chat propose le prochain coup en l'écrivant (Cf3, e4, O-O…). Résultat dès que le coup est joué.",
+    "chatVotes": "{n} vote(s) du chat",
+    "chatNone": "Pas encore de vote du chat pour ce coup.",
+    "chatPlayed": "Coup joué : {san}",
+    "chatScore": "{hits} sur {total} ont trouvé ({pct} %)",
+    "chatWinners": "Bien vu : {names}",
+    "chatToast": "Chat : {hits}/{total} ont trouvé {san}",
+    "title": "Pronostics",
+    "moveTitle": "Prochain coup",
+    "winnerTitle": "Vainqueur",
+    "moveHint": "Clique une pièce du camp au trait sur l'échiquier, puis sa case d'arrivée. Tu peux changer d'avis tant que le coup n'est pas joué.",
+    "yourGuess": "Ton prono : {san}",
+    "noGuess": "Pas encore de prono pour ce coup.",
+    "white": "Blancs",
+    "draw": "Nulle",
+    "black": "Noirs",
+    "votes": "{n} vote(s)",
+    "locked": "Votes clos après le coup {n}",
+    "lockIn": "Vote ouvert jusqu'au coup {n}",
+    "voted": "Vote enregistré : {pick}",
+    "stats": "{hits}/{total} coups devinés · série {streak} · vainqueurs {whits}/{wtotal}",
+    "loginText": "Devine le prochain coup et le vainqueur pour gagner de l'XP et des pions.",
+    "loginBtn": "Se connecter avec Twitch",
+    "login": "Connecte-toi avec Twitch pour pronostiquer",
+    "hit": "Bien vu ! {san} a été joué",
+    "miss": "Raté : {played} joué, tu avais dit {guess}",
+    "streak": "série de {n}",
+    "winnerHit": "Pronostic gagnant : {names}",
+    "winnerMiss": "Pronostic perdu : {names}",
+    "gain": "+{xp} XP · +{coins} pions",
+    "moved": "La position a changé, rejoue ton prono",
+    "ended": "Partie terminée",
+    "rulesTitle": "Barème",
+    "rules": "Coup deviné : +{xp} XP et {coins} pions. Toutes les {every} bonnes réponses d'affilée : +{sxp} XP et {scoins} pions en plus. Bon vainqueur : +{wxp} XP et {wcoins} pions (nulle : +{dxp} XP et {dcoins} pions). Les pions comptent dans le plafond du jour."
   }
 }

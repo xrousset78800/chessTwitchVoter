@@ -357,17 +357,24 @@ body.game-mode .nav__page-title {
     .nav__status-badge [data-phantom-status] { display: none; }
 }
 
-/* Menu escamotable : seul le logo reste, la barre garde sa place (rien ne bouge en dessous).
-   Il revient au survol de la barre ou à la navigation au clavier. Écrans tactiles : toujours visible. */
+/* Menu escamotable pendant une partie en cours (/game, 24/24, partie de tournoi suivie) :
+   seul le logo reste, la barre garde sa place (rien ne bouge en dessous). Il revient au survol
+   de la barre ou à la navigation au clavier. Ailleurs, et sur écrans tactiles : toujours visible. */
 @media (hover: hover) {
-    .nav { transition: background-color 0.3s 0.4s, border-color 0.3s 0.4s, backdrop-filter 0.3s 0.4s; }
-    .nav > :not(.nav__logo) { transition: opacity 0.25s 0.4s, visibility 0s 0.65s; }
-    .nav:not(:hover):not(:focus-within) {
+    body:is([data-page="game"], [data-page="h24"], [data-page="tournament"].t-following) .nav {
+        transition: background-color 0.3s 0.4s, border-color 0.3s 0.4s, backdrop-filter 0.3s 0.4s;
+    }
+    body:is([data-page="game"], [data-page="h24"], [data-page="tournament"].t-following) .nav > :not(.nav__logo) {
+        transition: opacity 0.25s 0.4s, visibility 0s 0.65s;
+    }
+    body:is([data-page="game"], [data-page="h24"], [data-page="tournament"].t-following) .nav:not(:hover):not(:focus-within) {
         background-color: transparent;
         border-bottom-color: transparent;
         backdrop-filter: none;
     }
-    .nav:not(:hover):not(:focus-within) > :not(.nav__logo) { opacity: 0; visibility: hidden; }
+    body:is([data-page="game"], [data-page="h24"], [data-page="tournament"].t-following) .nav:not(:hover):not(:focus-within) > :not(.nav__logo) {
+        opacity: 0; visibility: hidden;
+    }
     .nav:is(:hover, :focus-within), .nav:is(:hover, :focus-within) > * { transition-delay: 0s; }
 }
 

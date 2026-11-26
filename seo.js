@@ -15,7 +15,7 @@ const SITE_URL = (process.env.SITE_URL || 'https://chesstwitchvoter.xouindaplace
 // Pages indexées ('' = accueil) et le libellé qui sert de titre
 const PAGES = {
     '': null, '24h': 'nav.h24', rush: 'nav.rush', mono: 'nav.mono', multi: 'nav.multi', sandbox: 'newTabs.free',
-    browse: 'nav.browse', records: 'nav.records', achievements: 'nav.achievements', shop: 'nav.shop', live: 'nav.live', tournament: 'nav.tournament',
+    browse: 'nav.browse', records: 'nav.records', achievements: 'nav.achievements', shop: 'nav.shop', tournament: 'nav.tournament',
 };
 // Description propre à la page si la langue l'a, sinon celle de l'accueil
 const DESC_KEY = (page) => `seo.desc.${page || 'home'}`;

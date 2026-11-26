@@ -1409,7 +1409,6 @@ document.addEventListener('DOMContentLoaded', () => {
         menus.forEach(m => m.classList.toggle('is-connected', on));
         document.querySelectorAll('.status-dot--phantom').forEach(d => d.classList.toggle('is-connected', on));
         const following = {
-            '/live': typeof state !== 'undefined' && !!state.polling,
             '/tournament': !!(stateT.polling && stateT.currentGame),
         };
         for (const [route, isOn] of Object.entries(following)) {

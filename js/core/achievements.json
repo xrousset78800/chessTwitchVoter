@@ -1,6 +1,6 @@
 {
     "tiers": ["B", "A", "O", "P", "S"],
-    "categories": ["start", "rush", "votes", "moves"],
+    "categories": ["start", "rush", "votes", "predict", "moves"],
     "list": [
         { "id": "bienvenue", "cat": "start", "tier": "B" },
         { "id": "premier-coup", "cat": "start", "tier": "B", "stat": "turns", "goal": 1 },
@@ -34,6 +34,14 @@
         { "id": "salle-comble", "cat": "votes", "tier": "B", "stat": "maxVoters", "goal": 20 },
         { "id": "stade", "cat": "votes", "tier": "A", "stat": "maxVoters", "goal": 100 },
         { "id": "concert", "cat": "votes", "tier": "O", "stat": "maxVoters", "goal": 500 },
+
+        { "id": "bon-oeil", "cat": "predict", "tier": "B", "stat": "predictMoveHits", "goal": 1 },
+        { "id": "lecteur-de-pensees", "cat": "predict", "tier": "A", "stat": "predictMoveHits", "goal": 25 },
+        { "id": "oracle", "cat": "predict", "tier": "O", "stat": "predictMoveHits", "goal": 100 },
+        { "id": "dans-sa-tete", "cat": "predict", "tier": "A", "stat": "predictBestStreak", "goal": 5 },
+        { "id": "telepathe", "cat": "predict", "tier": "P", "stat": "predictBestStreak", "goal": 10 },
+        { "id": "pronostiqueur", "cat": "predict", "tier": "B", "stat": "predictWinnerHits", "goal": 1 },
+        { "id": "bookmaker", "cat": "predict", "tier": "O", "stat": "predictWinnerHits", "goal": 10 },
 
         { "id": "petit-roque", "cat": "moves", "tier": "B" },
         { "id": "grand-roque", "cat": "moves", "tier": "B" },

@@ -88,9 +88,24 @@ app.get('/proxy/chess-moves/', async (req, res) => {
     }
 });
 // Liste des tournois en cours depuis chess.com (search API + filtre qualité)
+let eventsListCache = null; // { at, promise }
+function fetchEventsList() {
+    if (eventsListCache && Date.now() - eventsListCache.at < 60000) return eventsListCache.promise;
+    const promise = loadEventsList();
+    eventsListCache = { at: Date.now(), promise };
+    promise.catch(() => { eventsListCache = null; });
+    return promise;
+}
 app.get('/proxy/chess-events-list', async (req, res) => {
     try {
-                const now = new Date();
+        res.json(await fetchEventsList());
+    } catch (err) {
+        res.status(err.status || 500).json({ error: err.message });
+    }
+});
+async function loadEventsList() {
+    {
+        const now = new Date();
         const r = await fetch('https://www.chess.com/events/v1/api/search', {
             method: 'POST',
             headers: {
@@ -102,7 +117,7 @@ app.get('/proxy/chess-events-list', async (req, res) => {
             },
             body: JSON.stringify({ size: 100 })
         });
-        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+        if (!r.ok) throw Object.assign(new Error(`chess.com HTTP ${r.status}`), { status: r.status });
         const raw = await r.json();
         const events = Array.isArray(raw) ? raw.map(i => i.event).filter(Boolean) : [];
 
@@ -129,11 +144,9 @@ app.get('/proxy/chess-events-list', async (req, res) => {
                 return new Date(b.startAt) - new Date(a.startAt);
             });
 
-        res.json(filtered);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+        return filtered;
     }
-});
+}
 
 // Partie daily Chess.com (callback spécifique daily)
 app.get('/proxy/chess-daily/:gameId', async (req, res) => {
@@ -148,6 +161,7 @@ app.get('/proxy/chess-daily/:gameId', async (req, res) => {
     }
 });
 
+let predictions = null; // module des pronostics, branche apres l'economie
 const CHESS_COM_EVENT_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     'Accept': 'application/json, text/plain, */*',
@@ -191,31 +205,162 @@ app.get('/proxy/chess-event/:slug', async (req, res) => {
 
 // Coups d'une partie de tournoi (la salle ne donne que la position actuelle).
 // La réponse de chess.com contient aussi l'analyse moteur (~200 Ko) : on ne garde que les coups.
-app.get('/proxy/chess-event-game/:room/:round/:game', async (req, res) => {
-    try {
-        const { room, round, game } = req.params;
-        const url = `https://www.chess.com/events/v1/api/game/${[room, round, game].map(encodeURIComponent).join('/')}`;
-        const r = await fetch(url, { method: 'POST', headers: CHESS_COM_EVENT_HEADERS, body: JSON.stringify({}) });
-        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
+const chessGameCache = new Map(); // room/round/game -> { at, promise }
+function fetchChessEventGame(room, round, game) {
+    const key = [room, round, game].join('/');
+    const cached = chessGameCache.get(key);
+    if (cached && Date.now() - cached.at < CHESS_EVENT_TTL) return cached.promise;
+    const url = `https://www.chess.com/events/v1/api/game/${[room, round, game].map(encodeURIComponent).join('/')}`;
+    const promise = fetch(url, { method: 'POST', headers: CHESS_COM_EVENT_HEADERS, body: JSON.stringify({}) }).then(async r => {
+        if (!r.ok) throw Object.assign(new Error(`chess.com HTTP ${r.status}`), { status: r.status });
         const data = await r.json();
-        res.json({
+        return {
             id: data.game?.id,
             currentFEN: data.game?.currentFEN,
             moves: (data.moves || []).slice().sort((a, b) => a.ply - b.ply).map(m => m.cbn)
-        });
+        };
+    });
+    chessGameCache.set(key, { at: Date.now(), promise });
+    promise.catch(() => chessGameCache.delete(key));
+    if (chessGameCache.size > 300) chessGameCache.delete(chessGameCache.keys().next().value);
+    return promise;
+}
+app.get('/proxy/chess-event-game/:room/:round/:game', async (req, res) => {
+    try {
+        const { room, round, game } = req.params;
+        res.json(await fetchChessEventGame(room, round, game));
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(err.status || 500).json({ error: err.message });
     }
 });
 
 // Événement chess.com qui regroupe plusieurs salles (groupes, brackets…) :
 // chaque salle a son propre slug, c'est lui qui donne accès aux parties
+const eventIndexCache = new Map(); // slug -> { at, promise }
+function fetchEventIndex(slug) {
+    const cached = eventIndexCache.get(slug);
+    if (cached && Date.now() - cached.at < 60000) return cached.promise;
+    const url = `https://www.chess.com/events/v1/api/index/${encodeURIComponent(slug)}`;
+    const promise = fetch(url, { method: 'POST', headers: CHESS_COM_EVENT_HEADERS, body: JSON.stringify({}) }).then(async r => {
+        if (!r.ok) throw Object.assign(new Error(`chess.com HTTP ${r.status}`), { status: r.status });
+        return r.json();
+    });
+    eventIndexCache.set(slug, { at: Date.now(), promise });
+    promise.catch(() => eventIndexCache.delete(slug));
+    if (eventIndexCache.size > 100) eventIndexCache.delete(eventIndexCache.keys().next().value);
+    return promise;
+}
+
+// Matchs en cours, tous tournois confondus (page Tournois). Deux étages pour ménager chess.com :
+//  - toutes les 5 min, repérage des salles ouvertes qui ont des parties non terminées (tous les événements commencés) ;
+//  - toutes les 30 s, lecture de ces seules salles (cache commun avec le proxy), quel que soit le nombre de spectateurs.
+const LIVE_SCAN_TTL = 5 * 60e3, LIVE_SCAN_ROOMS = 80, LIVE_MAX_ROOMS = 24, LIVE_MAX_GAMES = 60;
+let liveRoomsScan = null;  // { at, promise } -> [{ event, slug, name, live }]
+let liveGamesCache = null; // { at, promise }
+const liveGame = g => g.result === '*' && g.startAt && g.currentFEN;
+
+async function scanLiveRooms() {
+    const now = Date.now();
+    const events = (await fetchEventsList())
+        .filter(e => e.slug && Date.parse(e.startAt) <= now && (!e.endAt || Date.parse(e.endAt) > now));
+    const candidates = [];
+    const openRoom = r => (!r.startAt || Date.parse(r.startAt) <= now + 3600e3) && (!r.endAt || Date.parse(r.endAt) > now);
+    // Index des événements par paquets de 4 (cache 60 s)
+    for (let i = 0; i < events.length && candidates.length < LIVE_SCAN_ROOMS; i += 4) {
+        await Promise.all(events.slice(i, i + 4).map(async e => {
+            if (e.type !== 'index') { candidates.push({ event: e, slug: e.slug, name: e.name, tryIndex: true }); return; }
+            try {
+                const idx = await fetchEventIndex(e.slug);
+                (idx.rooms || []).filter(openRoom).forEach(r => candidates.push({ event: e, slug: r.slug, name: r.name }));
+            } catch { /* événement illisible : ignoré */ }
+        }));
+    }
+    const rooms = [];
+    const probe = async c => {
+        const r = await fetchChessEventRoom(c.slug).catch(() => null);
+        if (r?.ok) {
+            const games = r.body.games || [];
+            const live = games.filter(liveGame).length;
+            if (live || games.some(g => g.result === '*')) rooms.push({ event: c.event, slug: c.slug, name: c.name, live });
+            return;
+        }
+        // Événement « event » qui regroupe en fait des salles
+        if (c.tryIndex && r?.status === 404) {
+            try {
+                const idx = await fetchEventIndex(c.slug);
+                for (const room of (idx.rooms || []).filter(openRoom).slice(0, 6)) {
+                    await probe({ event: { ...c.event, type: 'index' }, slug: room.slug, name: room.name });
+                }
+            } catch { /* ignoré */ }
+        }
+    };
+    const list = candidates.slice(0, LIVE_SCAN_ROOMS);
+    for (let i = 0; i < list.length; i += 4) await Promise.all(list.slice(i, i + 4).map(probe));
+    return rooms.sort((a, b) => b.live - a.live);
+}
+
+async function loadLiveGames() {
+    if (!liveRoomsScan || Date.now() - liveRoomsScan.at > LIVE_SCAN_TTL) {
+        const promise = scanLiveRooms();
+        liveRoomsScan = { at: Date.now(), promise };
+        promise.catch(() => { liveRoomsScan = null; });
+    }
+    const rooms = (await liveRoomsScan.promise).slice(0, LIVE_MAX_ROOMS);
+    const games = [];
+    for (let i = 0; i < rooms.length; i += 4) {
+        await Promise.all(rooms.slice(i, i + 4).map(async room => {
+            try {
+                const r = await fetchChessEventRoom(room.slug);
+                if (!r.ok) return;
+                for (const g of r.body.games || []) {
+                    if (!liveGame(g)) continue;
+                    const round = (r.body.rounds || []).find(x => x.id === g.roundId);
+                    games.push({
+                        event: { slug: room.event.slug, name: room.event.name, index: room.event.type === 'index' },
+                        room: { slug: room.slug, name: room.name },
+                        id: g.id, slug: g.slug, round: round?.slug || null,
+                        white: { name: g.white?.preferredShortName?.trim() || String(g.slug).split('-')[0], elo: g.whiteElo ?? null, title: g.whiteTitle || null },
+                        black: { name: g.black?.preferredShortName?.trim() || String(g.slug).split('-')[1], elo: g.blackElo ?? null, title: g.blackTitle || null },
+                        fen: g.currentFEN, startAt: g.startAt,
+                    });
+                }
+            } catch { /* salle illisible : ignorée */ }
+        }));
+    }
+    const strength = g => (g.white.elo || 0) + (g.black.elo || 0);
+    games.sort((a, b) => strength(b) - strength(a));
+    return games.slice(0, LIVE_MAX_GAMES);
+}
+// Rafraîchi en arrière-plan : on sert la liste précédente pendant la lecture suivante
+let liveGamesLast = null; // { at, games }
+function liveGamesList() {
+    if (!liveGamesCache || Date.now() - liveGamesCache.at > 30000) {
+        const promise = loadLiveGames();
+        liveGamesCache = { at: Date.now(), promise };
+        promise.then(games => { liveGamesLast = { at: Date.now(), games }; }, () => { liveGamesCache = null; });
+    }
+    return liveGamesLast ? Promise.resolve(liveGamesLast.games) : liveGamesCache.promise;
+}
+// Régie (H24_REGIE) : outils réservés, comme le journal de la page Tournois
+app.get('/api/regie', requireTwitch, (req, res) => {
+    res.json({ regie: !!station?.isRegie(req.twitch.login) });
+});
+
+app.get('/api/tournament/live', async (req, res) => {
+    try {
+        const games = await liveGamesList();
+        res.json({
+            at: liveGamesLast?.at || Date.now(),
+            games: games.map(g => ({ ...g, votes: predictions ? predictions.tally(`${g.room.slug}:${g.id}`) : null })),
+        });
+    } catch (err) {
+        res.status(err.status || 500).json({ error: err.message });
+    }
+});
+
 app.get('/proxy/chess-event-index/:slug', async (req, res) => {
     try {
-        const url = `https://www.chess.com/events/v1/api/index/${encodeURIComponent(req.params.slug)}`;
-        const r = await fetch(url, { method: 'POST', headers: CHESS_COM_EVENT_HEADERS, body: JSON.stringify({}) });
-        if (!r.ok) return res.status(r.status).json({ error: `chess.com HTTP ${r.status}` });
-        const data = await r.json();
+        const data = await fetchEventIndex(req.params.slug);
         res.json({
             name: data.index?.name,
             rooms: (data.rooms || []).map(room => ({
@@ -428,6 +573,12 @@ loadRushRecords();
 // Stats Multi et viewers (stats.js)
 // XP / niveaux et pions par compte Twitch (economy.js)
 const economy = require('./economy')({ app, requireTwitch, dataDir: DATA_DIR, jsonStore: require('./stats').jsonStore });
+// Pronostics sur les parties de tournoi (prochain coup, vainqueur)
+predictions = require('./predictions')({
+    app, requireTwitch, dataDir: DATA_DIR, jsonStore: require('./stats').jsonStore, economy,
+    fetchRoom: fetchChessEventRoom,
+    fetchGame: (room, round, game) => fetchChessEventGame(room, round, game).then(g => g.moves),
+});
 const stats = require('./stats')({ app, requireTwitch, dataDir: DATA_DIR, rushRecords: () => rushRecords, economy });
 
 const games = {}; // Stockage des parties actives
