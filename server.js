@@ -1229,11 +1229,22 @@ io.on('connection', (socket) => {
     });
 });
 
+// Prédiction de la nuit : sans tournoi chess.com en direct (cadence d'au moins 10 min), les parties de Lichess TV
+const lichessTv = require('./lichessTv')({});
+const predictBase = (tc) => parseInt(String(tc || '').replace(/^\d+\//, ''), 10) >= 600;
+async function stationLiveGames() {
+    const games = await liveGamesList().catch(() => []);
+    if (games.some(g => predictBase(g.tc))) return games;
+    return [...games, ...await lichessTv.candidates().catch(() => [])];
+}
+const stationRoom = (slug) => lichessTv.isRoom(slug) ? lichessTv.room(slug) : fetchChessEventRoom(slug);
+const stationGame = (room, round, game) => lichessTv.isRoom(room) ? lichessTv.game(game) : fetchChessEventGame(room, round, game);
+
 // Station 24/24 : partie permanente des viewers (votes du web, puis du chat Twitch)
 const station = require('./station')({
     io, verifyTwitchToken, dataDir: DATA_DIR,
     // Mode Prédiction : parties de tournoi en direct (chess.com)
-    liveGames: liveGamesList, fetchRoom: fetchChessEventRoom, fetchGame: fetchChessEventGame,
+    liveGames: stationLiveGames, fetchRoom: stationRoom, fetchGame: stationGame,
     economy,    // gains de la Prédiction (XP et pions)
     // Tests locaux : phases raccourcies
     durations: process.env.STATION_FAST ? { recap: 5000, voteMode: 6000, voteOption: 5000, signup: 8000, turn: 6000 } : {}

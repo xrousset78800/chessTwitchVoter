@@ -516,6 +516,12 @@ const Router = {
         // Deux étapes : /new montre les quatre modes et leur description ; un mode choisi, ils se rangent
         // en petit en haut à droite et seules ses options restent, avec Précédent pour revenir au choix
         tabs.classList.toggle('is-compact', pageName !== 'new');
+        // Configurations sauvegardées : sous les quatre modes à l'étape 1, dans la colonne de la Partie libre sinon
+        const saved = document.getElementById('configs-list')?.closest('.setup-configs');
+        if (saved && pageName === 'new') {
+            target.querySelector('.new-pick')?.append(saved);
+            SandboxPage.loadConfigs();
+        } else if (saved?.closest('#page-new')) document.querySelector('#sandbox-setup .setup-presets')?.after(saved);
         const name = tabs.querySelector('.new-tabs__mode');
         if (name) name.textContent = tabs.querySelector(`.new-tab[data-new-tab="${pageName}"] .new-tab__title`)?.textContent || '';
         tabs.querySelectorAll('.new-tab').forEach(tab => {
@@ -1760,6 +1766,8 @@ fullReset() {
             card.addEventListener('click', (e) => {
                 if (!e.target.closest('[data-delete]')) {
                     this.loadConfig(card.dataset.id);
+                    // Depuis le choix du mode : on ouvre la Partie libre avec cette configuration
+                    if (AppState.currentPage === 'new') go('/sandbox');
                 }
             });
         });

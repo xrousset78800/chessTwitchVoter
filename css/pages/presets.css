@@ -401,6 +401,11 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .new-pick .new-tab { padding: 24px; }
 .new-pick .new-tab__desc { font-size: 0.95rem; }
 
+/* Configurations sauvegardées sous les quatre modes (cachées s'il n'y en a pas) */
+.new-pick > .setup-configs { margin-top: 4px; }
+.new-pick > .setup-configs:has(.empty-state) { display: none; }
+.new-pick #configs-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+
 /* Étape 2 : Précédent et le nom du mode à gauche, les quatre modes en petit à droite */
 .new-tabs.is-compact {
     display: grid;
