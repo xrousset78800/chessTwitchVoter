@@ -1,5 +1,5 @@
 /* Couleurs de l'échiquier : choisies dans le menu « Pièces » de la barre du haut (js/utils/pieceSet.js) */
-:root { --sq-light: #f0d9b5; --sq-dark: #b58863; }
+:root { --sq-light: #9db0d3; --sq-dark: #42598c; }
 .white-1e1d7 { background-color: var(--sq-light) !important; color: var(--sq-dark) !important; }
 .black-3c85d { background-color: var(--sq-dark) !important; color: var(--sq-light) !important; }
 .white-1e1d7 .notation-322f9 { color: var(--sq-dark); }

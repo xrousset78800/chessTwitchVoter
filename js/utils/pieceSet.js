@@ -17,15 +17,17 @@
     try { current = byId(localStorage.getItem('pieceSet')); } catch (e) { }
 
     // Couleurs de l'échiquier (variables --sq-light / --sq-dark, cf. css/components/boardTheme.css)
+    // Le premier est le thème par défaut. Gratuits : Bleu nuit, Noir, Ardoise (les autres deviendront des récompenses de succès)
     const BOARDS = [
+        { id: 'night', key: 'night', label: 'Bleu nuit', light: '#9db0d3', dark: '#42598c' },
+        { id: 'black', key: 'black', label: 'Noir', light: '#a6a6a6', dark: '#474747' },
+        { id: 'grey', key: 'grey', label: 'Ardoise', light: '#dcdcdc', dark: '#8a8d93' },
         { id: 'wood', key: 'wood', label: 'Bois', light: '#f0d9b5', dark: '#b58863' },
         { id: 'green', key: 'green', label: 'Vert', light: '#eeeed2', dark: '#769656' },
         { id: 'blue', key: 'blue', label: 'Bleu', light: '#dee3e6', dark: '#8ca2ad' },
-        { id: 'grey', key: 'grey', label: 'Ardoise', light: '#dcdcdc', dark: '#8a8d93' },
         { id: 'orange', key: 'orange', label: 'Braise', light: '#f6e2cc', dark: '#d2804f' },
         { id: 'purple', key: 'purple', label: 'Lavande', light: '#e9e1f3', dark: '#8f77b5' },
         { id: 'rose', key: 'rose', label: 'Rose', light: '#f5e1e4', dark: '#c27a87' },
-        { id: 'night', key: 'night', label: 'Nuit', light: '#9aa3b1', dark: '#4f5a6b' },
     ];
     const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
     let board = BOARDS[0];
