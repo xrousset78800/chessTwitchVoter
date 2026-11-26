@@ -1,7 +1,8 @@
 /**
  * Pronostics sur les parties de tournoi chess.com suivies sur /tournament :
  *   - deviner le prochain coup de la partie (un prono par position, modifiable tant que le coup n'est pas joué) ;
- *   - désigner le vainqueur (1-0, ½-½, 0-1) tant que la partie n'a pas dépassé RULES.predict.winnerLock coups.
+ *   - désigner le vainqueur (1-0, ½-½, 0-1) jusqu'à la fin de la partie : gain plein jusqu'au coup
+ *     RULES.predict.winnerFull, puis dégressif jusqu'à winnerMin au coup winnerFade (coup du dernier vote).
  * Tout est vérifié ici, avec les données de la salle chess.com (cache commun avec le proxy) :
  * un prono n'est accepté que sur la position en cours, et il est jugé sur le coup réellement joué.
  * Gains (XP / pions, dans le plafond quotidien) : RULES.predict de economy.js.
@@ -30,6 +31,12 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
     const store = jsonStore(path.join(dataDir, 'predictions.json'), () => ({}));
     for (const sig of ['SIGTERM', 'SIGINT']) process.once(sig, () => store.flush());
     const R = () => economy.RULES.predict;
+    /** Part du gain « vainqueur » selon le coup auquel le vote a été donné */
+    const winnerFactor = mv => {
+        const { winnerFull: full = 10, winnerFade: fade = 40, winnerMin: min = 0.25 } = R();
+        if (!mv || mv <= full) return 1;
+        return Math.max(min, 1 - (1 - min) * (mv - full) / Math.max(1, fade - full));
+    };
 
     const user = login => store.data[login] ||= { moves: {}, winners: {}, results: [] };
     const statsOf = login => {
@@ -141,7 +148,8 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             if (hit) {
                 st.predictWinnerHits = (st.predictWinnerHits || 0) + 1;
                 const g = result === '1/2-1/2' ? R().winnerDraw : R().winner;
-                gain = economy.grant(login, 'predict', { ...g, capped: true, key: `pw:${key}` });
+                const f = winnerFactor(w.mv);
+                gain = economy.grant(login, 'predict', { xp: Math.max(1, Math.round(g.xp * f)), coins: Math.max(1, Math.round(g.coins * f)), capped: true, key: `pw:${key}` });
             }
             pushResult(login, { kind: 'winner', key, at: now, hit, pick: w.pick, result, names: w.names, gain: gain && { xp: gain.xp, coins: gain.coins } });
         }
@@ -201,11 +209,12 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             if (!room || !gameId || !PICKS.includes(pick)) return res.status(400).json({ error: 'Prono invalide' });
             const { game } = await findGame(room, gameId);
             if (game.result && game.result !== '*') return res.status(409).json({ error: 'Partie terminée', code: 'ended' });
-            if (fullMove(game.currentFEN) > R().winnerLock) return res.status(409).json({ error: 'Votes clos', code: 'locked' });
             const key = `${room}:${gameId}`;
             const names = [game.white?.preferredShortName, game.black?.preferredShortName].map(n => str(n, 40));
             const prev = user(login).winners[key]?.pick;
-            user(login).winners[key] = { room, gameId, pick, names, at: Date.now() };
+            // Changer d'avis : le gain suit le coup du dernier vote
+            const mv = prev === pick ? (user(login).winners[key].mv || fullMove(game.currentFEN)) : fullMove(game.currentFEN);
+            user(login).winners[key] = { room, gameId, pick, names, mv, at: Date.now() };
             store.save();
             bump(key, pick, prev);
             res.json({ winner: { pick }, votes: tally(key) });

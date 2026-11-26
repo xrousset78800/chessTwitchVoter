@@ -778,14 +778,15 @@ input[type=range] {
 }
 
 /* ══ Matchs en direct (tous tournois) : js/core/tournamentPredict.js ══ */
-.tl-section { margin-top: 24px; }
-.tl-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
-.tl-title { margin: 0; font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; display: flex; align-items: center; gap: 8px; }
+.tl-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tl-head > span { display: flex; align-items: center; gap: 6px; }
 .tl-count { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 400; color: var(--text-muted); }
-.tl-hint { margin: 0; flex: 1 1 260px; color: var(--text-secondary); font-size: 0.88rem; }
+.tl-hint { margin: 0 0 8px; color: var(--text-muted); font-size: 0.76rem; }
 .tl-refresh { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; }
 .tl-refresh:hover { color: var(--accent); }
-.tl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.tl-grid { display: flex; flex-direction: column; gap: 8px; max-height: 560px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
+.tl-grid .tl-card { flex-shrink: 0; padding: 8px; gap: 8px; }
+.tl-grid .tl-card__board { flex-basis: 76px; width: 76px; }
 .tl-empty { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
 .tl-card {
     display: flex; gap: 10px; padding: 10px; min-width: 0;
@@ -808,7 +809,7 @@ input[type=range] {
 .tl-votes__seg--draw { background: #8a8079; }
 .tl-votes__seg--black { background: #3a3330; }
 .tl-votes__n { white-space: nowrap; }
-.tl-card__actions { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 4px; }
+.tl-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; padding-top: 4px; }
 .tl-follow, .tl-pick button, .tp-picks button {
     font: inherit; font-size: 0.76rem; cursor: pointer; border-radius: 4px;
     border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary); padding: 3px 7px;

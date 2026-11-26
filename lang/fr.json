@@ -387,7 +387,7 @@
       "p1": "Devine le prochain coup",
       "p1d": "Clique le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.",
       "p2": "Choisis le vainqueur",
-      "p2d": "Blancs, nulle ou Noirs, jusqu'au 10e coup. Un bon pronostic rapporte encore plus.",
+      "p2d": "Blancs, nulle ou Noirs, à tout moment. Plus tu votes tôt, plus ça rapporte : gain plein jusqu'au 10e coup.",
       "p3": "Tous les matchs au même endroit",
       "p3d": "Les parties en cours avec les votes de la communauté, et la recherche par nom de joueur."
     },
@@ -1553,8 +1553,8 @@
     "draw": "Nulle",
     "black": "Noirs",
     "votes": "{n} vote(s)",
-    "locked": "Votes clos après le coup {n}",
-    "lockIn": "Vote ouvert jusqu'au coup {n}",
+    "winnerOpen": "Vote ouvert jusqu'à la fin · gain actuel {pct} % (plein jusqu'au coup {full}, puis dégressif jusqu'à {min} % au coup {fade})",
+    "gainNow": "gain {pct} %",
     "voted": "Vote enregistré : {pick}",
     "stats": "{hits}/{total} coups devinés · série {streak} · vainqueurs {whits}/{wtotal}",
     "loginText": "Devine le prochain coup et le vainqueur pour gagner de l'XP et des pions.",
@@ -1569,6 +1569,6 @@
     "moved": "La position a changé, rejoue ton prono",
     "ended": "Partie terminée",
     "rulesTitle": "Barème",
-    "rules": "Coup deviné : +{xp} XP et {coins} pions. Toutes les {every} bonnes réponses d'affilée : +{sxp} XP et {scoins} pions en plus. Bon vainqueur : +{wxp} XP et {wcoins} pions (nulle : +{dxp} XP et {dcoins} pions). Les pions comptent dans le plafond du jour."
+    "rules": "Coup deviné : +{xp} XP et {coins} pions. Toutes les {every} bonnes réponses d'affilée : +{sxp} XP et {scoins} pions en plus. Bon vainqueur : +{wxp} XP et {wcoins} pions (nulle : +{dxp} XP et {dcoins} pions), gain plein si tu votes avant le coup {full}, puis dégressif jusqu'à {min} % au coup {fade}. Les pions comptent dans le plafond du jour."
   }
 }

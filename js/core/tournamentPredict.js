@@ -15,7 +15,11 @@
     const authHeaders = () => ({ 'Content-Type': 'application/json', ...(window.twitchAuth?.authHeaders?.() || {}) });
     const pageVisible = () => document.visibilityState === 'visible'
         && (document.getElementById('page-tournament')?.getClientRects().length ?? 0) > 0;
-    let rules = { move: { xp: 8, coins: 2 }, streak: { every: 5, xp: 25, coins: 10 }, winner: { xp: 25, coins: 10 }, winnerDraw: { xp: 40, coins: 20 }, winnerLock: 10 };
+    let rules = { move: { xp: 8, coins: 2 }, streak: { every: 5, xp: 25, coins: 10 }, winner: { xp: 25, coins: 10 }, winnerDraw: { xp: 40, coins: 20 }, winnerFull: 10, winnerFade: 40, winnerMin: 0.25 };
+    const winnerPct = fen => {
+        const mv = fullMove(fen), { winnerFull: full, winnerFade: fade, winnerMin: min } = rules;
+        return Math.round(100 * (mv <= full ? 1 : Math.max(min, 1 - (1 - min) * (mv - full) / Math.max(1, fade - full))));
+    };
 
     // ───────────── Matchs en direct ─────────────
     let liveGames = [];
@@ -61,7 +65,7 @@
         }
         const followed = stateT.polling && stateT.currentGame ? `${stateT.tournamentSlug}:${stateT.currentGame.id}` : null;
         grid.innerHTML = liveGames.map((g, i) => {
-            const locked = fullMove(g.fen) > rules.winnerLock;
+            const gainPct = winnerPct(g.fen);
             const mine = myWinnerPicks[`${g.room.slug}:${g.id}`];
             const isFollowed = followed === `${g.room.slug}:${g.id}`;
             return `<article class="tl-card${isFollowed ? ' is-followed' : ''}" data-tl="${i}">
@@ -73,7 +77,7 @@
                     <div class="tl-card__actions">
                         <button type="button" class="tl-follow" data-tl-follow="${i}"><i class="fas fa-eye"></i> ${esc(isFollowed ? T('tlive.following', null, 'Suivie') : T('tlive.follow', null, 'Suivre'))}</button>
                         <div class="tl-pick" role="group" aria-label="${esc(T('predict.winnerTitle', null, 'Vainqueur'))}">
-                            ${PICKS.map(p => `<button type="button" data-tl-vote="${i}" data-pick="${p}" class="${mine === p ? 'is-on' : ''}" ${locked ? 'disabled' : ''} title="${esc(locked ? T('predict.locked', { n: rules.winnerLock }) : T('predict.' + PICK_KEY[p]))}">${p === '1/2-1/2' ? '½' : p}</button>`).join('')}
+                            ${PICKS.map(p => `<button type="button" data-tl-vote="${i}" data-pick="${p}" class="${mine === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]) + ' · ' + T('predict.gainNow', { pct: gainPct }, `${gainPct} %`))}">${p === '1/2-1/2' ? '½' : p}</button>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -185,7 +189,6 @@
 
     const errText = err => err.code === 'moved' ? T('predict.moved', null, 'La position a changé')
         : err.code === 'ended' ? T('predict.ended', null, 'Partie terminée')
-        : err.code === 'locked' ? T('predict.locked', { n: rules.winnerLock })
         : err.message;
 
     async function voteWinner(room, gameId, pick, key) {
@@ -267,7 +270,6 @@
             return;
         }
         const st = pred.stats;
-        const locked = fullMove(c.fen) > rules.winnerLock;
         const moveLine = c.ended ? T('predict.ended', null, 'Partie terminée')
             : pred.move ? T('predict.yourGuess', { san: pred.move.san }, `Ton prono : ${pred.move.san}`)
             : T('predict.noGuess', null, 'Pas encore de prono pour ce coup.');
@@ -280,14 +282,14 @@
             <div class="tp-section">
                 <div class="tp-label"><i class="fas fa-trophy"></i> ${esc(T('predict.winnerTitle', null, 'Vainqueur'))}</div>
                 <div class="tp-picks" role="group">
-                    ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" ${locked || c.ended ? 'disabled' : ''}>${esc(T('predict.' + PICK_KEY[p]))}</button>`).join('')}
+                    ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" ${c.ended ? 'disabled' : ''}>${esc(T('predict.' + PICK_KEY[p]))}</button>`).join('')}
                 </div>
                 ${votesHTML(pred.votes)}
-                <p class="tp-hint">${esc(locked || c.ended ? T('predict.locked', { n: rules.winnerLock }) : T('predict.lockIn', { n: rules.winnerLock }))}</p>
+                ${c.ended ? '' : `<p class="tp-hint">${esc(T('predict.winnerOpen', { pct: winnerPct(c.fen), full: rules.winnerFull, fade: rules.winnerFade, min: Math.round(rules.winnerMin * 100) }))}</p>`}
             </div>
             <p class="tp-stats">${st ? esc(T('predict.stats', { hits: st.moveHits, total: st.moveTotal, streak: st.streak, whits: st.winnerHits, wtotal: st.winnerTotal })) : ''}</p>
             <details class="tp-rules"><summary>${esc(T('predict.rulesTitle', null, 'Barème'))}</summary>
-                <p>${esc(T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins }))}</p></details>`;
+                <p>${esc(T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, full: rules.winnerFull, fade: rules.winnerFade, min: Math.round(rules.winnerMin * 100) }))}</p></details>`;
         paintMarks();
     }
 

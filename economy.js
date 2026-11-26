@@ -26,7 +26,7 @@ const RULES = {
     // Bonus de la première activité du jour, + par jour de série (plafonné)
     daily:       { coins: 50, streakBonus: 10, streakMax: 7 },
     // Pronostics sur les parties de tournoi (page /tournament) : coup deviné, série, vainqueur
-    predict:     { move: { xp: 8, coins: 2 }, streak: { every: 5, xp: 25, coins: 10 }, winner: { xp: 25, coins: 10 }, winnerDraw: { xp: 40, coins: 20 }, winnerLock: 10 },
+    predict:     { move: { xp: 8, coins: 2 }, streak: { every: 5, xp: 25, coins: 10 }, winner: { xp: 25, coins: 10 }, winnerDraw: { xp: 40, coins: 20 }, winnerFull: 10, winnerFade: 40, winnerMin: 0.25 },
     dailyCoinCap: 300,                         // pions max par jour venant des coups et puzzles
     // Niveau : passer du niveau n au niveau n+1 coûte base + step × (n − 1) XP
     level:       { base: 100, step: 50, max: 100 },

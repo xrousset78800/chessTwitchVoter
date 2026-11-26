@@ -264,7 +264,7 @@
                         </div>
                         <ul class="home-tour__points">
                             <li><i class="fas fa-crosshairs" aria-hidden="true"></i><span><strong data-i18n="home.tour.p1">Devine le prochain coup</strong><small data-i18n="home.tour.p1d">Clique le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.</small></span></li>
-                            <li><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="home.tour.p2">Choisis le vainqueur</strong><small data-i18n="home.tour.p2d">Blancs, nulle ou Noirs, jusqu'au 10e coup. Un bon pronostic rapporte encore plus.</small></span></li>
+                            <li><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="home.tour.p2">Choisis le vainqueur</strong><small data-i18n="home.tour.p2d">Blancs, nulle ou Noirs, à tout moment. Plus tu votes tôt, plus ça rapporte : gain plein jusqu'au 10e coup.</small></span></li>
                             <li><i class="fas fa-magnifying-glass" aria-hidden="true"></i><span><strong data-i18n="home.tour.p3">Tous les matchs au même endroit</strong><small data-i18n="home.tour.p3d">Les parties en cours avec les votes de la communauté, et la recherche par nom de joueur.</small></span></li>
                         </ul>
                     </div>
@@ -1453,6 +1453,16 @@
                             </div>
                         </div>
 
+                        <!-- Matchs en cours, tous tournois confondus : suivre, pronostiquer, voter (js/core/tournamentPredict.js) -->
+                        <div class="live-card tl-section" id="tLiveGames">
+                            <div class="live-card__title tl-head">
+                                <span><span class="tg-live-dot"></span> <span data-i18n="tlive.title">Matchs en direct</span> <small class="tl-count" id="tLiveCount"></small></span>
+                                <button type="button" class="tl-refresh" id="btnRefreshLive" data-i18n-title="records.refresh" title="Actualiser"><i class="fas fa-sync-alt"></i></button>
+                            </div>
+                            <p class="tl-hint" data-i18n="tlive.hint">Clique un match pour le suivre et deviner les coups, ou vote pour le vainqueur directement ici.</p>
+                            <div class="tl-grid" id="tLiveGrid"><p class="tl-empty" data-i18n="ui.loading">Chargement…</p></div>
+                        </div>
+
                     </div>
 
                     <!-- ══ COL 2 : Échiquier ══ -->
@@ -1530,16 +1540,6 @@
 
                     </div>
                 </div>
-
-                <!-- Matchs en cours, tous tournois confondus : suivre, pronostiquer, voter -->
-                <section class="tl-section" id="tLiveGames">
-                    <div class="tl-head">
-                        <h2 class="tl-title"><span class="tg-live-dot"></span> <span data-i18n="tlive.title">Matchs en direct</span> <small class="tl-count" id="tLiveCount"></small></h2>
-                        <p class="tl-hint" data-i18n="tlive.hint">Clique un match pour le suivre et deviner les coups, ou vote pour le vainqueur directement ici.</p>
-                        <button type="button" class="tl-refresh" id="btnRefreshLive" data-i18n-title="records.refresh" title="Actualiser"><i class="fas fa-sync-alt"></i></button>
-                    </div>
-                    <div class="tl-grid" id="tLiveGrid"><p class="tl-empty" data-i18n="ui.loading">Chargement…</p></div>
-                </section>
             </div>
         </div>
     </div>

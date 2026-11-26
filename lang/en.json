@@ -387,7 +387,7 @@
       "p1": "Guess the next move",
       "p1d": "Click the move on the board before the player does. Got it: XP and pawns, with a bonus every 5 correct guesses in a row.",
       "p2": "Pick the winner",
-      "p2d": "White, draw or Black, until move 10. A correct prediction pays even more.",
+      "p2d": "White, draw or Black, at any time. The earlier you vote, the more it pays: full reward until move 10.",
       "p3": "Every game in one place",
       "p3d": "Ongoing games with the community votes, and search by player name."
     },
@@ -1553,8 +1553,8 @@
     "draw": "Draw",
     "black": "Black",
     "votes": "{n} vote(s)",
-    "locked": "Voting closed after move {n}",
-    "lockIn": "Voting open until move {n}",
+    "winnerOpen": "Voting open until the end · current reward {pct}% (full until move {full}, then decreasing to {min}% at move {fade})",
+    "gainNow": "reward {pct}%",
     "voted": "Vote saved: {pick}",
     "stats": "{hits}/{total} moves guessed · streak {streak} · winners {whits}/{wtotal}",
     "loginText": "Guess the next move and the winner to earn XP and pawns.",
@@ -1569,6 +1569,6 @@
     "moved": "The position changed, make your guess again",
     "ended": "Game over",
     "rulesTitle": "Scoring",
-    "rules": "Correct move: +{xp} XP and {coins} pawns. Every {every} correct guesses in a row: +{sxp} XP and {scoins} more pawns. Correct winner: +{wxp} XP and {wcoins} pawns (draw: +{dxp} XP and {dcoins} pawns). Pawns count toward the daily cap."
+    "rules": "Correct move: +{xp} XP and {coins} pawns. Every {every} correct guesses in a row: +{sxp} XP and {scoins} more pawns. Correct winner: +{wxp} XP and {wcoins} pawns (draw: +{dxp} XP and {dcoins} pawns), full reward if you vote before move {full}, then decreasing to {min}% at move {fade}. Pawns count toward the daily cap."
   }
 }
