@@ -1030,6 +1030,16 @@ input[type=range] {
 .tv-pic.is-bot { background: color-mix(in srgb, var(--text-muted) 25%, var(--bg-card)); color: var(--text-secondary); font-size: 0.7rem; }
 .tv-src.is-bot { color: var(--text-muted); }
 .tv-headright { display: inline-flex; align-items: center; gap: 8px; }
+/* Regroupés par coup : le coup, les photos des votants qui se chevauchent, le nombre ; le fond montre la part des votes */
+.tv-grp {
+    gap: 10px; padding: 5px 8px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent) var(--p, 0%), rgba(255, 255, 255, 0.03) var(--p, 0%));
+}
+.tv-grp .tv-move { flex: 0 0 auto; min-width: 48px; font-size: 0.9rem; color: var(--text-primary); }
+.tv-faces { flex: 1; min-width: 0; display: flex; align-items: center; padding-left: 6px; overflow: hidden; }
+.tv-faces .tv-pic { flex: 0 0 22px; width: 22px; height: 22px; margin-left: -6px; font-size: 0.62rem; box-shadow: 0 0 0 2px var(--bg-card, #1c1814); }
+.tv-more { margin-left: 4px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+.tv-n { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); }
 .tv-bots { background: none; border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; cursor: pointer; }
 .tv-bots[hidden] { display: none; }
 .tv-bots[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }

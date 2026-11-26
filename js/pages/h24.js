@@ -1618,21 +1618,32 @@ const H24Page = {
         clearTimeout(this.pvTimer);
         if (flash) this.pvTimer = setTimeout(() => this.render(), 5100 - (Date.now() + (this.skew || 0) - flash.at));
         const rows = flash ? flash.who : (P.guesses || []);
-        const face = (v) => v.v === 'bot' ? '<span class="tv-pic is-bot"><i class="fas fa-robot"></i></span>'
-            : v.p ? `<img class="tv-pic" src="${esc(v.p)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
-            : `<span class="tv-pic">${esc((v.u || '?')[0].toUpperCase())}</span>`;
-        const src = (v) => v.v === 'chat' ? `<i class="fab fa-twitch tv-src" title="${esc(t('voters.chat', null, 'Chat Twitch'))}"></i>`
-            : v.v === 'bot' ? `<i class="fas fa-robot tv-src is-bot" title="${esc(t('voters.bot', null, 'Bot de test'))}"></i>` : '';
-        const mark = (v) => !flash ? '' : v.hit
-            ? '<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1 pt</b></span>'
-            : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
-        const row = (v, i) => `<li class="tv-item${v.u === me ? ' is-me' : ''}${flash ? (v.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i}">
-                ${face(v)}<span class="tv-name">${esc(v.u)}</span>${src(v)}
-                <span class="tv-move">${esc(fmtMove(v.m))}</span>${mark(v)}</li>`;
+        const who = (v) => (v.u || '?') + (v.v === 'chat' ? ` · ${t('voters.chat', null, 'Chat Twitch')}` : v.v === 'bot' ? ` · ${t('voters.bot', null, 'Bot de test')}` : '');
+        const face = (v) => v.v === 'bot' ? `<span class="tv-pic is-bot" title="${esc(who(v))}"><i class="fas fa-robot"></i></span>`
+            : v.p ? `<img class="tv-pic" src="${esc(v.p)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="${esc(who(v))}">`
+            : `<span class="tv-pic" title="${esc(who(v))}">${esc((v.u || '?')[0].toUpperCase())}</span>`;
+        // Une ligne par coup (part des votes, photos des votants, nombre), comme sur la page Tournois
+        const groups = [...rows.reduce((m, v) => {
+            if (!m.has(v.m)) m.set(v.m, []);
+            m.get(v.m).push(v);
+            return m;
+        }, new Map()).entries()].map(([m, list]) => ({ m, list, hit: !!(flash && list[0].hit) }))
+            .sort((a, b) => (b.hit - a.hit) || b.list.length - a.list.length);
+        const MAXF = 10;
+        const row = (gr, i) => {
+            const mark = !flash ? '' : gr.hit
+                ? '<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1 pt</b></span>'
+                : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
+            const more = gr.list.length - MAXF;
+            return `<li class="tv-item tv-grp${gr.list.some(v => v.u === me) ? ' is-me' : ''}${flash ? (gr.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i};--p:${Math.round(100 * gr.list.length / rows.length)}%">
+                <span class="tv-move">${esc(fmtMove(gr.m))}</span>
+                <span class="tv-faces">${gr.list.slice(0, MAXF).map(face).join('')}${more > 0 ? `<span class="tv-more">+${more}</span>` : ''}</span>
+                <span class="tv-n">${gr.list.length}</span>${mark}</li>`;
+        };
         const cardVoters = `<div class="live-card tv-card">
             <div class="live-card__title tv-head"><span><i class="fas fa-users"></i> ${esc(t('voters.title', null, 'Votants'))}</span> <span class="tv-headright"><small class="tv-count">${rows.length || ''}</small></span></div>
             <div class="tv-body">
-                ${rows.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${rows.map(row).join('')}</ul>`
+                ${rows.length ? `<ul class="tv-list tv-groups${flash ? ' is-flash' : ''}">${groups.map(row).join('')}</ul>`
                     : `<p class="tp-hint">${esc(over ? t('predict.ended', null, 'Partie terminée') : t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
                 ${flash ? `<p class="tp-hint">${esc(fmtMove(flash.san))} · ${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</p>` : ''}
             </div></div>`;

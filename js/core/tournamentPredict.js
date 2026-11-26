@@ -586,23 +586,36 @@
         if (el.dataset.sig === sig) return;
         el.dataset.sig = sig;
         el.querySelector('.tv-count').textContent = list.length ? String(list.length) : '';
+        const srcName = v => (v.name || v.login || '?') + (v.src === 'chat' ? ` · ${T('voters.chat', null, 'Chat Twitch')}` : v.src === 'bot' ? ` · ${T('voters.bot', null, 'Bot de test')}` : '');
         const face = v => {
-            if (v.src === 'bot') return '<span class="tv-pic is-bot"><i class="fas fa-robot"></i></span>';
+            if (v.src === 'bot') return `<span class="tv-pic is-bot" title="${esc(srcName(v))}"><i class="fas fa-robot"></i></span>`;
             const url = picOf(v);
-            return url ? `<img class="tv-pic" src="${esc(url)}" alt="" loading="lazy">`
-                : `<span class="tv-pic">${esc(String(v.name || v.login || '?')[0].toUpperCase())}</span>`;
+            return url ? `<img class="tv-pic" src="${esc(url)}" alt="" loading="lazy" title="${esc(srcName(v))}">`
+                : `<span class="tv-pic" title="${esc(srcName(v))}">${esc(String(v.name || v.login || '?')[0].toUpperCase())}</span>`;
         };
-        const src = v => v.src === 'chat' ? `<i class="fab fa-twitch tv-src" title="${esc(T('voters.chat', null, 'Chat Twitch'))}"></i>`
-            : v.src === 'bot' ? `<i class="fas fa-robot tv-src is-bot" title="${esc(T('voters.bot', null, 'Bot de test'))}"></i>` : '';
-        // Coup joué : chaque ligne reçoit sa marque animée (✓ et gain pour les gagnants, mis en avant ; ✗ pour les autres)
-        const mark = v => !flash ? '' : v.hit
-            ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${v.gain ? `<b class="tv-gain">+${v.gain} XP</b>` : ''}</span>`
-            : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
-        const row = (v, i) => `<li class="tv-item${v.login === me ? ' is-me' : ''}${flash ? (v.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i}">
-                ${face(v)}<span class="tv-name">${esc(v.name || v.login)}</span>${src(v)}
-                <span class="tv-move">${esc(sanLocal(v.san))}</span>${mark(v)}</li>`;
+        // Votants regroupés par coup : une ligne par coup (part des votes, photos des votants, nombre) ;
+        // au coup joué, la ligne gagnante reçoit ✓ et le gain, les autres ✗
+        const groups = [...list.reduce((m, v) => {
+            const k = v.uci || v.san;
+            if (!m.has(k)) m.set(k, { san: v.san, list: [] });
+            m.get(k).list.push(v);
+            return m;
+        }, new Map()).values()].sort((a, b) => (flash ? (b.list[0].hit ? 1 : 0) - (a.list[0].hit ? 1 : 0) : 0) || b.list.length - a.list.length);
+        const MAXF = 10;
+        const row = (gr, i) => {
+            const hit = flash && gr.list[0].hit;
+            const gain = hit && gr.list.find(v => v.gain)?.gain;
+            const mark = !flash ? '' : hit
+                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${gain ? `<b class="tv-gain">+${gain} XP</b>` : ''}</span>`
+                : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
+            const more = gr.list.length - MAXF;
+            return `<li class="tv-item tv-grp${gr.list.some(v => v.login === me) ? ' is-me' : ''}${flash ? (hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i};--p:${Math.round(100 * gr.list.length / list.length)}%">
+                <span class="tv-move">${esc(sanLocal(gr.san))}</span>
+                <span class="tv-faces">${gr.list.slice(0, MAXF).map(face).join('')}${more > 0 ? `<span class="tv-more">+${more}</span>` : ''}</span>
+                <span class="tv-n">${gr.list.length}</span>${mark}</li>`;
+        };
         el.querySelector('.tv-body').innerHTML = `
-            ${list.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${list.map(row).join('')}</ul>`
+            ${list.length ? `<ul class="tv-list tv-groups${flash ? ' is-flash' : ''}">${groups.map(row).join('')}</ul>`
                 : `<p class="tp-hint">${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
             ${!list.length && !flash && !c.ended && chatOn() ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}`;
     }
