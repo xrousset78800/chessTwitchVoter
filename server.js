@@ -406,7 +406,8 @@ app.post('/api/rush/records', requireTwitch, (req, res) => {
     saveRushRecords();
 
     console.log(`🔥 [${login}] run terminé (mode ${mode}) : ${score} puzzle(s)${isNewRecord ? ' — NOUVEAU RECORD' : ''}`);
-    res.json({ record: publicRecord(rushRecords[login], mode), isNewRecord });
+    const gain = economy.onRushRun(login, { score, isNewRecord, mode, at: now });
+    res.json({ record: publicRecord(rushRecords[login], mode), isNewRecord, gain });
 });
 
 // Fiche d'une chaîne : tous les modes, avec son rang dans chacun
@@ -425,7 +426,9 @@ app.get('/api/rush/channel/:login', (req, res) => {
 loadRushRecords();
 
 // Stats Multi et viewers (stats.js)
-const stats = require('./stats')({ app, requireTwitch, dataDir: DATA_DIR, rushRecords: () => rushRecords });
+// XP / niveaux et pions par compte Twitch (economy.js)
+const economy = require('./economy')({ app, requireTwitch, dataDir: DATA_DIR, jsonStore: require('./stats').jsonStore });
+const stats = require('./stats')({ app, requireTwitch, dataDir: DATA_DIR, rushRecords: () => rushRecords, economy });
 
 const games = {}; // Stockage des parties actives
 

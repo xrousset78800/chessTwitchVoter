@@ -17,6 +17,7 @@ import twitchAuth from './core/twitchAuth.js';
 import { matchLegalMove, fmtMove } from './utils/moveMatch.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
+import './core/economy.js';
 import RecordsPage from './pages/records.js';
 import WatchPage from './pages/watch.js';
 import H24Page from './pages/h24.js';

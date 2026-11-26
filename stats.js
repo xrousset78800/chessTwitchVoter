@@ -50,7 +50,7 @@ function jsonStore(file, fallback) {
 const cleanName = (v, fallback) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 50) : fallback);
 const cleanAvatar = (v) => (typeof v === 'string' && /^https:\/\/[^\s"'<>]+$/.test(v) ? v.slice(0, 300) : null);
 
-module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords }) {
+module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords, economy }) {
     const multi   = jsonStore(path.join(dataDir, 'multi-results.json'), () => ({ games: [], channels: {} }));
     const viewers = jsonStore(path.join(dataDir, 'viewer-stats.json'), () => ({}));
 
@@ -97,6 +97,7 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
             c.lastAt = entry.at;
         }
         multi.save();
+        economy?.onMultiResult(entry);
         console.log(`⚔ Bataille terminée : ${game.host} vs ${game.guest} → ${result} (${reason})`);
         return entry;
     }
@@ -173,6 +174,7 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
         ch.avatar      = cleanAvatar(body.avatar) || ch.avatar;
 
         let counted = 0;
+        const gains = [];   // pour l'économie (XP / pions)
         for (const t of turns) {
             const puzzle = t?.kind === 'puzzle';
             const seen = new Set();
@@ -191,6 +193,7 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
             if (puzzle) ch.puzzleTurns++; else ch.turns++;
             ch.votes += seen.size;
             counted++;
+            gains.push({ puzzle, voters: seen.size });
         }
         ch.lastAt = now;
 
@@ -202,7 +205,8 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
                .forEach(id => delete ch.viewers[id]);
         }
         viewers.save();
-        res.json({ ok: true, turns: counted });
+        const gain = economy?.onTurns(login, gains) || null;
+        res.json({ ok: true, turns: counted, gain });
     });
 
     const channelSummary = (ch) => ({
@@ -260,3 +264,4 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords 
 
     return { recordMultiResult, stores: { multi, viewers } };
 };
+module.exports.jsonStore = jsonStore;

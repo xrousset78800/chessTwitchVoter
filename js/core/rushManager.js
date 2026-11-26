@@ -284,7 +284,9 @@ class RushManager {
             const body = await r.json().catch(() => ({}));
             throw new Error(body.error || `HTTP ${r.status}`);
         }
-        return r.json();
+        const data = await r.json();
+        window.economy?.noteGain(data.gain);
+        return data;
     }
 
     /** Récupère le record de la chaîne connectée (pour le HUD) */

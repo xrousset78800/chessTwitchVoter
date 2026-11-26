@@ -131,6 +131,7 @@
                 btn.setAttribute('aria-expanded', String(open));
                 box.classList.toggle('is-open', open);
             };
+            box._closeMenu = () => toggle(false);
             btn.addEventListener('click', e => { e.stopPropagation(); toggle(menu.hidden); });
             menu.addEventListener('click', e => {
                 const sw = e.target.closest('[data-board-theme]');
@@ -140,13 +141,28 @@
                 toggle(false);
                 setPieceSet(item.dataset.pieceSet);
             });
-            document.addEventListener('click', e => { if (!box.contains(e.target)) toggle(false); });
-            document.addEventListener('keydown', e => { if (e.key === 'Escape') toggle(false); });
         });
         render();
         // Images créées avant le chargement du choix (HTML statique) : alignées sur le set
         if (current.id !== SETS[0].id) refreshImages();
     }
+
+    // Fermeture des menus (une seule fois : setup() est rappelé quand les récompenses changent)
+    const closeMenus = keep => document.querySelectorAll('.nav__pieces').forEach(box => { if (box !== keep) box._closeMenu?.(); });
+    document.addEventListener('click', e => closeMenus(e.target.closest?.('.nav__pieces')));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenus(null); });
+
+    // Objets débloqués (js/core/economy.js) : choix enregistrés réappliqués, menu reconstruit
+    window.addEventListener('economyChanged', () => {
+        let ps = null, bt = null;
+        try { ps = localStorage.getItem('pieceSet'); bt = localStorage.getItem('boardTheme'); } catch (e) { }
+        const prevSet = current.id;
+        current = byId(ps || current.id);
+        board = boardById(bt || board.id);
+        applyBoard();
+        setup();
+        if (current.id !== prevSet) refreshImages();
+    });
 
     window.addEventListener('languageChanged', render);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);

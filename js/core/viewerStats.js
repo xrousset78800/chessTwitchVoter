@@ -48,7 +48,7 @@ export function flush() {
         keepalive: true,
         headers: { 'Content-Type': 'application/json', ...twitchAuth.authHeaders() },
         body: JSON.stringify({ turns, displayName: user?.displayName, avatar: user?.avatar })
-    }).catch(e => console.warn('📊 Stats viewers non envoyées:', e.message));
+    }).then(r => r.ok ? r.json() : null).then(d => window.economy?.noteGain(d?.gain)).catch(e => console.warn('📊 Stats viewers non envoyées:', e.message));
     if (queue.length) timer = setTimeout(flush, FLUSH_MS);
 }
 
