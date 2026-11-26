@@ -229,8 +229,19 @@
     align-items: center;
     gap: 8px;
     color: var(--text-primary);
-    border: 1px solid rgba(16, 185, 129, 0.45);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
+
+/* Quitter la partie en cours (à droite de « Partie en cours ») */
+.nav__game-quit {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; margin-left: -4px; padding: 0;
+    background: transparent; border: 1px solid var(--border-subtle, #2b2420); border-radius: var(--radius-md, 3px);
+    color: var(--text-secondary, #a89a8c); cursor: pointer; font-size: 0.9rem;
+}
+.nav__game-quit:hover { color: var(--text-primary); border-color: var(--accent); }
+.nav__game-quit[hidden] { display: none; }
 
 .nav__link--game[hidden] {
     display: none;
@@ -281,7 +292,7 @@
 .nav__links .nav__link { position: relative; z-index: 1; }
 .nav__link:hover,
 .nav__link.is-active { background: transparent; }
-.nav__link--game.is-active { background: rgba(16, 185, 129, 0.18); }
+.nav__link--game.is-active { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 .nav__cursor {
     position: absolute;
     top: 0;

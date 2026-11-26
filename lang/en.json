@@ -1,5 +1,7 @@
 {
   "nav": {
+    "quit": "Leave the game",
+    "quitConfirm": "Leave the current game?",
     "rush": "Puzzle Rush",
     "mono": "Mono",
     "multi": "Multi",

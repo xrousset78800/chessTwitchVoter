@@ -1121,6 +1121,13 @@ function stopGamePolling() {
     updateUrlT();
 }
 
+/** Bouton « Quitter » du menu : on lâche la partie suivie (ou revue) et on revient à la liste des matchs */
+window.quitTournamentT = function () {
+    stopGamePolling();
+    endReviewT(false);
+    setFollowLayoutT(false);
+};
+
 /** Partie suivie terminée : « Partie en cours » quitte le menu, la suite est proposée sous les pronostics */
 function setEndedT(on) {
     stateT.ended = !!on;

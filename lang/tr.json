@@ -1,5 +1,7 @@
 {
   "nav": {
+    "quit": "Oyundan çık",
+    "quitConfirm": "Devam eden oyundan çıkılsın mı?",
     "rush": "Puzzle Rush",
     "mono": "Mono",
     "multi": "Multi",

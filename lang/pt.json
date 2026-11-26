@@ -1,5 +1,7 @@
 {
   "nav": {
+    "quit": "Sair da partida",
+    "quitConfirm": "Sair da partida em andamento?",
     "rush": "Puzzle Rush",
     "mono": "Mono",
     "multi": "Multi",

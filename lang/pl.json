@@ -1,5 +1,7 @@
 {
   "nav": {
+    "quit": "Opuść partię",
+    "quitConfirm": "Opuścić trwającą partię?",
     "rush": "Puzzle Rush",
     "mono": "Mono",
     "multi": "Multi",

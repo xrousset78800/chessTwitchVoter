@@ -1,5 +1,7 @@
 {
   "nav": {
+    "quit": "Partij verlaten",
+    "quitConfirm": "De huidige partij verlaten?",
     "rush": "Puzzle Rush",
     "mono": "Mono",
     "multi": "Multi",

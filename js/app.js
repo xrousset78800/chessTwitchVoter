@@ -598,8 +598,32 @@ function updateNavCurrent(pageName = document.body.dataset.page) {
         link.dataset.mode = cur.id;
         link.classList.toggle('is-active', cur.pages.includes(pageName));
     }
+    // Quitter : parties Nouveau et Tournoi (la 24/24 de la régie ne s'arrête pas d'ici)
+    const quit = document.getElementById('nav-game-quit');
+    if (quit) {
+        quit.hidden = !cur || !['game', 'tournament'].includes(cur.id);
+        quit.dataset.mode = cur?.id || '';
+    }
     if (wasHidden !== link.hidden) moveNavCursor();
 }
+
+/** Bouton « Quitter » du menu : après confirmation, arrête la partie et revient à sa page de départ */
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#nav-game-quit');
+    if (!btn) return;
+    e.preventDefault();
+    const mode = btn.dataset.mode;
+    if (!window.confirm(tr('nav.quitConfirm') !== 'nav.quitConfirm' ? tr('nav.quitConfirm') : 'Quitter la partie en cours ?')) return;
+    if (mode === 'tournament') {
+        window.quitTournamentT?.();
+        go('/tournament');
+    } else if (GameSession.running) {
+        GameSession.quit('#/new');
+    } else {
+        go('/new');
+    }
+    updateNavCurrent();
+});
 setInterval(() => updateNavCurrent(), 1000);
 
 /** Curseur du menu : glisse sous le lien actif (et suit le survol) */
