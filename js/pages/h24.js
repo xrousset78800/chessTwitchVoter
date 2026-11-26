@@ -507,6 +507,17 @@ const H24Page = {
             }
         });
         this.annotations = window.BoardAnnotations?.attach('h24-board', { draggable: false }) || null;
+        // Main ouverte sur les pièces qu'on peut jouer (camp au trait, quand c'est à nous), main fermée pendant la saisie
+        el.addEventListener('mouseover', (e) => {
+            const sq = e.target.closest?.('[data-square]');
+            if (!sq) return;
+            const piece = sq.querySelector('img[data-piece]')?.dataset.piece;
+            sq.classList.toggle('can-grab', !!piece && this.myTurn() && piece[0] === this.state?.game?.turn);
+        });
+        el.addEventListener('mousedown', (e) => {
+            if (e.button === 0 && e.target.closest?.('.can-grab')) document.body.classList.add('is-dragging-piece');
+        });
+        document.addEventListener('mouseup', () => document.body.classList.remove('is-dragging-piece'));
         if (typeof ResizeObserver === 'function') {
             new ResizeObserver(() => {
                 const w = el.clientWidth;

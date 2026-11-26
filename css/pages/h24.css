@@ -85,6 +85,7 @@
 .h24-card__votes .vote-ticker__pic { width: 20px; height: 20px; font-size: 0.65rem; }
 .h24-card__votes b { font-weight: 700; }
 .h24-card__votes span.h24-card__vc { color: var(--text-secondary); }
+#h24-board .can-grab, #h24-board .can-grab img { cursor: grab; }
 #h24-moves .moves-group button { opacity: 1; cursor: default; }
 #h24-moves .moves-group button:not(:disabled) { cursor: pointer; }
 #h24-moves .moves-group button.is-mine { outline: 2px solid var(--twitch-purple); outline-offset: 1px; }
