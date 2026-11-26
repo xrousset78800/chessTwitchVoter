@@ -306,7 +306,9 @@ const ShopPage = {
 
     find(own) {
         const items = catalog();
-        for (const cat of Object.keys(items)) {
+        // Rayon ouvert d'abord : un même id peut exister dans deux rayons (thème « blue » et échiquier « blue »)
+        for (const cat of [tab, ...Object.keys(items).filter(k => k !== tab)]) {
+            if (!items[cat]) continue;
             const it = items[cat].find(i => i.own === own);
             if (it) return { ...it, cat };
         }
