@@ -1,5 +1,5 @@
 /**
- * Stockfish côté serveur (bots de test du 24/24, adversaire fictif du Multi).
+ * Stockfish côté serveur (bots de test du 24/24, adversaire fictif du Multi, cotes des pronostics).
  * Un seul processus, lancé au premier besoin et relancé s'il s'arrête ; les recherches passent une par une.
  */
 const path = require('path');
@@ -45,4 +45,38 @@ async function botMove(fen, elo) {
     return BotEngine.uciToSan(chess, uci || legal[Math.floor(Math.random() * legal.length)]);
 }
 
-module.exports = { botMove, LEVELS: BotEngine.LEVELS, snapLevel: BotEngine.snapLevel, levelLabel: BotEngine.levelLabel };
+// Évaluations déjà faites (position -> score du point de vue des Blancs), et celles en cours
+const evalCache = new Map();
+const evalPending = new Map();
+const MAX_EVALS = 800;
+const posKey = fen => String(fen || '').split(' ').slice(0, 4).join(' ');
+
+/** Évaluation déjà connue (centipions, point de vue des Blancs ; mat = ±100000), sinon undefined */
+function cachedEval(fen) { return evalCache.get(posKey(fen)); }
+
+/** Évaluation de la position (centipions, point de vue des Blancs) ; null si impossible */
+function evaluate(fen) {
+    const k = posKey(fen);
+    if (evalCache.has(k)) return Promise.resolve(evalCache.get(k));
+    if (evalPending.has(k)) return evalPending.get(k);
+    const p = (async () => {
+        let chess;
+        try { chess = new Chess(fen); } catch { return null; }
+        let white = null;
+        if (chess.isCheckmate()) white = chess.turn() === 'w' ? -100000 : 100000;
+        else if (chess.isDraw() || chess.isStalemate()) white = 0;
+        else {
+            let s = null;
+            try { s = await ensure().evaluate(fen); } catch {}
+            if (s == null) return null;
+            white = chess.turn() === 'w' ? s : -s;
+        }
+        evalCache.set(k, white);
+        if (evalCache.size > MAX_EVALS) evalCache.delete(evalCache.keys().next().value);
+        return white;
+    })().finally(() => evalPending.delete(k));
+    evalPending.set(k, p);
+    return p;
+}
+
+module.exports = { botMove, evaluate, cachedEval, LEVELS: BotEngine.LEVELS, snapLevel: BotEngine.snapLevel, levelLabel: BotEngine.levelLabel };

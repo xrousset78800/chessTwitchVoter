@@ -784,7 +784,7 @@ input[type=range] {
 .tl-hint { margin: 0 0 8px; color: var(--text-muted); font-size: 0.76rem; }
 .tl-refresh { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; }
 .tl-refresh:hover { color: var(--accent); }
-.tl-grid { display: flex; flex-direction: column; gap: 8px; max-height: 560px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
+.tl-grid { display: flex; flex-direction: column; gap: 8px; max-height: max(360px, calc(100vh - 330px)); overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
 .tl-grid .tl-card { flex-shrink: 0; padding: 8px; gap: 8px; }
 .tl-grid .tl-card__board { flex-basis: 76px; width: 76px; }
 .tl-empty { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
@@ -841,7 +841,7 @@ input[type=range] {
 .tp-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); display: flex; gap: 6px; align-items: center; }
 .tp-label i { color: var(--accent); }
 .tp-guess { margin: 0; font-size: 0.95rem; color: var(--text-muted); }
-.tp-guess.is-set { color: var(--accent-green); font-weight: 700; }
+.tp-guess.is-set { color: var(--accent); font-weight: 700; }
 .tp-hint { margin: 0; font-size: 0.76rem; color: var(--text-muted); }
 .tp-picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .tp-picks button { padding: 6px 4px; font-size: 0.82rem; }
@@ -866,15 +866,37 @@ input[type=range] {
 .tp-clast p { margin: 0; font-size: 0.84rem; }
 #tLogCard[hidden] { display: none; }
 
-/* Échiquier : sélection du prono */
-.board-wrapper.tp-armed #liveBoardT [data-square] { cursor: pointer; }
-#liveBoardT .tp-from { box-shadow: inset 0 0 0 3px var(--accent); }
-#liveBoardT .tp-dest { position: relative; }
-#liveBoardT .tp-dest::after {
-    content: ''; position: absolute; inset: 37%; border-radius: 50%;
-    background: color-mix(in srgb, var(--accent) 70%, transparent); pointer-events: none;
+/* Prono : coups disponibles (même présentation que les autres échiquiers) */
+.tp-moves { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; max-height: 280px; overflow-y: auto; padding: 8px 6px 2px 0; scrollbar-width: thin; -webkit-user-select: none; user-select: none; }
+.tp-moves:empty { display: none; }
+.tp-moves .moves-group { padding: 6px; gap: 6px; min-height: 0; }
+.tp-moves .moves-group .piece-icon { font-size: 1.2rem; width: 22px; }
+.tp-moves .moves-group button {
+    position: relative; padding: 4px 8px; font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7); background: rgba(255, 255, 255, 0.03); border-color: var(--border-subtle);
 }
-#liveBoardT .tp-guess { box-shadow: inset 0 0 0 3px var(--accent-green); }
+.tp-moves .moves-group button.is-mine { color: #fff; background: color-mix(in srgb, var(--twitch-purple) 22%, transparent); border-color: var(--twitch-purple); outline: 2px solid var(--twitch-purple); outline-offset: 1px; }
+.tp-moves .moves-group button:disabled { opacity: 0.55; cursor: wait; }
+.tp-moves .moves-group button b {
+    position: absolute; top: -7px; right: -6px; z-index: 1; min-width: 16px; padding: 0 4px; border-radius: 8px;
+    font: 700 0.62rem/15px 'Inter', sans-serif; text-align: center; color: #fff; background: var(--twitch-purple);
+}
+#liveBoardT [data-square] img { touch-action: none; }
+
+/* Cotes du vote vainqueur */
+.tp-picks button small { display: block; margin-top: 1px; font: 600 0.7rem 'JetBrains Mono', monospace; opacity: 0.75; }
+.tl-pick button small { margin-left: 3px; font-size: 0.68rem; opacity: 0.75; }
+.tp-picks button.is-on small, .tl-pick button.is-on small { opacity: 1; }
+
+/* Colonne de gauche : bascule matchs en direct / tournois en cours */
+.t-sidetabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
+.t-sidetabs button {
+    display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 8px; border: 0; border-radius: 6px;
+    background: none; color: var(--text-secondary); font: 600 0.8rem 'Inter', sans-serif; cursor: pointer; white-space: nowrap;
+}
+.t-sidetabs button:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.04); }
+.t-sidetabs button[aria-selected="true"] { color: var(--text-primary); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 0 0 1px var(--accent); }
+#tEventsCard[hidden], #tLiveGames[hidden] { display: none; }
 
 @media (max-width: 480px) {
     .tl-grid { grid-template-columns: 1fr; }

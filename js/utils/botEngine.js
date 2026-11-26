@@ -72,7 +72,7 @@
          * Une recherche : { best, lines } (meilleur coup UCI, et les k meilleurs coups notés si k > 1).
          * Niveau sous le plancher avec k > 1 : pleine force, pour que la liste soit fiable.
          */
-        function run(fen, level, k = 1) {
+        function run(fen, level, k = 1, ms = 0) {
             const go = () => new Promise((resolve) => {
                 if (!started) {
                     started = true;
@@ -89,7 +89,7 @@
                 send('setoption name MultiPV value ' + k);
                 lines = new Map();
                 send('position fen ' + fen);
-                send('go movetime ' + (level >= 2400 ? 600 : 300));
+                send('go movetime ' + (ms || (level >= 2400 ? 600 : 300)));
                 const done = (best) => {
                     const ranked = [...lines.entries()].sort((a, b) => a[0] - b[0]).map(e => e[1]);
                     lines = null;
@@ -139,7 +139,13 @@
             return legal.length ? legal[Math.floor(Math.random() * legal.length)] : null;
         }
 
-        return { onLine, search, botMove };
+        /** Évaluation de la position (pleine force), du point de vue du camp au trait ; null si rien */
+        async function evaluate(fen, ms = 400) {
+            const res = await run(fen, 3000, 1, ms);
+            return res.lines[0]?.score ?? null;
+        }
+
+        return { onLine, search, botMove, evaluate };
     }
 
     /** Coups légaux d'une partie chess.js, en UCI */

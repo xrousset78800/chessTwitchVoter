@@ -33,9 +33,12 @@ function initTournamentBoard() {
     stateT.board = Chessboard('liveBoardT', {
         position: 'start',
         pieceTheme: p => window.pieceUrl(p),
-        draggable: false,
+        // Prono du prochain coup (tournamentPredict.js) : on fait glisser la pièce, le coup part, la pièce revient
+        draggable: true,
+        onDragStart: (src, piece) => !!window.tournamentPredict?.canDrag(piece),
+        onDrop: (from, to) => { window.tournamentPredict?.dropMove(from, to); return 'snapback'; },
     });
-    window.BoardAnnotations?.attach('liveBoardT');
+    stateT.annotations = window.BoardAnnotations?.attach('liveBoardT', { draggable: false }) || null;
     window.addEventListener('resize', () => stateT.board?.resize());
     // Les bandes autour de l'échiquier recopient la carte « Partie sélectionnée »
     const card = document.getElementById('playerWhiteT')?.closest('.live-card');

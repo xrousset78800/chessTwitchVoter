@@ -263,8 +263,8 @@
                             </div>
                         </div>
                         <ul class="home-tour__points">
-                            <li><i class="fas fa-crosshairs" aria-hidden="true"></i><span><strong data-i18n="home.tour.p1">Devine le prochain coup</strong><small data-i18n="home.tour.p1d">Clique le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.</small></span></li>
-                            <li><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="home.tour.p2">Choisis le vainqueur</strong><small data-i18n="home.tour.p2d">Blancs, nulle ou Noirs, à tout moment. Plus tu votes tôt, plus ça rapporte : gain plein jusqu'au 10e coup.</small></span></li>
+                            <li><i class="fas fa-crosshairs" aria-hidden="true"></i><span><strong data-i18n="home.tour.p1">Devine le prochain coup</strong><small data-i18n="home.tour.p1d">Joue le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.</small></span></li>
+                            <li><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="home.tour.p2">Choisis le vainqueur</strong><small data-i18n="home.tour.p2d">Blancs, nulle ou Noirs, à tout moment. La cote suit l'évaluation de la partie : miser sur l'outsider rapporte plus.</small></span></li>
                             <li><i class="fas fa-magnifying-glass" aria-hidden="true"></i><span><strong data-i18n="home.tour.p3">Tous les matchs au même endroit</strong><small data-i18n="home.tour.p3d">Les parties en cours avec les votes de la communauté, et la recherche par nom de joueur.</small></span></li>
                         </ul>
                     </div>
@@ -1394,9 +1394,15 @@
                 <div class="live-content">
 
                     <!-- ══ COL 1 : Tournoi ══ -->
-                    <div style="display:flex; flex-direction:column; gap:16px;">
+                    <div style="display:flex; flex-direction:column; gap:16px;" id="tSideCol">
 
-                        <div class="live-card">
+                        <!-- Bascule : matchs en direct / tournois en cours (js/core/tournamentPredict.js) -->
+                        <div class="t-sidetabs" role="tablist">
+                            <button type="button" role="tab" data-tside="live" aria-selected="true"><span class="tg-live-dot"></span> <span data-i18n="tlive.title">Matchs en direct</span></button>
+                            <button type="button" role="tab" data-tside="events" aria-selected="false"><i class="fas fa-chess-board"></i> <span data-i18n="ui.tour.events">Tournois en cours</span></button>
+                        </div>
+
+                        <div class="live-card" id="tEventsCard" hidden>
                             <div class="live-card__title" style="display:flex; justify-content:space-between; align-items:center;">
                                 <span><i class="fas fa-chess-board"></i> <span data-i18n="ui.tour.events">Tournois en cours</span></span>
                                 <button id="btnRefreshEvents" data-i18n-title="records.refresh" title="Actualiser" style="background:none; border:none; color:var(--accent-purple,#8b5cf6); cursor:pointer; font-size:0.85rem; padding:2px 4px;">

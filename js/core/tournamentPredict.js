@@ -9,17 +9,16 @@
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const PICKS = ['1-0', '1/2-1/2', '0-1'];
     const PICK_KEY = { '1-0': 'white', '1/2-1/2': 'draw', '0-1': 'black' };
-    const fullMove = fen => parseInt(String(fen || '').split(' ')[5], 10) || 1;
     const boardOf = fen => String(fen || '').split(' ').slice(0, 2).join(' ');
     const logged = () => !!window.twitchAuth?.isLoggedIn;
     const authHeaders = () => ({ 'Content-Type': 'application/json', ...(window.twitchAuth?.authHeaders?.() || {}) });
     const pageVisible = () => document.visibilityState === 'visible'
         && (document.getElementById('page-tournament')?.getClientRects().length ?? 0) > 0;
-    let rules = { move: { xp: 8, coins: 2 }, streak: { every: 5, xp: 25, coins: 10 }, winner: { xp: 25, coins: 10 }, winnerDraw: { xp: 40, coins: 20 }, winnerFull: 10, winnerFade: 40, winnerMin: 0.25 };
-    const winnerPct = fen => {
-        const mv = fullMove(fen), { winnerFull: full, winnerFade: fade, winnerMin: min } = rules;
-        return Math.round(100 * (mv <= full ? 1 : Math.max(min, 1 - (1 - min) * (mv - full) / Math.max(1, fade - full))));
-    };
+    let rules = { move: { xp: 8, coins: 2 }, streak: { every: 5, xp: 25, coins: 10 }, winner: { xp: 25, coins: 10 }, winnerDraw: { xp: 40, coins: 20 }, oddsMin: 0.2, oddsMax: 2 };
+    /** Cote du vote vainqueur (×1,4) : fixée par le serveur d'après l'évaluation Stockfish */
+    const fmtOdds = f => '×' + Number(f).toLocaleString(document.documentElement.lang || 'fr', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
+    const sanLocal = san => (window.Notation?.local ? window.Notation.local(san) : san);
 
     // ───────────── Matchs en direct ─────────────
     let liveGames = [];
@@ -65,7 +64,7 @@
         }
         const followed = stateT.polling && stateT.currentGame ? `${stateT.tournamentSlug}:${stateT.currentGame.id}` : null;
         grid.innerHTML = liveGames.map((g, i) => {
-            const gainPct = winnerPct(g.fen);
+            const odds = g.odds;
             const mine = myWinnerPicks[`${g.room.slug}:${g.id}`];
             const isFollowed = followed === `${g.room.slug}:${g.id}`;
             return `<article class="tl-card${isFollowed ? ' is-followed' : ''}" data-tl="${i}">
@@ -77,7 +76,7 @@
                     <div class="tl-card__actions">
                         <button type="button" class="tl-follow" data-tl-follow="${i}"><i class="fas fa-eye"></i> ${esc(isFollowed ? T('tlive.following', null, 'Suivie') : T('tlive.follow', null, 'Suivre'))}</button>
                         <div class="tl-pick" role="group" aria-label="${esc(T('predict.winnerTitle', null, 'Vainqueur'))}">
-                            ${PICKS.map(p => `<button type="button" data-tl-vote="${i}" data-pick="${p}" class="${mine === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]) + ' · ' + T('predict.gainNow', { pct: gainPct }, `${gainPct} %`))}">${p === '1/2-1/2' ? '½' : p}</button>`).join('')}
+                            ${PICKS.map(p => `<button type="button" data-tl-vote="${i}" data-pick="${p}" class="${mine === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]) + (odds ? ' · ' + T('predict.oddsNow', { odds: fmtOdds(odds[p]) }) : ''))}">${p === '1/2-1/2' ? '½' : p}${odds ? `<small>${fmtOdds(odds[p])}</small>` : ''}</button>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -115,7 +114,7 @@
 
     // ───────────── Pronostics sur la partie suivie ─────────────
     const myWinnerPicks = {};          // clé salle:partie -> pick (connu de cette session)
-    const pred = { key: null, move: null, winner: null, votes: null, stats: null, sel: null, busy: false };
+    const pred = { key: null, move: null, winner: null, f: null, odds: null, votes: null, stats: null, busy: false };
     const SINCE_KEY = 'cgPredictSince';
     const readSince = () => { try { return Number(localStorage.getItem(SINCE_KEY)) || 0; } catch { return 0; } };
     const writeSince = v => { try { localStorage.setItem(SINCE_KEY, String(v)); } catch { /* navigation privée */ } };
@@ -170,6 +169,8 @@
                     pred.key = c.key;
                     pred.move = d.move && boardOf(d.move.fen) === boardOf(stateT.lastFEN) ? d.move : null;
                     pred.winner = d.winner?.pick || null;
+                    pred.f = d.winner?.f ?? null;
+                    pred.odds = d.odds || null;
                     if (pred.winner) myWinnerPicks[c.key] = pred.winner;
                     pred.votes = d.votes;
                     pred.stats = d.stats;
@@ -196,11 +197,12 @@
         try {
             const d = await postJSON('/api/predict/winner', { room, game: gameId, pick });
             myWinnerPicks[key] = pick;
-            if (pred.key === key) { pred.winner = pick; pred.votes = d.votes; renderPredict(); }
+            const f = d.winner?.f;
+            if (pred.key === key) { pred.winner = pick; pred.f = f ?? null; if (d.odds) pred.odds = d.odds; pred.votes = d.votes; renderPredict(); }
             const lg = liveGames.find(g => `${g.room.slug}:${g.id}` === key);
-            if (lg) lg.votes = d.votes;
+            if (lg) { lg.votes = d.votes; if (d.odds) lg.odds = d.odds; }
             renderLive();
-            window.AppToast?.show(esc(T('predict.voted', { pick: T('predict.' + PICK_KEY[pick]) }, 'Vote enregistré')), 'success', 2500);
+            window.AppToast?.show(esc(T('predict.voted', { pick: T('predict.' + PICK_KEY[pick]) }, 'Vote enregistré') + (f ? ` (${fmtOdds(f)})` : '')), 'success', 2500);
         } catch (err) {
             window.AppToast?.show(esc(errText(err)), 'error', 3000);
         }
@@ -210,49 +212,70 @@
         window.AppToast?.show(esc(T('predict.login', null, 'Connecte-toi avec Twitch pour pronostiquer')), 'info', 3500);
     }
 
-    // Clic sur l'échiquier : pièce du camp au trait, puis case d'arrivée
-    const sqEl = sq => document.querySelector(`#liveBoardT [data-square="${sq}"]`);
-    function clearMarks(cls) { document.querySelectorAll(`#liveBoardT .${cls}`).forEach(e => e.classList.remove(cls)); }
-    function paintMarks() {
-        clearMarks('tp-from'); clearMarks('tp-dest'); clearMarks('tp-guess');
-        if (pred.sel) {
-            sqEl(pred.sel.from)?.classList.add('tp-from');
-            pred.sel.dests.forEach(sq => sqEl(sq)?.classList.add('tp-dest'));
+    // ───────────── Prono de coup : glisser la pièce sur l'échiquier, ou cliquer un coup de la liste ─────────────
+    const canGuess = () => { const c = current(); return !!c && !c.ended && !reviewT.game; };
+    /** Échiquier (liveTournament.js, onDragStart) : seules les pièces du camp au trait se déplacent */
+    function canDrag(piece) {
+        if (!canGuess() || pred.busy) return false;
+        if (!logged()) { askLogin(); return false; }
+        return piece?.[0] === (String(current().fen).split(' ')[1] === 'b' ? 'b' : 'w');
+    }
+    /** Échiquier (onDrop) : le coup part comme prono, la pièce revient à sa place */
+    function dropMove(from, to) {
+        const c = current();
+        if (!canGuess() || from === to) return;
+        let m = null;
+        try { m = new Chess(c.fen).move({ from, to, promotion: 'q' }); } catch { /* coup illégal */ }
+        if (m) sendGuess(m.from + m.to + (m.promotion || ''));
+    }
+    async function sendGuess(uci) {
+        const c = current();
+        if (!c || c.ended || pred.busy) return;
+        if (!logged()) { askLogin(); return; }
+        pred.busy = true;
+        renderMoves();
+        try {
+            const d = await postJSON('/api/predict/move', { room: c.room, game: c.g.id, round: c.round, slug: c.g.slug, fen: c.fen, uci });
+            pred.key = c.key;
+            pred.move = d.move;
+        } catch (err) {
+            window.AppToast?.show(esc(errText(err)), 'error', 3000);
         }
-        if (pred.move && !pred.sel) [pred.move.uci.slice(0, 2), pred.move.uci.slice(2, 4)].forEach(sq => sqEl(sq)?.classList.add('tp-guess'));
+        pred.busy = false;
+        renderPredict();
     }
 
-    async function onBoardClick(e) {
-        const square = e.target.closest('[data-square]')?.dataset.square;
+    /** Coups disponibles, groupés par pièce comme sur les autres échiquiers ; votes du chat en pastille */
+    function renderMoves() {
+        const box = document.querySelector('#tPredict .tp-moves');
+        if (!box) return;
         const c = current();
-        if (!square || !c || c.ended || reviewT.game || pred.busy) return;
-        if (!logged()) { askLogin(); return; }
-        const chess = stateT.chess;
-        if (pred.sel && pred.sel.dests.includes(square)) {
-            const from = pred.sel.from;
-            const piece = chess.get(from);
-            const promo = piece?.type === 'p' && (square[1] === '8' || square[1] === '1') ? 'q' : '';
-            pred.sel = null;
-            pred.busy = true;
-            paintMarks();
-            try {
-                const d = await postJSON('/api/predict/move', { room: c.room, game: c.g.id, round: c.round, slug: c.g.slug, fen: c.fen, uci: from + square + promo });
-                pred.key = c.key;
-                pred.move = d.move;
-                renderPredict();
-            } catch (err) {
-                window.AppToast?.show(esc(errText(err)), 'error', 3000);
-            }
-            pred.busy = false;
-            paintMarks();
-            return;
+        let moves = [];
+        if (c && !c.ended && logged()) { try { moves = new Chess(c.fen).moves({ verbose: true }); } catch { moves = []; } }
+        const turn = String(c?.fen).split(' ')[1] === 'b' ? 'b' : 'w';
+        const counts = {};
+        if (c && chat.key === c.key && boardOf(chat.fen) === boardOf(c.fen)) for (const e of chatTally()) counts[e.uci] = e.n;
+        const mine = pred.move && boardOf(pred.move.fen) === boardOf(c?.fen) ? pred.move.uci : null;
+        const locked = pred.busy || !!reviewT.game;
+        const sig = JSON.stringify([c?.fen, mine, locked, counts, document.documentElement.lang]);
+        if (box.dataset.sig === sig) return;
+        box.dataset.sig = sig;
+        const groups = { P: [], N: [], B: [], R: [], Q: [], K: [], O: [] };
+        for (const m of moves) {
+            const castle = m.flags.includes('k') || m.flags.includes('q');
+            groups[castle ? 'O' : m.piece.toUpperCase()].push({ uci: m.from + m.to + (m.promotion || ''), san: m.san.replace(/[+#]/g, '') });
         }
-        const piece = chess.get(square);
-        if (piece && piece.color === chess.turn() && square !== pred.sel?.from) {
-            const dests = chess.moves({ square, verbose: true }).map(m => m.to);
-            pred.sel = dests.length ? { from: square, dests } : null;
-        } else pred.sel = null;
-        paintMarks();
+        box.innerHTML = Object.entries(groups).filter(([, l]) => l.length).map(([piece, l]) => `
+            <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : PIECE_ICONS[turn][piece]}</span>${
+                l.map(m => `<li><button type="button" data-tp-move="${esc(m.uci)}" class="${mine === m.uci ? 'is-mine' : ''}" ${locked ? 'disabled' : ''}>${esc(sanLocal(m.san))}${counts[m.uci] ? `<b>${counts[m.uci]}</b>` : ''}</button></li>`).join('')
+            }</ul>`).join('');
+    }
+    /** Survol d'un coup de la liste : flèche d'aperçu sur l'échiquier */
+    function hoverMove(uci) {
+        const c = current();
+        let m = null;
+        if (uci && c) { try { m = new Chess(c.fen).move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || 'q' }); } catch { m = null; } }
+        stateT.annotations?.setHover?.(m);
     }
 
     function renderPredict() {
@@ -260,9 +283,8 @@
         if (!card) return;
         const c = current();
         card.hidden = !c;
-        document.querySelector('#page-tournament .board-wrapper')?.classList.toggle('tp-armed', !!c && !c.ended && logged());
         if (!c) return;
-        if (pred.key !== c.key) { pred.key = c.key; pred.move = null; pred.winner = myWinnerPicks[c.key] || null; pred.votes = null; }
+        if (pred.key !== c.key) { pred.key = c.key; pred.move = null; pred.winner = myWinnerPicks[c.key] || null; pred.f = null; pred.odds = null; pred.votes = null; }
         const body = card.querySelector('.tp-body');
         if (!logged()) {
             body.innerHTML = `<p class="tp-hint">${esc(T('predict.loginText', null, 'Devine le prochain coup et le vainqueur pour gagner de l\'XP et des pions.'))}</p>
@@ -277,20 +299,20 @@
             <div class="tp-section">
                 <div class="tp-label"><i class="fas fa-crosshairs"></i> ${esc(T('predict.moveTitle', null, 'Prochain coup'))}</div>
                 <p class="tp-guess${pred.move ? ' is-set' : ''}">${esc(moveLine)}</p>
-                ${c.ended ? '' : `<p class="tp-hint">${esc(T('predict.moveHint', null, 'Clique une pièce du camp au trait sur l\'échiquier, puis sa case d\'arrivée.'))}</p>`}
+                ${c.ended ? '' : `<p class="tp-hint">${esc(T('predict.moveHint', null, 'Fais glisser une pièce sur l\'échiquier, ou clique un coup de la liste.'))}</p><div class="tp-moves"></div>`}
             </div>
             <div class="tp-section">
                 <div class="tp-label"><i class="fas fa-trophy"></i> ${esc(T('predict.winnerTitle', null, 'Vainqueur'))}</div>
                 <div class="tp-picks" role="group">
-                    ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" ${c.ended ? 'disabled' : ''}>${esc(T('predict.' + PICK_KEY[p]))}</button>`).join('')}
+                    ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" ${c.ended ? 'disabled' : ''}>${esc(T('predict.' + PICK_KEY[p]))}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
                 </div>
                 ${votesHTML(pred.votes)}
-                ${c.ended ? '' : `<p class="tp-hint">${esc(T('predict.winnerOpen', { pct: winnerPct(c.fen), full: rules.winnerFull, fade: rules.winnerFade, min: Math.round(rules.winnerMin * 100) }))}</p>`}
+                ${c.ended ? '' : `<p class="tp-hint">${esc(T('predict.oddsHint') + (pred.winner && pred.f ? ' ' + T('predict.yourOdds', { odds: fmtOdds(pred.f) }) : ''))}</p>`}
             </div>
             <p class="tp-stats">${st ? esc(T('predict.stats', { hits: st.moveHits, total: st.moveTotal, streak: st.streak, whits: st.winnerHits, wtotal: st.winnerTotal })) : ''}</p>
             <details class="tp-rules"><summary>${esc(T('predict.rulesTitle', null, 'Barème'))}</summary>
-                <p>${esc(T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, full: rules.winnerFull, fade: rules.winnerFade, min: Math.round(rules.winnerMin * 100) }))}</p></details>`;
-        paintMarks();
+                <p>${esc(T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, omin: fmtOdds(rules.oddsMin ?? 0.2), omax: fmtOdds(rules.oddsMax ?? 2) }))}</p></details>`;
+        renderMoves();
     }
 
     // ───────────── Vote du chat Twitch sur le prochain coup ─────────────
@@ -350,6 +372,7 @@
     }
     const pct = (n, t) => t ? Math.round(n * 100 / t) : 0;
     function renderChat() {
+        renderMoves();
         const el = document.querySelector('#tPredict .tp-chat');
         if (!el) return;
         const c = current();
@@ -374,7 +397,21 @@
                 ${last.names.length ? `<p class="tp-hint">${esc(T('predict.chatWinners', { names: last.names.join(', ') }))}</p>` : ''}
             </div>` : ''}`;
     }
-    window.tournamentPredict = { chatVote };
+    window.tournamentPredict = { chatVote, canDrag, dropMove };
+
+    // ───────────── Colonne de gauche : tournois en cours / matchs en direct ─────────────
+    const SIDE_KEY = 'cgTourSide';
+    function setSide(side, save) {
+        const col = document.getElementById('tSideCol');
+        if (!col) return;
+        if (side !== 'events') side = 'live';
+        col.querySelectorAll('[data-tside]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tside === side)));
+        const ev = document.getElementById('tEventsCard'), lv = document.getElementById('tLiveGames');
+        if (ev) ev.hidden = side !== 'events';
+        if (lv) lv.hidden = side !== 'live';
+        if (save) { try { localStorage.setItem(SIDE_KEY, side); } catch { /* navigation privée */ } }
+        if (side === 'live') loadLive();
+    }
 
     // ───────────── Journal réservé à la régie ─────────────
     let regie = false;
@@ -404,11 +441,23 @@
                 if (g) voteWinner(g.room.slug, g.id, vote.dataset.pick, `${g.room.slug}:${g.id}`);
                 return;
             }
+            const side = e.target.closest('[data-tside]');
+            if (side) { setSide(side.dataset.tside, true); return; }
+            const mv = e.target.closest('[data-tp-move]');
+            if (mv) { if (!mv.disabled) sendGuess(mv.dataset.tpMove); return; }
             const pick = e.target.closest('[data-tp-pick]');
             if (pick) { const c = current(); if (c) voteWinner(c.room, c.g.id, pick.dataset.tpPick, c.key); return; }
             if (e.target.closest('[data-tp-login]')) window.twitchAuth?.login();
         });
-        document.getElementById('liveBoardT')?.addEventListener('click', onBoardClick);
+        // Survol d'un coup de la liste : flèche d'aperçu
+        let hovered = null;
+        page.addEventListener('pointerover', e => {
+            const uci = e.target.closest('[data-tp-move]:not(:disabled)')?.dataset.tpMove || null;
+            if (uci !== hovered) { hovered = uci; hoverMove(uci); }
+        });
+        let side = 'live';
+        try { side = localStorage.getItem(SIDE_KEY) || 'live'; } catch { /* navigation privée */ }
+        setSide(side, false);
         document.getElementById('btnRefreshLive')?.addEventListener('click', () => loadLive(true));
         document.getElementById('eventSearchInput')?.addEventListener('input', () => { loadLive(); renderPlayerHits(); });
 
@@ -421,14 +470,13 @@
                 if (stateT.lastFEN !== lastFen && c?.key === lastKey && lastFen && stateT.lastFEN) chatResolve(lastKey, lastFen, stateT.lastFEN);
                 else if ((c?.key || null) !== lastKey) chatReset(c);
                 if (stateT.lastFEN !== lastFen && pred.move && boardOf(pred.move.fen) !== boardOf(stateT.lastFEN)) pred.move = null;
-                pred.sel = null;
                 lastFen = stateT.lastFEN;
                 const keyChanged = (c?.key || null) !== lastKey;
                 lastKey = c?.key || null;
                 renderPredict();
                 if (keyChanged) { renderLive(); pollState(); }
                 renderChat();
-            } else if (c) paintMarks();
+            }
             if (tick % 3 === 0) renderChat();
             if (++tick % 5 === 0) pollState();
             if (tick % 30 === 0 && pageVisible()) loadLive();

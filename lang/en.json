@@ -385,9 +385,9 @@
       "text": "Games from ongoing chess.com tournaments, live on the site. Pick a game, follow it move by move and guess what the players will play.",
       "cta": "See live games",
       "p1": "Guess the next move",
-      "p1d": "Click the move on the board before the player does. Got it: XP and pawns, with a bonus every 5 correct guesses in a row.",
+      "p1d": "Play the move on the board before the player does. Got it: XP and pawns, with a bonus every 5 correct guesses in a row.",
       "p2": "Pick the winner",
-      "p2d": "White, draw or Black, at any time. The earlier you vote, the more it pays: full reward until move 10.",
+      "p2d": "White, draw or Black, at any time. The odds follow the evaluation of the game: backing the underdog pays more.",
       "p3": "Every game in one place",
       "p3d": "Ongoing games with the community votes, and search by player name."
     },
@@ -1546,15 +1546,16 @@
     "title": "Predictions",
     "moveTitle": "Next move",
     "winnerTitle": "Winner",
-    "moveHint": "Click a piece of the side to move on the board, then its target square. You can change your mind until the move is played.",
+    "moveHint": "Drag a piece of the side to move on the board, or click a move in the list. You can change your mind until the move is played.",
     "yourGuess": "Your guess: {san}",
     "noGuess": "No guess for this move yet.",
     "white": "White",
     "draw": "Draw",
     "black": "Black",
     "votes": "{n} vote(s)",
-    "winnerOpen": "Voting open until the end · current reward {pct}% (full until move {full}, then decreasing to {min}% at move {fade})",
-    "gainNow": "reward {pct}%",
+    "oddsHint": "Odds from the Stockfish evaluation of the position: the least likely result pays the most. Your odds are locked when you vote.",
+    "oddsNow": "odds {odds}",
+    "yourOdds": "Your odds: {odds}.",
     "voted": "Vote saved: {pick}",
     "stats": "{hits}/{total} moves guessed · streak {streak} · winners {whits}/{wtotal}",
     "loginText": "Guess the next move and the winner to earn XP and pawns.",
@@ -1569,6 +1570,6 @@
     "moved": "The position changed, make your guess again",
     "ended": "Game over",
     "rulesTitle": "Scoring",
-    "rules": "Correct move: +{xp} XP and {coins} pawns. Every {every} correct guesses in a row: +{sxp} XP and {scoins} more pawns. Correct winner: +{wxp} XP and {wcoins} pawns (draw: +{dxp} XP and {dcoins} pawns), full reward if you vote before move {full}, then decreasing to {min}% at move {fade}. Pawns count toward the daily cap."
+    "rules": "Correct move: +{xp} XP and {coins} pawns. Every {every} correct guesses in a row: +{sxp} XP and {scoins} more pawns. Correct winner: +{wxp} XP and {wcoins} pawns (draw: +{dxp} XP and {dcoins} pawns), multiplied by the odds when you voted ({omin} to {omax}, from the Stockfish evaluation). Pawns count toward the daily cap."
   }
 }

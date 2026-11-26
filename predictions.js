@@ -1,8 +1,8 @@
 /**
  * Pronostics sur les parties de tournoi chess.com suivies sur /tournament :
  *   - deviner le prochain coup de la partie (un prono par position, modifiable tant que le coup n'est pas joué) ;
- *   - désigner le vainqueur (1-0, ½-½, 0-1) jusqu'à la fin de la partie : gain plein jusqu'au coup
- *     RULES.predict.winnerFull, puis dégressif jusqu'à winnerMin au coup winnerFade (coup du dernier vote).
+ *   - désigner le vainqueur (1-0, ½-½, 0-1) jusqu'à la fin de la partie, avec une cote tirée de
+ *     l'évaluation Stockfish au moment du vote (le résultat improbable rapporte plus, le favori moins).
  * Tout est vérifié ici, avec les données de la salle chess.com (cache commun avec le proxy) :
  * un prono n'est accepté que sur la position en cours, et il est jugé sur le coup réellement joué.
  * Gains (XP / pions, dans le plafond quotidien) : RULES.predict de economy.js.
@@ -16,7 +16,6 @@ const UCI = /^[a-h][1-8][a-h][1-8][qrbn]?$/;
 const PICKS = ['1-0', '1/2-1/2', '0-1'];
 
 const boardOf = fen => String(fen || '').split(' ').slice(0, 2).join(' ');   // pièces + trait
-const fullMove = fen => parseInt(String(fen || '').split(' ')[5], 10) || 1;
 const normResult = r => (r === '½-½' ? '1/2-1/2' : r);
 
 function applyUci(fen, uci) {
@@ -27,16 +26,40 @@ function applyUci(fen, uci) {
     } catch { return null; }
 }
 
-module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonStore, economy, fetchRoom, fetchGame }) {
+module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonStore, economy, fetchRoom, fetchGame, evaluate, cachedEval }) {
     const store = jsonStore(path.join(dataDir, 'predictions.json'), () => ({}));
     for (const sig of ['SIGTERM', 'SIGINT']) process.once(sig, () => store.flush());
     const R = () => economy.RULES.predict;
-    /** Part du gain « vainqueur » selon le coup auquel le vote a été donné */
-    const winnerFactor = mv => {
-        const { winnerFull: full = 10, winnerFade: fade = 40, winnerMin: min = 0.25 } = R();
-        if (!mv || mv <= full) return 1;
-        return Math.max(min, 1 - (1 - min) * (mv - full) / Math.max(1, fade - full));
-    };
+    /**
+     * Cotes des trois résultats d'après l'évaluation (centipions, point de vue des Blancs).
+     * Score attendu des Blancs E = 1 / (1 + 10^(-cp/400)) : cote Blancs 2(1-E), Noirs 2E,
+     * nulle 1 + 2|E - 0,5| (plus la partie penche, moins la nulle est probable). Sans évaluation : ×1.
+     */
+    function oddsOf(cp) {
+        if (cp == null || !Number.isFinite(cp)) return null;
+        const { oddsMin: lo = 0.2, oddsMax: hi = 2 } = R();
+        const E = 1 / (1 + 10 ** (-Math.max(-2000, Math.min(2000, cp)) / 400));
+        const f = x => Math.round(Math.max(lo, Math.min(hi, x)) * 10) / 10;
+        return { '1-0': f(2 * (1 - E)), '1/2-1/2': f(1 + 2 * Math.abs(E - 0.5)), '0-1': f(2 * E) };
+    }
+    /** Évaluation, sans attendre plus de ms (moteur partagé avec les bots) */
+    async function evalOf(fen, ms = 2500) {
+        if (!evaluate || !fen) return null;
+        const known = cachedEval?.(fen);
+        if (known !== undefined) return known;
+        return Promise.race([evaluate(fen).catch(() => null), new Promise(r => setTimeout(() => r(null), ms))]);
+    }
+    const oddsCached = fen => { const v = cachedEval?.(fen); return v === undefined ? null : oddsOf(v); };
+    /** Évalue en arrière-plan les positions pas encore connues (liste des matchs en direct), une à une */
+    let warming = false;
+    async function warm(fens) {
+        if (warming || !evaluate) return;
+        warming = true;
+        try {
+            const todo = [...new Set(fens.filter(f => f && cachedEval?.(f) === undefined))].slice(0, 80);
+            for (const fen of todo) await evaluate(fen).catch(() => null);
+        } finally { warming = false; }
+    }
 
     const user = login => store.data[login] ||= { moves: {}, winners: {}, results: [] };
     const statsOf = login => {
@@ -148,7 +171,7 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             if (hit) {
                 st.predictWinnerHits = (st.predictWinnerHits || 0) + 1;
                 const g = result === '1/2-1/2' ? R().winnerDraw : R().winner;
-                const f = winnerFactor(w.mv);
+                const f = Number.isFinite(w.f) ? w.f : 1;
                 gain = economy.grant(login, 'predict', { xp: Math.max(1, Math.round(g.xp * f)), coins: Math.max(1, Math.round(g.coins * f)), capped: true, key: `pw:${key}` });
             }
             pushResult(login, { kind: 'winner', key, at: now, hit, pick: w.pick, result, names: w.names, gain: gain && { xp: gain.xp, coins: gain.coins } });
@@ -169,7 +192,8 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             const since = Number(req.query.since) || 0;
             res.json({
                 move: u.moves[key] ? { fen: u.moves[key].fen, uci: u.moves[key].uci, san: u.moves[key].san } : null,
-                winner: u.winners[key] ? { pick: u.winners[key].pick } : null,
+                winner: u.winners[key] ? { pick: u.winners[key].pick, f: u.winners[key].f ?? null } : null,
+                odds: await currentOdds(room, gameId),
                 votes: tally(key),
                 results: u.results.filter(r => r.at > since),
                 stats: publicStats(login),
@@ -178,6 +202,15 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             });
         } catch (err) { fail(res, err); }
     });
+
+    async function currentOdds(room, gameId) {
+        if (!room || !gameId) return null;
+        try {
+            const { game } = await findGame(room, gameId);
+            if (game.result && game.result !== '*') return null;
+            return oddsOf(await evalOf(game.currentFEN));
+        } catch { return null; }
+    }
 
     app.post('/api/predict/move', requireTwitch, async (req, res) => {
         try {
@@ -212,12 +245,14 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             const key = `${room}:${gameId}`;
             const names = [game.white?.preferredShortName, game.black?.preferredShortName].map(n => str(n, 40));
             const prev = user(login).winners[key]?.pick;
-            // Changer d'avis : le gain suit le coup du dernier vote
-            const mv = prev === pick ? (user(login).winners[key].mv || fullMove(game.currentFEN)) : fullMove(game.currentFEN);
-            user(login).winners[key] = { room, gameId, pick, names, mv, at: Date.now() };
+            // Cote du moment du vote ; revoter le même résultat garde la cote déjà obtenue
+            const odds = oddsOf(await evalOf(game.currentFEN));
+            const kept = prev === pick ? user(login).winners[key].f : undefined;
+            const f = Number.isFinite(kept) ? kept : (odds ? odds[pick] : 1);
+            user(login).winners[key] = { room, gameId, pick, names, f, at: Date.now() };
             store.save();
             bump(key, pick, prev);
-            res.json({ winner: { pick }, votes: tally(key) });
+            res.json({ winner: { pick, f }, votes: tally(key), odds });
         } catch (err) { fail(res, err); }
     });
 
@@ -244,5 +279,5 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
         tallyCache.map.set(key, t);
     };
 
-    return { resolve, store, tally };
+    return { resolve, store, tally, oddsCached, warm };
 };

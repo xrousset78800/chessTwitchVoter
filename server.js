@@ -349,9 +349,11 @@ app.get('/api/regie', requireTwitch, (req, res) => {
 app.get('/api/tournament/live', async (req, res) => {
     try {
         const games = await liveGamesList();
+        predictions?.warm(games.map(g => g.fen));      // cotes des positions pas encore évaluées, en arrière-plan
         res.json({
             at: liveGamesLast?.at || Date.now(),
-            games: games.map(g => ({ ...g, votes: predictions ? predictions.tally(`${g.room.slug}:${g.id}`) : null })),
+            games: games.map(g => ({ ...g, votes: predictions ? predictions.tally(`${g.room.slug}:${g.id}`) : null,
+                odds: predictions ? predictions.oddsCached(g.fen) : null })),
         });
     } catch (err) {
         res.status(err.status || 500).json({ error: err.message });
@@ -578,6 +580,8 @@ predictions = require('./predictions')({
     app, requireTwitch, dataDir: DATA_DIR, jsonStore: require('./stats').jsonStore, economy,
     fetchRoom: fetchChessEventRoom,
     fetchGame: (room, round, game) => fetchChessEventGame(room, round, game).then(g => g.moves),
+    evaluate: fen => require('./stockfish').evaluate(fen),
+    cachedEval: fen => require('./stockfish').cachedEval(fen),
 });
 const stats = require('./stats')({ app, requireTwitch, dataDir: DATA_DIR, rushRecords: () => rushRecords, economy });
 
