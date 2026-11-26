@@ -88,9 +88,10 @@ const AchievementsPage = {
         if (!rules) {
             fetch('/api/economy/rules').then(r => r.json()).then(d => { rules = d.rules; if (isActive()) this.render(); }).catch(() => {});
         }
-        if (!root.dataset.claimBound) {
-            root.dataset.claimBound = '1';
-            root.addEventListener('click', e => {
+        const page = document.getElementById('page-achievements') || root;
+        if (!page.dataset.claimBound) {
+            page.dataset.claimBound = '1';
+            page.addEventListener('click', e => {
                 const b = e.target.closest('[data-ach-claim], [data-ach-claim-all]');
                 if (b) this.claim(b.dataset.achClaimAll != null ? window.achievements.toClaim() : [b.dataset.achClaim], b);
             });
@@ -129,10 +130,14 @@ const AchievementsPage = {
         const doneCount = defs.list.filter(d => unlocked[d.id]).length;
         const pending = new Set(window.achievements.toClaim());
 
-        root.innerHTML = levelBlock(acc) +
-            `<div class="ach-summary">${esc(t('count', { n: doneCount, total }))}`
-            + (pending.size ? ` <button type="button" class="btn btn--sm btn--primary ach-claim-all" data-ach-claim-all><i class="fas fa-gift"></i> ${esc(t('claimAll', { n: pending.size }))}</button>` : '')
-            + `</div>` +
+        // En haut à droite, à côté du titre : niveau, compteur de succès, « Tout récupérer »
+        const top = document.getElementById('achievements-top');
+        const topHTML = levelBlock(acc)
+            + `<div class="ach-summary"><span>${esc(t('count', { n: doneCount, total }))}</span>`
+            + (pending.size ? `<button type="button" class="btn btn--sm btn--primary ach-claim-all" data-ach-claim-all><i class="fas fa-gift"></i> ${esc(t('claimAll', { n: pending.size }))}</button>` : '')
+            + `</div>`;
+        if (top) top.innerHTML = topHTML;
+        root.innerHTML = (top ? '' : topHTML) +
             defs.categories.map(cat => {
                 const items = defs.list.filter(d => d.cat === cat);
                 const n = items.filter(d => unlocked[d.id]).length;
@@ -141,7 +146,7 @@ const AchievementsPage = {
                     <ul class="ach-grid">${items.map(d => card(d, unlocked[d.id], stats, pending.has(d.id))).join('')}</ul>
                 </section>`;
             }).join('');
-        root.querySelector('[data-ach-login]')?.addEventListener('click', () => window.twitchAuth?.login());
+        (top || root).querySelector('[data-ach-login]')?.addEventListener('click', () => window.twitchAuth?.login());
     },
 };
 

@@ -39,14 +39,28 @@
 .nav__level-lv { color: var(--accent); }
 .nav__level-coins { color: var(--text-secondary); }
 
+/* ----- En-tête : titre à gauche, niveau + compteur à droite ----- */
+
+.ach-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px 28px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+.ach-header__text { flex: 1 1 380px; min-width: 0; }
+.ach-header__text .browse__desc { margin: 0; }
+.ach-top { flex: 0 1 440px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ach-top:empty { display: none; }
+
 /* ----- Niveau ----- */
 
 .ach-level {
     display: flex;
     align-items: center;
-    gap: 20px;
-    padding: 18px 20px;
-    margin-bottom: 16px;
+    gap: 14px;
+    padding: 10px 14px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
     background: var(--bg-card);
@@ -61,16 +75,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     flex: none;
     border-radius: 50%;
     background: var(--gradient-hero);
     color: var(--on-accent);
     line-height: 1;
 }
-.ach-level__badge span { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.ach-level__badge b { font-family: 'Chakra Petch', sans-serif; font-size: 1.6rem; }
+.ach-level__badge span { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.ach-level__badge b { font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; }
 
 .ach-level__main { flex: 1; min-width: 0; }
 .ach-level__bar, .ach-card__progress {
@@ -85,16 +99,26 @@
     border-radius: inherit;
     background: var(--accent);
 }
-.ach-level__xp { margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
+.ach-level__xp { margin-top: 5px; font-size: 0.74rem; color: var(--text-muted); }
 
 .ach-level__stat { display: flex; flex-direction: column; align-items: flex-end; }
-.ach-level__stat b { font-family: 'Chakra Petch', sans-serif; font-size: 1.25rem; color: var(--text-primary); }
-.ach-level__stat span { font-size: 0.75rem; color: var(--text-muted); }
+.ach-level__stat b { font-family: 'Chakra Petch', sans-serif; font-size: 1.05rem; color: var(--text-primary); white-space: nowrap; }
+.ach-level__stat span { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
+.ach-level--guest { padding: 12px 14px; }
+.ach-level--guest p { font-size: 0.82rem; }
 
-.ach-summary { margin: 0 0 20px; color: var(--text-secondary); font-size: 0.9rem; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.ach-claim-all { margin-left: auto; }
-.ach-card__claim { margin-top: 8px; }
-.ach-card__claim small { opacity: 0.85; font-weight: 600; margin-left: 4px; }
+.ach-summary { margin: 0; padding: 0 2px; color: var(--text-secondary); font-size: 0.82rem; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-height: 28px; }
+.ach-claim-all, .ach-card__claim { padding: 5px 12px; font-size: 0.78rem; gap: 6px; border-radius: 999px; }
+.ach-card__claim {
+    margin-top: 8px;
+    max-width: 100%;
+    white-space: normal;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    text-align: left;
+    row-gap: 0;
+}
+.ach-card__claim small { opacity: 0.85; font-weight: 600; font-size: 0.7rem; white-space: nowrap; }
 .ach-card.is-claimable { border-color: var(--accent); }
 
 /* ----- Catégories et cartes ----- */
@@ -172,6 +196,10 @@
     border: 1px solid var(--tier);
     color: var(--tier);
     font-size: 0.72rem;
+}
+
+@media (max-width: 860px) {
+    .ach-top { flex-basis: 100%; }
 }
 
 @media (max-width: 640px) {
