@@ -34,7 +34,7 @@
 }
 .live-badge.idle    { background: rgba(127, 115, 107,0.3); color: var(--text-secondary, #b9aea6); border: 1px solid #2b2420; }
 .live-badge.polling { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
-.live-badge.live    { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.live-badge.live    { background: color-mix(in srgb, var(--accent, #ff8a3d) 15%, transparent); color: var(--accent, #ff8a3d); border: 1px solid color-mix(in srgb, var(--accent, #ff8a3d) 35%, transparent); }
 .live-badge.ended   { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
 
 .live-badge .dot {
@@ -706,7 +706,7 @@ input[type=range] {
 
 /* ── Menu Phantom dans l'en-tête (Live, Tournoi) ── */
 .live-phantom-menu { margin-left: auto; }
-.live-phantom-menu.is-connected .phantom-menu__dot { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
+.live-phantom-menu.is-connected .phantom-menu__dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
 .live-phantom-menu .phantom-menu__panel { width: 300px; }
 .live-phantom-menu .phantom-menu__panel > * + * { margin-top: 10px; }
 .live-phantom-menu .btn-connect { width: 100%; }
@@ -898,6 +898,35 @@ input[type=range] {
 .t-sidetabs button[aria-selected="true"] { color: var(--text-primary); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 0 0 1px var(--accent); }
 #tEventsCard[hidden], #tLiveGames[hidden] { display: none; }
 
+/* ── Tournois : plus d'en-tête de page, titre à gauche et outils à droite ── */
+.t-sidehead { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; }
+.t-sidehead .live-header__title { margin: 0; font-size: 1.25rem; line-height: 1.2; }
+.t-righttools { display: flex; align-items: center; gap: 8px; min-height: 34px; flex-wrap: wrap; }
+.t-righttools .live-phantom-menu { margin-left: auto; }
+.t-righttools .phantom-menu__panel { left: auto; right: 0; }
+
+/* ── Matchs en direct : filtre et vue compacte ── */
+.tl-tools { display: flex; gap: 6px; margin-bottom: 8px; }
+.tl-search { flex: 1; min-width: 0; box-sizing: border-box; margin: 0; }
+.tl-view {
+    flex-shrink: 0; width: 34px; cursor: pointer; border-radius: 4px;
+    border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary);
+}
+.tl-view:hover, .tl-view[aria-pressed="true"] { border-color: var(--accent); color: var(--text-primary); }
+.tl-grid.is-compact { gap: 4px; }
+.tl-grid .tl-row { flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 5px 8px; }
+.tl-row__main {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;
+    padding: 0; border: none; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.tl-row__main:hover .tl-player__name { color: var(--accent); }
+.tl-row .tl-player { font-size: 0.8rem; }
+.tl-row .tl-pick { margin-left: 0; }
+.tl-row .tl-pick button { padding: 2px 5px; font-size: 0.72rem; }
+.tl-row .tl-votes { flex-basis: 100%; margin: 0; }
+.tl-row .tl-votes__bar { height: 3px; }
+.tl-row .tl-votes__n, .tl-row .tl-votes.is-empty { display: none; }
+
 @media (max-width: 480px) {
     .tl-grid { grid-template-columns: 1fr; }
     .tl-card__board { flex-basis: 80px; width: 80px; }
@@ -905,12 +934,12 @@ input[type=range] {
 
 /* ── Tournois : échiquier agrandi (page plus large, hauteur limitée à l'écran) ── */
 @media (min-width: 901px) {
-    #page-tournament .live-header, #page-tournament .live-content { max-width: 1480px; }
+    #page-tournament .live-content { max-width: 1480px; }
     #page-tournament .live-content { grid-template-columns: 320px minmax(0, 1fr) 300px; }
-    #page-tournament .board-wrapper > div:first-child { max-width: min(780px, max(320px, calc(100vh - 250px))); }
+    #page-tournament .board-wrapper > div:first-child { max-width: min(780px, max(320px, calc(100vh - 205px))); }
     #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: minmax(0, 1fr) 300px; }
     #page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child,
     #page-tournament .live-content.t-following:not(.t-list-open) .board-wrapper > div:first-child {
-        max-width: min(880px, max(320px, calc(100vh - 250px)));
+        max-width: min(880px, max(320px, calc(100vh - 205px)));
     }
 }

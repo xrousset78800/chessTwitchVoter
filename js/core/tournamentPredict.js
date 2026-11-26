@@ -21,6 +21,21 @@
     const sanLocal = san => (window.Notation?.local ? window.Notation.local(san) : san);
 
     // ───────────── Matchs en direct ─────────────
+    const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const COMPACT_KEY = 'cgLiveCompact';
+    let compact = false;
+    try { compact = localStorage.getItem(COMPACT_KEY) === '1'; } catch { /* navigation privée */ }
+    function setCompact(on) {
+        compact = !!on;
+        try { localStorage.setItem(COMPACT_KEY, compact ? '1' : '0'); } catch { /* navigation privée */ }
+        const btn = document.getElementById('btnLiveCompact');
+        if (btn) {
+            btn.setAttribute('aria-pressed', String(compact));
+            btn.innerHTML = `<i class="fas ${compact ? 'fa-th-large' : 'fa-list'}"></i>`;
+            btn.title = T(compact ? 'tlive.cards' : 'tlive.compact', null, compact ? 'Vue avec échiquiers' : 'Vue compacte');
+        }
+        renderLive();
+    }
     let liveGames = [];
     let liveBusy = false;
     let liveAt = 0;
@@ -63,21 +78,38 @@
             return;
         }
         const followed = stateT.polling && stateT.currentGame ? `${stateT.tournamentSlug}:${stateT.currentGame.id}` : null;
-        grid.innerHTML = liveGames.map((g, i) => {
+        const q = norm(document.getElementById('liveSearchInput')?.value.trim());
+        const shown = liveGames.map((g, i) => ({ g, i }))
+            .filter(({ g }) => !q || [g.white.name, g.black.name, g.event.name, g.room.name].some(x => norm(x).includes(q)));
+        grid.classList.toggle('is-compact', compact);
+        if (!shown.length) {
+            grid.innerHTML = `<p class="tl-empty">${esc(T('tlive.noMatch', null, 'Aucun match ne correspond.'))}</p>`;
+            return;
+        }
+        const pickHTML = (g, i, odds, mine) => `<div class="tl-pick" role="group" aria-label="${esc(T('predict.winnerTitle', null, 'Vainqueur'))}">
+                ${PICKS.map(p => `<button type="button" data-tl-vote="${i}" data-pick="${p}" class="${mine === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]) + (odds ? ' · ' + T('predict.oddsNow', { odds: fmtOdds(odds[p]) }) : ''))}">${p === '1/2-1/2' ? '½' : p}${odds ? `<small>${fmtOdds(odds[p])}</small>` : ''}</button>`).join('')}
+            </div>`;
+        grid.innerHTML = shown.map(({ g, i }) => {
             const odds = g.odds;
             const mine = myWinnerPicks[`${g.room.slug}:${g.id}`];
             const isFollowed = followed === `${g.room.slug}:${g.id}`;
+            const where = g.event.name + (g.room.name && g.room.name !== g.event.name ? ' · ' + g.room.name : '');
+            if (compact) {
+                return `<article class="tl-card tl-row${isFollowed ? ' is-followed' : ''}" data-tl="${i}" title="${esc(where)}">
+                <button type="button" class="tl-row__main" data-tl-follow="${i}">${playerHTML(g.white, 'w')}${playerHTML(g.black, 'b')}</button>
+                ${pickHTML(g, i, odds, mine)}
+                ${votesHTML(g.votes)}
+            </article>`;
+            }
             return `<article class="tl-card${isFollowed ? ' is-followed' : ''}" data-tl="${i}">
                 <button type="button" class="tl-card__board" data-tl-follow="${i}" aria-label="${esc(T('tlive.follow', null, 'Suivre'))}">${miniBoardHTML(g.fen)}</button>
                 <div class="tl-card__body">
-                    <div class="tl-card__event" title="${esc(g.event.name)}${g.room.name && g.room.name !== g.event.name ? ' · ' + esc(g.room.name) : ''}">${esc(g.event.name)}</div>
+                    <div class="tl-card__event" title="${esc(where)}">${esc(g.event.name)}</div>
                     ${playerHTML(g.white, 'w')}${playerHTML(g.black, 'b')}
                     ${votesHTML(g.votes)}
                     <div class="tl-card__actions">
                         <button type="button" class="tl-follow" data-tl-follow="${i}"><i class="fas fa-eye"></i> ${esc(isFollowed ? T('tlive.following', null, 'Suivie') : T('tlive.follow', null, 'Suivre'))}</button>
-                        <div class="tl-pick" role="group" aria-label="${esc(T('predict.winnerTitle', null, 'Vainqueur'))}">
-                            ${PICKS.map(p => `<button type="button" data-tl-vote="${i}" data-pick="${p}" class="${mine === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]) + (odds ? ' · ' + T('predict.oddsNow', { odds: fmtOdds(odds[p]) }) : ''))}">${p === '1/2-1/2' ? '½' : p}${odds ? `<small>${fmtOdds(odds[p])}</small>` : ''}</button>`).join('')}
-                        </div>
+                        ${pickHTML(g, i, odds, mine)}
                     </div>
                 </div>
             </article>`;
@@ -96,7 +128,6 @@
     }
 
     // ───────────── Recherche par joueur (champ « Filtrer les tournois ») ─────────────
-    const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     function renderPlayerHits() {
         const box = document.getElementById('tPlayerHits');
         const q = norm(document.getElementById('eventSearchInput')?.value.trim());
@@ -459,6 +490,9 @@
         try { side = localStorage.getItem(SIDE_KEY) || 'live'; } catch { /* navigation privée */ }
         setSide(side, false);
         document.getElementById('btnRefreshLive')?.addEventListener('click', () => loadLive(true));
+        document.getElementById('liveSearchInput')?.addEventListener('input', () => { loadLive(); renderLive(); });
+        document.getElementById('btnLiveCompact')?.addEventListener('click', () => setCompact(!compact));
+        setCompact(compact);
         document.getElementById('eventSearchInput')?.addEventListener('input', () => { loadLive(); renderPlayerHits(); });
 
         // Une seule boucle : visibilité de la carte, marques sur l'échiquier, rafraîchissements

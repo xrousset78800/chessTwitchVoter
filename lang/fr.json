@@ -1532,7 +1532,11 @@
     "follow": "Suivre",
     "following": "Suivie",
     "players": "Parties en direct",
-    "noVotes": "Aucun vote"
+    "noVotes": "Aucun vote",
+    "filter": "Filtrer par joueur ou tournoi…",
+    "compact": "Vue compacte",
+    "cards": "Vue avec échiquiers",
+    "noMatch": "Aucun match ne correspond."
   },
   "predict": {
     "chatTitle": "Vote du chat",

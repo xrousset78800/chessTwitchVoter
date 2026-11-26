@@ -1532,7 +1532,11 @@
     "follow": "Follow",
     "following": "Followed",
     "players": "Live games",
-    "noVotes": "No votes"
+    "noVotes": "No votes",
+    "filter": "Filter by player or event…",
+    "compact": "Compact view",
+    "cards": "View with boards",
+    "noMatch": "No matching game."
   },
   "predict": {
     "chatTitle": "Chat vote",
