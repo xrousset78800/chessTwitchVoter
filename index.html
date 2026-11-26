@@ -542,11 +542,6 @@
                                             <button type="button" class="draw-menu__style" data-wheel-style="band"><i class="fas fa-grip-lines"></i> <span data-i18n="drawMenu.band">Bande</span></button>
                                             <button type="button" class="draw-menu__style" data-wheel-style="classic"><i class="fas fa-dharmachakra"></i> <span data-i18n="drawMenu.classic">Roue</span></button>
                                         </div>
-                                        <p class="draw-menu__title" data-i18n="palette.title">Couleurs du tirage</p>
-                                        <div class="palette-select" id="palette-picker">
-                                            <span class="palette-option__swatches" id="palette-swatches"></span>
-                                            <select class="input input--sm" id="palette-select" data-i18n-title="palette.title" title="Couleurs du tirage"></select>
-                                        </div>
                                         <p class="draw-menu__title" data-i18n="anonymity.title">Anonymat du vote</p>
                                         <div class="anon-picker" data-anon-picker></div>
                                     </div>
@@ -1103,27 +1098,8 @@
                                     <div class="panel__content h24-histpop__sc"><div class="history-list" id="h24-history"></div></div>
                                 </div>
                             </div>
-                            <!-- Réglages du viewer (tirage, couleurs) regroupés derrière la roue crantée -->
-                            <div class="h24-settings">
-                                <button type="button" class="h24-settings__btn" data-h24-settings aria-expanded="false" aria-haspopup="true"><i class="fas fa-cog"></i> <span data-i18n="h24.settings">Paramètres</span></button>
-                                <div class="h24-settings__pop" id="h24-settings" hidden>
-                                    <div class="h24-settings__row">
-                                        <span class="h24-settings__label" data-i18n="h24.settingsDraw">Tirage</span>
-                                        <div class="h24-style" role="group">
-                                            <button type="button" class="btn btn--sm" data-h24-style="band" data-i18n-title="ui.drawBand" title="Tirage : bande"><i class="fas fa-grip-lines"></i> <span data-i18n="h24.styleBand">Bande</span></button>
-                                            <button type="button" class="btn btn--sm" data-h24-style="wheel" data-i18n-title="ui.drawWheel" title="Tirage : roue"><i class="fas fa-dharmachakra"></i> <span data-i18n="h24.styleWheel">Roue</span></button>
-                                        </div>
-                                    </div>
-                                    <div class="h24-settings__row">
-                                        <span class="h24-settings__label" data-i18n="h24.settingsBg">Fond</span>
-                                        <div class="h24-style h24-bgs" role="group" data-h24-bgs></div>
-                                    </div>
-                                    <div class="h24-settings__row h24-settings__row--col">
-                                        <span class="h24-settings__label" data-i18n="palette.title">Couleurs du tirage</span>
-                                        <div class="h24-palettes" id="h24-palettes"></div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Tirage en bande ou en roue (les couleurs se choisissent dans le menu du cavalier, en haut) -->
+                            <button type="button" class="h24-settings__btn h24-stylebtn" data-h24-style-toggle></button>
                         </div>
                         <!-- Régie (PC du streamer) : Phantom, pause, chaîne de la vue réelle -->
                         <div class="h24-regie" id="h24-regie" hidden></div>

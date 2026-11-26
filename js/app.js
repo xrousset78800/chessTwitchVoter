@@ -28,7 +28,7 @@ import HomePage from './pages/home.js';
 import BrowseTable from './pages/browseTable.js';
 import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
-import { PALETTES, PALETTE_IDS, getPaletteId, setPaletteId, paletteAvailable } from './components/votePalettes.js';
+import { getPaletteId } from './components/votePalettes.js';
 import { initAnonymity, secretVotes, getAnonymity, forceAnonymity, ANON_MODES } from './components/voteAnonymity.js';
 import { initGreenScreen } from './components/greenScreen.js';
 import { VoteTicker } from './components/voteViews.js';
@@ -1141,18 +1141,6 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         });
         // Flip
 
-        // Couleurs du tirage : roue, bande et podium (transmises aux spectateurs)
-        const paletteSelect = document.getElementById('palette-select');
-        const paletteSwatches = document.getElementById('palette-swatches');
-        const renderPalettes = () => {
-            if (!paletteSelect) return;
-            const current = getPaletteId();
-            paletteSelect.innerHTML = PALETTE_IDS.filter(paletteAvailable).map(id => `<option value="${id}"${id === current ? ' selected' : ''}>${tr(`palette.${id}`)}</option>`).join('');
-            if (paletteSwatches) paletteSwatches.innerHTML = PALETTES[current].slice(0, 6).map(c => `<span style="background:${c}"></span>`).join('');
-        };
-        renderPalettes();
-        window.addEventListener('languageChanged', renderPalettes);
-        paletteSelect?.addEventListener('change', () => setPaletteId(paletteSelect.value));
         // Anonymat du vote : sélecteurs (réglages + modale ⚙), appliqué tout de suite à la partie en cours
         document.addEventListener('voteAnonymityChanged', () => {
             VoteTicker.repaint();
@@ -1165,8 +1153,8 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
                 }
             } catch {}
         });
+        // Couleurs du tirage (menu du cavalier) : roue, bande et podium repeints, transmises aux spectateurs
         document.addEventListener('votePaletteChanged', () => {
-            renderPalettes();
             const wheel = gameEngine.votingWheel;
             if (wheel && !wheel.isSpinning) wheel.draw?.();
             try { gameEngine.updateVotesUI(voting.getSortedResults()); } catch {}

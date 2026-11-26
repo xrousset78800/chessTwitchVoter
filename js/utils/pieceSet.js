@@ -4,8 +4,12 @@
  *   window.pieceUrl('wN')  → adresse de l'image dans le set choisi
  *   window.pieceTheme      → fonction à passer à Chessboard({ pieceTheme })
  * Le sélecteur est construit dans chaque .nav__pieces (barre du haut, à côté de la langue).
+ * C'est le seul endroit où l'on choisit son apparence : échiquier, matière, pièces, couleurs
+ * du tirage, thème du site ; il ne montre que les objets gratuits ou achetés à la Boutique.
  */
 (function () {
+    // Couleurs du tirage (module ES, js/components/votePalettes.js) : chargées à part, le menu se complète
+    let vp = null;
     // free : disponible pour tous. Les autres sont des récompenses de succès (ticket #16) :
     // ils n'apparaissent que lorsque window.unlockedRewards (Set d'ids) les contient.
     // own : id de l'objet au magasin (economy.js, CATALOG) quand il diffère de l'id local
@@ -155,9 +159,21 @@
                 const s = byId(el.dataset.pieceSet);
                 const on = s.id === current.id;
                 el.classList.toggle('is-active', on);
-                el.setAttribute('aria-selected', String(on));
-                el.querySelector('.nav__pieces-name').textContent = label(s);
+                el.setAttribute('aria-pressed', String(on));
+                el.title = label(s);
+                el.setAttribute('aria-label', label(s));
             });
+            const pal = vp?.getPaletteId();
+            box.querySelectorAll('[data-vote-palette]').forEach(el => {
+                const on = el.dataset.votePalette === pal;
+                el.classList.toggle('is-active', on);
+                el.setAttribute('aria-pressed', String(on));
+                el.title = palLabel(el.dataset.votePalette);
+                el.setAttribute('aria-label', el.title);
+            });
+            // Le choix en cours, à droite de chaque titre
+            const cur = { board: boardLabel(board), mat: matLabel(mat), pieces: label(current), theme: themeLabel(theme), palette: pal ? palLabel(pal) : '' };
+            box.querySelectorAll('[data-cur]').forEach(b => { b.textContent = cur[b.dataset.cur] || ''; });
             box.querySelectorAll('[data-board-theme]').forEach(el => {
                 const b = boardById(el.dataset.boardTheme);
                 const on = b.id === board.id;
@@ -183,7 +199,7 @@
                 el.setAttribute('aria-label', matLabel(m));
             });
             box.querySelectorAll('.nav__pieces-shop span').forEach(s => { s.textContent = tr('nav.shop', 'Boutique'); });
-            box.querySelectorAll('.nav__pieces-heading').forEach(h => { h.textContent = tr(h.dataset.key, h.dataset.fb); });
+            box.querySelectorAll('.nav__pieces-heading').forEach(h => { h.firstElementChild.textContent = tr(h.dataset.key, h.dataset.fb); });
         });
     }
 
@@ -230,24 +246,34 @@
         current: () => current, board: () => board, mat: () => mat, theme: () => theme,
     };
 
+    const palLabel = id => tr(`palette.${id}`, id);
+
     function setup() {
         const sets = SETS.filter(unlocked);
         const mats = MATS.filter(unlocked);
+        const pals = vp ? vp.PALETTE_IDS.filter(vp.paletteAvailable) : [];
+        // Titre de rubrique : le nom à gauche, le choix en cours à droite
+        const head = (key, fb, cur) => `<li class="nav__pieces-heading" data-key="${key}" data-fb="${fb}"><span></span><b data-cur="${cur}"></b></li>`;
         document.querySelectorAll('.nav__pieces').forEach(box => {
+            const wasOpen = box.classList.contains('is-open');   // reconstruit pendant qu'on choisit : il reste ouvert
             box.innerHTML = `
-                <button class="nav__pieces-current" type="button" aria-haspopup="listbox" aria-expanded="false"></button>
+                <button class="nav__pieces-current" type="button" aria-haspopup="true" aria-expanded="false"></button>
                 <ul class="nav__pieces-menu" hidden>
-                    <li class="nav__pieces-heading" data-key="pieces.boardTitle" data-fb="Échiquier"></li>
-                    <li class="nav__pieces-boards">${BOARDS.filter(unlocked).map(b => `<button type="button" class="nav__pieces-swatch" data-board-theme="${b.id}"
+                    ${head('pieces.boardTitle', 'Échiquier', 'board')}
+                    <li class="nav__pieces-grid">${BOARDS.filter(unlocked).map(b => `<button type="button" class="nav__pieces-swatch" data-board-theme="${b.id}"
                         style="--l:${b.light};--d:${b.dark}"></button>`).join('')}</li>
-                    ${sets.length > 1 ? '<li class="nav__pieces-heading" data-key="pieces.title" data-fb="Pièces"></li>' : ''}
-                    ${(sets.length > 1 ? sets : []).map(s => `<li><button type="button" role="option" class="nav__pieces-item" data-piece-set="${s.id}">
-                        <span class="nav__pieces-preview">${['wK', 'wN', 'bQ', 'bP'].map(p => `<img src="${url(p, s)}" alt="" loading="lazy">`).join('')}</span>
-                        <span class="nav__pieces-name"></span></button></li>`).join('')}
-                    ${mats.length > 1 ? `<li class="nav__pieces-heading" data-key="pieces.matTitle" data-fb="Matière"></li>
-                    <li class="nav__pieces-boards">${mats.map(m => `<button type="button" class="nav__pieces-swatch nav__pieces-mat mat--${m.id}" data-board-mat="${m.id}"></button>`).join('')}</li>` : ''}
-                    <li class="nav__pieces-heading" data-key="pieces.themeTitle" data-fb="Thème du site"></li>
-                    <li class="nav__pieces-boards">${THEMES.filter(unlocked).map(x => `<button type="button" class="nav__pieces-swatch nav__pieces-theme" data-site-theme="${x.id}"
+                    ${mats.length > 1 ? `${head('pieces.matTitle', 'Matière', 'mat')}
+                    <li class="nav__pieces-grid">${mats.map(m => `<button type="button" class="nav__pieces-swatch nav__pieces-mat mat--${m.id}" data-board-mat="${m.id}"></button>`).join('')}</li>` : ''}
+                    ${sets.length > 1 ? `${head('pieces.title', 'Pièces', 'pieces')}
+                    <li class="nav__pieces-grid">${sets.map(s => `<button type="button" class="nav__pieces-swatch nav__pieces-set" data-piece-set="${s.id}"><img src="${url('wN', s)}" alt="" loading="lazy"></button>`).join('')}</li>` : ''}
+                    ${pals.length > 1 ? `${head('palette.title', 'Couleurs du tirage', 'palette')}
+                    <li class="nav__pieces-grid nav__pieces-grid--pal">${pals.map(id => {
+                        const c = vp.PALETTES[id].slice(0, 5);
+                        const stops = c.map((x, i) => `${x} ${i * 20}% ${(i + 1) * 20}%`).join(',');
+                        return `<button type="button" class="nav__pieces-swatch nav__pieces-pal" data-vote-palette="${id}" style="background:linear-gradient(90deg,${stops})"></button>`;
+                    }).join('')}</li>` : ''}
+                    ${head('pieces.themeTitle', 'Thème du site', 'theme')}
+                    <li class="nav__pieces-grid">${THEMES.filter(unlocked).map(x => `<button type="button" class="nav__pieces-swatch nav__pieces-theme" data-site-theme="${x.id}"
                         style="--l:${x.card};--d:${x.bg}"></button>`).join('')}</li>
                     <li><a class="nav__pieces-shop" href="/shop"><i class="fas fa-store"></i> <span></span></a></li>
                 </ul>`;
@@ -259,18 +285,21 @@
                 box.classList.toggle('is-open', open);
             };
             box._closeMenu = () => toggle(false);
+            if (wasOpen) toggle(true);
             btn.addEventListener('click', e => { e.stopPropagation(); toggle(menu.hidden); });
             menu.addEventListener('click', e => {
-                const sw = e.target.closest('[data-board-theme]');
+                const sw = e.target.closest('button[data-board-theme]');
                 if (sw) { e.stopPropagation(); setBoardTheme(sw.dataset.boardTheme); return; }   // le menu reste ouvert pour comparer
-                const th = e.target.closest('[data-site-theme]');
+                const th = e.target.closest('button[data-site-theme]');
                 if (th) { e.stopPropagation(); setSiteTheme(th.dataset.siteTheme); return; }
-                const mt = e.target.closest('[data-board-mat]');
+                const mt = e.target.closest('button[data-board-mat]');
                 if (mt) { e.stopPropagation(); setBoardMat(mt.dataset.boardMat); return; }
+                const pl = e.target.closest('[data-vote-palette]');
+                if (pl) { e.stopPropagation(); vp?.setPaletteId(pl.dataset.votePalette); render(); return; }
                 if (e.target.closest('.nav__pieces-shop')) { toggle(false); return; }
                 const item = e.target.closest('[data-piece-set]');
                 if (!item) return;
-                toggle(false);
+                e.stopPropagation();   // le menu reste ouvert, comme pour les couleurs
                 setPieceSet(item.dataset.pieceSet);
             });
         });
@@ -307,6 +336,9 @@
     });
 
     window.addEventListener('languageChanged', render);
+    // Couleurs du tirage changées (ici, à la Boutique) ou objets du compte relus : le menu suit
+    document.addEventListener('votePaletteChanged', render);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
     else setup();
+    import('/js/components/votePalettes.js').then(m => { vp = m; setup(); }).catch(() => { });
 })();

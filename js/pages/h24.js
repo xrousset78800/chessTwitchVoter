@@ -11,7 +11,7 @@ import VotingWheel from '../components/wheel.js';
 import WheelBand from '../components/wheelBand.js';
 import { fillVoteTimer } from '../components/voteTimer.js';
 import { renderHistory, paintMoveChips, clearWinner, nameColor, renderPodium, markPodiumWinner, pieceOf } from '../components/voteViews.js';
-import { PALETTES, PALETTE_IDS, isPalette } from '../components/votePalettes.js';
+import { paletteColors } from '../components/votePalettes.js';
 import { fmtMove } from '../utils/moveMatch.js';
 import { CamSender, CamPlayer, CAM_QUALITIES, CAM_ZOOM, listCameras, camSupported } from '../components/liveCam.js';
 
@@ -39,9 +39,8 @@ function squaresChanged(a, b) {
 }
 const PIECE_ICONS = { w: { K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙' }, b: { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' } };
 const clean = (m) => String(m || '').replace(/[+#!?]/g, '');
-// Couleurs du tirage (roue, bande, podium, puces des coups) : au choix du viewer, gardées dans son navigateur
-const loadPalette = () => { try { const id = localStorage.getItem('h24Palette'); return isPalette(id) ? id : 'violet'; } catch { return 'violet'; } };
-let COLORS = PALETTES[loadPalette()];
+// Couleurs du tirage (roue, bande, podium, puces des coups) : celles choisies dans le menu du cavalier
+let COLORS = paletteColors();
 
 /** Parties proposées au vote « game » (prédiction) : clé g0…g4 → infos de la partie */
 let ballotGames = {};
@@ -186,14 +185,8 @@ const H24Page = {
             if (fp) { this.socket?.emit('h24:force', { phase: fp.dataset.h24Force }); return; }
             if (e.target.closest('[data-h24-quit]')) { this.socket?.emit('h24:quit'); return; }
             if (e.target.closest('[data-h24-login]')) { twitchAuth.login?.(); return; }
-            const st = e.target.closest('[data-h24-style]');
-            if (st) { this.setStyle(st.dataset.h24Style); return; }
-            const bg = e.target.closest('[data-h24-bg]');
-            if (bg) { this.setBg(bg.dataset.h24Bg); return; }
-            if (e.target.closest('[data-h24-settings]')) { this.toggleSettings(); return; }
+            if (e.target.closest('[data-h24-style-toggle]')) { this.setStyle(this.style === 'wheel' ? 'band' : 'wheel'); return; }
             if (e.target.closest('[data-h24-hist]')) { this.toggleHist(); return; }
-            const pal = e.target.closest('[data-h24-palette]');
-            if (pal) { this.setPalette(pal.dataset.h24Palette); return; }
             const rg = e.target.closest('[data-h24-regie]');
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
@@ -238,25 +231,13 @@ const H24Page = {
             } catch {}
             this.renderVolume();
         });
-        // Panneau des paramètres : se ferme au clic ailleurs ou avec Échap
+        // Historique : se ferme au clic ailleurs ou avec Échap
         // (chemin du clic figé au départ : un bouton redessiné pendant le clic compte toujours comme « dedans »)
-        document.addEventListener('click', (e) => { if (!e.composedPath().some(n => n.classList?.contains('h24-settings'))) this.toggleSettings(false); });
         document.addEventListener('click', (e) => { if (!e.composedPath().some(n => n.classList?.contains('h24-histbtn'))) this.toggleHist(false); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { this.toggleSettings(false); this.toggleHist(false); } });
-        window.addEventListener('languageChanged', () => this.renderPalettes());
-        this.renderPalettes();
-        this.renderBgs();
-        for (const ev of ['siteThemeChanged', 'economyChanged', 'languageChanged']) window.addEventListener(ev, () => this.renderBgs());
-    },
-
-    // ------------------------------------------------------------------ paramètres du viewer
-    toggleSettings(open) {
-        const pop = $('h24-settings');
-        if (!pop) return;
-        open = open ?? pop.hidden;
-        if (open === !pop.hidden) return;
-        pop.hidden = !open;
-        document.querySelector('[data-h24-settings]')?.setAttribute('aria-expanded', String(open));
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.toggleHist(false); });
+        // Couleurs du tirage choisies dans le menu du cavalier (ou objets du compte relus)
+        document.addEventListener('votePaletteChanged', () => this.applyPalette());
+        window.addEventListener('languageChanged', () => this.renderStyle());
     },
 
     /** Historique des coups : fenêtre sous le bouton de la barre d'outils, calée sur le dernier coup */
@@ -270,21 +251,10 @@ const H24Page = {
         if (open) this.historyToBottom();
     },
 
-    renderPalettes() {
-        const box = $('h24-palettes');
-        if (!box) return;
-        const cur = loadPalette();
-        box.innerHTML = PALETTE_IDS.map(id => `<button type="button" class="h24-palette${id === cur ? ' is-active' : ''}" data-h24-palette="${id}" aria-pressed="${id === cur}">
-            <span class="h24-palette__dots">${PALETTES[id].slice(0, 5).map(c => `<i style="background:${c}"></i>`).join('')}</span>
-            <span class="h24-palette__name">${esc(t(`palette.${id}`, null, id))}</span>
-        </button>`).join('');
-    },
-
-    setPalette(id) {
-        if (!isPalette(id)) return;
-        try { localStorage.setItem('h24Palette', id); } catch {}
-        COLORS = PALETTES[id];
-        this.renderPalettes();
+    applyPalette() {
+        const next = paletteColors();
+        if (next === COLORS) return;
+        COLORS = next;
         // Tout ce qui est déjà coloré se repeint : roue ou bande, podium, puces des coups
         if (this.wheel) {
             this.wheel.paletteColors = COLORS;
@@ -1479,21 +1449,6 @@ const H24Page = {
     },
 
     // ------------------------------------------------------------------ style du tirage
-    /** Thème du site (js/utils/pieceSet.js) : gratuits et achetés à la Boutique */
-    setBg(bg) {
-        window.setSiteTheme?.(bg);
-        this.renderBgs();
-    },
-
-    renderBgs() {
-        const pc = window.pieceCatalog;
-        const box = document.querySelector('[data-h24-bgs]');
-        if (!pc || !box) return;
-        const cur = pc.theme().id;
-        const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-        box.innerHTML = pc.themes.filter(pc.unlocked).map(x => `<button type="button" class="btn btn--sm${x.id === cur ? ' is-active' : ''}" data-h24-bg="${x.id}"><span class="h24-bg-dot" style="background:${x.bg}"></span> <span>${esc(pc.themeLabel(x))}</span></button>`).join('');
-    },
-
     setStyle(style) {
         style = style === 'wheel' ? 'wheel' : 'band';
         if (style === this.style) return;
@@ -1503,7 +1458,14 @@ const H24Page = {
     },
 
     renderStyle() {
-        document.querySelectorAll('[data-h24-style]').forEach(b => b.classList.toggle('is-active', b.dataset.h24Style === this.style));
+        // Un seul bouton : l'icône du tirage en cours, un clic passe à l'autre
+        const sb = document.querySelector('[data-h24-style-toggle]');
+        if (sb) {
+            const wheel = this.style === 'wheel';
+            sb.innerHTML = `<i class="fas ${wheel ? 'fa-dharmachakra' : 'fa-grip-lines'}"></i>`;
+            sb.title = t(wheel ? 'ui.drawWheel' : 'ui.drawBand', null, wheel ? 'Tirage : roue' : 'Tirage : bande');
+            sb.setAttribute('aria-label', sb.title);
+        }
         // Pendant un tirage, on garde l'affichage en cours
         if (this.wheel?.isSpinning || this.revealing) return;
         this.dock(this.style);

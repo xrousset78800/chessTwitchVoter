@@ -390,8 +390,9 @@ body.game-mode .nav__page-title {
 .nav__pieces-current:hover, .nav__pieces.is-open .nav__pieces-current { opacity: 1; background: var(--bg-card); border-color: var(--border-subtle); }
 .nav__pieces-current:focus-visible { outline: 2px solid rgba(255, 138, 61, 0.5); outline-offset: 1px; }
 .nav__pieces-menu {
-    position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000; min-width: 210px;
-    margin: 0; padding: 6px; list-style: none;
+    position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000;
+    width: min(320px, calc(100vw - 16px)); max-height: calc(100vh - 80px); overflow-y: auto; scrollbar-width: thin;
+    margin: 0; padding: 4px 4px 2px; list-style: none;
     background: var(--bg-card, #1a1512); border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md, 10px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
@@ -409,13 +410,20 @@ body.game-mode .nav__page-title {
 }
 .nav__pieces-current img { border-radius: 3px; background: linear-gradient(135deg, var(--sq-light) 0 50%, var(--sq-dark) 50%); }
 .nav__pieces-heading {
-    padding: 6px 8px 4px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+    padding: 6px 8px 3px; font-size: 0.64rem; font-weight: 600; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--text-muted, #8f857d);
 }
-.nav__pieces-boards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 2px 8px 8px; }
+.nav__pieces-heading b {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 0.72rem; color: var(--text-secondary, #d8cfc8);
+}
+/* Grilles serrées : tout tient même quand on a tout acheté */
+.nav__pieces-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(28px, 1fr)); gap: 4px; padding: 0 8px 6px; }
+.nav__pieces-grid--pal { grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); }
 .nav__pieces-swatch {
-    aspect-ratio: 1; min-height: 30px; padding: 0; cursor: pointer;
-    border: 2px solid transparent; border-radius: 6px;
+    aspect-ratio: 1; min-height: 0; padding: 0; cursor: pointer;
+    border: 2px solid transparent; border-radius: 5px;
     background: conic-gradient(var(--d) 0 25%, var(--l) 0 50%, var(--d) 0 75%, var(--l) 0);
     background-size: 50% 50%;
 }
@@ -456,12 +464,17 @@ body.game-mode .nav__page-title {
     background-size: var(--mat-size-d, auto);
 }
 .nav__pieces-swatch.nav__pieces-theme { background: linear-gradient(135deg, var(--d) 0 55%, var(--l) 55%); }
+/* Pièces : le cavalier du set, sur une case de l'échiquier choisi */
+.nav__pieces-swatch.nav__pieces-set { display: grid; place-items: center; background: var(--sq-light); }
+.nav__pieces-set img { width: 86%; height: 86%; display: block; }
+/* Couleurs du tirage : bandes des 5 premières couleurs */
+.nav__pieces-swatch.nav__pieces-pal { aspect-ratio: auto; height: 18px; border-radius: 4px; }
 .nav__pieces-shop {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 4px 8px 6px;
-    padding: 7px 10px;
+    margin: 2px 8px 6px;
+    padding: 5px 10px;
     border-radius: 6px;
     border: 1px dashed var(--border-subtle, #3a322c);
     color: var(--text-secondary);
