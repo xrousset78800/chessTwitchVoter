@@ -79,7 +79,7 @@
 .h24-gauge__txt { display: flex; justify-content: space-between; gap: 10px; font-size: 0.78rem; color: var(--text-secondary); }
 .h24-gauge__txt b { color: var(--text-primary); }
 .h24-gauge__done { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.h24-card__votes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; max-height: 58px; overflow: hidden; }
+.h24-card__votes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; max-height: 196px; overflow: hidden; }
 .h24-card__votes li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); font-size: 0.78rem; }
 .h24-card__votes li:first-child { animation: h24-guide-new 0.4s ease-out; }
 .h24-card__votes .vote-ticker__pic { width: 20px; height: 20px; font-size: 0.65rem; }
@@ -342,11 +342,11 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-pclock.is-critical { background: #e02828; color: #fff; }
 .h24-pclock i { font-size: 0.8em; }
 
-/* Entre deux parties : fenêtre discrète au milieu, sur l'échiquier (le reste reste cliquable) */
+/* Entre deux parties : fenêtre discrète en haut de l'échiquier (le reste reste cliquable), les votants s'empilent dessous */
 #page-h24 .sandbox__main { position: relative; }
 .h24-modal {
     position: absolute; inset: 0; z-index: 60; pointer-events: none;
-    display: flex; align-items: center; justify-content: center; padding: 16px;
+    display: flex; align-items: flex-start; justify-content: center; padding: 16px;
 }
 .h24-modal[hidden] { display: none; }
 .h24-modal__box {

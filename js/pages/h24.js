@@ -1696,7 +1696,7 @@ const H24Page = {
 
     /** Derniers votes du scrutin (le plus récent en premier) : photo, pseudo, choix */
     ballotVotesHtml(b) {
-        const recent = (b.recent || []).slice(-8).reverse();
+        const recent = (b.recent || []).slice(-20).reverse();
         if (!recent.length) return '';
         const voted = t('anonymity.voted', null, 'a voté');
         return `<ul class="h24-card__votes">${recent.map(r => {
