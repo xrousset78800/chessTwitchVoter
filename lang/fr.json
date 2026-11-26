@@ -368,6 +368,7 @@
     "phantomHint": "Connecte le Phantom pour régler sa vitesse et la synchronisation."
   },
   "newTabs": {
+    "back": "Précédent",
     "free": "Partie libre",
     "title": "Nouvelle partie",
     "subtitle": "Choisis comment ton chat va jouer, règle deux ou trois choses, lance.",

@@ -368,6 +368,7 @@
     "phantomHint": "Hızını ve eşitlemeyi ayarlamak için Phantom'u bağla."
   },
   "newTabs": {
+    "back": "Geri",
     "free": "Serbest oyun",
     "title": "Yeni oyun",
     "subtitle": "Sohbetinin nasıl oynayacağını seç, iki üç ayar yap, başlat.",

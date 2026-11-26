@@ -368,6 +368,7 @@
     "phantomHint": "Conecte o Phantom para ajustar a velocidade e a sincronização."
   },
   "newTabs": {
+    "back": "Voltar",
     "free": "Jogo livre",
     "title": "Nova partida",
     "subtitle": "Escolha como seu chat vai jogar, ajuste duas ou três coisas e comece.",

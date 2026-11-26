@@ -393,13 +393,82 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
     display: none;
 }
 
-/* Écran étroit : grille de 2, sans les descriptions */
+/* Étape 1 (/new) : les quatre modes seuls, sans « Comment ça marche » ni Précédent */
+.new-tabs__back, .new-tabs__mode { display: none; }
+.new-tabs:not(.is-compact) .new-how { display: none; }
+.new-pick { max-width: 1000px; }
+.new-pick .new-tabs { margin-top: 4vh; }
+.new-pick .new-tab { padding: 24px; }
+.new-pick .new-tab__desc { font-size: 0.95rem; }
+
+/* Étape 2 : Précédent et le nom du mode à gauche, les quatre modes en petit à droite */
+.new-tabs.is-compact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 16px;
+}
+.new-tabs.is-compact .new-tabs__head { flex-direction: row; align-items: center; gap: 14px; min-width: 0; }
+.new-tabs.is-compact .new-tabs__title,
+.new-tabs.is-compact .new-tabs__sub { display: none; }
+.new-tabs.is-compact .new-tabs__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.new-tabs.is-compact .new-tabs__back:hover { color: var(--text-primary); border-color: var(--accent); }
+.new-tabs.is-compact .new-tabs__mode {
+    display: block;
+    margin: 0;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.new-tabs.is-compact .new-tabs__grid { display: flex; gap: 6px; }
+.new-tabs.is-compact .new-tab {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px 5px 5px;
+    border-width: 1px;
+    border-radius: var(--radius-md);
+}
+.new-tabs.is-compact .new-tab__top { margin: 0; }
+.new-tabs.is-compact .new-tab__tag,
+.new-tabs.is-compact .new-tab__desc { display: none; }
+.new-tabs.is-compact .new-tab__icon { width: 26px; height: 26px; font-size: 0.8rem; border-radius: 6px; }
+.new-tabs.is-compact .new-tab__title { font-size: 0.85rem; white-space: nowrap; }
+.new-tabs.is-compact .new-how { grid-column: 1 / -1; }
+
+/* Bouton de lancement : taille normale, à droite */
+.preset__go { display: flex; width: fit-content; margin: 12px 0 0 auto; }
+
+/* Écran étroit */
 @media (max-width: 860px) {
     .new-tabs__title { font-size: 1.8rem; }
-    .new-tabs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .new-tab { padding: 14px; gap: 4px; }
+    .new-tabs:not(.is-compact) .new-tabs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .new-pick .new-tab { padding: 14px; gap: 4px; }
     .new-tab__title { font-size: 1.05rem; }
-    .new-tab__desc { display: none; }
+    .new-tabs.is-compact { grid-template-columns: 1fr; }
+    .new-tabs.is-compact .new-tabs__mode { font-size: 1.3rem; }
+    .new-tabs.is-compact .new-tabs__grid { flex-wrap: wrap; }
+}
+@media (max-width: 520px) {
+    .new-tabs:not(.is-compact) .new-tabs__grid { grid-template-columns: 1fr; }
+    .new-tabs.is-compact .new-tab__title { display: none; }
+    .new-tabs.is-compact .new-tab { padding: 5px; }
 }
 
 .roster__hint {

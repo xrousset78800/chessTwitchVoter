@@ -99,7 +99,7 @@
 
             <div class="nav__links">
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
-                <a class="nav__link" data-navigate="/rush" data-i18n="nav.new">Nouveau</a>
+                <a class="nav__link" data-navigate="/new" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
                 <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
                 <a class="nav__link" data-navigate="/tournament"><span data-i18n="nav.tournament">Tournoi</span></a>
@@ -305,6 +305,9 @@
                 <!-- Menu vertical à gauche (horizontal sur mobile) ; l'onglet actif détaille son fonctionnement -->
                 <div class="new-tabs" id="new-tabs">
                     <div class="new-tabs__head">
+                        <!-- Étape 2 : retour au choix du mode, nom du mode choisi -->
+                        <a class="new-tabs__back" data-navigate="/new"><i class="fas fa-arrow-left" aria-hidden="true"></i> <span data-i18n="newTabs.back">Précédent</span></a>
+                        <h1 class="new-tabs__mode"></h1>
                         <h1 class="new-tabs__title" data-i18n="newTabs.title">Nouvelle partie</h1>
                         <p class="new-tabs__sub" data-i18n="newTabs.subtitle">Choisis comment ton chat va jouer, règle deux ou trois choses, lance.</p>
                     </div>
@@ -615,7 +618,7 @@
                         </div>
                         <div class="sandbox-setup__footer launch-only">
                             <button class="btn" id="btn-save-config"><i class="fas fa-save"></i> <span data-i18n="actions.save">Sauvegarder</span></button>
-                            <button class="btn btn--primary btn--lg" id="btn-apply-config"><i class="fas fa-play"></i> <span data-i18n="setup.launch">Lancer</span></button>
+                            <button class="btn btn--primary" id="btn-apply-config"><i class="fas fa-play"></i> <span data-i18n="setup.launch">Lancer</span></button>
                         </div>
                     </div>
                 </div>
@@ -804,6 +807,11 @@
             </div>
         </div>
 
+        <!-- ==================== NOUVEAU : CHOIX DU MODE ==================== -->
+        <div class="page" id="page-new">
+            <div class="preset new-pick"></div>
+        </div>
+
         <!-- ==================== ROUTE PUZZLE RUSH ==================== -->
         <div class="page" id="page-rush">
             <div class="preset">
@@ -815,7 +823,7 @@
                             <button type="button" class="rush-mode" data-rush-mode="120">2 min</button>
                         </div>
                         <p class="rush-modes__hint" data-i18n="rushPage.modeHint">Chaque temps a son propre classement.</p>
-                        <button class="btn btn--primary btn--full btn--lg" id="rush-page-start">
+                        <button class="btn btn--primary preset__go" id="rush-page-start">
                             <i class="fas fa-play"></i> <span data-i18n="rushPage.start">Lancer un run</span>
                         </button>
                         <h2 class="preset__subtitle" data-i18n="rushPage.records">Records des chaînes</h2>
@@ -895,7 +903,7 @@
                             <button type="button" class="toggle toggle--chip toggle--follow" id="mono-follow-toggle" data-i18n-title="presets.followersHint" title="Followers uniquement"><i class="fas fa-heart"></i> Followers</button>
                             <button type="button" class="toggle toggle--chip toggle--sub" id="mono-sub-toggle" data-i18n-title="gameMode.twitchOptions.subMode" title="Abonnés uniquement"><i class="fas fa-star"></i> Subs</button>
                         </div>
-                    <button class="btn btn--primary btn--full btn--lg" id="mono-start">
+                    <button class="btn btn--primary preset__go" id="mono-start">
                         <i class="fas fa-play"></i> <span data-i18n="mono.start">Ouvrir les inscriptions</span>
                     </button>
                 </div>
@@ -951,7 +959,7 @@
                             <label class="form-label"><i class="fas fa-user-secret"></i> <span data-i18n="anonymity.title" data-info="anonymityMulti">Anonymat du vote</span></label>
                             <div class="anon-picker" data-anon-picker></div>
                         </div>
-                    <button class="btn btn--primary btn--full btn--lg" id="multi-start">
+                    <button class="btn btn--primary preset__go" id="multi-start">
                         <i class="fas fa-play"></i> <span data-i18n="multi.start">Créer la partie</span>
                     </button>
                 </div>

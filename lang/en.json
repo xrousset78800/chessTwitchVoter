@@ -368,6 +368,7 @@
     "phantomHint": "Connect the Phantom to adjust its speed and sync."
   },
   "newTabs": {
+    "back": "Back",
     "free": "Free play",
     "title": "New game",
     "subtitle": "Pick how your chat will play, tweak a thing or two, launch.",

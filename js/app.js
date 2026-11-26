@@ -336,7 +336,7 @@ const GameSession = {
 // ROUTER (SPA Navigation)
 // ============================================
 // Pages de réglage regroupées sous Nouveau
-const NEW_TABS = ['sandbox', 'mono', 'multi', 'rush'];
+const NEW_TABS = ['new', 'sandbox', 'mono', 'multi', 'rush'];
 
 const Router = {
     routes: {
@@ -349,6 +349,7 @@ const Router = {
         '/24h': 'h24',
         '/live': 'tournament',   // ancienne page Live, fondue dans Tournois
         '/tournament': 'tournament',
+        '/new': 'new',       // Nouveau, étape 1 : les quatre modes
         '/rush': 'rush',
         '/mono': 'mono',
         '/multi': 'multi',
@@ -512,6 +513,11 @@ const Router = {
         if (!tabs || !target || !NEW_TABS.includes(pageName)) return;
         if (pageName === 'sandbox') target.querySelector('#sandbox-setup')?.before(tabs);
         else target.querySelector('.preset')?.prepend(tabs);
+        // Deux étapes : /new montre les quatre modes et leur description ; un mode choisi, ils se rangent
+        // en petit en haut à droite et seules ses options restent, avec Précédent pour revenir au choix
+        tabs.classList.toggle('is-compact', pageName !== 'new');
+        const name = tabs.querySelector('.new-tabs__mode');
+        if (name) name.textContent = tabs.querySelector(`.new-tab[data-new-tab="${pageName}"] .new-tab__title`)?.textContent || '';
         tabs.querySelectorAll('.new-tab').forEach(tab => {
             const on = tab.dataset.newTab === pageName;
             tab.classList.toggle('is-active', on);
