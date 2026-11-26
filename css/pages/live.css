@@ -954,6 +954,8 @@ input[type=range] {
 .tp-win { display: flex; align-items: center; gap: 4px; }
 .tp-win button.is-pending { border-color: var(--accent); color: var(--text-primary); }
 .tp-win button:disabled.is-on { opacity: 1; cursor: default; }
+/* Après son vote, les autres boutons restent lisibles : ils montrent au chat ses commandes */
+.tp-win button:disabled:not(.is-on) { opacity: 0.75; cursor: default; }
 .tp-win button .fa-lock { font-size: 0.65rem; }
 .tp-confirm { margin: 0; padding: 8px 10px; border: 1px solid var(--accent); border-radius: 8px; background: var(--bg-elevated, var(--bg-secondary)); font-size: 0.74rem; color: var(--text-secondary, var(--text-muted)); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
 .tp-confirm p { margin: 0 0 6px; line-height: 1.35; }

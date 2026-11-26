@@ -9,6 +9,8 @@
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const PICKS = ['1-0', '1/2-1/2', '0-1'];
     const PICK_KEY = { '1-0': 'white', '1/2-1/2': 'draw', '0-1': 'black' };
+    // Les boutons du vainqueur portent la commande du chat : le chat voit qu'il peut voter aussi
+    const WIN_CMD = { '1-0': '!1-0', '1/2-1/2': '!1/2', '0-1': '!0-1' };
     const boardOf = fen => String(fen || '').split(' ').slice(0, 2).join(' ');
     const logged = () => !!window.twitchAuth?.isLoggedIn;
     const authHeaders = () => ({ 'Content-Type': 'application/json', ...(window.twitchAuth?.authHeaders?.() || {}) });
@@ -367,7 +369,7 @@
         body.innerHTML = `
             <div class="tp-picks tp-win" role="group" title="${esc(winTip)}">
                 <i class="fas fa-trophy"></i>
-                ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}${cp === p ? ' is-pending' : ''}${result === p ? ' is-result' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended || pred.winner ? 'disabled' : ''}>${pred.winner === p ? '<i class="fas fa-lock"></i> ' : ''}${p === '1/2-1/2' ? '½' : p}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
+                ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}${cp === p ? ' is-pending' : ''}${result === p ? ' is-result' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended || pred.winner ? 'disabled' : ''}>${pred.winner === p ? '<i class="fas fa-lock"></i> ' : ''}${WIN_CMD[p]}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
             </div>
             ${confirmHTML}
             <div class="tp-winbars"></div>
@@ -443,14 +445,10 @@
         const c = current();
         if (!c) { box.innerHTML = ''; return; }
         const cv = chatWinTally(c.key);
-        const showChat = chatOn() || PICKS.some(p => cv[p]);
-        const hint = showChat && !c.ended
-            ? `<div class="tp-wbar__hint">${esc(T('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>` : '';
         const html = `<div class="tp-wbars__title"><span>${esc(T('predict.winBars', null, 'Pronostics en cours'))}</span>
                 <span class="tp-wbars__legend">${PICKS.map(p => `<i class="tp-wbar__dot tp-wbar__seg--${PICK_KEY[p]}"></i>${esc(T('predict.' + PICK_KEY[p]))}`).join(' ')}</span></div>`
             + winBarHTML(Object.fromEntries(PICKS.map(p => [p, (pred.votes?.[p] || 0) + (cv[p] || 0)])),
-                `${T('predict.siteVotes', null, 'Site')} : ${PICKS.reduce((s, p) => s + (pred.votes?.[p] || 0), 0)} · ${T('predict.chatVotes', null, 'Chat')} : ${PICKS.reduce((s, p) => s + cv[p], 0)}`)
-            + hint;
+                `${T('predict.siteVotes', null, 'Site')} : ${PICKS.reduce((s, p) => s + (pred.votes?.[p] || 0), 0)} · ${T('predict.chatVotes', null, 'Chat')} : ${PICKS.reduce((s, p) => s + cv[p], 0)}`);
         if (box._html !== html) { box.innerHTML = html; box._html = html; }
     }
 

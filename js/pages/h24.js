@@ -1538,7 +1538,8 @@ const H24Page = {
         const over = !!g.result;
         // --- Pronostics
         const w = P.winners || { w: 0, d: 0, b: 0 };
-        const keys = [['w', 'white', '1-0'], ['d', 'draw', '½'], ['b', 'black', '0-1']];
+        // Libellés = commandes du chat : le chat voit qu'il peut pronostiquer aussi
+        const keys = [['w', 'white', '!1-0'], ['d', 'draw', '!1/2'], ['b', 'black', '!0-1']];
         const nw = w.w + w.d + w.b;
         const pct = (k) => Math.round(100 * (w[k] || 0) / nw);
         const ply = (g.history || []).length;
@@ -1559,8 +1560,7 @@ const H24Page = {
                 <div class="tp-picks tp-win" role="group" title="${esc(rules)}"><i class="fas fa-trophy"></i>${picks}</div>
                 <div class="tp-winbars"><div class="tp-wbars__title"><span>${esc(t('predict.winBars', null, 'Pronostics en cours'))}</span>
                     <span class="tp-wbars__legend">${keys.map(([, c]) => `<i class="tp-wbar__dot tp-wbar__seg--${c}"></i>${esc(t('predict.' + c, null, c))}`).join(' ')}</span></div>
-                <div class="tp-wbar"><div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${esc(t('predict.votes', { n: nw }, nw + ' vote(s)'))}</span></div>
-                ${over ? '' : `<div class="tp-wbar__hint">${esc(t('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>`}</div>
+                <div class="tp-wbar"><div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${esc(t('predict.votes', { n: nw }, nw + ' vote(s)'))}</span></div></div>
                 ${over ? `<div class="tp-guessrow"><i class="fas fa-crosshairs"></i><span>${esc(t('predict.ended', null, 'Partie terminée'))}</span></div>` : ''}
             </div></div>`;
         // --- Votants : devinettes du coup en cours, ou résultat du coup joué pendant 5 s
