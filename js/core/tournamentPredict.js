@@ -245,7 +245,7 @@
     }
 
     // ───────────── Prono de coup : glisser la pièce sur l'échiquier, ou cliquer un coup de la liste ─────────────
-    const canGuess = () => { const c = current(); return !!c && !c.ended && !reviewT.game; };
+    const canGuess = () => { const c = current(); return !!c && !c.ended && !reviewT.game && !window.simT?.active; };
     /** Échiquier (liveTournament.js, onDragStart) : seules les pièces du camp au trait se déplacent */
     function canDrag(piece) {
         if (!canGuess() || pred.busy) return false;
@@ -253,7 +253,8 @@
         return piece?.[0] === (String(current().fen).split(' ')[1] === 'b' ? 'b' : 'w');
     }
     /** Survol : main ouverte sur les pièces qu'on peut faire glisser (camp au trait, sans ouvrir la connexion) */
-    const canGrab = piece => canGuess() && !pred.busy && piece?.[0] === (String(current().fen).split(' ')[1] === 'b' ? 'b' : 'w');
+    const canGrab = piece => window.simT?.active ? !!window.simCanDragT?.(piece)
+        : canGuess() && !pred.busy && piece?.[0] === (String(current().fen).split(' ')[1] === 'b' ? 'b' : 'w');
     document.addEventListener('mouseover', e => {
         const sq = e.target.closest?.('#liveBoardT [data-square]');
         if (!sq) return;
@@ -327,6 +328,7 @@
         const c = current();
         let m = null;
         if (uci && c) { try { m = new Chess(c.fen).move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || 'q' }); } catch { m = null; } }
+        if (window.simT?.active) m = null;
         stateT.annotations?.setHover?.(m);
     }
 
@@ -416,6 +418,7 @@
         const login = String(msg.username || '').toLowerCase();
         if (!login) return true;
         if (!chatWin.has(c.key)) chatWin.set(c.key, new Map());
+        if (chatWin.get(c.key).has(login)) return true;     // vote définitif : le premier compte
         chatWin.get(c.key).set(login, { pick, name: msg.displayName || login });
         saveChatWin();
         renderWinBars();
@@ -730,7 +733,7 @@
             const id = 'bot_' + name.toLowerCase();
             if (!chatWin.has(cur.key)) chatWin.set(cur.key, new Map());
             const cw = chatWin.get(cur.key);
-            if (!cw.has(id) || Math.random() < 0.1) cw.set(id, { pick: botWinPick(), name, bot: true });
+            if (!cw.has(id)) cw.set(id, { pick: botWinPick(), name, bot: true });
             renderWinBars();
             scheduleChat();
             paintBotsPanel();

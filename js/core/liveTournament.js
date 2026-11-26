@@ -36,8 +36,15 @@ function initTournamentBoard() {
         pieceTheme: p => window.pieceUrl(p),
         // Prono du prochain coup (tournamentPredict.js) : on fait glisser la pièce, le coup part, la pièce revient
         draggable: true,
-        onDragStart: (src, piece) => !!window.tournamentPredict?.canDrag(piece),
-        onDrop: (from, to) => { window.tournamentPredict?.dropMove(from, to); return 'snapback'; },
+        // Mode simulé : les deux camps se jouent librement, sans pronostic
+        onDragStart: (src, piece) => simT.active ? simCanDragT(piece) : !!window.tournamentPredict?.canDrag(piece),
+        onDrop: (from, to) => {
+            if (simT.active) return simMoveT(from, to);
+            window.tournamentPredict?.dropMove(from, to);
+            return 'snapback';
+        },
+        // Roque, prise en passant, promotion : on recale toute la position après le coup simulé
+        onSnapEnd: () => { if (simT.active) stateT.board.position(simFenT(), false); },
     });
     stateT.annotations = window.BoardAnnotations?.attach('liveBoardT', { draggable: false }) || null;
     window.addEventListener('resize', () => stateT.board?.resize());
@@ -397,8 +404,138 @@ function setFollowLayoutT(following) {
     grid.classList.toggle('t-following', following);
     grid.classList.remove('t-list-open');
     updateListToggleT();
+    updateSimBtnT();
     stateT.board?.resize();
 }
+
+// ── Mode simulé (comme sur chess.com) : on fige la partie et on joue une suite de coups ──
+// Rien ne part : ni Phantom (il continue de suivre le direct), ni pronostic. « Revenir au direct » en un clic.
+const simT = { active: false, base: null, line: [], idx: 0, liveMoves: 0 };
+window.simT = simT;
+const trS = (k, p, f) => window.tt ? window.tt('ui.tour.' + k, p, f) : f;
+const escS = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function simFenT() { return simT.idx ? simT.line[simT.idx - 1].fen : simT.base; }
+function simCanDragT(piece) { return simT.active && piece?.[0] === (simFenT().split(' ')[1] === 'b' ? 'b' : 'w'); }
+window.simCanDragT = simCanDragT;
+function updateSimBtnT() {
+    const b = document.getElementById('btnSimT');
+    if (!b) return;
+    b.hidden = !(stateT.currentGame || reviewT.game);
+    b.setAttribute('aria-pressed', String(simT.active));
+    b.classList.toggle('is-on', simT.active);
+}
+function startSimT() {
+    if (simT.active || !stateT.board || !(stateT.currentGame || reviewT.game)) return;
+    setReviewPlayingT(false);
+    Object.assign(simT, { active: true, base: stateT.chess.fen(), line: [], idx: 0, liveMoves: 0 });
+    document.getElementById('tReview')?.classList.add('is-sim-hidden');
+    document.querySelector('#page-tournament .t-boardcol')?.classList.add('is-sim');
+    stateT.annotations?.setHover?.(null);
+    renderSimT();
+    updateSimBtnT();
+}
+/** restore : remettre l'échiquier sur la partie (direct ou revue) */
+function exitSimT(restore = true) {
+    if (!simT.active) return;
+    simT.active = false;
+    document.getElementById('tReview')?.classList.remove('is-sim-hidden');
+    document.querySelector('#page-tournament .t-boardcol')?.classList.remove('is-sim');
+    const el = document.getElementById('tSim');
+    if (el) el.hidden = true;
+    updateSimBtnT();
+    if (!restore) return;
+    if (reviewT.game) { showReviewStepT(reviewT.idx); return; }
+    setBoardPositionT(stateT.chess.fen());
+    document.querySelectorAll('.highlight-last-move-live').forEach(e => e.classList.remove('highlight-last-move-live'));
+    if (stateT.lastMove) paintLastMoveT(...stateT.lastMove);
+}
+function simMoveT(from, to) {
+    if (from === to) return 'snapback';
+    const ch = new Chess(simFenT());
+    let m = null;
+    try { m = ch.move({ from, to, promotion: 'q' }); } catch { m = null; }
+    if (!m) return 'snapback';
+    simT.line = simT.line.slice(0, simT.idx).concat({ fen: ch.fen(), san: m.san, from: m.from, to: m.to });
+    simT.idx++;
+    paintLastMoveT(m.from, m.to);
+    renderSimT();
+    return undefined;
+}
+function simGoT(i) {
+    if (!simT.active) return;
+    simT.idx = Math.max(0, Math.min(simT.line.length, i));
+    setBoardPositionT(simFenT());
+    document.querySelectorAll('.highlight-last-move-live').forEach(e => e.classList.remove('highlight-last-move-live'));
+    const mv = simT.line[simT.idx - 1];
+    if (mv) paintLastMoveT(mv.from, mv.to);
+    renderSimT();
+}
+function renderSimT() {
+    let el = document.getElementById('tSim');
+    if (!simT.active) { if (el) el.hidden = true; return; }
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'tSim';
+        el.className = 't-sim';
+        const after = document.getElementById('tReview') || document.querySelector('#page-tournament .t-boardcol');
+        after?.insertAdjacentElement('afterend', el);
+        el.addEventListener('click', e => {
+            const b = e.target.closest('[data-sim]');
+            if (!b || b.disabled) return;
+            const a = b.dataset.sim;
+            if (a === 'live') exitSimT();
+            else if (a === 'first') simGoT(0);
+            else if (a === 'prev') simGoT(simT.idx - 1);
+            else if (a === 'next') simGoT(simT.idx + 1);
+            else if (a === 'last') simGoT(simT.line.length);
+            else if (a === 'reset') { simT.line = []; simGoT(0); }
+            else if (a.startsWith('go')) simGoT(+a.slice(2));
+        });
+    }
+    el.hidden = false;
+    const local = san => (window.Notation?.local ? window.Notation.local(san) : san);
+    const [, turn, , , , full] = String(simT.base).split(' ');
+    let num = +full || 1, black = turn === 'b';
+    const chips = simT.line.map((m, i) => {
+        const pre = !black ? `<span class="t-sim__num">${num}.</span>` : i === 0 ? `<span class="t-sim__num">${num}…</span>` : '';
+        const html = `${pre}<button type="button" data-sim="go${i + 1}" class="t-sim__mv${simT.idx === i + 1 ? ' is-on' : ''}">${escS(local(m.san))}</button>`;
+        if (black) num++;
+        black = !black;
+        return html;
+    }).join('');
+    const n = simT.line.length;
+    const back = reviewT.game ? trS('simBackReview', null, 'Revenir à la revue') : trS('simBackLive', null, 'Revenir au direct');
+    el.innerHTML = `
+        <div class="t-sim__head">
+            <span class="t-sim__badge"><i class="fas fa-flask"></i> ${escS(trS('simBadge', null, 'Simulation'))}</span>
+            <span class="t-sim__note">${escS(trS('simNote', null, 'Partie figée · le Phantom et les pronostics ne suivent pas'))}</span>
+            <button type="button" class="t-sim__live" data-sim="live">${reviewT.game ? '<i class="fas fa-rotate-left"></i>' : '<span class="tg-live-dot"></span>'} ${escS(back)}${simT.liveMoves && !reviewT.game ? ` <b>${escS(trS('simNewMoves', { n: simT.liveMoves }, '+{n} coup(s)').replace('{n}', simT.liveMoves))}</b>` : ''}</button>
+        </div>
+        <div class="t-sim__nav">
+            <button type="button" data-sim="first" ${simT.idx ? '' : 'disabled'} title="${escS(trS('simStart', null, 'Position de départ'))}"><i class="fas fa-fast-backward"></i></button>
+            <button type="button" data-sim="prev" ${simT.idx ? '' : 'disabled'}><i class="fas fa-step-backward"></i></button>
+            <div class="t-sim__line">${n ? chips : `<span class="t-sim__empty">${escS(trS('simEmpty', null, 'Fais glisser une pièce pour jouer un coup, pour les deux camps.'))}</span>`}</div>
+            <button type="button" data-sim="next" ${simT.idx < n ? '' : 'disabled'}><i class="fas fa-step-forward"></i></button>
+            <button type="button" data-sim="last" ${simT.idx < n ? '' : 'disabled'}><i class="fas fa-fast-forward"></i></button>
+            <button type="button" data-sim="reset" ${n ? '' : 'disabled'} title="${escS(trS('simReset', null, 'Effacer la suite'))}"><i class="fas fa-eraser"></i></button>
+        </div>`;
+    el.querySelector('.t-sim__mv.is-on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+document.addEventListener('keydown', e => {
+    if (!simT.active || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+    if (!document.getElementById('page-tournament')?.getClientRects().length) return;
+    if (e.key === 'Escape') { e.preventDefault(); exitSimT(); return; }
+    const d = { ArrowLeft: simT.idx - 1, ArrowRight: simT.idx + 1, Home: 0, End: simT.line.length }[e.key];
+    if (d === undefined) return;
+    e.preventDefault();
+    simGoT(d);
+});
+document.addEventListener('click', e => {
+    if (!e.target.closest?.('#btnSimT')) return;
+    simT.active ? exitSimT() : startSimT();
+});
+window.addEventListener('languageChanged', () => renderSimT());
 
 // ── Revue d'une partie terminée ──
 const reviewT = { game: null, fens: [], moves: [], idx: 0 };
@@ -416,6 +553,7 @@ async function startReviewT(g, wName, bName) {
     }
     if (startReviewT.token !== token) return;
 
+    exitSimT(false);
     stopGamePolling();
     const info = [];
     const fens = replayFensT(moves, g.currentFEN, info);
@@ -505,6 +643,7 @@ function setReviewPlayingT(on) {
 }
 
 function endReviewT(restoreLayout = true) {
+    exitSimT(false);
     startReviewT.token = null;
     setReviewPlayingT(false);
     if (!reviewT.game) return;
@@ -886,6 +1025,7 @@ window.phantomPositionProviders.tournament = () => {
 };
 
 async function startGamePolling(game) {
+    exitSimT(false);
     stopGamePolling();
     stopClockT();  // ← reset
     stateT.currentGame = game;
@@ -900,6 +1040,7 @@ async function startGamePolling(game) {
 }
 
 function stopGamePolling() {
+    exitSimT(false);
     stateT.phantomReplay = null;
     stateT.polling = false;
     clearTimeout(stateT.pollTimer);
@@ -957,7 +1098,7 @@ async function pollGame() {
                 }
 
                 stateT.chess.load(updatedGame.currentFEN);
-                setBoardPositionT(updatedGame.currentFEN);
+                if (simT.active) { simT.liveMoves++; renderSimT(); } else setBoardPositionT(updatedGame.currentFEN);
                 updateTurnIndicatorT();
 
                 // Chrono — resync depuis les données Chess.com si dispo, sinon simulation
@@ -986,6 +1127,10 @@ async function pollGame() {
 }
 
 function highlightLastMoveT(from, to) {
+    stateT.lastMove = [from, to];
+    if (!simT.active) paintLastMoveT(from, to);
+}
+function paintLastMoveT(from, to) {
     document.querySelectorAll('.highlight-last-move-live')
         .forEach(el => el.classList.remove('highlight-last-move-live'));
     const fromSq = document.querySelector(`#liveBoardT [data-square="${from}"]`);
@@ -1262,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logT(sent === false ? 'Phantom non actif : synchronisation ignorée' : 'Phantom : position de la revue', sent === false ? 'warn' : 'ok');
     });
     document.addEventListener('keydown', e => {
-        if (!reviewT.game || !tournamentPageVisible() || e.ctrlKey || e.metaKey || e.altKey) return;
+        if (!reviewT.game || simT.active || !tournamentPageVisible() || e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
         if (e.key === ' ' && !e.target.closest?.('button')) { e.preventDefault(); setReviewPlayingT(!reviewT.playToken); return; }
         const d = { ArrowLeft: -1, ArrowRight: 1, Home: 'first', End: 'last' }[e.key];
@@ -1287,7 +1432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const evalT = EvalBar.attach({
             host: evalCol,
             boardEl: document.getElementById('liveBoardT'),
-            getFen: () => stateT.chess?.fen(),
+            getFen: () => simT.active ? simFenT() : stateT.chess?.fen(),
         });
         const setEvalT = on => {
             evalCol.classList.toggle('has-eval', on);
