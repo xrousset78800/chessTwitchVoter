@@ -25,6 +25,9 @@ export const PALETTES = {
     retro:   ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#264653', '#ff6f59', '#457b9d', '#f1faee', '#a8dadc', '#8338ec', '#fb8500', '#219ebc'],
     royal:   ['#7048e8', '#f5cf5c', '#5f3dc4', '#ffe066', '#9775fa', '#e8b923', '#4c2a9c', '#fff3bf', '#b197fc', '#c99700', '#3b1f80', '#ffd43b'],
     synth:   ['#ff3fb4', '#22e5ff', '#b14dff', '#ffe14d', '#ff7ccc', '#5cf0ff', '#7b2cff', '#ff9e3d', '#ff4d6d', '#00ffc6', '#d45cff', '#3d8bff'],
+    pastel:  ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff', '#a0c4ff', '#bdb2ff', '#ffc6ff', '#f1c0e8', '#cfbaf0', '#a3c4f3', '#90dbf4'],
+    earth:   ['#6b4f3a', '#a47148', '#c9a66b', '#556b2f', '#8f9779', '#b5651d', '#d4a373', '#7f5539', '#3d5a40', '#e9c46a', '#8d6e63', '#bc6c25'],
+    neon:    ['#39ff14', '#ff073a', '#00f0ff', '#fffb00', '#ff00e6', '#ff8c00', '#7df9ff', '#bf00ff', '#00ff9f', '#ff3cac', '#faff00', '#00b3ff'],
     gold:    ['#ffd700', '#f5c542', '#e6b422', '#ffdf6e', '#d4a017', '#fff0a5', '#c9a227', '#ffcc33', '#b8860b', '#f0d58c', '#daa520', '#ffe680'],
 };
 

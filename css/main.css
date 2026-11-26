@@ -90,18 +90,47 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Fonds plus doux, au choix du viewer (Paramètres du 24/24) */
-:root[data-bg="graphite"] {
-    --bg-dark: #1b1917; --bg-card: #24211e; --bg-card-hover: #2d2a27; --bg-input: #1f1c1a;
-    --border-subtle: #36322e; --text-primary: #ece7e1; --text-secondary: #b0a9a2;
+/* Thèmes du site (data-bg sur <html>, choisis dans le menu Pièces ; Nuit, Ardoise et Bleu nuit gratuits,
+   les autres à la Boutique). La classe .bg--x applique un thème à un seul bloc (aperçus). */
+.bg--dark {
+    --bg-dark: #100d0b; --bg-card: #1a1512; --bg-card-hover: #221c18; --bg-input: #15110e;
+    --border-subtle: #2b2420; --text-primary: #f4eee8; --text-secondary: #b9aea6;
 }
-:root[data-bg="slate"] {
+:root[data-bg="slate"], .bg--slate {
     --bg-dark: #262421; --bg-card: #2f2d2a; --bg-card-hover: #383532; --bg-input: #292724;
     --border-subtle: #423e3a; --text-primary: #ebe6e0; --text-secondary: #b3aca5;
 }
-:root[data-bg="blue"] {
+:root[data-bg="blue"], .bg--blue {
     --bg-dark: #161a21; --bg-card: #1e232b; --bg-card-hover: #262c35; --bg-input: #1a1e25;
     --border-subtle: #2e3540; --text-primary: #e8e9ec; --text-secondary: #a9afba;
+}
+:root[data-bg="graphite"], .bg--graphite {
+    --bg-dark: #1b1917; --bg-card: #24211e; --bg-card-hover: #2d2a27; --bg-input: #1f1c1a;
+    --border-subtle: #36322e; --text-primary: #ece7e1; --text-secondary: #b0a9a2;
+}
+:root[data-bg="mocha"], .bg--mocha {
+    --bg-dark: #1f1915; --bg-card: #29211c; --bg-card-hover: #332a24; --bg-input: #231c18;
+    --border-subtle: #42372f; --text-primary: #f1ebe5; --text-secondary: #bbaea3;
+}
+:root[data-bg="forest"], .bg--forest {
+    --bg-dark: #121a15; --bg-card: #19231d; --bg-card-hover: #212d26; --bg-input: #151e18;
+    --border-subtle: #2a3830; --text-primary: #e9efe9; --text-secondary: #a9b8ad;
+}
+:root[data-bg="petrol"], .bg--petrol {
+    --bg-dark: #0f1c1e; --bg-card: #162629; --bg-card-hover: #1d3034; --bg-input: #122022;
+    --border-subtle: #27403f; --text-primary: #e6f0f0; --text-secondary: #a5b9ba;
+}
+:root[data-bg="plum"], .bg--plum {
+    --bg-dark: #1a141e; --bg-card: #231b29; --bg-card-hover: #2c2333; --bg-input: #1e1723;
+    --border-subtle: #3a2e42; --text-primary: #efe8f2; --text-secondary: #b7aabd;
+}
+:root[data-bg="wine"], .bg--wine {
+    --bg-dark: #1d1214; --bg-card: #27181b; --bg-card-hover: #312024; --bg-input: #211417;
+    --border-subtle: #42282d; --text-primary: #f2e8e9; --text-secondary: #bfa9ac;
+}
+:root[data-bg="ink"], .bg--ink {
+    --bg-dark: #08080a; --bg-card: #111114; --bg-card-hover: #19191d; --bg-input: #0d0d10;
+    --border-subtle: #232328; --text-primary: #f2f2f4; --text-secondary: #a8a8b0;
 }
 
 body {

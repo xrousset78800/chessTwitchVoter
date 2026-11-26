@@ -748,7 +748,10 @@
     "glacier": "Glacier",
     "retro": "Retro",
     "royal": "Royal",
-    "synth": "Synthwave"
+    "synth": "Synthwave",
+    "pastel": "Pastel",
+    "earth": "Earth",
+    "neon": "Neon"
   },
   "timerRing": {
     "seconds": "seconds",
@@ -1130,16 +1133,32 @@
     "flat": "Flat",
     "neon": "Neon",
     "token": "Tokens",
+    "emerald": "Emerald",
+    "obsidian": "Obsidian",
+    "toxic": "Acid",
     "ice": "Pack ice",
     "ruby": "Ruby",
     "royal": "Royal",
     "synth": "Synthwave",
     "boardTitle": "Board",
+    "themeTitle": "Site theme",
+    "theme": {
+      "dark": "Night",
+      "slate": "Slate",
+      "blue": "Midnight blue",
+      "graphite": "Graphite",
+      "mocha": "Mocha",
+      "forest": "Fir",
+      "petrol": "Petrol",
+      "plum": "Plum",
+      "wine": "Burgundy",
+      "ink": "Ink"
+    },
     "board": {
       "wood": "Wood",
       "green": "Green",
       "blue": "Blue",
-      "grey": "Slate",
+      "grey": "Classic",
       "orange": "Ember",
       "purple": "Lavender",
       "rose": "Rose",
@@ -1157,7 +1176,13 @@
       "bubblegum": "Bubblegum",
       "cherry": "Cherry",
       "midnight": "Midnight",
-      "gilded": "Gilded"
+      "gilded": "Gilded",
+      "lagoon": "Lagoon",
+      "peach": "Peach",
+      "matcha": "Matcha",
+      "steel": "Steel",
+      "wine": "Burgundy",
+      "abyss": "Abyss"
     },
     "matTitle": "Material",
     "mat": {
@@ -1170,7 +1195,9 @@
       "mosaic": "Mosaic",
       "frost": "Frost",
       "carbon": "Carbon",
-      "marble": "Marble"
+      "marble": "Marble",
+      "linen": "Linen",
+      "stone": "Stone"
     }
   },
   "achievements": {
@@ -1396,13 +1423,15 @@
       "pieces": "Piece sets",
       "boards": "Board colors",
       "mats": "Board materials",
-      "palettes": "Draw colors"
+      "palettes": "Draw colors",
+      "themes": "Site themes"
     },
     "catDesc": {
       "pieces": "On every board and every small piece across the site.",
       "boards": "The two square colors.",
       "mats": "A texture laid over your square colors.",
-      "palettes": "The wheel, strip and podium of the votes, also seen by your viewers."
+      "palettes": "The wheel, strip and podium of the votes, also seen by your viewers.",
+      "themes": "Background and cards of every page of the site, just for you."
     },
     "buy": "Buy",
     "confirm": "Confirm ({n} ♟)?",
@@ -1423,7 +1452,8 @@
       "pieces": "Pieces",
       "boards": "Boards",
       "mats": "Materials",
-      "palettes": "Draw"
+      "palettes": "Draw",
+      "themes": "Themes"
     },
     "filter": {
       "all": "All",

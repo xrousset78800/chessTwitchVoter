@@ -748,7 +748,10 @@
     "glacier": "Glacier",
     "retro": "Rétro",
     "royal": "Royal",
-    "synth": "Synthwave"
+    "synth": "Synthwave",
+    "pastel": "Pastel",
+    "earth": "Terre",
+    "neon": "Néon"
   },
   "timerRing": {
     "seconds": "secondes",
@@ -1130,16 +1133,32 @@
     "flat": "Plat",
     "neon": "Néon",
     "token": "Jetons",
+    "emerald": "Émeraude",
+    "obsidian": "Obsidienne",
+    "toxic": "Acide",
     "ice": "Banquise",
     "ruby": "Rubis",
     "royal": "Royal",
     "synth": "Synthwave",
     "boardTitle": "Échiquier",
+    "themeTitle": "Thème du site",
+    "theme": {
+      "dark": "Nuit",
+      "slate": "Ardoise",
+      "blue": "Bleu nuit",
+      "graphite": "Graphite",
+      "mocha": "Moka",
+      "forest": "Sapin",
+      "petrol": "Pétrole",
+      "plum": "Prune",
+      "wine": "Bordeaux",
+      "ink": "Encre"
+    },
     "board": {
       "wood": "Bois",
       "green": "Vert",
       "blue": "Bleu",
-      "grey": "Ardoise",
+      "grey": "Classique",
       "orange": "Braise",
       "purple": "Lavande",
       "rose": "Rose",
@@ -1157,7 +1176,13 @@
       "bubblegum": "Chewing-gum",
       "cherry": "Cerise",
       "midnight": "Minuit",
-      "gilded": "Doré"
+      "gilded": "Doré",
+      "lagoon": "Lagon",
+      "peach": "Pêche",
+      "matcha": "Matcha",
+      "steel": "Acier",
+      "wine": "Bordeaux",
+      "abyss": "Abysses"
     },
     "matTitle": "Matière",
     "mat": {
@@ -1170,7 +1195,9 @@
       "mosaic": "Mosaïque",
       "frost": "Givre",
       "carbon": "Carbone",
-      "marble": "Marbre"
+      "marble": "Marbre",
+      "linen": "Lin",
+      "stone": "Pierre"
     }
   },
   "achievements": {
@@ -1396,13 +1423,15 @@
       "pieces": "Sets de pièces",
       "boards": "Couleurs d'échiquier",
       "mats": "Matières d'échiquier",
-      "palettes": "Couleurs du tirage"
+      "palettes": "Couleurs du tirage",
+      "themes": "Thèmes du site"
     },
     "catDesc": {
       "pieces": "Sur tous les échiquiers et toutes les petites pièces du site.",
       "boards": "Les deux couleurs des cases.",
       "mats": "Une texture posée sur tes couleurs de cases.",
-      "palettes": "La roue, la bande et le podium des votes, vus aussi par tes spectateurs."
+      "palettes": "La roue, la bande et le podium des votes, vus aussi par tes spectateurs.",
+      "themes": "Le fond et les cartes de toutes les pages du site, pour toi seul."
     },
     "buy": "Acheter",
     "confirm": "Confirmer ({n} ♟) ?",
@@ -1423,7 +1452,8 @@
       "pieces": "Pièces",
       "boards": "Échiquiers",
       "mats": "Matières",
-      "palettes": "Tirage"
+      "palettes": "Tirage",
+      "themes": "Thèmes"
     },
     "filter": {
       "all": "Tout",

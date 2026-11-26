@@ -19,6 +19,7 @@ const CATS = [
     { key: 'boards', icon: 'fa-chess-board' },
     { key: 'mats', icon: 'fa-layer-group' },
     { key: 'palettes', icon: 'fa-palette' },
+    { key: 'themes', icon: 'fa-fill-drip' },
 ];
 const FILTERS = ['all', 'buy', 'owned'];
 // Position de la cabine : 1.e4 e5 2.Cf3 Cc6 3.Fc4
@@ -29,7 +30,7 @@ let rules = null;          // { rules, catalog } du serveur
 let confirming = null;     // id en attente de confirmation (deuxième clic)
 let confirmTimer = null;
 let busy = null;           // id en cours d'achat
-const tried = { pieces: null, boards: null, mats: null, palettes: null };   // objet essayé par rayon
+const tried = { pieces: null, boards: null, mats: null, palettes: null, themes: null };   // objet essayé par rayon
 let tab = 'pieces';
 let filter = 'all';
 try {
@@ -61,7 +62,7 @@ function catalog() {
             look: { set: s },
         })),
         boards: pc.boards.map(b => ({
-            own: b.id, free: !!b.free, name: pc.boardLabel(b),
+            own: b.own || b.id, free: !!b.free, name: pc.boardLabel(b),
             preview: boardPreview(b.light, b.dark),
             equipped: pc.board().id === b.id,
             equip: () => window.setBoardTheme(b.id),
@@ -81,6 +82,13 @@ function catalog() {
             equipped: pal === id,
             equip: () => setPaletteId(id),
             look: { colors: PALETTES[id] },
+        })),
+        themes: (pc.themes || []).map(x => ({
+            own: x.own || x.id, free: !!x.free, name: pc.themeLabel(x),
+            preview: `<div class="shop-theme bg--${x.id}"><i></i><i></i><i></i></div>`,
+            equipped: pc.theme().id === x.id,
+            equip: () => window.setSiteTheme(x.id),
+            look: { bg: x.id },
         })),
     };
 }
@@ -164,6 +172,7 @@ function fitting(items, acc) {
     const board = shown('boards', items)?.look;
     const mat = shown('mats', items)?.look.mat || 'none';
     const colors = shown('palettes', items)?.look.colors || [];
+    const bg = shown('themes', items)?.look.bg || 'dark';
     const url = window.pieceCatalog.url;
     let squares = '';
     FEN.split('/').forEach((row, r) => {
@@ -180,7 +189,7 @@ function fitting(items, acc) {
     });
     const sel = shown(tab, items);
     const trying = Object.keys(tried).some(k => tried[k] && !(items[k] || []).find(i => i.own === tried[k])?.equipped);
-    return `<aside class="shop-fit">
+    return `<aside class="shop-fit bg--${esc(bg)}">
         <div class="shop-fit__head"><span>${esc(t('fit.title'))}</span>${trying ? `<button type="button" class="shop-fit__reset" data-shop-reset><i class="fas fa-rotate-left"></i> ${esc(t('fit.reset'))}</button>` : ''}</div>
         <div class="shop-fit__board mat--${esc(mat)}" style="--sq-light:${board?.light};--sq-dark:${board?.dark}">${squares}</div>
         <div class="shop-fit__draw" title="${esc(tr('palette.title'))}">${SHARES.map((w, i) => `<span style="flex:${w};background:${colors[i] || '#555'}"></span>`).join('')}</div>

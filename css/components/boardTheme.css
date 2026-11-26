@@ -69,3 +69,13 @@ html[data-board-mat="marble"], .mat--marble {
     --mat-d: linear-gradient(135deg, rgba(255,255,255,.16), transparent 60%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='turbulence' baseFrequency='.012 .03' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -4 0 0 0 .55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     --mat-size-l: 100% 100%, 240px; --mat-size-d: 100% 100%, 240px;
 }
+html[data-board-mat="linen"], .mat--linen {
+    --mat-l: repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(0,0,0,.06) 0 1px, transparent 1px 3px), linear-gradient(135deg, rgba(255,255,255,.12), transparent 70%);
+    --mat-d: repeating-linear-gradient(0deg, rgba(0,0,0,.13) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(0,0,0,.1) 0 1px, transparent 1px 3px), linear-gradient(135deg, rgba(255,255,255,.08), transparent 70%);
+    --mat-size-l: auto, auto, 100% 100%; --mat-size-d: auto, auto, 100% 100%;
+}
+html[data-board-mat="stone"], .mat--stone {
+    --mat-l: radial-gradient(circle at 30% 30%, rgba(255,255,255,.18), transparent 60%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.05 .08' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.6 .9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-d: radial-gradient(circle at 30% 30%, rgba(255,255,255,.1), transparent 60%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.05 .08' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2 1.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --mat-size-l: 100% 100%, 160px; --mat-size-d: 100% 100%, 160px;
+}

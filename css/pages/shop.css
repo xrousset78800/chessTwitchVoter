@@ -6,30 +6,32 @@
 
 #page-shop .browse__header {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
-    gap: 14px 24px;
-    margin-bottom: 22px;
+    gap: 12px 24px;
+    margin-bottom: 16px;
 }
+#page-shop .browse__header > div:first-child { flex: 1; min-width: 0; }
 #page-shop .browse__title { font-size: 2rem; margin-bottom: 4px; }
-#page-shop .browse__desc { font-size: 0.92rem; max-width: 620px; margin: 0; }
+#page-shop .browse__desc { font-size: 0.88rem; max-width: 620px; margin: 0; }
+#shop-wallet { flex: none; }
 
 /* ----- Solde ----- */
 .shop-wallet {
     position: relative;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px 14px;
-    padding: 8px 14px;
+    display: grid;
+    justify-items: end;
+    gap: 3px;
+    min-width: 170px;
+    padding: 10px 16px;
+    text-align: right;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
     background: var(--bg-card);
 }
-.shop-wallet b { font-family: 'Chakra Petch', sans-serif; font-size: 1.4rem; color: var(--text-primary); line-height: 1; }
+.shop-wallet b { font-family: 'Chakra Petch', sans-serif; font-size: 1.6rem; color: var(--text-primary); line-height: 1; }
 .shop-wallet small { font-size: 0.72rem; color: var(--text-muted); }
-.shop-wallet--guest span { font-size: 0.82rem; color: var(--text-secondary); max-width: 300px; }
+.shop-wallet--guest span { font-size: 0.8rem; color: var(--text-secondary); max-width: 240px; }
 
 .shop-earn summary {
     list-style: none;
@@ -184,8 +186,8 @@
 /* ----- Tuiles ----- */
 .shop-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 6px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -194,10 +196,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
     width: 100%;
     height: 100%;
-    padding: 8px 6px 7px;
+    padding: 6px 4px 5px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-subtle);
     background: var(--bg-card);
@@ -209,19 +211,19 @@
 .shop-tile.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 .shop-tile.is-exclusive .shop-tile__preview { opacity: 0.5; }
 
-.shop-tile__preview { display: flex; align-items: center; justify-content: center; height: 58px; }
+.shop-tile__preview { display: flex; align-items: center; justify-content: center; height: 40px; }
 .shop-tile__name {
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     font-weight: 600;
     color: var(--text-primary);
 }
-.shop-tile__price { font: 700 0.78rem 'Chakra Petch', sans-serif; color: var(--accent-light); }
+.shop-tile__price { font: 700 0.72rem 'Chakra Petch', sans-serif; color: var(--accent-light); }
 .shop-tile__price.is-poor { color: var(--text-muted); }
-.shop-tile__meta { font-size: 0.7rem; color: var(--text-muted); }
+.shop-tile__meta { font-size: 0.66rem; color: var(--text-muted); }
 .shop-tile__meta.is-excl { color: var(--accent-light); }
 .shop-tile__badge.is-on {
     display: inline-flex;
@@ -238,15 +240,25 @@
 .shop-board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    width: 52px;
-    height: 52px;
-    border-radius: 4px;
+    width: 38px;
+    height: 38px;
+    border-radius: 3px;
     overflow: hidden;
 }
-.shop-pieces { display: grid; grid-template-columns: repeat(2, 26px); }
-.shop-pieces img { width: 26px; height: 26px; }
-.shop-palette { display: grid; grid-template-columns: repeat(4, 14px); gap: 4px; }
-.shop-palette span { width: 14px; height: 14px; border-radius: 50%; }
+.shop-pieces { display: grid; grid-template-columns: repeat(2, 20px); }
+.shop-pieces img { width: 20px; height: 20px; }
+.shop-palette { display: grid; grid-template-columns: repeat(4, 10px); gap: 3px; }
+.shop-palette span { width: 10px; height: 10px; border-radius: 50%; }
+/* Thème du site : fond, carte et deux lignes de texte */
+.shop-theme {
+    display: grid; grid-template-rows: 1fr 4px 4px; gap: 3px;
+    width: 52px; height: 38px; padding: 5px 6px;
+    border-radius: 4px; border: 1px solid var(--border-subtle); background: var(--bg-dark);
+}
+.shop-theme i:nth-child(1) { border-radius: 3px; background: var(--bg-card); border: 1px solid var(--border-subtle); }
+.shop-theme i:nth-child(2) { width: 80%; border-radius: 2px; background: var(--text-primary); }
+.shop-theme i:nth-child(3) { width: 55%; border-radius: 2px; background: var(--text-secondary); }
+.shop-fit { color: var(--text-primary); transition: background .2s, border-color .2s; }
 
 .shop-price { font-family: 'Chakra Petch', sans-serif; font-weight: 700; color: var(--text-primary); }
 .shop-price.is-poor { color: var(--text-muted); }
@@ -272,8 +284,11 @@
     .shop-fit__hint { grid-area: hint; }
     .shop-tab span { display: none; }
     .shop-tab.is-active span { display: inline; }
+    #page-shop .browse__desc { display: none; }
 }
 @media (max-width: 480px) {
-    .shop-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .shop-wallet { min-width: 0; padding: 8px 10px; }
+    .shop-wallet small { display: none; }
     #page-shop .browse__title { font-size: 1.6rem; }
 }

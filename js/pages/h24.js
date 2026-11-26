@@ -224,7 +224,8 @@ const H24Page = {
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.toggleSettings(false); });
         window.addEventListener('languageChanged', () => this.renderPalettes());
         this.renderPalettes();
-        this.setBg(document.documentElement.dataset.bg || 'dark');
+        this.renderBgs();
+        for (const ev of ['siteThemeChanged', 'economyChanged', 'languageChanged']) window.addEventListener(ev, () => this.renderBgs());
     },
 
     // ------------------------------------------------------------------ paramètres du viewer
@@ -1324,13 +1325,19 @@ const H24Page = {
     },
 
     // ------------------------------------------------------------------ style du tirage
-    /** Fond du site (nuit, ardoise, bleu nuit) : retenu dans ce navigateur */
+    /** Thème du site (js/utils/pieceSet.js) : gratuits et achetés à la Boutique */
     setBg(bg) {
-        bg = ['graphite', 'slate', 'blue'].includes(bg) ? bg : 'dark';
-        if (bg === 'dark') delete document.documentElement.dataset.bg;
-        else document.documentElement.dataset.bg = bg;
-        try { localStorage.setItem('cgBg', bg); } catch {}
-        document.querySelectorAll('[data-h24-bg]').forEach(b => b.classList.toggle('is-active', b.dataset.h24Bg === bg));
+        window.setSiteTheme?.(bg);
+        this.renderBgs();
+    },
+
+    renderBgs() {
+        const pc = window.pieceCatalog;
+        const box = document.querySelector('[data-h24-bgs]');
+        if (!pc || !box) return;
+        const cur = pc.theme().id;
+        const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        box.innerHTML = pc.themes.filter(pc.unlocked).map(x => `<button type="button" class="btn btn--sm${x.id === cur ? ' is-active' : ''}" data-h24-bg="${x.id}"><span class="h24-bg-dot" style="background:${x.bg}"></span> <span>${esc(pc.themeLabel(x))}</span></button>`).join('');
     },
 
     setStyle(style) {

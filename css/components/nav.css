@@ -449,6 +449,7 @@ body.game-mode .nav__page-title {
     background-image: var(--mat-d, none);
     background-size: var(--mat-size-d, auto);
 }
+.nav__pieces-swatch.nav__pieces-theme { background: linear-gradient(135deg, var(--d) 0 55%, var(--l) 55%); }
 .nav__pieces-shop {
     display: flex;
     align-items: center;
