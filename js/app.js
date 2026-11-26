@@ -2105,17 +2105,32 @@ const Toast = {
             <button class="toast__close" aria-label="Fermer">&times;</button>
             <span class="toast__life"></span>
         `;
-        // Pas plus de 4 à la fois : le plus ancien laisse sa place
-        while (this.container.children.length >= 4) this.container.firstElementChild.remove();
-        const leave = () => {
-            if (toast.classList.contains('is-leaving')) return;
-            toast.classList.add('is-leaving');
-            setTimeout(() => toast.remove(), 250);
-        };
+        // Le même message déjà affiché n'est pas empilé une seconde fois : il repart pour un tour
+        const twin = [...this.container.children].find(t => !t.classList.contains('is-leaving') && t.dataset.msg === message);
+        if (twin) twin.remove();
+        toast.dataset.msg = message;
+        // Pas plus de 4 à la fois : les plus anciens laissent leur place
+        const alive = [...this.container.children].filter(t => !t.classList.contains('is-leaving'));
+        alive.slice(0, Math.max(0, alive.length - 3)).forEach(t => this.leave(t));
+        const leave = () => this.leave(toast);
         toast.querySelector('.toast__close').addEventListener('click', leave);
         toast.querySelector('.toast__life').addEventListener('animationend', leave);
         this.container.appendChild(toast);
         return toast;
+    },
+
+    /** Départ : le toast s'efface puis se replie, les suivants remontent sans à-coup */
+    leave(toast) {
+        if (!toast?.isConnected || toast.classList.contains('is-leaving')) return;
+        toast.classList.add('is-leaving');
+        const h = toast.offsetHeight;
+        const fold = toast.animate?.([
+            { height: `${h}px`, marginBottom: '0px', opacity: 1 },
+            { height: `${h}px`, marginBottom: '0px', opacity: 0, offset: 0.5 },
+            { height: '0px', marginBottom: '-8px', opacity: 0, paddingTop: '0px', paddingBottom: '0px', borderWidth: '0px' }
+        ], { duration: 360, easing: 'ease-in-out', fill: 'forwards' });
+        if (fold) fold.onfinish = () => toast.remove();
+        else setTimeout(() => toast.remove(), 250);
     },
 
     success(msg) { this.show(msg, 'success'); },

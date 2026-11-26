@@ -513,6 +513,20 @@ function endReviewT(restoreLayout = true) {
 }
 
 
+/**
+ * Position sur l'échiquier : animée seulement pour un coup simple (4 cases au plus, roque compris).
+ * Un saut de plusieurs coups (nouvelle partie, rattrapage) s'affiche d'un coup : chessboard.js
+ * ferait glisser des pièces au hasard d'une case à l'autre.
+ */
+function setBoardPositionT(fen) {
+    if (!stateT.board || !fen) return;
+    const before = stateT.board.position();
+    const after = Chessboard.fenToObj(String(fen).split(' ')[0]) || {};
+    let changed = 0;
+    for (const sq of new Set([...Object.keys(before), ...Object.keys(after)])) if (before[sq] !== after[sq]) changed++;
+    stateT.board.position(fen, changed > 0 && changed <= 4);
+}
+
 function updateListToggleT() {
     const grid = document.querySelector('#page-tournament .live-content');
     const btn = document.getElementById('btnToggleListT');
@@ -574,7 +588,7 @@ function renderGames(games, roundId) {
                 if (!choice) return;
                 // L'état interne doit suivre l'échiquier affiché : c'est lui que Synchroniser envoie au Phantom
                 stateT.chess.load(g.currentFEN);
-                stateT.board.position(g.currentFEN);
+                setBoardPositionT(g.currentFEN);
                 updateTurnIndicatorT();
                 document.getElementById('fenDisplayT').textContent = `FEN : ${g.currentFEN ?? '—'}`;
                 document.getElementById('playerWhiteT').textContent = wName;
@@ -917,7 +931,7 @@ async function pollGame() {
                 }
 
                 stateT.chess.load(updatedGame.currentFEN);
-                stateT.board.position(updatedGame.currentFEN);
+                setBoardPositionT(updatedGame.currentFEN);
                 updateTurnIndicatorT();
 
                 // Chrono — resync depuis les données Chess.com si dispo, sinon simulation

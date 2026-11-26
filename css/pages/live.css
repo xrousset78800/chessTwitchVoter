@@ -880,3 +880,15 @@ input[type=range] {
     .tl-grid { grid-template-columns: 1fr; }
     .tl-card__board { flex-basis: 80px; width: 80px; }
 }
+
+/* ── Tournois : échiquier agrandi (page plus large, hauteur limitée à l'écran) ── */
+@media (min-width: 901px) {
+    #page-tournament .live-header, #page-tournament .live-content { max-width: 1480px; }
+    #page-tournament .live-content { grid-template-columns: 320px minmax(0, 1fr) 300px; }
+    #page-tournament .board-wrapper > div:first-child { max-width: min(780px, max(320px, calc(100vh - 250px))); }
+    #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: minmax(0, 1fr) 300px; }
+    #page-tournament .live-page .live-content.t-following .board-wrapper > div:first-child,
+    #page-tournament .live-content.t-following:not(.t-list-open) .board-wrapper > div:first-child {
+        max-width: min(880px, max(320px, calc(100vh - 250px)));
+    }
+}

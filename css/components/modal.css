@@ -132,7 +132,9 @@
     to { opacity: 1; transform: none; }
 }
 
-.toast.is-leaving { animation: toast-out 0.25s ease-in forwards; }
+/* Départ animé par Toast.leave (fondu puis repli) */
+.toast.is-leaving { pointer-events: none; }
+.toast { flex-shrink: 0; box-sizing: border-box; }
 
 @keyframes toast-out {
     to { opacity: 0; transform: translateY(-4px); }
