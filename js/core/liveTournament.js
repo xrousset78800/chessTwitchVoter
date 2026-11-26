@@ -449,6 +449,32 @@ function exitSimT(restore = true) {
     document.querySelectorAll('.highlight-last-move-live').forEach(e => e.classList.remove('highlight-last-move-live'));
     if (stateT.lastMove) paintLastMoveT(...stateT.lastMove);
 }
+// ========== SONS DE L'ÉCHIQUIER ==========
+// Mêmes fichiers et même volume que la régie 24/24 (h24Volume / h24Muted)
+const SOUNDS_T = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', end: 'mp3/end.wav' };
+function playSoundT(kind) {
+    let vol = 0.6;
+    try {
+        if (localStorage.getItem('h24Muted') === '1') return;
+        const v = parseFloat(localStorage.getItem('h24Volume'));
+        if (Number.isFinite(v)) vol = Math.max(0, Math.min(1, v));
+    } catch {}
+    if (!vol || !SOUNDS_T[kind]) return;
+    try {
+        const a = new Audio(SOUNDS_T[kind]);
+        a.volume = vol * (kind === 'end' ? 0.6 : 0.8);
+        a.play().catch(() => {});   // pas encore de clic sur la page : le navigateur refuse
+    } catch {}
+}
+/** Son du coup qui mène de prevFEN à fen (fin de partie, échec, prise ou coup simple) */
+function moveSoundT(prevFEN, fen) {
+    try {
+        const ch = new Chess(fen);
+        const count = f => String(f).split(' ')[0].replace(/[^a-zA-Z]/g, '').length;
+        playSoundT(ch.game_over() ? 'end' : ch.in_check() ? 'check' : count(fen) < count(prevFEN) ? 'capture' : 'move');
+    } catch {}
+}
+
 function simMoveT(from, to) {
     if (from === to) return 'snapback';
     const ch = new Chess(simFenT());
@@ -457,6 +483,7 @@ function simMoveT(from, to) {
     if (!m) return 'snapback';
     simT.line = simT.line.slice(0, simT.idx).concat({ fen: ch.fen(), san: m.san, from: m.from, to: m.to });
     simT.idx++;
+    playSoundT(ch.game_over() ? 'end' : ch.in_check() ? 'check' : m.captured ? 'capture' : 'move');
     paintLastMoveT(m.from, m.to);
     renderSimT();
     return undefined;
@@ -1098,7 +1125,11 @@ async function pollGame() {
                 }
 
                 stateT.chess.load(updatedGame.currentFEN);
-                if (simT.active) { simT.liveMoves++; renderSimT(); } else setBoardPositionT(updatedGame.currentFEN);
+                if (simT.active) { simT.liveMoves++; renderSimT(); } else {
+                    setBoardPositionT(updatedGame.currentFEN);
+                    // Son du coup (pas au chargement de la partie, ni pendant une simulation)
+                    if (prevFEN && stateT.currentGame === g) moveSoundT(prevFEN, updatedGame.currentFEN);
+                }
                 updateTurnIndicatorT();
 
                 // Chrono — resync depuis les données Chess.com si dispo, sinon simulation
