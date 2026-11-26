@@ -1232,9 +1232,11 @@ io.on('connection', (socket) => {
 // Prédiction de la nuit : sans tournoi chess.com en direct (cadence d'au moins 10 min), les parties de Lichess TV
 const lichessTv = require('./lichessTv')({});
 const predictBase = (tc) => parseInt(String(tc || '').replace(/^\d+\//, ''), 10) >= 600;
+// Mêmes règles que la station : une partie commencée il y a plus de 12 h est sans doute figée et ne compte pas
+const predictFresh = (g) => !g.startAt || Number.isNaN(Date.parse(g.startAt)) || Date.now() - Date.parse(g.startAt) < 12 * 3600e3;
 async function stationLiveGames() {
     const games = await liveGamesList().catch(() => []);
-    if (games.some(g => predictBase(g.tc))) return games;
+    if (games.some(g => predictBase(g.tc) && predictFresh(g) && g.room?.slug && g.id && g.fen)) return games;
     return [...games, ...await lichessTv.candidates().catch(() => [])];
 }
 const stationRoom = (slug) => lichessTv.isRoom(slug) ? lichessTv.room(slug) : fetchChessEventRoom(slug);
