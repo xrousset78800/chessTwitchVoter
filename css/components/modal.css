@@ -193,10 +193,10 @@
 
 @keyframes toast-life { to { transform: scaleX(0); } }
 
-.toast--success { --tone: var(--accent-green); }
+.toast--success { --tone: var(--accent); }
 .toast--error { --tone: #ef4444; }
 .toast--warning { --tone: #eab308; }
-.toast--info { --tone: #ff8a3d; }
+.toast--info { --tone: #9aa0b4; }
 
 @media (prefers-reduced-motion: reduce) {
     .toast, .toast.is-leaving { animation-duration: 0.01s; }

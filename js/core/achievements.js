@@ -26,6 +26,7 @@ const achievements = {
     known: null,        // ids déjà vus pour le compte courant (null : pas encore chargé)
     knownLogin: null,
     quiet: new Set(),   // déjà annoncés (débloqués hors connexion)
+    pending: new Set(), // constatés avant le chargement du compte connecté
     sending: false,
 
     unlocked() {
@@ -40,6 +41,9 @@ const achievements = {
     /** Succès constaté par le navigateur */
     unlock(...ids) {
         if (!this.defs) return void this.ready?.then(() => this.unlock(...ids));
+        // Connecté mais compte pas encore chargé : on ne sait pas encore ce qui est acquis
+        // (sinon un succès déjà obtenu est ré-annoncé à chaque rechargement de la page)
+        if (twitchAuth.isLoggedIn && !window.economy?.account) { ids.forEach(id => this.pending.add(id)); return; }
         const have = this.unlocked();
         const fresh = ids.filter(id => this.byId.has(id) && !have[id]);
         if (!fresh.length) return;
@@ -84,8 +88,11 @@ const achievements = {
         if (!def || !window.AppToast) return;
         const name = tr(`achievements.list.${id}.name`);
         const tier = tr(`achievements.tier.${def.tier}`);
+        const descKey = `achievements.list.${id}.desc`;
+        const desc = tr(descKey);
         window.AppToast.show(
-            `<b>${esc(tr('achievements.unlockedToast'))}</b> ${esc(name)} <span class="ach-toast__tier ach-tier--${def.tier}">${esc(tier)}</span>`,
+            `<b>${esc(tr('achievements.unlockedToast'))}</b> ${esc(name)} <span class="ach-toast__tier ach-tier--${def.tier}">${esc(tier)}</span>`
+            + (desc && desc !== descKey ? `<small class="ach-toast__desc">${esc(desc)}</small>` : ''),
             'success', 7000
         )?.classList.add('ach-toast');
     },
@@ -100,7 +107,8 @@ const achievements = {
         this.known = new Set(ids);
         this.knownLogin = acc.login;
         // Arrivée sur le compte : premiers pas et progression locale
-        this.unlock('bienvenue');
+        this.unlock('bienvenue', ...this.pending);
+        this.pending.clear();
         this.flushLocal();
         window.dispatchEvent(new CustomEvent('achievementsChanged'));
     },

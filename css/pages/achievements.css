@@ -146,9 +146,11 @@
 .ach-card__count { margin-top: 3px; font-size: 0.72rem; color: var(--text-muted); }
 .ach-card__reward { margin-top: 6px; font-size: 0.78rem; color: var(--accent-light); }
 .ach-card__date { margin-top: 6px; font-size: 0.72rem; color: var(--text-muted); }
-.ach-card__date .fa-check { color: var(--accent-green); }
+.ach-card__date .fa-check { color: var(--accent); }
 
 /* ----- Toast de déblocage ----- */
+
+.ach-toast__desc { display: block; margin-top: 3px; font-size: 0.8rem; color: var(--text-secondary); }
 
 .ach-toast__tier {
     margin-left: 4px;
