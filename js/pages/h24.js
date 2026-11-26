@@ -1288,11 +1288,13 @@ const H24Page = {
                 const turn = g.turn === side && !g.result;
                 const photo = p.fide && this.fidePics?.[p.fide]?.src;
                 el.className = `h24-side h24-side--${pos} h24-side--${side} h24-side--player${turn ? ' is-turn' : ''}`;
-                el.innerHTML = `<span class="h24-pclock" data-pclock="${side}"></span><span class="h24-side__spacer"></span>`
+                // Comme sur la page Tournois : pendule, photo, nom et Elo à gauche, le tournoi à droite
+                el.innerHTML = `<span class="h24-pclock" data-pclock="${side}"></span>`
                     + (photo ? `<img class="h24-side__photo" src="${esc(photo)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
                         : `<span class="h24-side__photo h24-side__photo--none"><i class="fas fa-user"></i></span>`)
                     + `<span class="h24-side__team h24-team--${side}"><span class="h24-team__swatch"></span>${p.title ? `<b class="h24-side__title">${esc(p.title)}</b>` : ''}${esc(p.name || '?')}</span>`
                     + (p.elo ? `<span class="h24-side__elo">${esc(p.elo)}</span>` : '')
+                    + '<span class="h24-side__spacer"></span>'
                     + (pos === 'top' ? `<span class="h24-side__event" title="${esc([P.event, P.roomName].filter(Boolean).join(' · '))}"><i class="fas fa-trophy"></i> ${esc(P.event || P.roomName || '')}</span>` : '');
             };
             fillP(top, 'top', 'b');
@@ -1571,21 +1573,6 @@ const H24Page = {
                 <div class="tp-guessrow"><i class="fas fa-crosshairs"></i><span>${esc(over ? t('predict.ended', null, 'Partie terminée') : t('predict.moveTitle', null, 'Prochain coup'))}</span>
                     ${myGuess ? `<b class="tp-mine">${esc(fmtMove(myGuess))}</b>` : ''}<i class="fas fa-circle-info tp-info" tabindex="0" title="${esc(rules)}"></i></div>
             </div></div>`;
-        // --- Partie sélectionnée
-        const prow = (side) => {
-            const pl = (side === 'w' ? P.white : P.black) || {};
-            const photo = pl.fide && this.fidePics?.[pl.fide]?.src;
-            const turn = g.turn === side && !over;
-            return `<div class="player-row ${side === 'w' ? 'white' : 'black'}${turn ? ' is-turn' : ''}"><div class="player-color-dot"></div>`
-                + (photo ? `<img class="player-photo" src="${esc(photo)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '')
-                + `<span class="player-name">${pl.title ? `<b class="h24-side__title">${esc(pl.title)}</b>` : ''}${esc(pl.name || '?')}</span>`
-                + `<span class="player-rating">${pl.elo ? esc(pl.elo) : ''}</span><span class="player-clock h24-pc" data-pclock="${side}"></span></div>`;
-        };
-        const ev = [P.event, P.roomName].filter(Boolean).join(' · ');
-        const cardGame = `<div class="live-card h24-pgame">
-            <div class="live-card__title"><i class="fas fa-info-circle"></i> ${esc(t('ui.tour.selected', null, 'Partie sélectionnée'))}</div>
-            ${prow('b')}${prow('w')}
-            ${ev ? `<p class="tp-hint h24-pgame__ev" title="${esc(ev)}"><i class="fas fa-trophy"></i> ${esc(ev)}</p>` : ''}</div>`;
         // --- Votants : devinettes du coup en cours, ou résultat du coup joué pendant 5 s
         const h = P.lastHit;
         const flash = h?.who?.length && Date.now() + (this.skew || 0) - (h.at || 0) < 5000 ? h : null;
@@ -1624,7 +1611,8 @@ const H24Page = {
         // Pronostics dans la colonne de gauche, comme sur la page Tournois ; la partie et les votants à droite
         const left = $('h24-pred');
         if (left && left.dataset.html !== cardPred) { left.dataset.html = cardPred; left.innerHTML = cardPred; }
-        const html = cardGame + cardVoters;
+        // (la carte « Partie sélectionnée » n'est plus affichée : les bandes autour de l'échiquier donnent joueurs, Elo et pendules)
+        const html = cardVoters;
         if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; this.paintPclocks(); }
     },
 
