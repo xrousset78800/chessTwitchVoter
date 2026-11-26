@@ -888,6 +888,14 @@ input[type=range] {
 .tp-stat .fa-fire { color: var(--accent); }
 #tPredict .tp-body { gap: 8px; flex: 1; min-height: 0; }
 .tp-win { display: flex; align-items: center; gap: 4px; }
+.tp-win button.is-pending { border-color: var(--accent); color: var(--text-primary); }
+.tp-win button:disabled.is-on { opacity: 1; cursor: default; }
+.tp-win button .fa-lock { font-size: 0.65rem; }
+.tp-confirm { margin: 0; padding: 8px 10px; border: 1px solid var(--accent); border-radius: 8px; background: var(--bg-elevated, var(--bg-secondary)); font-size: 0.74rem; color: var(--text-secondary, var(--text-muted)); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+.tp-confirm p { margin: 0 0 6px; line-height: 1.35; }
+.tp-confirm strong { color: var(--text-primary); }
+.tp-confirm__btns { display: flex; justify-content: flex-end; gap: 6px; }
+.tp-confirm__btns .btn--sm { padding: 3px 10px; font-size: 0.74rem; }
 .tp-win > .fa-trophy { color: var(--accent); font-size: 0.85rem; margin-right: 2px; }
 .tp-win button { flex: 1; padding: 4px 2px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; white-space: nowrap; }
 .tp-picks.tp-win button small { display: inline; margin: 0 0 0 4px; font-size: 0.68rem; }
@@ -899,7 +907,6 @@ input[type=range] {
 .tp-wbars__legend { font-weight: 400; display: inline-flex; align-items: center; gap: 4px; }
 .tp-wbar__dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-left: 4px; border: 1px solid var(--border-subtle); }
 .tp-wbar { display: flex; align-items: center; gap: 6px; }
-.tp-wbar__src { flex: 0 0 52px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tp-wbar__bar { flex: 1; display: flex; height: 16px; border-radius: 4px; overflow: hidden; background: var(--border-subtle); }
 .tp-wbar__seg { display: flex; align-items: center; justify-content: center; min-width: 3px; font-size: 0.66rem; font-weight: 700; white-space: nowrap; transition: flex 0.4s ease; }
 .tp-wbar__seg--white { background: #e9e4dc; color: #2a2320; }

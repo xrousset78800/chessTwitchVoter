@@ -147,7 +147,7 @@
 
     // ───────────── Pronostics sur la partie suivie ─────────────
     const myWinnerPicks = {};          // clé salle:partie -> pick (connu de cette session)
-    const pred = { key: null, move: null, winner: null, f: null, odds: null, votes: null, stats: null, busy: false };
+    const pred = { key: null, move: null, winner: null, f: null, odds: null, votes: null, stats: null, busy: false, confirm: null };
     const SINCE_KEY = 'cgPredictSince';
     const readSince = () => { try { return Number(localStorage.getItem(SINCE_KEY)) || 0; } catch { return 0; } };
     const writeSince = v => { try { localStorage.setItem(SINCE_KEY, String(v)); } catch { /* navigation privée */ } };
@@ -220,6 +220,7 @@
     }
 
     const errText = err => err.code === 'moved' ? T('predict.moved', null, 'La position a changé')
+        : err.code === 'locked' ? T('predict.winnerLocked', null, 'Ton pronostic de vainqueur est définitif.')
         : err.code === 'ended' ? T('predict.ended', null, 'Partie terminée')
         : err.message;
 
@@ -335,7 +336,8 @@
         const c = current();
         card.hidden = !c;
         if (!c) return;
-        if (pred.key !== c.key) { pred.key = c.key; pred.move = null; pred.winner = myWinnerPicks[c.key] || null; pred.f = null; pred.odds = null; pred.votes = null; }
+        if (pred.key !== c.key) { pred.key = c.key; pred.move = null; pred.winner = myWinnerPicks[c.key] || null; pred.f = null; pred.odds = null; pred.votes = null; pred.confirm = null; }
+        if (pred.winner || c.ended) pred.confirm = null;
         const body = card.querySelector('.tp-body');
         if (!logged()) {
             body.innerHTML = `<p class="tp-hint">${esc(T('predict.loginText', null, 'Devine le prochain coup et le vainqueur pour gagner de l\'XP et des pions.'))}</p>
@@ -350,12 +352,19 @@
             stat.title = st ? T('predict.stats', { hits: st.moveHits, total: st.moveTotal, streak: st.streak, whits: st.winnerHits, wtotal: st.winnerTotal }) : '';
         }
         const rulesText = T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, omin: fmtOdds(rules.oddsMin ?? 0.2), omax: fmtOdds(rules.oddsMax ?? 2) });
-        const winTip = T('predict.winnerTitle', null, 'Vainqueur') + ' — ' + T('predict.oddsHint') + (pred.winner && pred.f ? ' ' + T('predict.yourOdds', { odds: fmtOdds(pred.f) }) : '');
+        const winTip = T('predict.winnerTitle', null, 'Vainqueur') + ' — ' + T('predict.oddsHint') + (pred.winner && pred.f ? ' ' + T('predict.yourOdds', { odds: fmtOdds(pred.f) }) : '')
+            + ' ' + T(pred.winner ? 'predict.winnerLocked' : 'predict.winnerFinal', null, '');
+        const cp = pred.confirm;
+        const confirmHTML = !cp ? '' : `<div class="tp-confirm" role="dialog">
+                <p><strong>${esc(T('predict.confirmTitle', { pick: T('predict.' + PICK_KEY[cp]) }, 'Confirmer : ' + cp))}${pred.odds ? ` (${fmtOdds(pred.odds[cp])})` : ''}</strong><br>${esc(T('predict.confirmText', null, 'Un vote pour le vainqueur est définitif : tu ne pourras plus le changer pour ce match.'))}</p>
+                <div class="tp-confirm__btns"><button type="button" class="btn btn--sm" data-tp-cancel>${esc(T('predict.cancel', null, 'Annuler'))}</button>
+                <button type="button" class="btn btn--sm btn--primary" data-tp-confirm>${esc(T('predict.confirmBtn', null, 'Valider'))}</button></div></div>`;
         body.innerHTML = `
             <div class="tp-picks tp-win" role="group" title="${esc(winTip)}">
                 <i class="fas fa-trophy"></i>
-                ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended ? 'disabled' : ''}>${p === '1/2-1/2' ? '½' : p}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
+                ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}${cp === p ? ' is-pending' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended || pred.winner ? 'disabled' : ''}>${pred.winner === p ? '<i class="fas fa-lock"></i> ' : ''}${p === '1/2-1/2' ? '½' : p}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
             </div>
+            ${confirmHTML}
             <div class="tp-winbars"></div>
             <div class="tp-guessrow">
                 <i class="fas fa-crosshairs"></i>
@@ -418,15 +427,14 @@
         return t;
     }
     /** Barre horizontale : part de chaque résultat, pourcentage dans le segment quand il y a la place */
-    function winBarHTML(icon, label, v) {
+    function winBarHTML(v, tipN) {
         const n = PICKS.reduce((s, p) => s + (v?.[p] || 0), 0);
         const pct = p => Math.round(100 * (v[p] || 0) / n);
         const segs = n ? PICKS.filter(p => v[p]).map(p => {
             const tip = `${T('predict.' + PICK_KEY[p])} : ${pct(p)} % (${v[p]})`;
             return `<span class="tp-wbar__seg tp-wbar__seg--${PICK_KEY[p]}" style="flex:${v[p]}" title="${esc(tip)}">${pct(p) >= 14 ? pct(p) + ' %' : ''}</span>`;
         }).join('') : `<span class="tp-wbar__empty">${esc(T('tlive.noVotes', null, 'Aucun vote'))}</span>`;
-        return `<div class="tp-wbar"><span class="tp-wbar__src"><i class="${icon}"></i> ${esc(label)}</span>
-            <div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n">${n}</span></div>`;
+        return `<div class="tp-wbar"><div class="tp-wbar__bar">${segs}</div><span class="tp-wbar__n" title="${esc(tipN)}">${esc(T('predict.votes', { n }, n + ' vote(s)'))}</span></div>`;
     }
     function renderWinBars() {
         const box = document.querySelector('#tPredict .tp-winbars');
@@ -439,8 +447,8 @@
             ? `<div class="tp-wbar__hint">${esc(T('predict.chatWinHint', { cmds: '!1-0 · !1/2 · !0-1' }, 'Le chat pronostique avec !1-0 · !1/2 · !0-1'))}</div>` : '';
         const html = `<div class="tp-wbars__title"><span>${esc(T('predict.winBars', null, 'Pronostics en cours'))}</span>
                 <span class="tp-wbars__legend">${PICKS.map(p => `<i class="tp-wbar__dot tp-wbar__seg--${PICK_KEY[p]}"></i>${esc(T('predict.' + PICK_KEY[p]))}`).join(' ')}</span></div>`
-            + winBarHTML('fas fa-globe', T('predict.siteVotes', null, 'Site'), pred.votes)
-            + (showChat ? winBarHTML('fab fa-twitch', T('predict.chatVotes', null, 'Chat'), cv) : '')
+            + winBarHTML(Object.fromEntries(PICKS.map(p => [p, (pred.votes?.[p] || 0) + (cv[p] || 0)])),
+                `${T('predict.siteVotes', null, 'Site')} : ${PICKS.reduce((s, p) => s + (pred.votes?.[p] || 0), 0)} · ${T('predict.chatVotes', null, 'Chat')} : ${PICKS.reduce((s, p) => s + cv[p], 0)}`)
             + hint;
         if (box._html !== html) { box.innerHTML = html; box._html = html; }
     }
@@ -596,7 +604,7 @@
         el.querySelector('.tv-body').innerHTML = `
             ${list.length ? `<ul class="tv-list${flash ? ' is-flash' : ''}">${list.map(row).join('')}</ul>`
                 : `<p class="tp-hint">${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
-            ${!flash && !c.ended && chatOn() ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}`;
+            ${!list.length && !flash && !c.ended && chatOn() ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}`;
     }
 
     // ───────────── Bots de test (régie) : votes simulés, sur cet écran seulement ─────────────
@@ -858,7 +866,20 @@
             const mv = e.target.closest('[data-tp-move]');
             if (mv) { if (!mv.disabled) sendGuess(mv.dataset.tpMove); return; }
             const pick = e.target.closest('[data-tp-pick]');
-            if (pick) { const c = current(); if (c) voteWinner(c.room, c.g.id, pick.dataset.tpPick, c.key); return; }
+            if (pick) {
+                if (!logged()) { askLogin(); return; }
+                if (pred.winner) return;
+                pred.confirm = pred.confirm === pick.dataset.tpPick ? null : pick.dataset.tpPick;
+                renderPredict();
+                return;
+            }
+            if (e.target.closest('[data-tp-cancel]')) { pred.confirm = null; renderPredict(); return; }
+            if (e.target.closest('[data-tp-confirm]')) {
+                const c = current(), p = pred.confirm;
+                pred.confirm = null;
+                if (c && p) voteWinner(c.room, c.g.id, p, c.key); else renderPredict();
+                return;
+            }
             if (e.target.closest('[data-tv-bots]')) { setBots(!bots.on); return; }
             if (e.target.closest('[data-tp-login]')) window.twitchAuth?.login();
         });

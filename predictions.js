@@ -261,10 +261,10 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             const key = `${room}:${gameId}`;
             const names = [game.white?.preferredShortName, game.black?.preferredShortName].map(n => str(n, 40));
             const prev = user(login).winners[key]?.pick;
-            // Cote du moment du vote ; revoter le même résultat garde la cote déjà obtenue
+            // Vote définitif : un seul pronostic de vainqueur par partie
+            if (prev) return res.status(409).json({ error: 'Pronostic définitif', code: 'locked', winner: { pick: prev, f: user(login).winners[key].f ?? null } });
             const odds = oddsOf(await evalOf(game.currentFEN));
-            const kept = prev === pick ? user(login).winners[key].f : undefined;
-            const f = Number.isFinite(kept) ? kept : (odds ? odds[pick] : 1);
+            const f = odds ? odds[pick] : 1;
             user(login).winners[key] = { room, gameId, pick, names, f, at: Date.now() };
             store.save();
             bump(key, pick, prev);
