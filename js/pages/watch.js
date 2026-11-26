@@ -32,7 +32,6 @@ const WatchPage = {
     id: null,
     state: null,
     spectators: null,
-    flipped: false,
     bound: false,
     timerEndsAt: null,
     timerId: null,
@@ -49,7 +48,6 @@ const WatchPage = {
         this.id = id;
         this.state = null;
         this.spectators = null;
-        this.flipped = false;
         this.boardWidth = 0;
         this.drawSig = null;
         this.revealing = false;
@@ -69,10 +67,6 @@ const WatchPage = {
     bind() {
         if (this.bound) return;
         this.bound = true;
-        $('watch-flip')?.addEventListener('click', () => {
-            this.flipped = !this.flipped;
-            this.render();
-        });
         window.addEventListener('resize', () => { if (this.socket) this.board?.resize(); });
         window.addEventListener('languageChanged', () => { if (this.socket || this.state) { this.render(); this.renderSpectators(); } });
     },
@@ -129,8 +123,7 @@ const WatchPage = {
     },
 
     orientation() {
-        const base = this.state?.orientation === 'black' ? 'black' : 'white';
-        return this.flipped ? (base === 'white' ? 'black' : 'white') : base;
+        return this.state?.orientation === 'black' ? 'black' : 'white';
     },
 
     render() {

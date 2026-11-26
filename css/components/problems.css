@@ -34,8 +34,8 @@
 }
 
 .problem-end-modal--solved .problem-end-modal__content {
-    border-color: var(--accent-green, #4ade80);
-    box-shadow: 0 0 40px rgba(74, 222, 128, 0.3);
+    border-color: var(--accent-green, #10b981);
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
 }
 
 .problem-end-modal--failed .problem-end-modal__content {
@@ -62,7 +62,7 @@
 }
 
 .problem-end-modal--solved .problem-end-modal__title {
-    color: var(--accent-green, #4ade80);
+    color: var(--accent-green, #10b981);
 }
 
 .problem-end-modal--failed .problem-end-modal__title {
@@ -121,7 +121,7 @@
     transition: opacity 0.3s, transform 0.3s;
 }
 .problem-badge.is-leaving { opacity: 0; transform: scale(0.6); }
-.problem-badge--correct { background: #22a55a; }
+.problem-badge--correct { background: var(--accent-green, #10b981); }
 .problem-badge--wrong { background: #dc3c3c; }
 .problem-badge--solved { background: linear-gradient(135deg, #ffd23f, #f59e0b); color: #3a2400; }
 
@@ -131,7 +131,7 @@
 }
 
 .problem-feedback--correct {
-    background: var(--accent-green, #4ade80);
+    background: var(--accent-green, #10b981);
     color: #000;
 }
 
@@ -245,7 +245,7 @@
 .timer-display {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #4ade80;
+    color: var(--accent-green, #10b981);
     font-family: 'Chakra Petch', 'Courier New', monospace;
     margin-bottom: 8px;
 }
@@ -417,8 +417,8 @@
    ============================================ */
 
 .highlight-player {
-    background-color: rgba(74, 222, 128, 0.4) !important;
-    box-shadow: inset 0 0 0 3px #4ade80 !important;
+    background-color: rgba(16, 185, 129, 0.4) !important;
+    box-shadow: inset 0 0 0 3px var(--accent-green, #10b981) !important;
 }
 
 .highlight-bot {
@@ -451,7 +451,7 @@ body.problem-wrong .board-wrapper {
 
 @keyframes flashGreen {
     0%, 100% { box-shadow: none; }
-    50% { box-shadow: 0 0 30px rgba(74, 222, 128, 0.6); }
+    50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
 }
 
 @keyframes flashRed {
@@ -507,7 +507,7 @@ body.problem-wrong .board-wrapper {
 
 .problem-timer-message--solved .problem-timer-text,
 .problem-timer-message--solved .problem-timer-countdown {
-    color: var(--accent-green, #4ade80);
+    color: var(--accent-green, #10b981);
 }
 
 .problem-timer-message--failed .problem-timer-text,
@@ -539,8 +539,8 @@ body.problem-wrong .board-wrapper {
    ============================================ */
 
 .highlight-player {
-    background-color: rgba(74, 222, 128, 0.5) !important;
-    box-shadow: inset 0 0 0 3px #4ade80 !important;
+    background-color: rgba(16, 185, 129, 0.5) !important;
+    box-shadow: inset 0 0 0 3px var(--accent-green, #10b981) !important;
 }
 
 .highlight-bot {

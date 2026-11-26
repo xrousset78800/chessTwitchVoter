@@ -1160,10 +1160,6 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             renderStyles();
         }));
 
-        document.getElementById('btn-flip')?.addEventListener('click', () => {
-            gameEngine.flip();
-        });
-
         // Sync Phantom
         document.getElementById('btn-sync')?.addEventListener('click', () => {
             if (window.phantomChessboard?.isConnected) {
