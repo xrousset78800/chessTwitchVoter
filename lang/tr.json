@@ -1556,6 +1556,9 @@
     "empty": "Bu filtreyle burada bir şey yok."
   },
   "tlive": {
+    "nextOther": "Başka bir oyunu tahmin et",
+    "nextPlay": "Bir oyun başlat",
+    "nextH24": "24/24'ye git",
     "title": "Canlı maçlar",
     "hint": "Bir maça tıklayıp takip et ve hamleleri tahmin et, ya da kazanan için doğrudan buradan oy ver.",
     "count": "{n} oyun",

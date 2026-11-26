@@ -1556,6 +1556,9 @@
     }
   },
   "tlive": {
+    "nextOther": "Predict another game",
+    "nextPlay": "Start a game",
+    "nextH24": "Go to 24/24",
     "title": "Live games",
     "hint": "Click a game to follow it and guess the moves, or vote for the winner right here.",
     "count": "{n} games",

@@ -675,8 +675,29 @@ input[type=range] {
 /* Partie suivie : la colonne de choix se masque, l'échiquier prend la place */
 #page-tournament .live-content.t-following:not(.t-list-open) { grid-template-columns: 320px minmax(0, 1fr) 280px; }
 /* Partie suivie : la colonne de gauche ne garde que le titre, la revue et les pronostics */
-#page-tournament .live-content.t-following:not(.t-list-open) #tSideCol > :not(.t-sidehead):not(#tPredict):not(#tReview) { display: none !important; }
-#page-tournament .live-content.t-list-open #tReview { display: none !important; }
+#page-tournament .live-content.t-following:not(.t-list-open) #tSideCol > :not(.t-sidehead):not(#tPredict):not(#tReview):not(#tNext) { display: none !important; }
+#page-tournament .live-content.t-list-open #tReview,
+#page-tournament .live-content.t-list-open #tNext,
+#page-tournament .live-content:not(.t-following) #tNext { display: none !important; }
+#statusBadgeT[hidden] { display: none; }
+
+/* Partie terminée : la suite, sous les pronostics */
+.t-next { display: flex; flex-direction: column; gap: 6px; }
+.t-next[hidden] { display: none; }
+.t-next__btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; box-sizing: border-box;
+    background: var(--bg-card, #1a1512); border: 1px solid var(--border-subtle, #2b2420); border-radius: var(--radius-md, 3px);
+    color: var(--text-primary); font: inherit; font-size: 0.88rem; font-weight: 600; text-align: left; cursor: pointer; text-decoration: none;
+}
+.t-next__btn i { width: 18px; text-align: center; color: var(--accent); }
+.t-next__btn:hover { border-color: var(--accent); }
+
+/* Partie terminée : la carte des pronostics ressort, avec le résultat */
+#tPredict.is-ended { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 30%, transparent); }
+#tPredict.is-ended .tp-guessrow span { color: var(--accent); font-weight: 700; }
+#tPredict .tp-picks button.is-result { opacity: 1; border-color: var(--accent); color: var(--text-primary); box-shadow: 0 0 0 1px var(--accent) inset; }
+#tPredict.is-won .tp-picks button.is-on.is-result { background: var(--accent); color: #1a1310; }
+#tPredict.is-lost .tp-picks button.is-on { opacity: 0.55; text-decoration: line-through; }
 #page-tournament .live-content:not(.t-following) #tPredict,
 #page-tournament .live-content.t-list-open #tPredict { display: none !important; }
 #page-tournament .live-content.t-following:not(.t-list-open) .board-wrapper > div:first-child { max-width: 640px; }
@@ -1074,16 +1095,13 @@ input[type=range] {
 .t-sidehead .live-header__title { margin: 0; font-size: 1.25rem; line-height: 1.2; }
 .t-righttools { display: flex; align-items: center; gap: 6px; min-height: 34px; flex-wrap: wrap; }
 /* Volume des sons de l'échiquier : bouton (couper / remettre), jauge au survol */
-.t-vol { position: relative; flex: none; }
+.t-vol { position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; }
 #page-tournament .t-righttools .t-vol__btn { padding: 4px 8px; width: 30px; display: grid; place-items: center; }
 .t-vol__btn.is-muted { color: var(--text-muted); }
-.t-vol__pop { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); z-index: 60; padding-top: 14px; }
-.t-vol:hover .t-vol__pop, .t-vol:focus-within .t-vol__pop { display: block; }
 .t-vol__range {
     --v: 60%;
-    display: block; width: 96px; height: 6px; margin: 0; appearance: none; -webkit-appearance: none; border-radius: 2px; cursor: pointer;
+    display: block; width: 90px; height: 6px; margin: 0; appearance: none; -webkit-appearance: none; border-radius: 2px; cursor: pointer;
     background: linear-gradient(90deg, var(--accent) var(--v), rgba(255, 255, 255, 0.15) var(--v));
-    box-shadow: 0 0 0 9px var(--bg-card), 0 0 0 10px var(--border-subtle), 0 8px 20px 10px rgba(0, 0, 0, 0.35);
 }
 .t-vol__range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
 .t-vol__range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }

@@ -1556,6 +1556,9 @@
     "empty": "Nada aqui com este filtro."
   },
   "tlive": {
+    "nextOther": "Prever outra partida",
+    "nextPlay": "Começar uma partida",
+    "nextH24": "Ir para a 24/24",
     "title": "Jogos ao vivo",
     "hint": "Clique em um jogo para acompanhá-lo e adivinhar os lances, ou vote no vencedor direto aqui.",
     "count": "{n} partidas",

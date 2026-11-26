@@ -1556,6 +1556,9 @@
     "empty": "Nic tu nie ma przy tym filtrze."
   },
   "tlive": {
+    "nextOther": "Typuj inną partię",
+    "nextPlay": "Rozpocznij partię",
+    "nextH24": "Przejdź do 24/24",
     "title": "Mecze na żywo",
     "hint": "Kliknij mecz, by go śledzić i zgadywać ruchy, albo zagłosuj na zwycięzcę bezpośrednio tutaj.",
     "count": "{n} partii",

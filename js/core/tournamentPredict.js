@@ -335,6 +335,11 @@
         const c = current();
         card.hidden = !c;
         if (!c) return;
+        // Fin de partie : la carte se met en évidence, le résultat et le pronostic gagnant ressortent
+        const result = c.ended ? c.g.result : null;
+        card.classList.toggle('is-ended', !!result);
+        card.classList.toggle('is-won', !!result && pred.winner === result);
+        card.classList.toggle('is-lost', !!result && !!pred.winner && pred.winner !== result);
         if (pred.key !== c.key) { pred.key = c.key; pred.move = null; pred.winner = myWinnerPicks[c.key] || null; pred.f = null; pred.odds = null; pred.votes = null; pred.confirm = null; }
         if (pred.winner || c.ended) pred.confirm = null;
         const body = card.querySelector('.tp-body');
@@ -361,13 +366,13 @@
         body.innerHTML = `
             <div class="tp-picks tp-win" role="group" title="${esc(winTip)}">
                 <i class="fas fa-trophy"></i>
-                ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}${cp === p ? ' is-pending' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended || pred.winner ? 'disabled' : ''}>${pred.winner === p ? '<i class="fas fa-lock"></i> ' : ''}${p === '1/2-1/2' ? '½' : p}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
+                ${PICKS.map(p => `<button type="button" data-tp-pick="${p}" class="${pred.winner === p ? 'is-on' : ''}${cp === p ? ' is-pending' : ''}${result === p ? ' is-result' : ''}" title="${esc(T('predict.' + PICK_KEY[p]))}" ${c.ended || pred.winner ? 'disabled' : ''}>${pred.winner === p ? '<i class="fas fa-lock"></i> ' : ''}${p === '1/2-1/2' ? '½' : p}${pred.odds ? `<small>${fmtOdds(pred.odds[p])}</small>` : ''}</button>`).join('')}
             </div>
             ${confirmHTML}
             <div class="tp-winbars"></div>
             <div class="tp-guessrow">
                 <i class="fas fa-crosshairs"></i>
-                <span>${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('predict.moveTitle', null, 'Prochain coup'))}</span>
+                <span>${esc(c.ended ? T('ui.tour.ended', { result }, `Terminée (${result})`) : T('predict.moveTitle', null, 'Prochain coup'))}</span>
                 ${pred.move && !c.ended ? `<b class="tp-mine" title="${esc(T('predict.yourGuess', { san: pred.move.san }))}">${esc(sanLocal(pred.move.san))}</b>` : ''}
                 <i class="fas fa-circle-info tp-info" tabindex="0" title="${esc(T('predict.moveHint', null, '') + NL2 + rulesText)}"></i>
             </div>

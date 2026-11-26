@@ -14,7 +14,11 @@ const stateT = {
 function setStatusT(type, text) {
     const badge = document.getElementById('statusBadgeT');
     const label = document.getElementById('statusTextT');
-    if (badge) badge.className = `live-badge ${type}`;
+    if (badge) {
+        badge.className = `live-badge ${type}`;
+        // Partie terminée : pas d'encart, c'est la carte des pronostics qui le dit
+        badge.hidden = type === 'ended';
+    }
     if (label) label.textContent = text;
 }
 
@@ -1073,7 +1077,7 @@ async function runPhantomReplayT(g, fens, delayS = 0) {
 // Mode « Tournoi » pour le Phantom et l'entrée « Partie en cours » du menu
 PhantomOwner.register('tournament', {
     pages: ['tournament'],
-    active: () => !!(stateT.polling && stateT.currentGame) || !!(reviewT.game && document.getElementById('tRevPhantom')?.checked),
+    active: () => !!(stateT.polling && stateT.currentGame && !stateT.ended) || !!(reviewT.game && document.getElementById('tRevPhantom')?.checked),
     label: () => {
         const w = document.getElementById('playerWhiteT')?.textContent.trim(), b = document.getElementById('playerBlackT')?.textContent.trim();
         const name = trT('nav.tournament', 'Tournoi');
@@ -1096,6 +1100,7 @@ async function startGamePolling(game) {
     stateT.currentGame = game;
     stateT.lastFEN = null;
     stateT.polling = true;
+    setEndedT(false);
     endReviewT(false);
     setFollowLayoutT(true);
     updateUrlT();
@@ -1111,8 +1116,16 @@ function stopGamePolling() {
     clearTimeout(stateT.pollTimer);
     stopClockT();  // ← reset
     stateT.currentGame = null;
+    setEndedT(false);
     setStatusT('idle', 'En attente');
     updateUrlT();
+}
+
+/** Partie suivie terminée : « Partie en cours » quitte le menu, la suite est proposée sous les pronostics */
+function setEndedT(on) {
+    stateT.ended = !!on;
+    const next = document.getElementById('tNext');
+    if (next) next.hidden = !stateT.ended;
 }
 
 async function pollGame() {
@@ -1132,6 +1145,7 @@ async function pollGame() {
             // Partie terminée (nulle par accord, abandon, temps…) : les pendules s'arrêtent, même sans nouveau coup
             const ended = !!(updatedGame?.result && updatedGame.result !== '*');
             if (updatedGame && stateT.currentGame === g) {
+                setEndedT(ended);
                 if (ended) {
                     setStatusT('ended', window.tt('ui.tour.ended', { result: updatedGame.result }));
                     if (stateT.clockInterval) stopClockT();
@@ -1487,6 +1501,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnChangeEvent')?.addEventListener('click', () => {
         toggleEventPickerT(document.getElementById('tEventPicker')?.style.display === 'none');
+    });
+    // Après la fin : rouvrir la liste des matchs en direct pour en pronostiquer un autre
+    document.querySelector('[data-tnext="other"]')?.addEventListener('click', () => {
+        document.querySelector('#page-tournament .live-content')?.classList.add('t-list-open');
+        updateListToggleT();
+        document.querySelector('#tSideCol [data-tside="live"]')?.click();
+        requestAnimationFrame(() => stateT.board?.resize());
     });
     document.getElementById('btnToggleListT')?.addEventListener('click', () => {
         document.querySelector('#page-tournament .live-content')?.classList.toggle('t-list-open');

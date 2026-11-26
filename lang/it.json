@@ -1556,6 +1556,9 @@
     "empty": "Niente qui con questo filtro."
   },
   "tlive": {
+    "nextOther": "Pronostica un'altra partita",
+    "nextPlay": "Inizia una partita",
+    "nextH24": "Vai alla 24/24",
     "title": "Match in diretta",
     "hint": "Clicca un match per seguirlo e indovinare le mosse, o vota subito qui per il vincitore.",
     "count": "{n} partite",

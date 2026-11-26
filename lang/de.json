@@ -1556,6 +1556,9 @@
     "empty": "Hier ist mit diesem Filter nichts."
   },
   "tlive": {
+    "nextOther": "Eine andere Partie tippen",
+    "nextPlay": "Eine Partie starten",
+    "nextH24": "Zur 24/24",
     "title": "Live-Matches",
     "hint": "Klick auf ein Match, um es zu verfolgen und Züge zu erraten, oder stimm direkt hier für den Sieger ab.",
     "count": "{n} Partien",

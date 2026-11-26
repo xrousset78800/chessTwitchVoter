@@ -1556,6 +1556,9 @@
     }
   },
   "tlive": {
+    "nextOther": "Pronostiquer une autre partie",
+    "nextPlay": "Lancer une partie",
+    "nextH24": "Aller sur la 24/24",
     "title": "Matchs en direct",
     "hint": "Clique un match pour le suivre et deviner les coups, ou vote pour le vainqueur directement ici.",
     "count": "{n} parties",

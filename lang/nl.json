@@ -1556,6 +1556,9 @@
     "empty": "Niets hier met dit filter."
   },
   "tlive": {
+    "nextOther": "Een andere partij voorspellen",
+    "nextPlay": "Een partij starten",
+    "nextH24": "Naar de 24/24",
     "title": "Live wedstrijden",
     "hint": "Klik op een wedstrijd om hem te volgen en zetten te raden, of stem hier direct op de winnaar.",
     "count": "{n} partijen",
