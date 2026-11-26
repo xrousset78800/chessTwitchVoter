@@ -77,6 +77,7 @@
     <link rel="stylesheet" href="css/pages/records.css">
     <link rel="stylesheet" href="css/pages/achievements.css">
     <link rel="stylesheet" href="css/pages/shop.css">
+    <link rel="stylesheet" href="css/pages/home.css">
     <link rel="stylesheet" href="css/pages/watch.css">
     <link rel="stylesheet" href="css/pages/h24.css">
     <link rel="stylesheet" href="css/pages/presets.css">
@@ -89,7 +90,7 @@
     <div id="app">
         <!-- ==================== NAVIGATION ==================== -->
         <nav class="nav">
-            <a class="nav__logo" data-navigate="/24h">
+            <a class="nav__logo" data-navigate="/">
                 <svg class="nav__logo-icon" viewBox="0 0 100 100" aria-hidden="true"><path d="M26 10 H74 a16 16 0 0 1 16 16 V60 a16 16 0 0 1 -16 16 H46 L26 92 V76 a16 16 0 0 1 -16 -16 V26 a16 16 0 0 1 16 -16 z" fill="#ff8a3d"/><rect x="28" y="24" width="22" height="22" fill="#f4eee8"/><rect x="50" y="46" width="22" height="22" fill="#f4eee8"/><rect x="50" y="24" width="22" height="22" fill="#100d0b"/><rect x="28" y="46" width="22" height="22" fill="#100d0b"/></svg>
                 <span class="nav__logo-text">Crowd <span>Gambit</span></span>
             </a>
@@ -133,16 +134,172 @@
             </div>
         </nav>
 
+        <!-- ==================== ACCUEIL (présentation + tuto) ==================== -->
+        <div class="page" id="page-home">
+            <div class="home">
+                <section class="home-hero">
+                    <div class="home-hero__text">
+                        <span class="home-kicker" data-i18n="home.kicker">Échecs joués par le chat Twitch</span>
+                        <h1 class="home-hero__title"><span data-i18n="home.titleA">Ton chat devient</span> <em data-i18n="home.titleB">un seul joueur</em>.</h1>
+                        <p class="home-hero__lead" data-i18n="home.lead">Chaque spectateur tape son coup dans le chat, le plus voté est joué. Problèmes, Puzzle Rush, parties contre Stockfish ou contre une autre chaîne : tu lances, ton chat décide.</p>
+                        <div class="home-actions">
+                            <a class="home-btn home-btn--primary" data-navigate="/rush"><span data-i18n="home.cta">Lancer une partie</span> <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                            <a class="home-btn home-btn--ghost" href="#home-tuto" data-home-scroll data-i18n="home.how">Comment ça marche</a>
+                        </div>
+                        <p class="home-note" data-i18n="home.note">Gratuit. Tu peux essayer seul, sans compte, puis connecter Twitch quand tu veux.</p>
+                    </div>
+                    <div class="home-demo" aria-hidden="true">
+                        <div class="home-demo__board"><div class="home-board" id="home-board"></div></div>
+                        <div class="home-demo__vote">
+                            <div class="home-demo__head"><span data-i18n="home.demo.title">Vote du chat</span><b id="home-demo-timer">0:15</b></div>
+                            <div id="home-demo-votes" class="home-demo__votes"></div>
+                            <div id="home-demo-chat" class="home-demo__chat"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="home-band" id="home-tuto">
+                    <div class="home-wrap">
+                        <div class="home-head">
+                            <span class="home-kicker" data-i18n="home.tuto.kicker">Tuto · 4 étapes</span>
+                            <h2 class="home-h2" data-i18n="home.tuto.title">Comment ça marche</h2>
+                        </div>
+                        <ol class="home-steps">
+                            <li class="home-step">
+                                <span class="home-step__n">01</span>
+                                <h3 data-i18n="home.tuto.s1.title">Connecte ta chaîne</h3>
+                                <p data-i18n="home.tuto.s1.text">Un clic sur « Connecter Twitch ». Le site lit ton chat, il n'écrit rien et ne demande aucun mot de passe.</p>
+                                <div class="home-step__demo home-step__twitch">
+                                    <i class="fab fa-twitch" aria-hidden="true"></i>
+                                    <span class="home-step__chan" id="home-chan" data-i18n="home.tuto.s1.chan">ta chaîne</span>
+                                    <button type="button" class="home-step__connect" data-home-login data-i18n="twitch.connect">Connecter Twitch</button>
+                                    <span class="home-step__ok" data-i18n="twitch.connected" hidden>Connecté</span>
+                                </div>
+                            </li>
+                            <li class="home-step">
+                                <span class="home-step__n">02</span>
+                                <h3 data-i18n="home.tuto.s2.title">Choisis un mode</h3>
+                                <p data-i18n="home.tuto.s2.text">Puzzle Rush pour un sprint, Partie libre contre Stockfish ou toi-même, Multi contre une autre chaîne.</p>
+                                <div class="home-step__demo home-step__chips">
+                                    <a class="is-on" data-navigate="/rush">Puzzle Rush</a>
+                                    <a data-navigate="/mono">Mono</a>
+                                    <a data-navigate="/multi">Multi</a>
+                                    <a data-navigate="/sandbox" data-i18n="newTabs.free">Partie libre</a>
+                                </div>
+                            </li>
+                            <li class="home-step">
+                                <span class="home-step__n">03</span>
+                                <h3 data-i18n="home.tuto.s3.title">Ton chat vote</h3>
+                                <p data-i18n="home.tuto.s3.text">Les spectateurs tapent le coup dans le chat (e4, Cf3, O-O…). À la fin du chrono, le coup le plus voté est joué.</p>
+                                <div class="home-step__demo home-step__chat">
+                                    <span><b class="c1">viewer_1</b> e4</span>
+                                    <span><b class="c2">viewer_2</b> d4</span>
+                                    <span><b class="c3">viewer_3</b> e4</span>
+                                </div>
+                            </li>
+                            <li class="home-step">
+                                <span class="home-step__n">04</span>
+                                <h3 data-i18n="home.tuto.s4.title">Gagne et personnalise</h3>
+                                <p data-i18n="home.tuto.s4.text">Chaque coup joué rapporte de l'XP et des pions. Débloque des succès, puis habille ton échiquier dans la boutique.</p>
+                                <a class="home-step__demo home-step__xp" data-navigate="/shop">
+                                    <b data-i18n="home.tuto.s4.level">Niv. 3</b>
+                                    <span class="home-step__bar"><span></span></span>
+                                    <span>♟ 240</span>
+                                </a>
+                            </li>
+                        </ol>
+                        <div class="home-who">
+                            <div class="home-who__card">
+                                <i class="fas fa-display" aria-hidden="true"></i>
+                                <div><strong data-i18n="home.who.streamTitle">Tu streames ?</strong><p data-i18n="home.who.streamText">Partage l'onglet du jeu dans OBS. La roue, la bande et le podium des votes s'affichent pour tes spectateurs.</p></div>
+                            </div>
+                            <div class="home-who__card">
+                                <i class="fas fa-comment" aria-hidden="true"></i>
+                                <div><strong data-i18n="home.who.watchTitle">Tu regardes ?</strong><p data-i18n="home.who.watchText">Rien à installer : tape ton coup dans le chat de la chaîne. Pour gagner XP et succès à ton nom, connecte-toi avec Twitch ici.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="home-wrap home-modes-wrap">
+                    <div class="home-head home-head--row">
+                        <h2 class="home-h2" data-i18n="home.modes.title">Quatre façons de jouer</h2>
+                    </div>
+                    <div class="home-modes">
+                        <a class="home-mode" data-navigate="/rush">
+                            <span class="home-mode__top"><span class="home-mode__icon"><i class="fas fa-bolt"></i></span><span class="home-mode__tag" data-i18n="newTabs.tag.rush">Contre la montre</span></span>
+                            <h3>Puzzle Rush</h3>
+                            <p data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</p>
+                            <span class="home-mode__go" data-i18n="home.modes.play">Jouer →</span>
+                        </a>
+                        <a class="home-mode" data-navigate="/mono">
+                            <span class="home-mode__top"><span class="home-mode__icon"><i class="fas fa-chess-knight"></i></span><span class="home-mode__tag" data-i18n="newTabs.tag.mono">Inscription join</span></span>
+                            <h3>Mono</h3>
+                            <p data-i18n="mono.desc">Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.</p>
+                            <span class="home-mode__go" data-i18n="home.modes.play">Jouer →</span>
+                        </a>
+                        <a class="home-mode" data-navigate="/multi">
+                            <span class="home-mode__top"><span class="home-mode__icon"><i class="fas fa-khanda"></i></span><span class="home-mode__tag" data-i18n="newTabs.tag.multi">2 chaînes</span></span>
+                            <h3>Multi</h3>
+                            <p data-i18n="home.modes.multi">Ton chat contre celui d'un autre streamer, chacun vote les coups de son camp.</p>
+                            <span class="home-mode__go" data-i18n="home.modes.play">Jouer →</span>
+                        </a>
+                        <a class="home-mode" data-navigate="/sandbox">
+                            <span class="home-mode__top"><span class="home-mode__icon"><i class="fas fa-chess-pawn"></i></span><span class="home-mode__tag" data-i18n="newTabs.tag.free">Sur mesure</span></span>
+                            <h3 data-i18n="newTabs.free">Partie libre</h3>
+                            <p data-i18n="newInfo.free.desc">Tout le chat vote, sans inscription : vote libre, problèmes, contre Stockfish, chat contre chat…</p>
+                            <span class="home-mode__go" data-i18n="home.modes.play">Jouer →</span>
+                        </a>
+                    </div>
+                </section>
+
+                <section class="home-band">
+                    <div class="home-wrap home-split">
+                        <div class="home-live">
+                            <span class="home-live__badge"><span class="home-dot"></span> <span data-i18n="home.live.badge">En direct</span></span>
+                            <h2 class="home-h2" data-i18n="home.live.title">La chaîne 24/24</h2>
+                            <p data-i18n="home.live.text">Une partie qui ne s'arrête jamais, jouée par tous ceux qui passent. Le meilleur endroit pour voir le vote en action avant de lancer ta propre partie.</p>
+                            <div class="home-actions">
+                                <a class="home-btn home-btn--primary" data-navigate="/24h" data-i18n="home.live.watch">Regarder</a>
+                                <a class="home-btn home-btn--ghost" data-navigate="/browse" data-i18n="home.live.browse">Parcourir les parties</a>
+                            </div>
+                        </div>
+                        <div class="home-progress">
+                            <h2 class="home-h3" data-i18n="home.progress.title">Ta progression</h2>
+                            <a class="home-link" data-navigate="/achievements"><i class="fas fa-medal" aria-hidden="true"></i><span><strong data-i18n="nav.achievements">Succès</strong><small data-i18n="home.progress.ach">XP, niveaux et pions à débloquer</small></span></a>
+                            <a class="home-link" data-navigate="/records"><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="nav.records">Records</strong><small data-i18n="home.progress.records">Les meilleurs chats en Puzzle Rush</small></span></a>
+                            <a class="home-link" data-navigate="/shop"><i class="fas fa-store" aria-hidden="true"></i><span><strong data-i18n="nav.shop">Boutique</strong><small data-i18n="home.progress.shop">Pièces, échiquiers, matières, couleurs de tirage</small></span></a>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="home-wrap home-final">
+                    <h2 class="home-h2" data-i18n="home.final.title">Prêt à laisser ton chat jouer ?</h2>
+                    <p data-i18n="home.final.text">Une première partie se lance en moins d'une minute.</p>
+                    <div class="home-actions">
+                        <button type="button" class="home-btn home-btn--twitch" data-home-login><i class="fab fa-twitch" aria-hidden="true"></i> <span data-i18n="twitch.connect">Connecter Twitch</span></button>
+                        <a class="home-btn home-btn--ghost" data-navigate="/rush" data-i18n="home.final.try">Essayer sans compte</a>
+                    </div>
+                </section>
+            </div>
+        </div>
+
         <!-- ==================== SANDBOX PAGE ==================== -->
         <div class="page" id="page-sandbox">
             <div class="sandbox">
 
                 <!-- Onglets de Nouveau (déplacés par le router vers /rush, /mono, /multi) -->
                 <!-- Menu vertical à gauche (horizontal sur mobile) ; l'onglet actif détaille son fonctionnement -->
-                <nav class="new-tabs" id="new-tabs">
+                <div class="new-tabs" id="new-tabs">
+                    <div class="new-tabs__head">
+                        <h1 class="new-tabs__title" data-i18n="newTabs.title">Nouvelle partie</h1>
+                        <p class="new-tabs__sub" data-i18n="newTabs.subtitle">Choisis comment ton chat va jouer, règle deux ou trois choses, lance.</p>
+                    </div>
+                    <nav class="new-tabs__grid" aria-label="Modes">
                     <!-- Puzzle Rush d'abord : le plus simple à essayer -->
                     <a class="new-tab" data-navigate="/rush" data-new-tab="rush">
-                        <span class="new-tab__title">🔥 Puzzle Rush</span>
+                        <span class="new-tab__top"><span class="new-tab__icon"><i class="fas fa-bolt" aria-hidden="true"></i></span><span class="new-tab__tag" data-i18n="newTabs.tag.rush">Contre la montre</span></span>
+                        <span class="new-tab__title">Puzzle Rush</span>
                         <span class="new-tab__desc" data-i18n="rushPage.desc">Ton chat enchaîne des puzzles de plus en plus durs. Trois erreurs et le run s'arrête.</span>
                         <span class="new-tab__more">
                             <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
@@ -155,7 +312,8 @@
                         </span>
                     </a>
                     <a class="new-tab" data-navigate="/mono" data-new-tab="mono">
-                        <span class="new-tab__title">👥 Mono</span>
+                        <span class="new-tab__top"><span class="new-tab__icon"><i class="fas fa-chess-knight" aria-hidden="true"></i></span><span class="new-tab__tag" data-i18n="newTabs.tag.mono">Inscription join</span></span>
+                        <span class="new-tab__title">Mono</span>
                         <span class="new-tab__desc" data-i18n="mono.desc">Ton chat s'inscrit pendant 2 minutes en tapant join, puis la partie démarre.</span>
                         <span class="new-tab__more">
                             <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
@@ -167,7 +325,8 @@
                         </span>
                     </a>
                     <a class="new-tab" data-navigate="/multi" data-new-tab="multi">
-                        <span class="new-tab__title">⚔ Multi</span>
+                        <span class="new-tab__top"><span class="new-tab__icon"><i class="fas fa-khanda" aria-hidden="true"></i></span><span class="new-tab__tag" data-i18n="newTabs.tag.multi">2 chaînes</span></span>
+                        <span class="new-tab__title">Multi</span>
                         <span class="new-tab__desc" data-i18n="multi.desc">Deux chaînes s'affrontent, la tienne joue les Blancs. Crée la partie : dès qu'une autre chaîne la rejoint, leurs chats ont 2 minutes pour s'inscrire.</span>
                         <span class="new-tab__more">
                             <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
@@ -179,13 +338,17 @@
                         </span>
                     </a>
                     <a class="new-tab" data-navigate="/sandbox" data-new-tab="sandbox">
-                        <span class="new-tab__title">🧪 <span data-i18n="newTabs.free">Partie libre</span></span>
+                        <span class="new-tab__top"><span class="new-tab__icon"><i class="fas fa-chess-pawn" aria-hidden="true"></i></span><span class="new-tab__tag" data-i18n="newTabs.tag.free">Sur mesure</span></span>
+                        <span class="new-tab__title" data-i18n="newTabs.free">Partie libre</span>
                         <span class="new-tab__desc" data-i18n="newInfo.free.desc">Tout le chat vote, sans inscription : vote libre, problèmes, contre Stockfish, chat contre chat…</span>
                         <span class="new-tab__more">
                             <span class="new-tab__intro" data-i18n="newInfo.free.intro">Pas d'inscription ici : tout ton chat vote, coup après coup. Pars d'une configuration prête à l'emploi, ou choisis Personnaliser pour régler le mode de jeu et chaque option du vote.</span>
                         </span>
                     </a>
-                </nav>
+                    </nav>
+                    <!-- Explications de l'onglet actif (recopiées par le router depuis .new-tab__more) -->
+                    <details class="new-how" id="new-how"><summary><i class="fas fa-circle-info" aria-hidden="true"></i> <span data-i18n="newInfo.howTitle">Comment ça marche</span></summary><div class="new-how__body"></div></details>
+                </div>
 
                 <!-- Lancement (Nouveau) ; pendant la partie, la même carte sert de modale ⚙ -->
                 <div class="sandbox-setup" id="sandbox-setup">

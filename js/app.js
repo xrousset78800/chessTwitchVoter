@@ -24,6 +24,7 @@ import ShopPage from './pages/shop.js';
 import RecordsPage from './pages/records.js';
 import WatchPage from './pages/watch.js';
 import H24Page from './pages/h24.js';
+import HomePage from './pages/home.js';
 import BrowseTable from './pages/browseTable.js';
 import { renderSpectatorList, spectatorsLabel } from './components/spectators.js';
 import './components/infoTip.js';
@@ -339,6 +340,7 @@ const NEW_TABS = ['sandbox', 'mono', 'multi', 'rush'];
 
 const Router = {
     routes: {
+        '/': 'home',
         '/sandbox': 'sandbox',
         '/game': 'game',
         '/browse': 'browse',
@@ -415,10 +417,10 @@ const Router = {
             return;
         }
 
-        // Accueil (et adresse inconnue) : la station 24/24
+        // Adresse inconnue : retour à l'accueil
         if (!this.routes[path]) {
-            history.replaceState(null, '', '/24h');
-            return this.showPage('h24');
+            history.replaceState(null, '', '/');
+            return this.showPage('home');
         }
         let pageName = this.routes[path];
         // #/game sans partie (F5, lien partagé) : écran de lancement
@@ -477,9 +479,12 @@ const Router = {
         // Quitter la page spectateur coupe son flux
         if (pageName !== 'watch') WatchPage.stop();
         if (pageName !== 'h24') H24Page.stop();
+        if (pageName !== 'home') HomePage.stop();
 
         // Init spécifique à la page
-        if (pageName === 'sandbox' || pageName === 'game') {
+        if (pageName === 'home') {
+            HomePage.init();
+        } else if (pageName === 'sandbox' || pageName === 'game') {
             SandboxPage.init();
         } else if (pageName === 'browse') {
             BrowsePage.init();
@@ -513,7 +518,12 @@ const Router = {
         if (pageName === 'sandbox') target.querySelector('#sandbox-setup')?.before(tabs);
         else target.querySelector('.preset')?.prepend(tabs);
         tabs.querySelectorAll('.new-tab').forEach(tab => {
-            tab.classList.toggle('is-active', tab.dataset.newTab === pageName);
+            const on = tab.dataset.newTab === pageName;
+            tab.classList.toggle('is-active', on);
+            // « Comment ça marche » sous la grille : les explications de l'onglet actif
+            const body = tabs.querySelector('#new-how .new-how__body');
+            const more = tab.querySelector('.new-tab__more');
+            if (on && body && more) body.innerHTML = more.innerHTML;
         });
     }
 };

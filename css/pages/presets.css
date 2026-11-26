@@ -9,17 +9,17 @@
     min-height: 100vh;
 }
 
-/* Nouveau : menu vertical à gauche (onglets + explications), options de l'onglet à droite */
+/* Nouveau : titre et grille des modes en haut, options de l'onglet en dessous */
 .preset,
 body.sandbox-launch #page-sandbox .sandbox {
-    display: grid;
-    grid-template-columns: 330px minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 20px;
-    align-items: start;
 }
 body.sandbox-launch #page-sandbox .sandbox { max-width: 1180px; margin: 0 auto; }
 .preset > .preset__card,
-body.sandbox-launch #page-sandbox .sandbox > #sandbox-setup { grid-column: 2; grid-row: 1; max-width: none; margin: 0; min-width: 0; }
+body.sandbox-launch #page-sandbox .sandbox > #sandbox-setup { max-width: none; margin: 0; min-width: 0; width: 100%; }
 .preset__card .preset__subtitle:first-child { margin-top: 0; }
 
 .preset__how {
@@ -278,63 +278,97 @@ body.preset-multi #btn-reset {
     display: none;
 }
 
-/* ── Onglets de Nouveau : menu vertical, chaque onglet avec sa description ── */
+/* ── Onglets de Nouveau : titre, grille de cartes, explications repliables ── */
 .new-tabs {
-    grid-column: 1;
-    grid-row: 1;
-    position: sticky;
-    top: calc(var(--nav-height) + 12px);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 16px;
     margin: 0;
-    padding: 6px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
 }
 body.sandbox-launch #page-sandbox .sandbox > .new-tabs { margin: 0; }
+
+.new-tabs__head { display: flex; flex-direction: column; gap: 6px; }
+.new-tabs__title {
+    margin: 0;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    color: var(--text-primary);
+}
+.new-tabs__sub { margin: 0; color: var(--text-secondary); font-size: 1rem; }
+
+.new-tabs__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+}
 
 .new-tab {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 12px 14px;
+    gap: 8px;
+    padding: 20px;
     color: var(--text-secondary);
-    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: background var(--transition-fast), box-shadow var(--transition-fast);
+    transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
 }
+.new-tab:hover { border-color: #4a3c33; background: var(--bg-card-hover); }
+
+.new-tab__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 
 .new-tab__title {
     font-family: 'Chakra Petch', sans-serif;
     font-weight: 700;
-    font-size: 1.05rem;
+    font-size: 1.25rem;
     color: var(--text-primary);
 }
 
 .new-tab__desc {
-    font-size: 0.84rem;
-    line-height: 1.4;
+    font-size: 0.88rem;
+    line-height: 1.45;
 }
 
-.new-tab__more { display: none; }
-
-.new-tab:hover { background: rgba(255, 138, 61, 0.07); }
+.new-tab__more,
+.new-tab.is-active .new-tab__more { display: none; }
 
 .new-tab.is-active {
-    background: linear-gradient(135deg, rgba(255, 138, 61, 0.16), rgba(242, 112, 15, 0.05));
-    box-shadow: inset 3px 0 0 var(--accent-purple, #ff8a3d);
+    border-color: var(--accent);
+    background: #221c18;
     cursor: default;
 }
-.new-tab.is-active .new-tab__title { color: #ffb27a; }
-.new-tab.is-active .new-tab__more {
+.new-tab.is-active .new-tab__title { color: var(--accent-light); }
+.new-tab.is-active .new-tab__icon { background: var(--accent); color: #1a1512; border-color: var(--accent); }
+
+/* Comment ça marche : explications de l'onglet actif, repliables */
+.new-how {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+.new-how > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+.new-how > summary::-webkit-details-marker { display: none; }
+.new-how > summary::after { content: '078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; margin-left: auto; font-size: 0.75rem; transition: transform var(--transition-fast); }
+.new-how[open] > summary::after { transform: rotate(180deg); }
+.new-how > summary:hover { color: var(--text-primary); }
+.new-how > summary i { color: var(--accent); }
+.new-how__body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 6px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border-subtle);
+    padding: 0 16px 16px;
 }
 
 .new-tab__how-title {
@@ -345,10 +379,12 @@ body.sandbox-launch #page-sandbox .sandbox > .new-tabs { margin: 0; }
     color: var(--text-muted);
 }
 
-.new-tab__how li { font-size: 0.84rem; }
+.new-tab__how li { font-size: 0.88rem; }
+/* Le résumé du bloc dit déjà « Comment ça marche » */
+.new-how__body .new-tab__how-title { display: none; }
 
 .new-tab__intro {
-    font-size: 0.84rem;
+    font-size: 0.88rem;
     line-height: 1.45;
 }
 
@@ -357,22 +393,13 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
     display: none;
 }
 
-/* Écran étroit : une colonne, onglets en ligne et sans les explications */
+/* Écran étroit : grille de 2, sans les descriptions */
 @media (max-width: 860px) {
-    .preset,
-    body.sandbox-launch #page-sandbox .sandbox { display: flex; flex-direction: column; align-items: stretch; }
-    .new-tabs {
-        position: static;
-        flex-direction: row;
-        overflow-x: auto;
-        border-radius: var(--radius-full);
-        padding: 4px;
-    }
-    .new-tab { padding: 8px 14px; white-space: nowrap; border-radius: var(--radius-full); }
-    .new-tab__title { font-size: 0.9rem; }
-    .new-tab__desc,
-    .new-tab.is-active .new-tab__more { display: none; }
-    .new-tab.is-active { box-shadow: inset 0 0 0 1px var(--accent-purple, #ff8a3d); }
+    .new-tabs__title { font-size: 1.8rem; }
+    .new-tabs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .new-tab { padding: 14px; gap: 4px; }
+    .new-tab__title { font-size: 1.05rem; }
+    .new-tab__desc { display: none; }
 }
 
 .roster__hint {

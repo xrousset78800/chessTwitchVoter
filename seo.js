@@ -12,9 +12,9 @@ const DEFAULT_LANG = 'fr';
 const PREFIXED = LANGS.filter(l => l !== DEFAULT_LANG);
 const SITE_URL = (process.env.SITE_URL || 'https://chesstwitchvoter.xouindaplace.fr').replace(/\/+$/, '');
 
-// Pages indexées ('' = accueil, la station 24/24) et le libellé qui sert de titre
+// Pages indexées ('' = accueil) et le libellé qui sert de titre
 const PAGES = {
-    '': null, rush: 'nav.rush', mono: 'nav.mono', multi: 'nav.multi', sandbox: 'newTabs.free',
+    '': null, '24h': 'nav.h24', rush: 'nav.rush', mono: 'nav.mono', multi: 'nav.multi', sandbox: 'newTabs.free',
     browse: 'nav.browse', records: 'nav.records', achievements: 'nav.achievements', shop: 'nav.shop', live: 'nav.live', tournament: 'nav.tournament',
 };
 // Description propre à la page si la langue l'a, sinon celle de l'accueil
@@ -112,7 +112,6 @@ module.exports = function setupSeo({ app, rootDir, indexHtml, appRoutes }) {
     const send = (lang, rest, res) => {
         const segs = rest.split('/').filter(Boolean);
         let page = segs[0] || '';
-        if (page === '24h') page = '';
         const indexable = segs.length <= 1 && page in PAGES;
         const html = bodies[lang].replace(/<title>[^<]*<\/title>/, head(lang, indexable ? page : '', indexable));
         res.set('Cache-Control', 'no-cache').set('Content-Language', lang).type('html').send(html);

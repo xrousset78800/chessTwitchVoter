@@ -368,7 +368,79 @@
     "phantomHint": "Connecte le Phantom pour régler sa vitesse et la synchronisation."
   },
   "newTabs": {
-    "free": "Partie libre"
+    "free": "Partie libre",
+    "title": "Nouvelle partie",
+    "subtitle": "Choisis comment ton chat va jouer, règle deux ou trois choses, lance.",
+    "tag": {
+      "rush": "Contre la montre",
+      "mono": "Inscription join",
+      "multi": "2 chaînes",
+      "free": "Sur mesure"
+    }
+  },
+  "home": {
+    "kicker": "Échecs joués par le chat Twitch",
+    "titleA": "Ton chat devient",
+    "titleB": "un seul joueur",
+    "lead": "Chaque spectateur tape son coup dans le chat, le plus voté est joué. Problèmes, Puzzle Rush, parties contre Stockfish ou contre une autre chaîne : tu lances, ton chat décide.",
+    "cta": "Lancer une partie",
+    "how": "Comment ça marche",
+    "note": "Gratuit. Tu peux essayer seul, sans compte, puis connecter Twitch quand tu veux.",
+    "demo": {
+      "title": "Vote du chat",
+      "votes": "{n} votes"
+    },
+    "tuto": {
+      "kicker": "Tuto · 4 étapes",
+      "title": "Comment ça marche",
+      "s1": {
+        "title": "Connecte ta chaîne",
+        "text": "Un clic sur « Connecter Twitch ». Le site lit ton chat, il n'écrit rien et ne demande aucun mot de passe.",
+        "chan": "ta chaîne"
+      },
+      "s2": {
+        "title": "Choisis un mode",
+        "text": "Puzzle Rush pour un sprint, Partie libre contre Stockfish ou toi-même, Multi contre une autre chaîne."
+      },
+      "s3": {
+        "title": "Ton chat vote",
+        "text": "Les spectateurs tapent le coup dans le chat (e4, Cf3, O-O…). À la fin du chrono, le coup le plus voté est joué."
+      },
+      "s4": {
+        "title": "Gagne et personnalise",
+        "text": "Chaque coup joué rapporte de l'XP et des pions. Débloque des succès, puis habille ton échiquier dans la boutique.",
+        "level": "Niv. 3"
+      }
+    },
+    "who": {
+      "streamTitle": "Tu streames ?",
+      "streamText": "Partage l'onglet du jeu dans OBS. La roue, la bande et le podium des votes s'affichent pour tes spectateurs.",
+      "watchTitle": "Tu regardes ?",
+      "watchText": "Rien à installer : tape ton coup dans le chat de la chaîne. Pour gagner XP et succès à ton nom, connecte-toi avec Twitch ici."
+    },
+    "modes": {
+      "title": "Quatre façons de jouer",
+      "play": "Jouer →",
+      "multi": "Ton chat contre celui d'un autre streamer, chacun vote les coups de son camp."
+    },
+    "live": {
+      "badge": "En direct",
+      "title": "La chaîne 24/24",
+      "text": "Une partie qui ne s'arrête jamais, jouée par tous ceux qui passent. Le meilleur endroit pour voir le vote en action avant de lancer ta propre partie.",
+      "watch": "Regarder",
+      "browse": "Parcourir les parties"
+    },
+    "progress": {
+      "title": "Ta progression",
+      "ach": "XP, niveaux et pions à débloquer",
+      "records": "Les meilleurs chats en Puzzle Rush",
+      "shop": "Pièces, échiquiers, matières, couleurs de tirage"
+    },
+    "final": {
+      "title": "Prêt à laisser ton chat jouer ?",
+      "text": "Une première partie se lance en moins d'une minute.",
+      "try": "Essayer sans compte"
+    }
   },
   "browsePage": {
     "desc": "Les parties en cours. Pour jouer, passe par Nouveau ; les classements sont dans Records.",
@@ -1337,7 +1409,8 @@
       "browse": "Les parties d'échecs jouées en ce moment par des chats Twitch : regarde-les en direct ou rejoins une partie.",
       "records": "Records Puzzle Rush, batailles entre chaînes et viewers les plus actifs des chats Twitch qui jouent aux échecs.",
       "live": "Suis une partie Chess.com en direct et rejoue-la coup par coup sur ton échiquier Phantom.",
-      "tournament": "Suis les tournois d'échecs Chess.com en direct, partie par partie, et rejoue-les sur ton échiquier Phantom."
+      "tournament": "Suis les tournois d'échecs Chess.com en direct, partie par partie, et rejoue-les sur ton échiquier Phantom.",
+      "h24": "La station 24/24 : une partie d'échecs sans fin jouée par tous les chats Twitch qui passent. Tape ton coup et regarde le vote en direct."
     }
   }
 }

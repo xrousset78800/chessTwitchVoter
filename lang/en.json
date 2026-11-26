@@ -368,7 +368,79 @@
     "phantomHint": "Connect the Phantom to adjust its speed and sync."
   },
   "newTabs": {
-    "free": "Free play"
+    "free": "Free play",
+    "title": "New game",
+    "subtitle": "Pick how your chat will play, tweak a thing or two, launch.",
+    "tag": {
+      "rush": "Against the clock",
+      "mono": "Sign up with join",
+      "multi": "2 channels",
+      "free": "Custom"
+    }
+  },
+  "home": {
+    "kicker": "Chess played by Twitch chat",
+    "titleA": "Your chat becomes",
+    "titleB": "a single player",
+    "lead": "Every viewer types a move in chat, the most voted one is played. Puzzles, Puzzle Rush, games against Stockfish or another channel: you launch, your chat decides.",
+    "cta": "Start a game",
+    "how": "How it works",
+    "note": "Free. Try it alone without an account, then connect Twitch whenever you like.",
+    "demo": {
+      "title": "Chat vote",
+      "votes": "{n} votes"
+    },
+    "tuto": {
+      "kicker": "Tutorial · 4 steps",
+      "title": "How it works",
+      "s1": {
+        "title": "Connect your channel",
+        "text": "One click on \"Connect Twitch\". The site reads your chat, never writes to it and never asks for a password.",
+        "chan": "your channel"
+      },
+      "s2": {
+        "title": "Pick a mode",
+        "text": "Puzzle Rush for a sprint, Free play against Stockfish or yourself, Multi against another channel."
+      },
+      "s3": {
+        "title": "Your chat votes",
+        "text": "Viewers type the move in chat (e4, Nf3, O-O…). When the timer ends, the most voted move is played."
+      },
+      "s4": {
+        "title": "Earn and customize",
+        "text": "Every move played earns XP and pawns. Unlock achievements, then dress up your board in the shop.",
+        "level": "Lvl 3"
+      }
+    },
+    "who": {
+      "streamTitle": "Streaming?",
+      "streamText": "Share the game tab in OBS. The wheel, the ticker and the vote podium show up for your viewers.",
+      "watchTitle": "Watching?",
+      "watchText": "Nothing to install: type your move in the channel's chat. To earn XP and achievements in your name, log in with Twitch here."
+    },
+    "modes": {
+      "title": "Four ways to play",
+      "play": "Play →",
+      "multi": "Your chat against another streamer's, each votes the moves of its side."
+    },
+    "live": {
+      "badge": "Live",
+      "title": "The 24/7 channel",
+      "text": "A game that never ends, played by everyone passing by. The best place to see voting in action before starting your own game.",
+      "watch": "Watch",
+      "browse": "Browse games"
+    },
+    "progress": {
+      "title": "Your progress",
+      "ach": "XP, levels and pawns to unlock",
+      "records": "The best chats in Puzzle Rush",
+      "shop": "Pieces, boards, materials, draw colors"
+    },
+    "final": {
+      "title": "Ready to let your chat play?",
+      "text": "Your first game starts in under a minute.",
+      "try": "Try without an account"
+    }
   },
   "browsePage": {
     "desc": "Live games. To play, go to New; leaderboards are in Records.",
@@ -1337,7 +1409,8 @@
       "browse": "Chess games being played right now by Twitch chats: watch them live or join a game.",
       "records": "Puzzle Rush records, channel battles and the most active viewers of the Twitch chats that play chess.",
       "live": "Follow a Chess.com game live and replay it move by move on your Phantom board.",
-      "tournament": "Follow Chess.com chess tournaments live, game by game, and replay them on your Phantom board."
+      "tournament": "Follow Chess.com chess tournaments live, game by game, and replay them on your Phantom board.",
+      "h24": "The 24/7 station: an endless chess game played by every Twitch chat passing by. Type your move and watch the vote live."
     }
   }
 }
