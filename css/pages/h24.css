@@ -486,13 +486,14 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 }
 @keyframes h24-live-in { from { opacity: 0; } to { opacity: 1; } }
 .h24-live.is-overlay .h24-live__frame {
-    position: absolute; inset: 0; aspect-ratio: auto; background: transparent; overflow: hidden;
-    opacity: var(--live-opacity, 1); transition: opacity 0.8s ease-in;
+    /* Fond noir : la vidéo masque entièrement l'échiquier, même pendant le chargement ou s'il reste une bande */
+    position: absolute; inset: 0; aspect-ratio: auto; background: #000; overflow: hidden;
+    opacity: 1; transition: opacity 0.8s ease-in;
 }
 /* L'échiquier bouge (coup joué, nouvelle partie, pièce prise en main) : la vidéo s'efface pour le laisser voir */
 .h24-live.is-overlay.is-board-busy .h24-live__frame { opacity: 0; transition: opacity 0.15s ease-out; }
 .h24-live.is-overlay .h24-live__frame iframe { position: absolute; top: 0; left: 50%; width: calc(100% * 16 / 9); height: 100%; transform: translateX(-50%); }
-.h24-live.is-overlay .h24-live__cam { object-fit: cover; background: transparent; }
+.h24-live.is-overlay .h24-live__cam { object-fit: cover; background: #000; }
 .h24-live.is-overlay .h24-live__msg { background: rgba(0, 0, 0, 0.35); }
 /* Rien sur l'échiquier : les réglages sont dans la marge (.h24-livectl) */
 .h24-live.is-overlay .h24-live__head { display: none; }
@@ -512,12 +513,6 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 .h24-livectl__btn:hover, .h24-livectl__btn.is-on { color: var(--accent, #ff8a3d); opacity: 1; }
 .h24-livectl__btn:focus-visible { outline: 2px solid var(--accent, #ff8a3d); outline-offset: 1px; }
 .h24-livectl:not(.is-on) .h24-livectl__more { display: none; }
-/* Opacité : petit curseur vertical (haut = vidéo pleine) */
-.h24-livectl__op {
-    writing-mode: vertical-lr; direction: rtl; width: 16px; height: 84px; margin: 2px 0;
-    accent-color: var(--accent, #ff8a3d); cursor: pointer; opacity: 0.7;
-}
-.h24-livectl__op:hover, .h24-livectl__op:focus-visible { opacity: 1; }
 @media (max-width: 900px) {
     /* Pas de marge à droite de l'échiquier : les icônes passent dans son coin, sur fond sombre */
     .h24-livectl { left: auto; right: 4px; top: 4px; padding: 3px; border-radius: 14px; background: rgba(12, 10, 9, 0.6); }

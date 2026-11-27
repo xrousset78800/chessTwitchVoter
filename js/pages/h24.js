@@ -87,7 +87,6 @@ const H24Page = {
     liveFolded: (() => { try { return localStorage.getItem('h24LiveFolded') === '1'; } catch { return false; } })(),
     // Vue réelle : incrustée sur l'échiquier (en fondu) ou petite fenêtre déplaçable ; opacité, position et largeur gardées
     liveMode: (() => { try { return localStorage.getItem('h24LiveMode') === 'float' ? 'float' : 'overlay'; } catch { return 'overlay'; } })(),
-    liveOpacity: (() => { try { const v = parseFloat(localStorage.getItem('h24LiveOpacity')); return v >= 0.15 && v <= 1 ? v : 1; } catch { return 1; } })(),
     liveFloat: (() => { try { return JSON.parse(localStorage.getItem('h24LiveFloat') || 'null'); } catch { return null; } })(),
     // Régie fermée par défaut : le petit bouton orange de la barre d'outils l'ouvre
     regieFolded: (() => { try { return localStorage.getItem('h24RegieOpen') !== '1'; } catch { return true; } })(),
@@ -943,9 +942,6 @@ const H24Page = {
         if (host && box.parentElement !== host) host.appendChild(box);
         box.classList.toggle('is-overlay', !float);
         box.classList.toggle('is-float', float);
-        box.style.setProperty('--live-opacity', String(this.liveOpacity));
-        const op = $('h24-live-opacity');
-        if (op && document.activeElement !== op) op.value = String(Math.round(this.liveOpacity * 100));
         if (float) {
             const w = this.liveFloat?.w;
             box.style.width = w ? `${Math.max(200, Math.min(w, innerWidth * 0.9))}px` : '';
@@ -971,7 +967,7 @@ const H24Page = {
         }
     },
 
-    /** Glisser la petite fenêtre par sa barre, garder sa largeur quand on la redimensionne, régler l'opacité */
+    /** Glisser la petite fenêtre par sa barre, garder sa largeur quand on la redimensionne */
     bindLive(box) {
         this._liveBound = true;
         const head = box.querySelector('.h24-live__head');
@@ -1014,11 +1010,6 @@ const H24Page = {
                 }, 200);
             }).observe(box);
         }
-        $('h24-live-opacity')?.addEventListener('input', (e) => {
-            this.liveOpacity = Math.max(0.15, Math.min(1, Number(e.target.value) / 100 || 0.5));
-            box.style.setProperty('--live-opacity', String(this.liveOpacity));
-            try { localStorage.setItem('h24LiveOpacity', String(this.liveOpacity)); } catch {}
-        });
         window.addEventListener('resize', () => { if (box.classList.contains('is-float') && !box.hidden) this.clampLive(box); });
     },
 
