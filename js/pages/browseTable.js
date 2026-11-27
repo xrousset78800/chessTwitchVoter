@@ -180,7 +180,8 @@ const BrowseTable = {
         });
         const by = {
             spectators: (a, b) => (b.spectators || 0) - (a.spectators || 0) || (b.moveCount || 0) - (a.moveCount || 0),
-            moves:      (a, b) => (b.moveCount || 0) - (a.moveCount || 0),
+            // Moins de coups d'abord (parties qui commencent)
+            moves:      (a, b) => (a.moveCount || 0) - (b.moveCount || 0),
             players:    (a, b) => (b.players || 0) - (a.players || 0),
             recent:     (a, b) => (b.startedAt || 0) - (a.startedAt || 0)
         }[f.sort] || (() => 0);

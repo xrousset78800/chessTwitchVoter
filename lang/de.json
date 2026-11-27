@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Partie exportieren (PGN)",
+    "done": "PGN heruntergeladen und kopiert",
+    "saved": "PGN heruntergeladen",
+    "empty": "Keine Züge zum Exportieren"
+  },
   "nav": {
     "quit": "Partie verlassen",
     "quitConfirm": "Die laufende Partie verlassen?",
@@ -408,7 +414,7 @@
     "statusWaiting": "Wartet",
     "statusOpen": "Platz frei",
     "sortSpectators": "Meistgesehen",
-    "sortMoves": "Meiste Züge",
+    "sortMoves": "Wenigste Züge",
     "sortPlayers": "Meiste Spieler",
     "sortRecent": "Neueste",
     "countOne": "{n} Partie",

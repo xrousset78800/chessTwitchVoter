@@ -835,6 +835,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         };
         s.lastResult = result;
         try { recordGame(g, result); } catch (e) { log('📊 24/24 : partie non comptée', e.message); }
+        // Parties à suivre relues pendant le récap : « Prédiction » est là dès l'ouverture du vote du mode
+        refreshCands();
         setPhase('recap', DUR.recap);
     }
 
@@ -861,6 +863,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         }).catch(() => {});
     }
     refreshCands();
+    // Liste tenue à jour en continu (sinon vide ou périmée au vote du mode, et « Prédiction » arrive en retard)
+    setInterval(refreshCands, 2 * 60 * 1000).unref?.();
     /** Vote de la partie à suivre : g0…g4 (le chat tape 1 à 5), la plus forte par défaut */
     function gameBallot() {
         if (!pred.cands.length) return null;

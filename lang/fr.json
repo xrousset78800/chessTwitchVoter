@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Exporter la partie (PGN)",
+    "done": "PGN téléchargé et copié",
+    "saved": "PGN téléchargé",
+    "empty": "Aucun coup à exporter"
+  },
   "nav": {
     "quit": "Quitter la partie",
     "quitConfirm": "Quitter la partie en cours ?",
@@ -490,7 +496,7 @@
     "statusWaiting": "En attente",
     "statusOpen": "Place libre",
     "sortSpectators": "Plus regardées",
-    "sortMoves": "Plus avancées",
+    "sortMoves": "Moins avancées",
     "sortPlayers": "Plus d'inscrits",
     "sortRecent": "Plus récentes",
     "countOne": "{n} partie",

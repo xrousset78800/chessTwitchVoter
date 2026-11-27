@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Partij exporteren (PGN)",
+    "done": "PGN gedownload en gekopieerd",
+    "saved": "PGN gedownload",
+    "empty": "Geen zetten om te exporteren"
+  },
   "nav": {
     "quit": "Partij verlaten",
     "quitConfirm": "De huidige partij verlaten?",
@@ -408,7 +414,7 @@
     "statusWaiting": "Wachten",
     "statusOpen": "Plek vrij",
     "sortSpectators": "Meest bekeken",
-    "sortMoves": "Meeste zetten",
+    "sortMoves": "Minste zetten",
     "sortPlayers": "Meeste spelers",
     "sortRecent": "Nieuwste",
     "countOne": "{n} partij",

@@ -762,6 +762,7 @@
                         <div class="sandbox__actions game-toolbar">
                             <span class="spectators-badge game-only" id="spectators-badge" hidden><i class="fas fa-eye"></i> <span id="spectators-count">0</span></span>
                             <button class="btn btn--sm tool-btn" id="btn-settings" data-i18n-title="setup.settings" title="Réglages"><i class="fas fa-cog"></i></button>
+                            <button type="button" class="btn btn--sm tool-btn" data-pgn-export="sandbox" data-i18n-title="pgn.export" title="Exporter la partie (PGN)"><i class="fas fa-file-export"></i></button>
                             <div class="phantom-menu" id="phantom-menu">
                                 <button class="btn btn--sm" id="btn-phantom-menu" aria-haspopup="true" aria-expanded="false">
                                     <span class="phantom-menu__dot"></span> Phantom <i class="fas fa-caret-down"></i>
@@ -996,7 +997,6 @@
                 <div class="browse__header">
                     <h1 class="browse__title">👀 <span data-i18n="nav.browse">Parcourir</span>
                         <span class="browse-toolbar__count"><span class="browse__live-dot"></span> <span id="browse-count"></span></span></h1>
-                    <p class="browse__desc" data-i18n="browsePage.desc">Les parties en cours. Pour jouer, passe par Nouveau ; les classements sont dans Records.</p>
                 </div>
 
                 <!-- ===== Parties en cours : filtres, tableau, aperçu ===== -->
@@ -1014,7 +1014,7 @@
                         </select>
                         <select id="browse-sort" class="browse-select" data-i18n-title="browsePage.sort" title="Trier">
                             <option value="spectators" data-i18n="browsePage.sortSpectators">Plus regardées</option>
-                            <option value="moves" data-i18n="browsePage.sortMoves">Plus avancées</option>
+                            <option value="moves" data-i18n="browsePage.sortMoves">Moins avancées</option>
                             <option value="players" data-i18n="browsePage.sortPlayers">Plus d'inscrits</option>
                             <option value="recent" data-i18n="browsePage.sortRecent">Plus récentes</option>
                         </select>
@@ -1121,6 +1121,8 @@
                                     <div class="panel__content h24-histpop__sc"><div class="history-list" id="h24-history"></div></div>
                                 </div>
                             </div>
+                            <!-- Export PGN de la partie (chess.com, Lichess : Importer) -->
+                            <button type="button" class="h24-settings__btn" data-pgn-export="h24" data-i18n-title="pgn.export" title="Exporter la partie (PGN)"><i class="fas fa-file-export"></i></button>
                             <!-- Régie (PC du streamer : Phantom, pause, chaîne de la vue réelle) : fenêtre sous un petit bouton orange, comme l'historique -->
                             <div class="h24-regiewrap">
                                 <button type="button" class="h24-settings__btn h24-regiebtn" data-h24-regie-toggle aria-expanded="false" aria-haspopup="true" data-i18n-title="h24.regie.title" title="Régie" hidden><i class="fas fa-sliders-h"></i><span class="h24-regiebtn__dot"></span></button>

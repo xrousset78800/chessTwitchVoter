@@ -15,6 +15,7 @@ import rushManager from './core/rushManager.js';
 import twitch from './managers/twitch.js';
 import twitchAuth from './core/twitchAuth.js';
 import { matchLegalMove, fmtMove } from './utils/moveMatch.js';
+import { registerPgnSource } from './utils/pgnExport.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import './core/economy.js';
@@ -1377,6 +1378,15 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         const menuBtn = document.getElementById('btn-phantom-menu');
 
         document.getElementById('btn-settings')?.addEventListener('click', () => this.openSettings());
+        // Export PGN de la partie : Stockfish, le streamer (partie à joueurs) ou le chat de la chaîne
+        registerPgnSource('sandbox', () => {
+            const c = gameEngine.chess;
+            if (!c) return null;
+            const bot = gameEngine.vsBot, human = gameEngine.session?.humanColor;
+            const ch = twitch.channel;
+            const name = side => bot && bot.color === side ? `Stockfish ${bot.elo}` : human === side ? (ch || 'Streamer') : `Chat${ch ? ' #' + ch : ' Twitch'}`;
+            return { moves: c.history(), startFen: c.header?.().FEN || null, white: name('w'), black: name('b') };
+        });
         document.getElementById('btn-settings-close')?.addEventListener('click', () => this.closeSettings());
         setup?.addEventListener('click', (e) => {
             if (e.target === setup) this.closeSettings();

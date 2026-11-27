@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Eksportuj partię (PGN)",
+    "done": "PGN pobrany i skopiowany",
+    "saved": "PGN pobrany",
+    "empty": "Brak ruchów do eksportu"
+  },
   "nav": {
     "quit": "Opuść partię",
     "quitConfirm": "Opuścić trwającą partię?",
@@ -408,7 +414,7 @@
     "statusWaiting": "Oczekuje",
     "statusOpen": "Wolne miejsce",
     "sortSpectators": "Najczęściej oglądane",
-    "sortMoves": "Najwięcej ruchów",
+    "sortMoves": "Najmniej ruchów",
     "sortPlayers": "Najwięcej graczy",
     "sortRecent": "Najnowsze",
     "countOne": "{n} partia",

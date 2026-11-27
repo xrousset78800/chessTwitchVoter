@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Esporta partita (PGN)",
+    "done": "PGN scaricato e copiato",
+    "saved": "PGN scaricato",
+    "empty": "Nessuna mossa da esportare"
+  },
   "nav": {
     "quit": "Esci dalla partita",
     "quitConfirm": "Uscire dalla partita in corso?",
@@ -408,7 +414,7 @@
     "statusWaiting": "In attesa",
     "statusOpen": "Posto libero",
     "sortSpectators": "Più seguite",
-    "sortMoves": "Più mosse",
+    "sortMoves": "Meno mosse",
     "sortPlayers": "Più iscritti",
     "sortRecent": "Più recenti",
     "countOne": "{n} partita",

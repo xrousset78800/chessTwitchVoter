@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Exportar partida (PGN)",
+    "done": "PGN transferido e copiado",
+    "saved": "PGN transferido",
+    "empty": "Sem jogadas para exportar"
+  },
   "nav": {
     "quit": "Sair da partida",
     "quitConfirm": "Sair da partida em andamento?",
@@ -408,7 +414,7 @@
     "statusWaiting": "Aguardando",
     "statusOpen": "Vaga aberta",
     "sortSpectators": "Mais assistidas",
-    "sortMoves": "Mais lances",
+    "sortMoves": "Menos lances",
     "sortPlayers": "Mais jogadores",
     "sortRecent": "Mais recentes",
     "countOne": "{n} partida",

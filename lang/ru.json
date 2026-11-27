@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Экспорт партии (PGN)",
+    "done": "PGN скачан и скопирован",
+    "saved": "PGN скачан",
+    "empty": "Нет ходов для экспорта"
+  },
   "nav": {
     "quit": "Выйти из партии",
     "quitConfirm": "Выйти из текущей партии?",
@@ -408,7 +414,7 @@
     "statusWaiting": "Ожидание",
     "statusOpen": "Есть место",
     "sortSpectators": "Больше зрителей",
-    "sortMoves": "Больше ходов",
+    "sortMoves": "Меньше ходов",
     "sortPlayers": "Больше игроков",
     "sortRecent": "Новые",
     "countOne": "Партий: {n}",

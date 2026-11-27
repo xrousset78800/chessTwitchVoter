@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Export game (PGN)",
+    "done": "PGN downloaded and copied",
+    "saved": "PGN downloaded",
+    "empty": "No moves to export"
+  },
   "nav": {
     "quit": "Leave the game",
     "quitConfirm": "Leave the current game?",
@@ -490,7 +496,7 @@
     "statusWaiting": "Waiting",
     "statusOpen": "Open seat",
     "sortSpectators": "Most watched",
-    "sortMoves": "Most moves",
+    "sortMoves": "Fewest moves",
     "sortPlayers": "Most players",
     "sortRecent": "Newest",
     "countOne": "{n} game",

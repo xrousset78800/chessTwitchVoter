@@ -1,4 +1,10 @@
 {
+  "pgn": {
+    "export": "Oyunu dışa aktar (PGN)",
+    "done": "PGN indirildi ve kopyalandı",
+    "saved": "PGN indirildi",
+    "empty": "Dışa aktarılacak hamle yok"
+  },
   "nav": {
     "quit": "Oyundan çık",
     "quitConfirm": "Devam eden oyundan çıkılsın mı?",
@@ -408,7 +414,7 @@
     "statusWaiting": "Bekliyor",
     "statusOpen": "Boş yer",
     "sortSpectators": "En çok izlenen",
-    "sortMoves": "En çok hamle",
+    "sortMoves": "En az hamle",
     "sortPlayers": "En çok oyuncu",
     "sortRecent": "En yeni",
     "countOne": "{n} oyun",

@@ -13,6 +13,7 @@ import { fillVoteTimer } from '../components/voteTimer.js';
 import { renderHistory, paintMoveChips, clearWinner, nameColor, renderPodium, markPodiumWinner, pieceOf } from '../components/voteViews.js';
 import { paletteColors } from '../components/votePalettes.js';
 import { fmtMove } from '../utils/moveMatch.js';
+import { registerPgnSource } from '../utils/pgnExport.js';
 import { CamSender, CamPlayer, CAM_QUALITIES, CAM_ZOOM, listCameras, camSupported } from '../components/liveCam.js';
 
 const t = (key, params, fallback) => {
@@ -102,6 +103,16 @@ const H24Page = {
     init() {
         if (!this.socket) this.connect();
         if (!this._bound) this.bind();
+        // Export PGN : la partie en cours (ou celle du récap) ; pas pour le Puzzle Rush (une suite de puzzles)
+        registerPgnSource('h24', () => {
+            const s = this.state, g = s?.game;
+            if (!g?.history?.length || s.mode === 'rush') return null;
+            const p = g.predict;
+            const who = (x, side) => x?.name ? `${x.title ? x.title + ' ' : ''}${x.name}` : `Crowd Gambit 24/24 (${t(side === 'w' ? 'h24.sideW' : 'h24.sideB', null, side === 'w' ? 'Blancs' : 'Noirs')})`;
+            const r = g.result, w = r?.winner;
+            const result = w === 'w' ? '1-0' : w === 'b' ? '0-1' : r && (r.kind === 'draw' || w === 'd') ? '1/2-1/2' : null;
+            return { moves: g.history, startFen: g.startFen, white: who(p?.white, 'w'), black: who(p?.black, 'b'), result, event: p?.event || 'Crowd Gambit 24/24' };
+        });
         this.ensureBoard();
         requestAnimationFrame(() => this.board?.resize());
         this.render();
