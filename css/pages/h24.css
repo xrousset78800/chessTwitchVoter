@@ -477,7 +477,6 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 .h24-live__frame { aspect-ratio: 16 / 9; background: #000; }
 .h24-live.is-folded .h24-live__frame { display: none; }
 .h24-live__frame iframe { display: block; width: 100%; height: 100%; border: 0; }
-.h24-live__opacity { display: none; width: 70px; accent-color: var(--accent); cursor: pointer; }
 
 /* Incrustée : la vidéo en fondu sur l'échiquier, recadrée au carré ; les clics passent au travers (on joue toujours) */
 #h24-board-wrap > .h24-live.is-overlay {
@@ -488,20 +487,41 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 @keyframes h24-live-in { from { opacity: 0; } to { opacity: 1; } }
 .h24-live.is-overlay .h24-live__frame {
     position: absolute; inset: 0; aspect-ratio: auto; background: transparent; overflow: hidden;
-    opacity: var(--live-opacity, 0.5); transition: opacity 0.25s;
+    opacity: var(--live-opacity, 1); transition: opacity 0.8s ease-in;
 }
+/* L'échiquier bouge (coup joué, nouvelle partie, pièce prise en main) : la vidéo s'efface pour le laisser voir */
+.h24-live.is-overlay.is-board-busy .h24-live__frame { opacity: 0; transition: opacity 0.15s ease-out; }
 .h24-live.is-overlay .h24-live__frame iframe { position: absolute; top: 0; left: 50%; width: calc(100% * 16 / 9); height: 100%; transform: translateX(-50%); }
 .h24-live.is-overlay .h24-live__cam { object-fit: cover; background: transparent; }
 .h24-live.is-overlay .h24-live__msg { background: rgba(0, 0, 0, 0.35); }
-/* Petite barre en haut à droite de l'échiquier, discrète tant qu'on ne la survole pas */
-.h24-live.is-overlay .h24-live__head {
-    position: absolute; top: 6px; right: 6px; z-index: 1; pointer-events: auto;
-    padding: 3px 6px; border-radius: 3px; background: rgba(12, 10, 9, 0.72);
-    opacity: 0.6; transition: opacity 0.2s;
+/* Rien sur l'échiquier : les réglages sont dans la marge (.h24-livectl) */
+.h24-live.is-overlay .h24-live__head { display: none; }
+.h24-live.is-overlay.is-folded { display: none; }
+
+/* Icônes de la vue incrustée, à droite du haut de l'échiquier (comme l'icône de la jauge d'évaluation) */
+.h24-livectl {
+    position: absolute; top: 0; left: calc(100% + 4px); z-index: 5;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
-.h24-live.is-overlay .h24-live__head:hover, .h24-live.is-overlay .h24-live__head:focus-within { opacity: 1; }
-.h24-live.is-overlay .h24-live__link { display: none; }
-.h24-live.is-overlay .h24-live__opacity { display: block; }
+.h24-livectl[hidden] { display: none; }
+.h24-livectl__btn {
+    width: 26px; height: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 50%; background: transparent; color: var(--text-muted, #7f736b);
+    font-size: 13px; cursor: pointer; opacity: 0.7; transition: color 0.15s, opacity 0.15s;
+}
+.h24-livectl__btn:hover, .h24-livectl__btn.is-on { color: var(--accent, #ff8a3d); opacity: 1; }
+.h24-livectl__btn:focus-visible { outline: 2px solid var(--accent, #ff8a3d); outline-offset: 1px; }
+.h24-livectl:not(.is-on) .h24-livectl__more { display: none; }
+/* Opacité : petit curseur vertical (haut = vidéo pleine) */
+.h24-livectl__op {
+    writing-mode: vertical-lr; direction: rtl; width: 16px; height: 84px; margin: 2px 0;
+    accent-color: var(--accent, #ff8a3d); cursor: pointer; opacity: 0.7;
+}
+.h24-livectl__op:hover, .h24-livectl__op:focus-visible { opacity: 1; }
+@media (max-width: 900px) {
+    /* Pas de marge à droite de l'échiquier : les icônes passent dans son coin, sur fond sombre */
+    .h24-livectl { left: auto; right: 4px; top: 4px; padding: 3px; border-radius: 14px; background: rgba(12, 10, 9, 0.6); }
+}
 
 /* Petite fenêtre : déplaçable par sa barre, redimensionnable par le coin en bas à droite */
 .h24-live.is-float {
@@ -511,6 +531,9 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
     animation: h24-live-in 0.25s ease-out both;
 }
 .h24-live.is-float .h24-live__head { cursor: move; user-select: none; touch-action: none; }
+/* Toute la barre sert de poignée : le lien ne s'étire plus, les boutons sont poussés à droite */
+.h24-live.is-float .h24-live__link { flex: 0 1 auto; }
+.h24-live.is-float #h24-live-mode { margin-left: auto; }
 .h24-live.is-float.is-dragging { opacity: 0.9; }
 .h24-live.is-float.is-dragging .h24-live__frame { pointer-events: none; }
 

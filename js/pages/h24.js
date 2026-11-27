@@ -87,7 +87,7 @@ const H24Page = {
     liveFolded: (() => { try { return localStorage.getItem('h24LiveFolded') === '1'; } catch { return false; } })(),
     // Vue réelle : incrustée sur l'échiquier (en fondu) ou petite fenêtre déplaçable ; opacité, position et largeur gardées
     liveMode: (() => { try { return localStorage.getItem('h24LiveMode') === 'float' ? 'float' : 'overlay'; } catch { return 'overlay'; } })(),
-    liveOpacity: (() => { try { const v = parseFloat(localStorage.getItem('h24LiveOpacity')); return v >= 0.15 && v <= 1 ? v : 0.5; } catch { return 0.5; } })(),
+    liveOpacity: (() => { try { const v = parseFloat(localStorage.getItem('h24LiveOpacity')); return v >= 0.15 && v <= 1 ? v : 1; } catch { return 1; } })(),
     liveFloat: (() => { try { return JSON.parse(localStorage.getItem('h24LiveFloat') || 'null'); } catch { return null; } })(),
     // Régie fermée par défaut : le petit bouton orange de la barre d'outils l'ouvre
     regieFolded: (() => { try { return localStorage.getItem('h24RegieOpen') !== '1'; } catch { return true; } })(),
@@ -478,8 +478,14 @@ const H24Page = {
             position: 'start',
             draggable: true,
             pieceTheme: PIECES,
-            onDragStart: (src, piece) => this.myTurn() && piece[0] === this.state.game.turn,
+            onDragStart: (src, piece) => {
+                const ok = this.myTurn() && piece[0] === this.state.game.turn;
+                // Pièce en main : la vue incrustée s'efface le temps du geste
+                if (ok) this.liveBusy(60000);
+                return ok;
+            },
             onDrop: (from, to) => {
+                this.liveBusy(1500);
                 const g = this.state?.game;
                 if (!g) return 'snapback';
                 const chess = new Chess(g.fen);
@@ -524,6 +530,8 @@ const H24Page = {
             // Animer seulement un coup joué (au plus 4 cases changent : roque) ; un nouveau puzzle ou une
             // nouvelle partie remplace la position sans faire voyager les pièces à travers l'échiquier
             this.board.position(fen, this.boardFen != null && squaresChanged(this.boardFen, fen) <= 4);
+            // L'échiquier bouge (coup, nouvelle partie, retournement) : on le montre, puis la vidéo revient en fondu
+            this.liveBusy(1800);
             this.boardKey = key;
             this.boardFen = fen;
         }
@@ -898,6 +906,15 @@ const H24Page = {
         if (msg.textContent !== text) { msg.textContent = text; msg.hidden = !text; }
     },
 
+    /** Vue incrustée : laisse voir l'échiquier pendant ms (relancé à chaque mouvement), puis la vidéo revient */
+    liveBusy(ms) {
+        const box = $('h24-live');
+        if (!box) return;
+        box.classList.add('is-board-busy');
+        clearTimeout(this._liveBusyT);
+        this._liveBusyT = setTimeout(() => box.classList.remove('is-board-busy'), ms);
+    },
+
     setLiveMode(mode) {
         this.liveMode = mode === 'float' ? 'float' : 'overlay';
         try { localStorage.setItem('h24LiveMode', this.liveMode); } catch {}
@@ -935,6 +952,17 @@ const H24Page = {
             if (!box.hidden) this.clampLive(box);
         } else {
             box.style.left = box.style.top = box.style.width = '';
+        }
+        // Icônes dans la marge de l'échiquier (mode incrusté seulement)
+        const ctl = $('h24-livectl');
+        if (ctl) {
+            ctl.hidden = box.hidden || float;
+            ctl.classList.toggle('is-on', !this.liveFolded);
+            const sh = $('h24-livectl-show');
+            if (sh) {
+                sh.classList.toggle('is-on', !this.liveFolded);
+                sh.title = this.liveFolded ? t('h24.liveShow', null, 'Afficher') : t('h24.liveHide', null, 'Replier');
+            }
         }
         const md = $('h24-live-mode');
         if (md) {
