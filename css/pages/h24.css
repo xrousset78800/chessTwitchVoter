@@ -299,6 +299,12 @@
 #h24-votes-panel .vote-total:empty { display: none; }
 #h24-votes-panel.is-live:not(.votes-slot--wheel) .vote-total { margin: 0; font-size: 1.6rem; }
 body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opacity: 1; pointer-events: auto; }
+/* Votes visibles (tableau des votants) en style roue : pas de place réservée, le tableau reste en haut à sa taille ;
+   la roue apparaît dessous le temps du tirage, sans cacher le tableau (la ligne tirée s'y allume) */
+#page-h24 #h24-votes-panel.votes-slot--wheel:has(.h24-vlist) { min-height: 0; justify-content: flex-start; }
+#page-h24 #h24-votes-panel.is-drawing:has(.h24-vlist) .votes-slot__podium { opacity: 1; transform: none; filter: none; pointer-events: auto; }
+body #page-h24 #h24-votes-panel:has(.h24-vlist) #h24-wheel-area.wheel-area--docked { position: relative; inset: auto; display: none; padding: 14px 0 10px; }
+body #page-h24 #h24-votes-panel.is-drawing:has(.h24-vlist) #h24-wheel-area.wheel-area--docked { display: grid; opacity: 1; }
 #page-h24 #h24-wheel-area.wheel-area--band.is-live { opacity: 1; transform: none; pointer-events: auto; }
 
 /* Bandeau des votes sous l'échiquier */
