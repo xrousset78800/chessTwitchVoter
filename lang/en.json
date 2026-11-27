@@ -1817,7 +1817,7 @@
     "title": "Play",
     "solo": "Solo",
     "stream": "On stream",
-    "soloDesc": "Puzzles, a Puzzle Rush or Stockfish, with your mouse. One click and you play: no votes, no timer.",
+    "soloDesc": "Puzzles, a Puzzle Rush, Stockfish or picks on a real match, with your mouse. One click and you play: no votes, no timer.",
     "streamDesc": "Your chat plays with you: votes, wheel, Mono, Multi, chat Puzzle Rush, predictions.",
     "puzzles": "Puzzles",
     "puzzlesDesc": "An endless series at your level: it goes up when you find the move, down when you miss. No clock.",
@@ -1855,6 +1855,7 @@
     "failedWith": "Missed: the move was {san}",
     "bilanMeta": "{n} missed · best streak {streak} · level {level}",
     "loginToSave": "Log in with Twitch to keep your personal best.",
-    "newRecord": "🏆 New personal best!"
+    "newRecord": "🏆 New personal best!",
+    "liveDesc": "Follow a real tournament game live: guess the next move and the winner. Every right answer earns you pawns."
   }
 }

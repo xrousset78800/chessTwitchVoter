@@ -1817,7 +1817,7 @@
     "title": "Graj",
     "solo": "Sam",
     "stream": "Na streamie",
-    "soloDesc": "Zadania, Puzzle Rush lub Stockfish, myszką. Jedno kliknięcie i grasz: bez głosowania, bez minutnika.",
+    "soloDesc": "Zadania, Puzzle Rush, Stockfish lub typy na prawdziwą partię, myszką. Jedno kliknięcie i grasz: bez głosowania, bez minutnika.",
     "streamDesc": "Twój czat gra z tobą: głosy, koło, Mono, Multi, Puzzle Rush czatu, typy.",
     "puzzles": "Zadania",
     "puzzlesDesc": "Niekończąca się seria na twoim poziomie: rośnie, gdy znajdziesz ruch, spada, gdy się pomylisz. Bez zegara.",
@@ -1855,6 +1855,7 @@
     "failedWith": "Pudło: należało zagrać {san}",
     "bilanMeta": "Nieudane: {n} · najlepsza seria {streak} · poziom {level}",
     "loginToSave": "Zaloguj się przez Twitch, by zapisać swój rekord osobisty.",
-    "newRecord": "🏆 Nowy rekord osobisty!"
+    "newRecord": "🏆 Nowy rekord osobisty!",
+    "liveDesc": "Śledź na żywo prawdziwą partię turniejową: zgadnij następny ruch i zwycięzcę. Każda trafna odpowiedź daje pionki."
   }
 }

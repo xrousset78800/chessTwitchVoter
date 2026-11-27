@@ -839,7 +839,7 @@
                     <button type="button" class="play-side" data-play-side="solo">
                         <span class="play-side__icon"><i class="fas fa-user" aria-hidden="true"></i></span>
                         <span class="play-side__title" data-i18n="play.solo">Seul</span>
-                        <span class="play-side__desc" data-i18n="play.soloDesc">Des puzzles, un Puzzle Rush ou Stockfish, à la souris. Un clic et tu joues : pas de vote, pas de minuteur.</span>
+                        <span class="play-side__desc" data-i18n="play.soloDesc">Des puzzles, un Puzzle Rush, Stockfish ou les pronos sur un vrai match, à la souris. Un clic et tu joues : pas de vote, pas de minuteur.</span>
                     </button>
                     <button type="button" class="play-side" data-play-side="stream">
                         <span class="play-side__icon"><i class="fab fa-twitch" aria-hidden="true"></i></span>
@@ -875,6 +875,13 @@
                         <label class="play-card__label" for="solo-bot-elo" data-i18n="play.level">Niveau de Stockfish</label>
                         <select class="input input--sm play-card__select" id="solo-bot-elo"></select>
                         <button type="button" class="btn btn--primary play-card__go" data-solo-start="bot"><i class="fas fa-play" aria-hidden="true"></i> <span data-i18n="play.go">Jouer</span></button>
+                    </div>
+                    <!-- Pronos live : la page des matchs en direct, la même qu'en stream -->
+                    <div class="play-card">
+                        <div class="play-card__top"><span class="new-tab__icon"><i class="fas fa-crosshairs" aria-hidden="true"></i></span><span class="play-card__meta"><span class="nav__game-dot"></span> <span data-i18n="newTabs.tag.live">En direct</span></span></div>
+                        <h2 class="play-card__title" data-i18n="nav.tournament">Pronos live</h2>
+                        <p class="play-card__desc" data-i18n="play.liveDesc">Suis un vrai match de tournoi en direct : devine le prochain coup et le vainqueur. Chaque bonne réponse rapporte des pions.</p>
+                        <a class="btn btn--primary play-card__go" data-navigate="/tournament"><i class="fas fa-play" aria-hidden="true"></i> <span data-i18n="play.go">Jouer</span></a>
                     </div>
                     <p class="play__coins"><i class="fas fa-coins" aria-hidden="true"></i> <span id="solo-coins"></span></p>
                 </div>

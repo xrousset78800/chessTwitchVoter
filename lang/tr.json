@@ -1817,7 +1817,7 @@
     "title": "Oyna",
     "solo": "Tek başına",
     "stream": "Yayında",
-    "soloDesc": "Bulmacalar, Puzzle Rush ya da Stockfish, fareyle. Tek tık ve oynuyorsun: oylama yok, sayaç yok.",
+    "soloDesc": "Bulmacalar, Puzzle Rush, Stockfish ya da gerçek bir maç için tahminler, fareyle. Tek tık ve oynuyorsun: oylama yok, sayaç yok.",
     "streamDesc": "Sohbetin seninle oynar: oylar, çark, Mono, Multi, sohbet Puzzle Rush, tahminler.",
     "puzzles": "Bulmacalar",
     "puzzlesDesc": "Senin seviyende sonsuz bir seri: hamleyi bulunca yükselir, kaçırınca düşer. Saat yok.",
@@ -1855,6 +1855,7 @@
     "failedWith": "Kaçtı: doğrusu {san}",
     "bilanMeta": "{n} kaçırılan · en iyi seri {streak} · seviye {level}",
     "loginToSave": "Kişisel rekorunu saklamak için Twitch ile giriş yap.",
-    "newRecord": "🏆 Yeni kişisel rekor!"
+    "newRecord": "🏆 Yeni kişisel rekor!",
+    "liveDesc": "Gerçek bir turnuva maçını canlı izle: sonraki hamleyi ve kazananı tahmin et. Her doğru cevap piyon kazandırır."
   }
 }

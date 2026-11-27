@@ -1817,7 +1817,7 @@
     "title": "Jouer",
     "solo": "Seul",
     "stream": "En stream",
-    "soloDesc": "Des puzzles, un Puzzle Rush ou Stockfish, à la souris. Un clic et tu joues : pas de vote, pas de minuteur.",
+    "soloDesc": "Des puzzles, un Puzzle Rush, Stockfish ou les pronos sur un vrai match, à la souris. Un clic et tu joues : pas de vote, pas de minuteur.",
     "streamDesc": "Ton chat joue avec toi : votes, roue, Mono, Multi, Puzzle Rush du chat, pronostics.",
     "puzzles": "Puzzles",
     "puzzlesDesc": "Une série sans fin, à ton niveau : il monte quand tu trouves, baisse quand tu rates. Pas de chrono.",
@@ -1855,6 +1855,7 @@
     "failedWith": "Raté : il fallait {san}",
     "bilanMeta": "{n} raté(s) · meilleure série {streak} · niveau {level}",
     "loginToSave": "Connecte-toi avec Twitch pour garder ton record perso.",
-    "newRecord": "🏆 Nouveau record perso !"
+    "newRecord": "🏆 Nouveau record perso !",
+    "liveDesc": "Suis un vrai match de tournoi en direct : devine le prochain coup et le vainqueur. Chaque bonne réponse rapporte des pions."
   }
 }

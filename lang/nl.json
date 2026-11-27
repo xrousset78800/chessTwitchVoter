@@ -1817,7 +1817,7 @@
     "title": "Spelen",
     "solo": "Alleen",
     "stream": "Op stream",
-    "soloDesc": "Puzzels, een Puzzle Rush of Stockfish, met je muis. Eén klik en je speelt: geen stemmen, geen timer.",
+    "soloDesc": "Puzzels, een Puzzle Rush, Stockfish of voorspellingen op een echte partij, met je muis. Eén klik en je speelt: geen stemmen, geen timer.",
     "streamDesc": "Je chat speelt met je mee: stemmen, rad, Mono, Multi, chat-Puzzle Rush, voorspellingen.",
     "puzzles": "Puzzels",
     "puzzlesDesc": "Een eindeloze reeks op jouw niveau: het stijgt als je de zet vindt en daalt als je mist. Geen klok.",
@@ -1855,6 +1855,7 @@
     "failedWith": "Gemist: het was {san}",
     "bilanMeta": "{n} gemist · beste reeks {streak} · niveau {level}",
     "loginToSave": "Log in met Twitch om je persoonlijk record te bewaren.",
-    "newRecord": "🏆 Nieuw persoonlijk record!"
+    "newRecord": "🏆 Nieuw persoonlijk record!",
+    "liveDesc": "Volg live een echte toernooipartij: raad de volgende zet en de winnaar. Elk goed antwoord levert pionnen op."
   }
 }

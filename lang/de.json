@@ -1817,7 +1817,7 @@
     "title": "Spielen",
     "solo": "Allein",
     "stream": "Im Stream",
-    "soloDesc": "Puzzles, ein Puzzle Rush oder Stockfish, mit der Maus. Ein Klick und du spielst: keine Abstimmung, kein Timer.",
+    "soloDesc": "Puzzles, ein Puzzle Rush, Stockfish oder Tipps auf eine echte Partie, mit der Maus. Ein Klick und du spielst: keine Abstimmung, kein Timer.",
     "streamDesc": "Dein Chat spielt mit dir: Abstimmungen, Rad, Mono, Multi, Chat-Puzzle-Rush, Tipps.",
     "puzzles": "Puzzles",
     "puzzlesDesc": "Eine endlose Reihe auf deinem Niveau: Es steigt, wenn du den Zug findest, und sinkt bei Fehlern. Keine Uhr.",
@@ -1855,6 +1855,7 @@
     "failedWith": "Verfehlt: richtig war {san}",
     "bilanMeta": "{n} verfehlt · beste Serie {streak} · Niveau {level}",
     "loginToSave": "Melde dich mit Twitch an, um deinen persönlichen Rekord zu speichern.",
-    "newRecord": "🏆 Neuer persönlicher Rekord!"
+    "newRecord": "🏆 Neuer persönlicher Rekord!",
+    "liveDesc": "Verfolge eine echte Turnierpartie live: Tippe den nächsten Zug und den Sieger. Jede richtige Antwort bringt Bauern."
   }
 }

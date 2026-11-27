@@ -629,8 +629,10 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 .play-side__title { font: 700 1.7rem 'Chakra Petch', sans-serif; color: var(--text-primary); }
 .play-side__desc { font-size: 1rem; line-height: 1.5; }
 
-/* Seul : trois cartes, un clic pour jouer */
-.play__solo { display: none; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+/* Seul : quatre cartes, un clic pour jouer (4 de front sur grand écran, 2 × 2 en dessous) */
+.play__solo { display: none; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1100px) { .play__solo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .play__solo { grid-template-columns: minmax(0, 1fr); } }
 #page-new[data-side="solo"] .play__solo { display: grid; }
 .play-card {
     display: flex; flex-direction: column; gap: 10px; padding: 22px;
@@ -677,3 +679,4 @@ body.solo-mode .moves-panel__content,
 body.solo-mode #multi-turn-indicator,
 body.solo-mode #spectators-badge,
 body.solo-mode #spectators-panel { display: none !important; }
+.play-card__meta .nav__game-dot { display: inline-block; width: 7px; height: 7px; margin-right: 2px; vertical-align: 1px; }
