@@ -18,7 +18,7 @@ import twitchAuth from './twitchAuth.js';
 
 const KEY = 'solo_puzzles';
 const START_RATING = 800;
-const UP = 40, DOWN = 50, MIN = 400, MAX = 3000;
+const UP = 40, DOWN = 50, MIN = 400, MAX = 3000, SPREAD = 100;
 
 class SoloPuzzles {
     constructor() {
@@ -49,12 +49,18 @@ class SoloPuzzles {
         try { localStorage.setItem(KEY, JSON.stringify({ rating: this.rating, best: this.bestStreak })); } catch { }
     }
 
+    /** Fourchette des puzzles proposés autour du niveau (celle que _next() essaie d'abord) */
+    range() {
+        const lo = Math.max(MIN, this.rating - SPREAD), hi = Math.min(MAX, this.rating + SPREAD);
+        return `${lo}–${hi}`;
+    }
+
     getState() {
         const total = this.solved + this.failed;
         return {
             active: this.active, rating: this.rating, streak: this.streak, bestStreak: this.bestStreak,
             solved: this.solved, failed: this.failed, rate: total ? Math.round(this.solved / total * 100) : null,
-            last: this.last
+            last: this.last, range: this.range()
         };
     }
 
@@ -134,7 +140,7 @@ class SoloPuzzles {
         this._emit();
         const pool = problemsManager.getFilteredProblems();
         if (!pool.length) return null;
-        let spread = 100;
+        let spread = SPREAD;
         for (let i = 0; i < 6; i++) {
             const c = pool.filter(p => Math.abs((parseInt(p[3]) || 0) - this.rating) <= spread && !this.used.has(p[0]));
             if (c.length >= 5 || (i === 5 && c.length)) return this._take(c[Math.floor(Math.random() * c.length)]);

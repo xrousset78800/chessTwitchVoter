@@ -260,7 +260,7 @@ const GameSession = {
                 mode: 'problems',
                 solo: soloPuzzles.active,
                 title: tr('bilan.problemsTitle', { n: solved, total: solved + failed }),
-                meta: soloPuzzles.active ? tr('play.bilanMeta', { n: failed, streak: soloPuzzles.sessionBest, level: soloPuzzles.rating })
+                meta: soloPuzzles.active ? tr('play.bilanMeta', { n: failed, streak: soloPuzzles.sessionBest, level: soloPuzzles.range() })
                     : tr('bilan.problemsMeta', { n: failed }),
             });
         } else GameBilan.discard();
@@ -1016,7 +1016,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
         set('solo-streak', state.streak);
         set('solo-rate', state.rate == null ? '—' : `${state.rate} %`);
-        set('solo-level', state.rating);
+        set('solo-level', state.range);
         set('solo-best', state.bestStreak);
         const last = document.getElementById('solo-last');
         if (last) {
@@ -2500,7 +2500,7 @@ const PlayPage = {
             elo.innerHTML = levels.map(v => `<option value="${v}"${v === cur ? ' selected' : ''}>${window.BotEngine?.levelOption(v) || v}</option>`).join('');
         }
         const lvl = page.querySelector('#solo-puzzle-level');
-        if (lvl) lvl.textContent = tr('play.puzzlesLevel', { n: window.soloPuzzles?.rating ?? 800 });
+        if (lvl) lvl.textContent = tr('play.puzzlesLevel', { n: window.soloPuzzles?.range() ?? '700–900' });
         const coins = page.querySelector('#solo-coins');
         if (coins) coins.textContent = twitchAuth.isLoggedIn ? tr('play.coinsOn') : tr('play.coinsOff');
     },
