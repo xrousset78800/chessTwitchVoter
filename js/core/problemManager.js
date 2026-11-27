@@ -949,6 +949,9 @@ skipPause() {
 
     playSound(move) {
         try {
+            const check = !!(this.chess?.in_check?.() || this.chess?.inCheck?.());
+            window.BoardFx?.move({ from: move.from, to: move.to, capture: !!move.captured });
+            if (window.SoundKit?.play(check ? 'check' : move.captured ? 'capture' : 'move', 1, { mate: !!this.chess?.in_checkmate?.() })) return;
             if (this.chess?.in_check?.() || this.chess?.inCheck?.()) {
                 this.sounds.check?.play();
             } else if (move.captured) {

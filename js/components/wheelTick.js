@@ -30,6 +30,7 @@ export function wheelTick() {
     try {
         const vol = volume();
         if (!vol) return;
+        if (window.SoundKit?.tick(vol)) return;   // kit de sons du magasin
         wake();
         if (!audio || audio.state !== 'running') return;
         const t = audio.currentTime;

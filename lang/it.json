@@ -1171,7 +1171,9 @@
       "marble": "Marmo",
       "linen": "Lino",
       "stone": "Pietra"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lava"
   },
   "seo": {
     "title": "Crowd Gambit — Scacchi giocati dalla tua chat di Twitch",
@@ -1576,6 +1578,10 @@
       "mat-de-roi": {
         "name": "Matto di re",
         "desc": "Dare matto muovendo il re (matto di scoperta)"
+      },
+      "fidele": {
+        "name": "Fedele",
+        "desc": "Raggiungere una serie di 30 giorni di bonus giornaliero"
       }
     }
   },
@@ -1605,7 +1611,12 @@
       "boards": "I due colori delle case.",
       "mats": "Una texture sovrapposta ai colori delle tue case.",
       "palettes": "La ruota, la barra e il podio dei voti, visti anche dai tuoi spettatori.",
-      "themes": "Lo sfondo e le schede di tutte le pagine del sito, solo per te."
+      "themes": "Lo sfondo e le schede di tutte le pagine del sito, solo per te.",
+      "sounds": "Il suono di mosse, catture, scacchi e della ruota, solo per te.",
+      "effects": "Scia della mossa, effetto di cattura e animazione di vittoria sulla scacchiera.",
+      "stream": "Cerchio della ruota e freccia della mossa estratta nella tua pagina di partita.",
+      "profile": "Ciò che gli altri vedono di te: colore del nome, cornice, distintivo e il tuo volo di pedoni.",
+      "packs": "Più oggetti insieme, a meno che comprandoli uno per uno."
     },
     "buy": "Compra",
     "confirm": "Confermare ({n} ♟)?",
@@ -1627,7 +1638,12 @@
       "boards": "Scacchiere",
       "mats": "Texture",
       "palettes": "Estrazione",
-      "themes": "Temi"
+      "themes": "Temi",
+      "sounds": "Suoni",
+      "effects": "Effetti",
+      "stream": "Stream",
+      "profile": "Profilo",
+      "packs": "Pacchetti"
     },
     "filter": {
       "all": "Tutto",
@@ -1637,9 +1653,75 @@
     "fit": {
       "title": "Camerino",
       "hint": "Clicca un oggetto per provarlo qui prima di comprarlo.",
-      "reset": "Torna al mio equipaggiamento"
+      "reset": "Torna al mio equipaggiamento",
+      "hintFx": "Clicca un oggetto per provarlo: la demo si vede sulla scacchiera."
     },
-    "empty": "Niente qui con questo filtro."
+    "empty": "Niente qui con questo filtro.",
+    "levelShort": "Liv. {n}",
+    "levelNeed": "Livello {n} richiesto",
+    "levelGift": "In regalo al livello {n}",
+    "listen": "Ascolta",
+    "preview": "Guarda",
+    "unequip": "Togli",
+    "errEquip": "Impossibile equipaggiare questo oggetto ora.",
+    "deal": {
+      "title": "Offerta della settimana",
+      "until": "fino a {date}"
+    },
+    "slot": {
+      "sound": "Kit di suoni",
+      "trail": "Scia",
+      "capture": "Effetto di cattura",
+      "win": "Vittoria",
+      "wheel": "Ruota",
+      "arrow": "Freccia",
+      "color": "Colore del nome",
+      "frame": "Cornice avatar",
+      "badge": "Distintivo",
+      "fly": "Volo di pedoni"
+    },
+    "item": {
+      "kit-classic": "Classico",
+      "kit-wood": "Legno",
+      "kit-8bit": "8-bit",
+      "kit-marble": "Marmo",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orchestra",
+      "kit-fanfare": "Fanfara",
+      "trail-ember": "Braci",
+      "trail-ink": "Inchiostro",
+      "trail-stars": "Stelle",
+      "cap-shards": "Schegge",
+      "cap-dust": "Polvere",
+      "cap-shock": "Onda d'urto",
+      "win-pawns": "Pioggia di pedoni",
+      "win-crown": "Corona",
+      "win-fireworks": "Fuochi d'artificio",
+      "wheel-neon": "Neon",
+      "wheel-wood": "Legno",
+      "wheel-gold": "Oro",
+      "arrow-flame": "Fiamma",
+      "arrow-ice": "Ghiaccio",
+      "arrow-gold": "Oro",
+      "color-sky": "Cielo",
+      "color-violet": "Viola",
+      "color-rose": "Rosa",
+      "color-gold": "Oro",
+      "frame-bronze": "Bronzo",
+      "frame-silver": "Argento",
+      "frame-gold": "Oro",
+      "frame-mecene": "Mecenate",
+      "frame-crown": "Corona",
+      "badge-knight": "Cavallo",
+      "badge-flame": "Fiamma",
+      "badge-star": "Stella",
+      "badge-oracle": "Oracolo",
+      "badge-fidele": "Fedele",
+      "fly-stars": "Stelle",
+      "fly-gold": "Oro",
+      "pack-arcade": "Pacchetto Arcade",
+      "pack-wood": "Pacchetto Legno"
+    }
   },
   "tlive": {
     "nextOther": "Pronostica un'altra partita",

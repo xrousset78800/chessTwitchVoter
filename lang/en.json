@@ -1263,7 +1263,9 @@
       "marble": "Marble",
       "linen": "Linen",
       "stone": "Stone"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lava"
   },
   "bilan": {
     "mode": {
@@ -1561,6 +1563,10 @@
       "mat-de-roi": {
         "name": "King mate",
         "desc": "Deliver mate by moving the king (discovered mate)"
+      },
+      "fidele": {
+        "name": "Loyal",
+        "desc": "Reach a 30-day daily bonus streak"
       }
     }
   },
@@ -1590,7 +1596,12 @@
       "boards": "The two square colors.",
       "mats": "A texture laid over your square colors.",
       "palettes": "The wheel, strip and podium of the votes, also seen by your viewers.",
-      "themes": "Background and cards of every page of the site, just for you."
+      "themes": "Background and cards of every page of the site, just for you.",
+      "sounds": "The sound of moves, captures, checks and the wheel, just for you.",
+      "effects": "Move trail, capture effect and victory animation on the board.",
+      "stream": "Wheel rim and drawn-move arrow on your game page.",
+      "profile": "What others see of you: name colour, frame, badge, and your coin flight.",
+      "packs": "Several items at once, cheaper than buying them one by one."
     },
     "buy": "Buy",
     "confirm": "Confirm ({n} ♟)?",
@@ -1612,7 +1623,12 @@
       "boards": "Boards",
       "mats": "Materials",
       "palettes": "Draw",
-      "themes": "Themes"
+      "themes": "Themes",
+      "sounds": "Sounds",
+      "effects": "Effects",
+      "stream": "Stream",
+      "profile": "Profile",
+      "packs": "Packs"
     },
     "filter": {
       "all": "All",
@@ -1622,9 +1638,75 @@
     "fit": {
       "title": "Fitting room",
       "hint": "Click an item to try it here before buying.",
-      "reset": "Back to my gear"
+      "reset": "Back to my gear",
+      "hintFx": "Click an item to try it: the demo plays on the board."
     },
-    "empty": "Nothing here with this filter."
+    "empty": "Nothing here with this filter.",
+    "levelShort": "Lv. {n}",
+    "levelNeed": "Level {n} required",
+    "levelGift": "Given at level {n}",
+    "listen": "Listen",
+    "preview": "Preview",
+    "unequip": "Remove",
+    "errEquip": "Can't equip this item right now.",
+    "deal": {
+      "title": "Deal of the week",
+      "until": "until {date}"
+    },
+    "slot": {
+      "sound": "Sound kit",
+      "trail": "Trail",
+      "capture": "Capture effect",
+      "win": "Victory",
+      "wheel": "Wheel",
+      "arrow": "Arrow",
+      "color": "Name colour",
+      "frame": "Avatar frame",
+      "badge": "Badge",
+      "fly": "Coin flight"
+    },
+    "item": {
+      "kit-classic": "Classic",
+      "kit-wood": "Wood",
+      "kit-8bit": "8-bit",
+      "kit-marble": "Marble",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orchestra",
+      "kit-fanfare": "Fanfare",
+      "trail-ember": "Embers",
+      "trail-ink": "Ink",
+      "trail-stars": "Stars",
+      "cap-shards": "Shards",
+      "cap-dust": "Dust",
+      "cap-shock": "Shockwave",
+      "win-pawns": "Pawn rain",
+      "win-crown": "Crown",
+      "win-fireworks": "Fireworks",
+      "wheel-neon": "Neon",
+      "wheel-wood": "Wood",
+      "wheel-gold": "Gold",
+      "arrow-flame": "Flame",
+      "arrow-ice": "Ice",
+      "arrow-gold": "Gold",
+      "color-sky": "Sky",
+      "color-violet": "Violet",
+      "color-rose": "Pink",
+      "color-gold": "Gold",
+      "frame-bronze": "Bronze",
+      "frame-silver": "Silver",
+      "frame-gold": "Gold",
+      "frame-mecene": "Patron",
+      "frame-crown": "Crown",
+      "badge-knight": "Knight",
+      "badge-flame": "Flame",
+      "badge-star": "Star",
+      "badge-oracle": "Oracle",
+      "badge-fidele": "Loyal",
+      "fly-stars": "Stars",
+      "fly-gold": "Gold",
+      "pack-arcade": "Arcade pack",
+      "pack-wood": "Wood pack"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Chess played by your Twitch chat",

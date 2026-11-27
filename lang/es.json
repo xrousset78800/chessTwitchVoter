@@ -1171,7 +1171,9 @@
       "marble": "Mármol",
       "linen": "Lino",
       "stone": "Piedra"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lava"
   },
   "seo": {
     "title": "Crowd Gambit — Ajedrez jugado por tu chat de Twitch",
@@ -1576,6 +1578,10 @@
       "mat-de-roi": {
         "name": "Mate de rey",
         "desc": "Dar mate moviendo el rey (mate a la descubierta)"
+      },
+      "fidele": {
+        "name": "Fiel",
+        "desc": "Alcanzar una racha de 30 días de bonus diario"
       }
     }
   },
@@ -1605,7 +1611,12 @@
       "boards": "Los dos colores de las casillas.",
       "mats": "Una textura sobre los colores de tus casillas.",
       "palettes": "La rueda, la banda y el podio de los votos, que también ven tus espectadores.",
-      "themes": "El fondo y las tarjetas de todas las páginas de la web, solo para ti."
+      "themes": "El fondo y las tarjetas de todas las páginas de la web, solo para ti.",
+      "sounds": "El sonido de las jugadas, capturas, jaques y la ruleta, solo para ti.",
+      "effects": "Estela de la jugada, efecto de captura y animación de victoria en el tablero.",
+      "stream": "Aro de la ruleta y flecha de la jugada sorteada en tu página de partida.",
+      "profile": "Lo que los demás ven de ti: color del nombre, marco, insignia y tu vuelo de peones.",
+      "packs": "Varios objetos a la vez, más baratos que por separado."
     },
     "buy": "Comprar",
     "confirm": "¿Confirmar ({n} ♟)?",
@@ -1627,7 +1638,12 @@
       "boards": "Tableros",
       "mats": "Materiales",
       "palettes": "Rueda",
-      "themes": "Temas"
+      "themes": "Temas",
+      "sounds": "Sonidos",
+      "effects": "Efectos",
+      "stream": "Stream",
+      "profile": "Perfil",
+      "packs": "Packs"
     },
     "filter": {
       "all": "Todo",
@@ -1637,9 +1653,75 @@
     "fit": {
       "title": "Probador",
       "hint": "Haz clic en un objeto para probarlo aquí antes de comprarlo.",
-      "reset": "Volver a mi equipamiento"
+      "reset": "Volver a mi equipamiento",
+      "hintFx": "Haz clic en un objeto para probarlo: la demo se ve en el tablero."
     },
-    "empty": "Aquí no hay nada con este filtro."
+    "empty": "Aquí no hay nada con este filtro.",
+    "levelShort": "Niv. {n}",
+    "levelNeed": "Nivel {n} necesario",
+    "levelGift": "Regalo al nivel {n}",
+    "listen": "Escuchar",
+    "preview": "Ver",
+    "unequip": "Quitar",
+    "errEquip": "No se puede equipar este objeto ahora.",
+    "deal": {
+      "title": "Oferta de la semana",
+      "until": "hasta el {date}"
+    },
+    "slot": {
+      "sound": "Kit de sonidos",
+      "trail": "Estela",
+      "capture": "Efecto de captura",
+      "win": "Victoria",
+      "wheel": "Ruleta",
+      "arrow": "Flecha",
+      "color": "Color del nombre",
+      "frame": "Marco de avatar",
+      "badge": "Insignia",
+      "fly": "Vuelo de peones"
+    },
+    "item": {
+      "kit-classic": "Clásico",
+      "kit-wood": "Madera",
+      "kit-8bit": "8 bits",
+      "kit-marble": "Mármol",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orquesta",
+      "kit-fanfare": "Fanfarria",
+      "trail-ember": "Brasas",
+      "trail-ink": "Tinta",
+      "trail-stars": "Estrellas",
+      "cap-shards": "Esquirlas",
+      "cap-dust": "Polvo",
+      "cap-shock": "Onda expansiva",
+      "win-pawns": "Lluvia de peones",
+      "win-crown": "Corona",
+      "win-fireworks": "Fuegos artificiales",
+      "wheel-neon": "Neón",
+      "wheel-wood": "Madera",
+      "wheel-gold": "Oro",
+      "arrow-flame": "Llama",
+      "arrow-ice": "Hielo",
+      "arrow-gold": "Oro",
+      "color-sky": "Cielo",
+      "color-violet": "Violeta",
+      "color-rose": "Rosa",
+      "color-gold": "Oro",
+      "frame-bronze": "Bronce",
+      "frame-silver": "Plata",
+      "frame-gold": "Oro",
+      "frame-mecene": "Mecenas",
+      "frame-crown": "Corona",
+      "badge-knight": "Caballo",
+      "badge-flame": "Llama",
+      "badge-star": "Estrella",
+      "badge-oracle": "Oráculo",
+      "badge-fidele": "Fiel",
+      "fly-stars": "Estrellas",
+      "fly-gold": "Oro",
+      "pack-arcade": "Pack Arcade",
+      "pack-wood": "Pack Madera"
+    }
   },
   "tlive": {
     "nextOther": "Pronosticar otra partida",

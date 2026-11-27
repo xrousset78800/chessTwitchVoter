@@ -1171,7 +1171,9 @@
       "marble": "Marmor",
       "linen": "Leinen",
       "stone": "Stein"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lava"
   },
   "seo": {
     "title": "Crowd Gambit — Schach, gespielt von deinem Twitch-Chat",
@@ -1576,6 +1578,10 @@
       "mat-de-roi": {
         "name": "Königsmatt",
         "desc": "Durch einen Königszug mattsetzen (Mattsetzen durch Abzug)"
+      },
+      "fidele": {
+        "name": "Treu",
+        "desc": "Eine Serie von 30 Tagen Tagesbonus erreichen"
       }
     }
   },
@@ -1605,7 +1611,12 @@
       "boards": "Die beiden Farben der Felder.",
       "mats": "Eine Textur über deinen Feldfarben.",
       "palettes": "Das Rad, die Leiste und das Podium der Stimmen, auch für deine Zuschauer sichtbar.",
-      "themes": "Hintergrund und Karten aller Seiten, nur für dich."
+      "themes": "Hintergrund und Karten aller Seiten, nur für dich.",
+      "sounds": "Der Klang von Zügen, Schlägen, Schachs und dem Rad, nur für dich.",
+      "effects": "Zugspur, Schlageffekt und Siegesanimation auf dem Brett.",
+      "stream": "Radkranz und Pfeil des gezogenen Zugs auf deiner Partieseite.",
+      "profile": "Was andere von dir sehen: Namensfarbe, Rahmen, Abzeichen und dein Münzflug.",
+      "packs": "Mehrere Gegenstände auf einmal, günstiger als einzeln."
     },
     "buy": "Kaufen",
     "confirm": "Bestätigen ({n} ♟)?",
@@ -1627,7 +1638,12 @@
       "boards": "Bretter",
       "mats": "Materialien",
       "palettes": "Rad",
-      "themes": "Themes"
+      "themes": "Themes",
+      "sounds": "Sounds",
+      "effects": "Effekte",
+      "stream": "Stream",
+      "profile": "Profil",
+      "packs": "Pakete"
     },
     "filter": {
       "all": "Alle",
@@ -1637,9 +1653,75 @@
     "fit": {
       "title": "Umkleidekabine",
       "hint": "Klick auf ein Objekt, um es hier vor dem Kauf auszuprobieren.",
-      "reset": "Zurück zu meiner Ausrüstung"
+      "reset": "Zurück zu meiner Ausrüstung",
+      "hintFx": "Klicke einen Gegenstand zum Testen: die Vorschau läuft auf dem Brett."
     },
-    "empty": "Hier ist mit diesem Filter nichts."
+    "empty": "Hier ist mit diesem Filter nichts.",
+    "levelShort": "St. {n}",
+    "levelNeed": "Stufe {n} nötig",
+    "levelGift": "Geschenk ab Stufe {n}",
+    "listen": "Anhören",
+    "preview": "Ansehen",
+    "unequip": "Ablegen",
+    "errEquip": "Dieser Gegenstand kann gerade nicht ausgerüstet werden.",
+    "deal": {
+      "title": "Angebot der Woche",
+      "until": "bis {date}"
+    },
+    "slot": {
+      "sound": "Soundpaket",
+      "trail": "Spur",
+      "capture": "Schlageffekt",
+      "win": "Sieg",
+      "wheel": "Rad",
+      "arrow": "Pfeil",
+      "color": "Namensfarbe",
+      "frame": "Avatarrahmen",
+      "badge": "Abzeichen",
+      "fly": "Münzflug"
+    },
+    "item": {
+      "kit-classic": "Klassisch",
+      "kit-wood": "Holz",
+      "kit-8bit": "8-Bit",
+      "kit-marble": "Marmor",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orchester",
+      "kit-fanfare": "Fanfare",
+      "trail-ember": "Glut",
+      "trail-ink": "Tinte",
+      "trail-stars": "Sterne",
+      "cap-shards": "Splitter",
+      "cap-dust": "Staub",
+      "cap-shock": "Druckwelle",
+      "win-pawns": "Bauernregen",
+      "win-crown": "Krone",
+      "win-fireworks": "Feuerwerk",
+      "wheel-neon": "Neon",
+      "wheel-wood": "Holz",
+      "wheel-gold": "Gold",
+      "arrow-flame": "Flamme",
+      "arrow-ice": "Eis",
+      "arrow-gold": "Gold",
+      "color-sky": "Himmel",
+      "color-violet": "Violett",
+      "color-rose": "Rosa",
+      "color-gold": "Gold",
+      "frame-bronze": "Bronze",
+      "frame-silver": "Silber",
+      "frame-gold": "Gold",
+      "frame-mecene": "Mäzen",
+      "frame-crown": "Krone",
+      "badge-knight": "Springer",
+      "badge-flame": "Flamme",
+      "badge-star": "Stern",
+      "badge-oracle": "Orakel",
+      "badge-fidele": "Treu",
+      "fly-stars": "Sterne",
+      "fly-gold": "Gold",
+      "pack-arcade": "Arcade-Paket",
+      "pack-wood": "Holz-Paket"
+    }
   },
   "tlive": {
     "nextOther": "Eine andere Partie tippen",

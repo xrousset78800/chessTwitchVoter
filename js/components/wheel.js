@@ -9,6 +9,9 @@ import { wheelTick } from './wheelTick.js';
 import { fmtMove } from '../utils/moveMatch.js';
 
 const TAU = 2 * Math.PI;
+// Habillage de la jante et du curseur (magasin, js/core/cosmetics.js) ; par défaut, l'orange du site
+const WHEEL_DEFAULT = { rim: '#2b211b', ring: 'rgba(255, 138, 61, 0.35)', lamp: '255, 196, 140', glow: '#ff8a3d', hub: '#ff8a3d', flap: '#f4eee8' };
+const wheelSkin = () => window.Cosmetics?.item('wheel') || WHEEL_DEFAULT;
 const LAMPS = 24;
 const PEGS = 24;               // Picots sur le bord de la roue : un « tic » à chacun
 const PEG_STEP = TAU / PEGS;
@@ -309,16 +312,17 @@ getSortedVotes() {
     drawRim(ctx, cx, cy, radius) {
         const rim = radius + 11;
         const now = performance.now();
+        const skin = wheelSkin();   // habillage acheté au magasin
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, rim, 0, TAU);
         ctx.lineWidth = 18;
-        ctx.strokeStyle = '#2b211b';
+        ctx.strokeStyle = skin.rim;
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(cx, cy, rim + 9, 0, TAU);
         ctx.lineWidth = 1.5;
-        ctx.strokeStyle = 'rgba(255, 138, 61, 0.35)';
+        ctx.strokeStyle = skin.ring;
         ctx.stroke();
         for (let i = 0; i < LAMPS; i++) {
             const a = (i / LAMPS) * TAU;
@@ -329,8 +333,8 @@ getSortedVotes() {
             else on = 0.4;
             ctx.beginPath();
             ctx.arc(cx + Math.cos(a) * rim, cy + Math.sin(a) * rim, 3.6, 0, TAU);
-            ctx.fillStyle = `rgba(255, 196, 140, ${on})`;
-            if (on > 0.9) { ctx.shadowColor = '#ff8a3d'; ctx.shadowBlur = 10; }
+            ctx.fillStyle = `rgba(${skin.lamp}, ${on})`;
+            if (on > 0.9) { ctx.shadowColor = skin.glow; ctx.shadowBlur = 10; }
             ctx.fill();
             ctx.shadowBlur = 0;
         }
@@ -348,14 +352,15 @@ getSortedVotes() {
         ctx.lineTo(1.5, 34);
         ctx.lineTo(-1.5, 34);
         ctx.closePath();
-        ctx.fillStyle = '#f4eee8';
+        const skin = wheelSkin();
+        ctx.fillStyle = skin.flap;
         ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
         ctx.shadowBlur = 6;
         ctx.fill();
         ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(0, 0, 5.5, 0, TAU);
-        ctx.fillStyle = '#ff8a3d';
+        ctx.fillStyle = skin.hub;
         ctx.fill();
         ctx.restore();
     }

@@ -1171,7 +1171,9 @@
       "marble": "Mármore",
       "linen": "Linho",
       "stone": "Pedra"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lava"
   },
   "seo": {
     "title": "Crowd Gambit — Xadrez jogado pelo seu chat da Twitch",
@@ -1576,6 +1578,10 @@
       "mat-de-roi": {
         "name": "Mate de rei",
         "desc": "Dar mate movendo o rei (mate descoberto)"
+      },
+      "fidele": {
+        "name": "Fiel",
+        "desc": "Atingir uma série de 30 dias de bónus diário"
       }
     }
   },
@@ -1605,7 +1611,12 @@
       "boards": "As duas cores das casas.",
       "mats": "Uma textura aplicada sobre as cores das casas.",
       "palettes": "A roda, a faixa e o pódio dos votos, vistos também pelos seus espectadores.",
-      "themes": "O fundo e os cartões de todas as páginas do site, só para você."
+      "themes": "O fundo e os cartões de todas as páginas do site, só para você.",
+      "sounds": "O som dos lances, capturas, xeques e da roleta, só para ti.",
+      "effects": "Rasto do lance, efeito de captura e animação de vitória no tabuleiro.",
+      "stream": "Aro da roleta e seta do lance sorteado na tua página de partida.",
+      "profile": "O que os outros veem de ti: cor do nome, moldura, distintivo e o teu voo de peões.",
+      "packs": "Vários itens de uma vez, mais baratos do que em separado."
     },
     "buy": "Comprar",
     "confirm": "Confirmar ({n} ♟)?",
@@ -1627,7 +1638,12 @@
       "boards": "Tabuleiros",
       "mats": "Materiais",
       "palettes": "Sorteio",
-      "themes": "Temas"
+      "themes": "Temas",
+      "sounds": "Sons",
+      "effects": "Efeitos",
+      "stream": "Stream",
+      "profile": "Perfil",
+      "packs": "Pacotes"
     },
     "filter": {
       "all": "Tudo",
@@ -1637,9 +1653,75 @@
     "fit": {
       "title": "Provador",
       "hint": "Clique em um item para experimentá-lo aqui antes de comprar.",
-      "reset": "Voltar ao meu equipamento"
+      "reset": "Voltar ao meu equipamento",
+      "hintFx": "Clica num item para o experimentar: a demo passa no tabuleiro."
     },
-    "empty": "Nada aqui com este filtro."
+    "empty": "Nada aqui com este filtro.",
+    "levelShort": "Nív. {n}",
+    "levelNeed": "Nível {n} necessário",
+    "levelGift": "Oferta no nível {n}",
+    "listen": "Ouvir",
+    "preview": "Ver",
+    "unequip": "Retirar",
+    "errEquip": "Não é possível equipar este item agora.",
+    "deal": {
+      "title": "Promoção da semana",
+      "until": "até {date}"
+    },
+    "slot": {
+      "sound": "Kit de sons",
+      "trail": "Rasto",
+      "capture": "Efeito de captura",
+      "win": "Vitória",
+      "wheel": "Roleta",
+      "arrow": "Seta",
+      "color": "Cor do nome",
+      "frame": "Moldura de avatar",
+      "badge": "Distintivo",
+      "fly": "Voo de peões"
+    },
+    "item": {
+      "kit-classic": "Clássico",
+      "kit-wood": "Madeira",
+      "kit-8bit": "8 bits",
+      "kit-marble": "Mármore",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orquestra",
+      "kit-fanfare": "Fanfarra",
+      "trail-ember": "Brasas",
+      "trail-ink": "Tinta",
+      "trail-stars": "Estrelas",
+      "cap-shards": "Estilhaços",
+      "cap-dust": "Poeira",
+      "cap-shock": "Onda de choque",
+      "win-pawns": "Chuva de peões",
+      "win-crown": "Coroa",
+      "win-fireworks": "Fogo de artifício",
+      "wheel-neon": "Néon",
+      "wheel-wood": "Madeira",
+      "wheel-gold": "Ouro",
+      "arrow-flame": "Chama",
+      "arrow-ice": "Gelo",
+      "arrow-gold": "Ouro",
+      "color-sky": "Céu",
+      "color-violet": "Violeta",
+      "color-rose": "Rosa",
+      "color-gold": "Ouro",
+      "frame-bronze": "Bronze",
+      "frame-silver": "Prata",
+      "frame-gold": "Ouro",
+      "frame-mecene": "Mecenas",
+      "frame-crown": "Coroa",
+      "badge-knight": "Cavalo",
+      "badge-flame": "Chama",
+      "badge-star": "Estrela",
+      "badge-oracle": "Oráculo",
+      "badge-fidele": "Fiel",
+      "fly-stars": "Estrelas",
+      "fly-gold": "Ouro",
+      "pack-arcade": "Pacote Arcade",
+      "pack-wood": "Pacote Madeira"
+    }
   },
   "tlive": {
     "nextOther": "Prever outra partida",

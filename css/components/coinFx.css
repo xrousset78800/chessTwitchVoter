@@ -44,6 +44,30 @@
     pointer-events: none; will-change: transform, opacity;
 }
 .coin-fly .coin-pawn { width: 19px; height: 19px; }
+/* Envols achetés au magasin */
+.coin-fly--stars {
+    background: linear-gradient(135deg, #3b2a7a, #6a4fd8 55%, #b48cff);
+    color: #fff; box-shadow: 0 0 18px rgba(180, 140, 255, .7), 0 8px 24px rgba(0, 0, 0, .55);
+}
+.coin-fly--stars::after { content: '\2726'; margin-left: 2px; color: #ffe9a8; text-shadow: 0 0 6px #fff; }
+.coin-fly--gold {
+    background: linear-gradient(135deg, #8a5a12, #ffd35c 45%, #fff3c4 55%, #c98a1c);
+    background-size: 200% 100%; animation: coin-fly-gold 1.2s linear infinite;
+    color: #3a2405; box-shadow: 0 0 18px rgba(255, 211, 92, .75), 0 8px 24px rgba(0, 0, 0, .55);
+}
+@keyframes coin-fly-gold { to { background-position: -200% 0; } }
+
+/* ----- Apparence des viewers (magasin) : cadre d'avatar et badge ----- */
+.look-frame--bronze { box-shadow: 0 0 0 2px #b07443, 0 0 0 3px rgba(0, 0, 0, .35); }
+.look-frame--silver { box-shadow: 0 0 0 2px #d6dde4, 0 0 6px rgba(214, 221, 228, .6); }
+.look-frame--gold { box-shadow: 0 0 0 2px #ffd35c, 0 0 8px rgba(255, 211, 92, .75); }
+.look-frame--mecene { box-shadow: 0 0 0 2px #b48cff, 0 0 0 4px rgba(255, 126, 182, .55), 0 0 10px rgba(180, 140, 255, .7); }
+.look-frame--crown { box-shadow: 0 0 0 2px #ffd35c, 0 0 10px rgba(255, 138, 61, .8); animation: look-crown 2.4s ease-in-out infinite; }
+@keyframes look-crown {
+    50% { box-shadow: 0 0 0 2px #fff3c4, 0 0 16px rgba(255, 211, 92, .95); }
+}
+@media (prefers-reduced-motion: reduce) { .look-frame--crown, .coin-fly--gold { animation: none; } }
+.look-badge { margin-left: 4px; font-size: .85em; vertical-align: baseline; }
 
 /* ----- Fenêtre « Crédités sur ce coup » (flottante, en bas à droite) ----- */
 .coin-credits {

@@ -513,7 +513,10 @@ function moveSoundT(prevFEN, fen) {
     try {
         const ch = new Chess(fen);
         const count = f => String(f).split(' ')[0].replace(/[^a-zA-Z]/g, '').length;
-        playSoundT(ch.in_check() ? 'check' : count(fen) < count(prevFEN) ? 'capture' : 'move');
+        const kind = ch.in_check() ? 'check' : count(fen) < count(prevFEN) ? 'capture' : 'move';
+        const { volume, muted } = getVolT();
+        if (window.SoundKit?.play(kind, muted ? 0 : volume * 0.8, { mate: ch.in_checkmate() })) return;
+        playSoundT(kind);
     } catch {}
 }
 

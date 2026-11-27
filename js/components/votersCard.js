@@ -16,7 +16,7 @@
 
     /** Photo du votant (robot pour un bot, initiale sans photo) */
     function face(v, winner = null) {
-        const a = ` data-u="${esc(v.login || '')}" title="${esc(v.tip || who(v))}"`;
+        const a = ` data-u="${esc(v.login || '')}"${v.login && v.src !== 'bot' ? ` data-look-pic="${esc(v.login)}"` : ''} title="${esc(v.tip || who(v))}"`;
         const w = v.login && v.login === winner ? ' is-winner' : '';
         if (v.src === 'bot') return `<span class="tv-pic is-bot${w}"${a}><i class="fas fa-robot"></i></span>`;
         if (v.pic) return `<img class="tv-pic${w}" src="${esc(v.pic)}" alt="" loading="lazy" referrerpolicy="no-referrer"${a}>`;

@@ -265,6 +265,95 @@
 .shop-tag { font-size: 0.75rem; color: var(--text-muted); }
 .shop-tag--on { color: var(--accent-green); font-weight: 600; }
 .shop-tag--excl { color: var(--accent-light); }
+/* ----- Rayons cosmétiques : aperçus ----- */
+.shop-tile { position: relative; }
+.shop-tile.is-level .shop-tile__preview { opacity: 0.55; }
+.shop-tile__meta.is-level { color: var(--text-secondary); }
+.shop-tile__price s, .shop-price s { color: var(--text-muted); font-weight: 500; margin-right: 2px; }
+.shop-tile__deal {
+    position: absolute; top: 3px; right: 3px; z-index: 1;
+    padding: 1px 5px; border-radius: 999px;
+    background: var(--accent); color: #1a1512;
+    font: 800 0.58rem 'Chakra Petch', sans-serif;
+}
+.shop-cosm { display: flex; align-items: center; justify-content: center; width: 64px; height: 40px; position: relative; }
+.shop-cosm--sound { gap: 6px; color: var(--accent-light); font-size: 1.05rem; }
+.shop-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 18px; }
+.shop-eq b { width: 3px; border-radius: 2px; background: currentColor; transform-origin: bottom; animation: shop-eq 1s ease-in-out infinite; }
+.shop-eq b:nth-child(1) { height: 40%; animation-delay: -.2s; }
+.shop-eq b:nth-child(2) { height: 90%; animation-delay: -.5s; }
+.shop-eq b:nth-child(3) { height: 60%; animation-delay: -.1s; }
+.shop-eq b:nth-child(4) { height: 100%; animation-delay: -.7s; }
+.shop-eq b:nth-child(5) { height: 50%; animation-delay: -.35s; }
+@keyframes shop-eq { 50% { transform: scaleY(.35); } }
+.shop-tile:not(:hover):not(.is-selected) .shop-eq b { animation-play-state: paused; }
+.shop-cosm--trail span {
+    width: 54px; height: 8px; border-radius: 999px;
+    background: linear-gradient(90deg, transparent, var(--c1) 30%, var(--c2) 65%, var(--c3));
+    box-shadow: 0 0 10px var(--c2);
+}
+.shop-cosm--trail i { position: absolute; font-style: normal; color: var(--c3); font-size: .7rem; text-shadow: 0 0 6px var(--c2); }
+.shop-cosm--trail i:first-of-type { left: 14px; top: 6px; }
+.shop-cosm--trail i:last-of-type { right: 12px; bottom: 6px; }
+.shop-cosm--cap span {
+    position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%;
+    transform: rotate(var(--a)) translateY(-15px);
+}
+.shop-cosm--cap b { width: 10px; height: 10px; border-radius: 50%; filter: blur(1px); }
+.shop-cosm--win { font-size: 1.5rem; color: #ffd35c; filter: drop-shadow(0 0 6px rgba(255, 211, 92, .55)); }
+.shop-cosm--badge { font-size: 1.45rem; }
+.shop-cosm__name { font: 700 0.8rem 'IBM Plex Sans', sans-serif; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop-cosm--pack { gap: 0; width: 76px; }
+.shop-cosm--pack > span { width: 26px; overflow: hidden; display: flex; justify-content: center; }
+.shop-cosm--pack .shop-cosm { transform: scale(.55); flex: none; }
+.shop-arrow { width: 50px; height: 22px; }
+.shop-wheel {
+    position: relative; display: block; width: 34px; height: 34px; border-radius: 50%;
+    border: 4px solid var(--rim); box-shadow: 0 0 0 1px var(--ring), 0 0 8px color-mix(in srgb, var(--glow) 45%, transparent);
+}
+.shop-wheel i { position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: var(--hub); }
+.shop-wheel::before {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    background: radial-gradient(circle, var(--lamp) 0 1.2px, transparent 1.6px) 50% 0 / 6px 6px no-repeat;
+}
+.shop-wheel--fit { position: absolute; right: 6px; bottom: 6px; width: 54px; height: 54px; border-width: 5px; }
+.shop-avatar {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 50%; background: var(--bg-card-hover); color: var(--text-muted);
+    flex: none;
+}
+.shop-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.shop-flychip {
+    display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px;
+    background: var(--accent); color: #1a1512; font: 800 0.72rem 'JetBrains Mono', monospace; white-space: nowrap;
+}
+.shop-fit__boardwrap { position: relative; }
+.shop-fit__arrow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.shop-fit__viewer {
+    display: flex; align-items: center; gap: 9px; padding: 8px 10px;
+    border-radius: var(--radius-sm); background: rgba(0, 0, 0, .28);
+    font: 600 0.86rem 'IBM Plex Sans', sans-serif; color: var(--text-primary);
+}
+.shop-fit__viewer b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ----- Vitrine de la semaine ----- */
+.shop-deal {
+    display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 10px; padding: 9px 12px;
+    border-radius: var(--radius-sm); cursor: pointer; text-align: left;
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 16%, var(--bg-card)), var(--bg-card) 70%);
+    color: var(--text-primary); font-family: 'IBM Plex Sans', sans-serif;
+}
+.shop-deal:hover { border-color: var(--accent); }
+.shop-deal__icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #1a1512; flex: none; }
+.shop-deal__text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.shop-deal__text small { font-size: 0.68rem; color: var(--text-muted); }
+.shop-deal__text small:first-child { text-transform: uppercase; letter-spacing: .1em; color: var(--accent-light); font-weight: 700; }
+.shop-deal__text b { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop-deal__price { display: flex; flex-direction: column; align-items: flex-end; font-family: 'Chakra Petch', sans-serif; }
+.shop-deal__price s { font-size: 0.72rem; color: var(--text-muted); }
+.shop-deal__price b { font-size: 1.05rem; color: var(--accent-light); }
+
 .shop-empty { padding: 30px 0; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
 
 /* ----- Mobile : cabine au-dessus, compacte ----- */
@@ -274,12 +363,13 @@
         position: static;
         display: grid;
         grid-template-columns: 132px minmax(0, 1fr);
-        grid-template-areas: "head head" "board item" "draw item" "hint hint";
+        grid-template-areas: "head head" "board item" "draw item" "viewer viewer" "hint hint";
         gap: 8px 12px;
     }
     .shop-fit__head { grid-area: head; }
-    .shop-fit__board { grid-area: board; }
+    .shop-fit__boardwrap { grid-area: board; }
     .shop-fit__draw { grid-area: draw; }
+    .shop-fit__viewer { grid-area: viewer; }
     .shop-fit__item { grid-area: item; border-top: 0; padding-top: 0; justify-content: center; }
     .shop-fit__hint { grid-area: hint; }
     .shop-tab span { display: none; }

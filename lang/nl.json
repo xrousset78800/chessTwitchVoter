@@ -1171,7 +1171,9 @@
       "marble": "Marmer",
       "linen": "Linnen",
       "stone": "Steen"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lava"
   },
   "seo": {
     "title": "Crowd Gambit — Schaken gespeeld door je Twitch-chat",
@@ -1576,6 +1578,10 @@
       "mat-de-roi": {
         "name": "Koningsmat",
         "desc": "Mat geven door de koning te verplaatsen (ontdekt mat)"
+      },
+      "fidele": {
+        "name": "Trouw",
+        "desc": "Een reeks van 30 dagen dagbonus halen"
       }
     }
   },
@@ -1605,7 +1611,12 @@
       "boards": "De twee kleuren van de velden.",
       "mats": "Een textuur over je veldkleuren heen.",
       "palettes": "Het rad, de balk en het podium van de stemmen, ook zichtbaar voor je kijkers.",
-      "themes": "De achtergrond en de kaarten van alle pagina's van de site, alleen voor jou."
+      "themes": "De achtergrond en de kaarten van alle pagina's van de site, alleen voor jou.",
+      "sounds": "Het geluid van zetten, slagen, schaak en het rad, alleen voor jou.",
+      "effects": "Spoor van de zet, slageffect en overwinningsanimatie op het bord.",
+      "stream": "Rand van het rad en pijl van de getrokken zet op je partijpagina.",
+      "profile": "Wat anderen van je zien: naamkleur, rand, badge en je muntvlucht.",
+      "packs": "Meerdere items tegelijk, goedkoper dan los."
     },
     "buy": "Kopen",
     "confirm": "Bevestigen ({n} ♟)?",
@@ -1627,7 +1638,12 @@
       "boards": "Borden",
       "mats": "Texturen",
       "palettes": "Trekking",
-      "themes": "Thema's"
+      "themes": "Thema's",
+      "sounds": "Geluiden",
+      "effects": "Effecten",
+      "stream": "Stream",
+      "profile": "Profiel",
+      "packs": "Pakketten"
     },
     "filter": {
       "all": "Alles",
@@ -1637,9 +1653,75 @@
     "fit": {
       "title": "Paskamer",
       "hint": "Klik op een voorwerp om het hier te passen voordat je het koopt.",
-      "reset": "Terug naar mijn uitrusting"
+      "reset": "Terug naar mijn uitrusting",
+      "hintFx": "Klik op een item om het te proberen: de demo speelt op het bord."
     },
-    "empty": "Niets hier met dit filter."
+    "empty": "Niets hier met dit filter.",
+    "levelShort": "Niv. {n}",
+    "levelNeed": "Niveau {n} vereist",
+    "levelGift": "Gratis op niveau {n}",
+    "listen": "Luisteren",
+    "preview": "Bekijken",
+    "unequip": "Afdoen",
+    "errEquip": "Dit item kan nu niet worden uitgerust.",
+    "deal": {
+      "title": "Aanbieding van de week",
+      "until": "tot {date}"
+    },
+    "slot": {
+      "sound": "Geluidspakket",
+      "trail": "Spoor",
+      "capture": "Slageffect",
+      "win": "Overwinning",
+      "wheel": "Rad",
+      "arrow": "Pijl",
+      "color": "Naamkleur",
+      "frame": "Avatarrand",
+      "badge": "Badge",
+      "fly": "Muntvlucht"
+    },
+    "item": {
+      "kit-classic": "Klassiek",
+      "kit-wood": "Hout",
+      "kit-8bit": "8-bit",
+      "kit-marble": "Marmer",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orkest",
+      "kit-fanfare": "Fanfare",
+      "trail-ember": "Gloed",
+      "trail-ink": "Inkt",
+      "trail-stars": "Sterren",
+      "cap-shards": "Scherven",
+      "cap-dust": "Stof",
+      "cap-shock": "Schokgolf",
+      "win-pawns": "Pionnenregen",
+      "win-crown": "Kroon",
+      "win-fireworks": "Vuurwerk",
+      "wheel-neon": "Neon",
+      "wheel-wood": "Hout",
+      "wheel-gold": "Goud",
+      "arrow-flame": "Vlam",
+      "arrow-ice": "IJs",
+      "arrow-gold": "Goud",
+      "color-sky": "Hemel",
+      "color-violet": "Violet",
+      "color-rose": "Roze",
+      "color-gold": "Goud",
+      "frame-bronze": "Brons",
+      "frame-silver": "Zilver",
+      "frame-gold": "Goud",
+      "frame-mecene": "Mecenas",
+      "frame-crown": "Kroon",
+      "badge-knight": "Paard",
+      "badge-flame": "Vlam",
+      "badge-star": "Ster",
+      "badge-oracle": "Orakel",
+      "badge-fidele": "Trouw",
+      "fly-stars": "Sterren",
+      "fly-gold": "Goud",
+      "pack-arcade": "Arcade-pakket",
+      "pack-wood": "Hout-pakket"
+    }
   },
   "tlive": {
     "nextOther": "Een andere partij voorspellen",

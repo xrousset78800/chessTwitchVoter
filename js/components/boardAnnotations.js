@@ -250,8 +250,10 @@
             const o = this.overlay;
             if (!o) return;
             // Tirage en cours : flèche du coup sous le curseur de la roue ou de la bande
+            const skin = window.Cosmetics?.item('arrow');   // flèche achetée au magasin
+            const skinned = (g) => { if (g && skin) { g.style.filter = `drop-shadow(0 0 4px ${skin.glow})`; g.classList.add('is-skin'); } return g; };
             if (o.kind === 'spin') {
-                this.drawArrow(o.from, o.to, 'rgb(255, 138, 61)', { opacity: 0.8, scale: 1.05 })
+                skinned(this.drawArrow(o.from, o.to, skin?.color || 'rgb(255, 138, 61)', { opacity: 0.8, scale: 1.05 }))
                     ?.classList.add('board-annotations__vote', 'is-spin');
                 return;
             }
@@ -271,7 +273,7 @@
                 return;
             }
             // Coup retenu : orange posé, à peine plus épais qu'une flèche normale
-            const group = this.drawArrow(o.from, o.to, 'rgb(255, 138, 61)', { opacity: 0.85, scale: 1.1 });
+            const group = skinned(this.drawArrow(o.from, o.to, skin?.color || 'rgb(255, 138, 61)', { opacity: skin ? 0.95 : 0.85, scale: 1.1 }));
             if (!group) return;
             group.classList.add('board-annotations__vote', 'is-win');
             if (!o.label) return;

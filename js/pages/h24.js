@@ -166,7 +166,7 @@ const H24Page = {
             if (st.phase === 'recap' && prevPhase !== 'recap') window.economy?.refresh();
             // Un coup vient d'être joué : son du coup (plus de carillon de fin de partie)
             const h = st.game?.history;
-            if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
+            if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1], st.game.lastMove);
             // Votants du coup joué crédités : fenêtre « Crédités sur ce coup », et toast si j'en suis
             const cr = st.game?.credited;
             if (cr && cr.at !== this.creditAt) {
@@ -311,9 +311,12 @@ const H24Page = {
         if (icon) icon.className = `fas fa-volume-${!vol ? 'mute' : vol < 0.4 ? 'down' : 'up'}`;
     },
 
-    playMoveSound(san) {
+    playMoveSound(san, last) {
         if (!san) return;
-        this.playSound(/[+#]/.test(san) ? 'check' : san.includes('x') ? 'capture' : 'move');
+        const kind = /[+#]/.test(san) ? 'check' : san.includes('x') ? 'capture' : 'move';
+        if (last?.from) requestAnimationFrame(() => window.BoardFx?.move({ from: last.from, to: last.to, capture: san.includes('x'), root: $('h24-board') }));
+        if (window.SoundKit?.play(kind, this.muted ? 0 : this.volume * 0.8, { mate: san.includes('#') })) return;
+        this.playSound(kind);
     },
 
     playSound(kind) {
@@ -442,7 +445,7 @@ const H24Page = {
             const item = document.createElement('span');
             item.className = 'vote-ticker__item vote-ticker__item--who';
             item.dataset.u = r.u;
-            item.innerHTML = `${pic(r)}<span class="vote-ticker__who"><span class="vote-ticker__user" style="color:${nameColor(r.u)}">${esc(r.u)}</span><span class="vote-ticker__via">${esc(r.v === 'bot' ? 'bot' : r.v === 'chat' ? 'chat' : r.v || site)}</span></span><span class="vote-ticker__move${r.m ? '' : ' is-hidden'}${r.choice ? ' is-choice' : ''}">${esc(r.m ? (r.choice ? r.m : fmtMove(r.m)) : voted)}</span>`;
+            item.innerHTML = `${pic(r)}<span class="vote-ticker__who"><span class="vote-ticker__user" data-look-name="${esc(r.u)}" style="color:${nameColor(r.u)}">${esc(r.u)}</span><span class="vote-ticker__via">${esc(r.v === 'bot' ? 'bot' : r.v === 'chat' ? 'chat' : r.v || site)}</span></span><span class="vote-ticker__move${r.m ? '' : ' is-hidden'}${r.choice ? ' is-choice' : ''}">${esc(r.m ? (r.choice ? r.m : fmtMove(r.m)) : voted)}</span>`;
             if (r.p) item.dataset.pic = '1';
             track.prepend(item);
         });
@@ -1438,7 +1441,7 @@ const H24Page = {
             const items = board.map((x, i) => {
                 const pic = x.p ? `<img class="h24-pboard__pic" src="${esc(x.p)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
                     : `<span class="h24-pboard__pic" style="background:${nameColor(x.login)}">${esc((x.login || '?')[0].toUpperCase())}</span>`;
-                return `<li class="${x.login === this.me.login ? 'is-me' : ''}"><span class="h24-pboard__rank">${i + 1}</span>${pic}<span class="h24-pboard__name" style="color:${nameColor(x.login)}">${esc(x.login)}</span>`
+                return `<li class="${x.login === this.me.login ? 'is-me' : ''}"><span class="h24-pboard__rank">${i + 1}</span>${pic}<span class="h24-pboard__name" data-look-name="${esc(x.login)}" style="color:${nameColor(x.login)}">${esc(x.login)}</span>`
                     + `<span class="h24-pboard__hits" title="${esc(t('h24.pred.hits', { n: x.hits }, `${x.hits} coup(s) trouvé(s)`))}"><i class="fas fa-bullseye"></i> ${x.hits}</span><span class="h24-pboard__pts">${x.pts}</span></li>`;
             }).join('');
             el.innerHTML = `<div class="h24-pboard">
@@ -1919,7 +1922,7 @@ const H24Page = {
         return `<ul class="h24-card__votes">${recent.map(r => {
             const pic = r.p ? `<img class="vote-ticker__pic" src="${esc(r.p)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
                 : `<span class="vote-ticker__pic" style="background:${nameColor(r.u)}">${r.v === 'bot' ? '<i class="fas fa-robot"></i>' : esc((r.u || '?')[0].toUpperCase())}</span>`;
-            return `<li>${pic}<b style="color:${nameColor(r.u)}">${esc(r.u)}</b><span class="h24-card__vc">${esc(r.c != null ? choiceLabel(b.id, r.c) : voted)}</span></li>`;
+            return `<li>${pic}<b data-look-name="${esc(r.u)}" style="color:${nameColor(r.u)}">${esc(r.u)}</b><span class="h24-card__vc">${esc(r.c != null ? choiceLabel(b.id, r.c) : voted)}</span></li>`;
         }).join('')}</ul>`;
     },
 
@@ -2052,7 +2055,7 @@ const H24Page = {
         let crowd = '';
         if (E?.n) {
             const rows = (E.top || []).map((x, i) => `<li class="${x.u === this.me.login ? 'is-me' : ''}"><span class="h24-earn__rank">${i + 1}</span>`
-                + `<span class="h24-earn__name" style="color:${nameColor(x.u)}">${esc(x.u)}</span>`
+                + `<span class="h24-earn__name" data-look-name="${esc(x.u)}" style="color:${nameColor(x.u)}">${esc(x.u)}</span>`
                 + `<small>${esc(x.v || t('coinfx.site', null, 'site'))}</small>`
                 + `<span class="h24-earn__c">+${x.c}</span></li>`).join('');
             crowd = `<p class="h24-recap__label">${esc(t('bilan.viewersTitle', null, 'Viewers crédités'))} <small>${esc(t('bilan.viewersSum', { n: E.n, coins: E.coins }, `${E.n} · ${E.coins} pions`))}</small></p>`
@@ -2069,7 +2072,7 @@ const H24Page = {
         const mins = Math.max(1, Math.round((r.durationMs || 0) / 60000));
         const name = (p) => `${p?.title ? `<b>${esc(p.title)}</b> ` : ''}${esc(p?.name || '?')}${p?.elo ? ` <small>${esc(p.elo)}</small>` : ''}`;
         const best = (P.board || []).map((x, i) => `<li class="${x.login === this.me.login ? 'is-me' : ''}"><span class="h24-pboard__rank">${i === 0 ? '<i class="fas fa-crown"></i>' : i + 1}</span>`
-            + `<span class="h24-pboard__name" style="color:${nameColor(x.login)}">${esc(x.login)}</span>`
+            + `<span class="h24-pboard__name" data-look-name="${esc(x.login)}" style="color:${nameColor(x.login)}">${esc(x.login)}</span>`
             + `<span class="h24-pboard__hits"><i class="fas fa-bullseye"></i> ${x.hits}</span>${x.win ? `<span class="h24-pboard__win" title="${esc(t('h24.pred.winnerOk', null, 'Bon vainqueur'))}"><i class="fas fa-trophy"></i> +${x.win}</span>` : ''}`
             + `<span class="h24-pboard__pts">${x.pts}</span></li>`).join('');
         return `<h2 class="h24-card__title">${esc(t('h24.pred.recapTitle', null, 'Fin de la prédiction'))}</h2>

@@ -1171,7 +1171,9 @@
       "marble": "Marmur",
       "linen": "Len",
       "stone": "Kamień"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lawa"
   },
   "seo": {
     "title": "Crowd Gambit — Szachy, w które gra Twój czat na Twitchu",
@@ -1576,6 +1578,10 @@
       "mat-de-roi": {
         "name": "Mat królem",
         "desc": "Daj mata, ruszając królem (mat odkryty)"
+      },
+      "fidele": {
+        "name": "Wierny",
+        "desc": "Osiągnij serię 30 dni bonusu dziennego"
       }
     }
   },
@@ -1605,7 +1611,12 @@
       "boards": "Dwa kolory pól.",
       "mats": "Tekstura nałożona na kolory pól.",
       "palettes": "Koło, pasek i podium głosów, widoczne też dla Twoich widzów.",
-      "themes": "Tło i karty wszystkich stron, tylko dla Ciebie."
+      "themes": "Tło i karty wszystkich stron, tylko dla Ciebie.",
+      "sounds": "Dźwięk ruchów, bić, szachów i koła, tylko dla ciebie.",
+      "effects": "Smuga ruchu, efekt bicia i animacja zwycięstwa na szachownicy.",
+      "stream": "Obręcz koła i strzałka wylosowanego ruchu na stronie partii.",
+      "profile": "Co inni widzą: kolor nicku, ramka, odznaka i twój lot pionków.",
+      "packs": "Kilka przedmiotów naraz, taniej niż osobno."
     },
     "buy": "Kup",
     "confirm": "Potwierdzić ({n} ♟)?",
@@ -1627,7 +1638,12 @@
       "boards": "Szachownice",
       "mats": "Materiały",
       "palettes": "Losowanie",
-      "themes": "Motywy"
+      "themes": "Motywy",
+      "sounds": "Dźwięki",
+      "effects": "Efekty",
+      "stream": "Stream",
+      "profile": "Profil",
+      "packs": "Pakiety"
     },
     "filter": {
       "all": "Wszystko",
@@ -1637,9 +1653,75 @@
     "fit": {
       "title": "Przymierzalnia",
       "hint": "Kliknij przedmiot, by go tu przymierzyć przed zakupem.",
-      "reset": "Wróć do mojego wyposażenia"
+      "reset": "Wróć do mojego wyposażenia",
+      "hintFx": "Kliknij przedmiot, aby go wypróbować: pokaz odbywa się na szachownicy."
     },
-    "empty": "Nic tu nie ma przy tym filtrze."
+    "empty": "Nic tu nie ma przy tym filtrze.",
+    "levelShort": "Poz. {n}",
+    "levelNeed": "Wymagany poziom {n}",
+    "levelGift": "Nagroda za poziom {n}",
+    "listen": "Posłuchaj",
+    "preview": "Pokaż",
+    "unequip": "Zdejmij",
+    "errEquip": "Nie można teraz założyć tego przedmiotu.",
+    "deal": {
+      "title": "Promocja tygodnia",
+      "until": "do {date}"
+    },
+    "slot": {
+      "sound": "Zestaw dźwięków",
+      "trail": "Smuga",
+      "capture": "Efekt bicia",
+      "win": "Zwycięstwo",
+      "wheel": "Koło",
+      "arrow": "Strzałka",
+      "color": "Kolor nicku",
+      "frame": "Ramka awatara",
+      "badge": "Odznaka",
+      "fly": "Lot pionków"
+    },
+    "item": {
+      "kit-classic": "Klasyczny",
+      "kit-wood": "Drewno",
+      "kit-8bit": "8-bit",
+      "kit-marble": "Marmur",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orkiestra",
+      "kit-fanfare": "Fanfara",
+      "trail-ember": "Żar",
+      "trail-ink": "Atrament",
+      "trail-stars": "Gwiazdy",
+      "cap-shards": "Odłamki",
+      "cap-dust": "Pył",
+      "cap-shock": "Fala uderzeniowa",
+      "win-pawns": "Deszcz pionków",
+      "win-crown": "Korona",
+      "win-fireworks": "Fajerwerki",
+      "wheel-neon": "Neon",
+      "wheel-wood": "Drewno",
+      "wheel-gold": "Złoto",
+      "arrow-flame": "Płomień",
+      "arrow-ice": "Lód",
+      "arrow-gold": "Złoto",
+      "color-sky": "Niebo",
+      "color-violet": "Fiolet",
+      "color-rose": "Róż",
+      "color-gold": "Złoto",
+      "frame-bronze": "Brąz",
+      "frame-silver": "Srebro",
+      "frame-gold": "Złoto",
+      "frame-mecene": "Mecenas",
+      "frame-crown": "Korona",
+      "badge-knight": "Skoczek",
+      "badge-flame": "Płomień",
+      "badge-star": "Gwiazda",
+      "badge-oracle": "Wyrocznia",
+      "badge-fidele": "Wierny",
+      "fly-stars": "Gwiazdy",
+      "fly-gold": "Złoto",
+      "pack-arcade": "Pakiet Arcade",
+      "pack-wood": "Pakiet Drewno"
+    }
   },
   "tlive": {
     "nextOther": "Typuj inną partię",

@@ -34,6 +34,19 @@ const economy = {
         return this._set(data);
     },
 
+    /** Apparence vue par les autres : slot color | frame | badge, item id ou null */
+    async setLook(slot, item) {
+        const r = await fetch('/api/economy/look', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...twitchAuth.authHeaders() },
+            body: JSON.stringify({ slot, item })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw Object.assign(new Error(data.error || `HTTP ${r.status}`), { status: r.status, data });
+        window.Looks?.forget?.(data.login);
+        return this._set(data);
+    },
+
     /** Gain renvoyé par le serveur (fin de run, coups…) : on relit le compte. source : turns, rush, predictMove… */
     noteGain(gain, source = 'other') {
         if (!gain || !(gain.xp || gain.coins || gain.daily || gain.achievements?.length)) return;

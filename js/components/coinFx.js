@@ -106,7 +106,7 @@ export function fly(n, from = null) {
     const r = target.getBoundingClientRect();
     const b = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     const chip = document.createElement('div');
-    chip.className = 'coin-fly';
+    chip.className = `coin-fly ${window.Cosmetics?.item('fly')?.cls || ''}`;
     chip.setAttribute('aria-hidden', 'true');
     chip.innerHTML = `${PAWN}<b>+${fmt(n)}</b>`;
     document.body.appendChild(chip);
@@ -165,9 +165,9 @@ export function showCredits({ move = '', ply = null, rows = [], n = null, me = n
             <button type="button" class="coin-credits__close" aria-label="${esc(T('coinfx.close', null, 'Fermer'))}"><i class="fas fa-xmark" aria-hidden="true"></i></button>
         </header>
         <ul>${shown.map(r => `<li class="${r.login === me ? 'is-me' : ''}">
-            ${r.pic ? `<img class="coin-credits__pic" src="${esc(r.pic)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
-                : `<span class="coin-credits__pic" style="background:${colorOf(r.login)}">${esc(String(r.name || r.login || '?')[0].toUpperCase())}</span>`}
-            <span class="coin-credits__who"><b>${esc(r.name || r.login)}</b><small>${esc(via(r))}</small></span>
+            ${r.pic ? `<img class="coin-credits__pic" data-look-pic="${esc(r.login)}" src="${esc(r.pic)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+                : `<span class="coin-credits__pic" data-look-pic="${esc(r.login)}" style="background:${colorOf(r.login)}">${esc(String(r.name || r.login || '?')[0].toUpperCase())}</span>`}
+            <span class="coin-credits__who"><b data-look-name="${esc(r.login)}">${esc(r.name || r.login)}</b><small>${esc(via(r))}</small></span>
             ${r.coins > 0 ? `<span class="coin-credits__n">+${fmt(r.coins)}${PAWN}</span>`
                 : `<span class="coin-credits__n is-cap">${esc(T('coinfx.capped', null, 'plafond atteint'))}</span>`}
         </li>`).join('')}</ul>

@@ -16,6 +16,7 @@
         { "id": "polyglotte", "cat": "start", "tier": "B" },
         { "id": "relooking", "cat": "start", "tier": "B" },
         { "id": "lien-partage", "cat": "start", "tier": "B" },
+        { "id": "fidele", "cat": "start", "tier": "O", "stat": "bestStreak", "goal": 30, "reward": "badge-fidele" },
 
         { "id": "premier-sang", "cat": "rush", "tier": "B", "stat": "rushBest", "goal": 1 },
         { "id": "echauffement", "cat": "rush", "tier": "B", "stat": "rushBest", "goal": 5 },
@@ -25,11 +26,11 @@
         { "id": "ruche-infaillible", "cat": "rush", "tier": "P", "stat": "rushBest", "goal": 40, "reward": "aurora" },
         { "id": "assidu-du-rush", "cat": "rush", "tier": "B", "stat": "rushRuns", "goal": 10 },
         { "id": "accro-du-rush", "cat": "rush", "tier": "A", "stat": "rushRuns", "goal": 100 },
-        { "id": "mille-puzzles", "cat": "rush", "tier": "O", "stat": "rushPuzzles", "goal": 1000 },
+        { "id": "mille-puzzles", "cat": "rush", "tier": "O", "stat": "rushPuzzles", "goal": 1000, "reward": "kit-fanfare" },
 
         { "id": "premiere-vague", "cat": "votes", "tier": "B", "stat": "votes", "goal": 100 },
         { "id": "maree-montante", "cat": "votes", "tier": "A", "stat": "votes", "goal": 1000 },
-        { "id": "raz-de-maree", "cat": "votes", "tier": "O", "stat": "votes", "goal": 10000 },
+        { "id": "raz-de-maree", "cat": "votes", "tier": "O", "stat": "votes", "goal": 10000, "reward": "frame-mecene" },
         { "id": "democratie-totale", "cat": "votes", "tier": "P", "stat": "votes", "goal": 100000 },
         { "id": "salle-comble", "cat": "votes", "tier": "B", "stat": "maxVoters", "goal": 20 },
         { "id": "stade", "cat": "votes", "tier": "A", "stat": "maxVoters", "goal": 100 },
@@ -37,7 +38,7 @@
 
         { "id": "bon-oeil", "cat": "predict", "tier": "B", "stat": "predictMoveHits", "goal": 1 },
         { "id": "lecteur-de-pensees", "cat": "predict", "tier": "A", "stat": "predictMoveHits", "goal": 25 },
-        { "id": "oracle", "cat": "predict", "tier": "O", "stat": "predictMoveHits", "goal": 100 },
+        { "id": "oracle", "cat": "predict", "tier": "O", "stat": "predictMoveHits", "goal": 100, "reward": "badge-oracle" },
         { "id": "dans-sa-tete", "cat": "predict", "tier": "A", "stat": "predictBestStreak", "goal": 5 },
         { "id": "telepathe", "cat": "predict", "tier": "P", "stat": "predictBestStreak", "goal": 10 },
         { "id": "pronostiqueur", "cat": "predict", "tier": "B", "stat": "predictWinnerHits", "goal": 1 },

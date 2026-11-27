@@ -26,6 +26,8 @@
         { id: 'emerald', ext: 'svg', key: 'emerald', label: 'Émeraude' },
         { id: 'obsidian', ext: 'svg', key: 'obsidian', label: 'Obsidienne' },
         { id: 'toxic', ext: 'svg', key: 'toxic', label: 'Acide' },
+        { id: 'holo', ext: 'svg', key: 'holo', label: 'Holo' },
+        { id: 'lava', ext: 'svg', key: 'lava', label: 'Lave' },
     ];
     const byId = id => SETS.find(s => s.id === id && unlocked(s)) || SETS[0];
     let current = SETS[0];

@@ -1,13 +1,16 @@
 /**
  * Boutique : les pions gagnés (coups votés, Rush, Multi, bonus du jour, succès) s'échangent
- * contre des sets de pièces, des couleurs et matières d'échiquier, des couleurs de tirage.
- * Prix et objets réservés aux succès : CATALOG de economy.js (GET /api/economy/rules).
+ * contre des sets de pièces, des couleurs et matières d'échiquier, des couleurs de tirage,
+ * des kits de sons, des effets (traînée, prise, victoire), l'habillage du stream (roue, flèche),
+ * l'apparence vue par les autres (couleur du pseudo, cadre, badge) et des packs.
+ * Prix, niveau requis, objets réservés aux succès, promo de la semaine : economy.js (GET /api/economy/rules).
  * Achat : POST /api/economy/buy (window.economy.buy) puis l'objet est équipé tout de suite.
  *
  * Présentation : un onglet par rayon, des tuiles compactes, et une cabine d'essayage
  * (échiquier + tirage) qui combine les objets cliqués dans chaque rayon avant achat.
  */
 import { PALETTES, PALETTE_IDS, FREE_PALETTES, getPaletteId, setPaletteId } from '../components/votePalettes.js';
+import Cosmetics, { ITEMS } from '../core/cosmetics.js';
 
 const tr = (key, params) => window.i18n?.t?.(key, params) ?? key;
 const t = (key, params) => tr(`shop.${key}`, params);
@@ -20,17 +23,26 @@ const CATS = [
     { key: 'mats', icon: 'fa-layer-group' },
     { key: 'palettes', icon: 'fa-palette' },
     { key: 'themes', icon: 'fa-fill-drip' },
+    { key: 'sounds', icon: 'fa-volume-high' },
+    { key: 'effects', icon: 'fa-wand-magic-sparkles' },
+    { key: 'stream', icon: 'fa-tower-broadcast' },
+    { key: 'profile', icon: 'fa-id-badge' },
+    { key: 'packs', icon: 'fa-box-open' },
 ];
+// Rayons des cosmétiques : emplacements (slots de js/core/cosmetics.js) qu'ils regroupent
+const CAT_SLOTS = { sounds: ['sound'], effects: ['trail', 'capture', 'win'], stream: ['wheel', 'arrow'], profile: ['color', 'frame', 'badge', 'fly'] };
 const FILTERS = ['all', 'buy', 'owned'];
 // Position de la cabine : 1.e4 e5 2.Cf3 Cc6 3.Fc4
 const FEN = 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R';
 const SHARES = [34, 24, 16, 12, 8, 6];
+const DEMO = { from: 45, to: 28 };   // Cf3xe5 dans la cabine (index des cases, a8 = 0)
 
-let rules = null;          // { rules, catalog } du serveur
+let rules = null;          // { rules, catalog, deal } du serveur
 let confirming = null;     // id en attente de confirmation (deuxième clic)
 let confirmTimer = null;
 let busy = null;           // id en cours d'achat
-const tried = { pieces: null, boards: null, mats: null, palettes: null, themes: null };   // objet essayé par rayon
+const tried = Object.fromEntries(CATS.map(c => [c.key, null]));   // objet essayé par rayon
+const triedSlot = {};      // objet essayé par emplacement de cosmétique (cabine)
 let tab = 'pieces';
 let filter = 'all';
 try {
@@ -41,6 +53,12 @@ try {
 } catch (e) { }
 const remember = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
 
+/** Nom d'un objet du magasin (cosmétiques, packs) ; repli sur l'id */
+export function itemName(id) {
+    const k = `shop.item.${id}`, s = tr(k);
+    return s && s !== k ? s : id;
+}
+
 /** Petit échiquier 4×4 (couleurs passées en style, matière par classe) */
 function boardPreview(light, dark, matClass = '') {
     const style = light ? ` style="--sq-light:${light};--sq-dark:${dark}"` : '';
@@ -48,11 +66,53 @@ function boardPreview(light, dark, matClass = '') {
     return `<div class="shop-board ${matClass}"${style}>${squares}</div>`;
 }
 
+const arrowSvg = (color, glow) => `<svg class="shop-arrow" viewBox="0 0 44 20" aria-hidden="true"${glow ? ` style="filter:drop-shadow(0 0 3px ${glow})"` : ''}><path d="M3 10H30" stroke="${color}" stroke-width="5" stroke-linecap="round"/><path d="M27 2L41 10L27 18Z" fill="${color}"/></svg>`;
+const wheelCss = (skin) => {
+    const pal = PALETTES[getPaletteId()] || PALETTES[PALETTE_IDS[0]];
+    const stops = pal.slice(0, 6).map((c, i) => `${c} ${i * 60}deg ${(i + 1) * 60}deg`).join(',');
+    return `--rim:${skin.rim};--ring:${skin.ring};--lamp:rgb(${skin.lamp});--hub:${skin.hub};--glow:${skin.glow};background:conic-gradient(${stops})`;
+};
+const WHEEL_DEFAULT = { rim: '#2b211b', ring: 'rgba(255,138,61,.35)', lamp: '255,196,140', hub: '#ff8a3d', glow: '#ff8a3d' };
+
+/** Aperçu d'un cosmétique dans sa tuile */
+function cosmPreview(id) {
+    const it = ITEMS[id] || {};
+    switch (it.slot) {
+        case 'sound': return `<div class="shop-cosm shop-cosm--sound"><i class="fas ${it.icon || 'fa-volume-high'}"></i><span class="shop-eq"><b></b><b></b><b></b><b></b><b></b></span></div>`;
+        case 'trail': return `<div class="shop-cosm shop-cosm--trail" style="--c1:${it.colors[0]};--c2:${it.colors[1]};--c3:${it.colors[2]}"><span></span>${it.stars ? '<i>✦</i><i>✦</i>' : ''}</div>`;
+        case 'capture': return `<div class="shop-cosm shop-cosm--cap">${Array.from({ length: 8 }, (_, i) => `<span style="--a:${i * 45}deg;background:${it.colors[i % 3]}"></span>`).join('')}<b style="background:${it.colors[1]}"></b></div>`;
+        case 'win': return `<div class="shop-cosm shop-cosm--win"><i class="fas ${it.icon}"></i></div>`;
+        case 'wheel': return `<div class="shop-cosm"><span class="shop-wheel" style="${wheelCss(it)}"><i></i></span></div>`;
+        case 'arrow': return `<div class="shop-cosm">${arrowSvg(it.color, it.glow)}</div>`;
+        case 'color': return `<div class="shop-cosm"><span class="shop-cosm__name" style="color:${it.color}">${esc(window.economy?.account?.login || 'viewer')}</span></div>`;
+        case 'frame': return `<div class="shop-cosm"><span class="shop-avatar look-frame ${it.cls}"><i class="fas fa-user"></i></span></div>`;
+        case 'badge': return `<div class="shop-cosm shop-cosm--badge"><i class="fas ${it.icon}" style="color:${it.color}"></i></div>`;
+        case 'fly': return `<div class="shop-cosm"><span class="shop-flychip ${it.cls}">♟ +2</span></div>`;
+        default: return '';
+    }
+}
+
+function cosmItem(id) {
+    const it = ITEMS[id];
+    return {
+        own: id, slot: it.slot, free: false, name: itemName(id), preview: cosmPreview(id),
+        equipped: Cosmetics.get(it.slot) === id,
+        equip: () => Cosmetics.set(it.slot, id),
+        unequip: () => Cosmetics.set(it.slot, null),
+    };
+}
+const slotIds = (slots) => Object.keys(ITEMS).filter(id => slots.includes(ITEMS[id].slot));
+
 /** Objets de chaque rayon : { own (id au magasin), free, name, preview, equipped, equip(), look } */
 function catalog() {
     const pc = window.pieceCatalog;
     if (!pc) return {};
     const pal = getPaletteId();
+    const packs = Object.entries(rules?.catalog || {}).filter(([, x]) => x.kind === 'bundle').map(([id, x]) => ({
+        own: id, free: false, name: itemName(id), bundle: x.items,
+        preview: `<div class="shop-cosm shop-cosm--pack">${x.items.map(i => `<span>${cosmPreview(i)}</span>`).join('')}</div>`,
+        equipped: false, equip: () => { },
+    }));
     return {
         pieces: pc.sets.map(s => ({
             own: s.id, free: !!s.free, name: pc.label(s),
@@ -90,6 +150,15 @@ function catalog() {
             equip: () => window.setSiteTheme(x.id),
             look: { bg: x.id },
         })),
+        sounds: [{
+            own: 'kit-classic', slot: 'sound', free: true, name: itemName('kit-classic'),
+            preview: `<div class="shop-cosm shop-cosm--sound"><i class="fas fa-volume-low"></i><span class="shop-eq"><b></b><b></b><b></b><b></b><b></b></span></div>`,
+            equipped: !Cosmetics.get('sound'), equip: () => Cosmetics.set('sound', null),
+        }, ...slotIds(CAT_SLOTS.sounds).map(cosmItem)],
+        effects: slotIds(CAT_SLOTS.effects).map(cosmItem),
+        stream: slotIds(CAT_SLOTS.stream).map(cosmItem),
+        profile: slotIds(CAT_SLOTS.profile).map(cosmItem),
+        packs,
     };
 }
 
@@ -99,30 +168,43 @@ function rewardOf(own) {
     return def ? tr(`achievements.list.${def.id}.name`) : null;
 }
 
+const hasItem = (acc, id) => !!acc?.owned?.includes(id) || !!window.unlockedRewards?.has?.(id);
+const priceOf = (id) => rules?.deal?.id === id ? rules.deal.price : rules?.catalog?.[id]?.price;
+
 function itemState(item, acc) {
-    const owned = item.free || !!acc?.owned?.includes(item.own) || !!window.unlockedRewards?.has?.(item.own);
-    const price = rules?.catalog?.[item.own]?.price;
+    const owned = item.free || (item.bundle ? item.bundle.every(i => hasItem(acc, i)) : hasItem(acc, item.own));
+    const def = rules?.catalog?.[item.own] || {};
+    const price = priceOf(item.own);
     if (owned) return { kind: item.equipped ? 'equipped' : 'owned' };
-    if (price == null) return { kind: 'exclusive', reward: rewardOf(item.own) };
+    if (price == null) return { kind: 'exclusive', reward: rewardOf(item.own), level: def.unlockLevel };
+    if (def.level && (acc?.level || 1) < def.level) return { kind: 'level', price, level: def.level };
     if (!acc) return { kind: 'login', price };
     if (acc.coins < price) return { kind: 'poor', price, missing: price - acc.coins };
     return { kind: 'buy', price };
 }
 
-/** Ordre d'un rayon : gratuits, puis par prix, objets de succès à la fin */
+/** Ordre d'un rayon : gratuits, puis par emplacement et prix, objets de succès à la fin */
 function sortItems(items) {
+    const slots = Object.values(CAT_SLOTS).flat();
     const rank = it => it.free ? -1 : (rules?.catalog?.[it.own]?.price ?? 1e9);
-    return [...items].sort((a, b) => rank(a) - rank(b));
+    return [...items].sort((a, b) => (slots.indexOf(a.slot) - slots.indexOf(b.slot)) || rank(a) - rank(b));
 }
 
 const isOwned = st => st.kind === 'equipped' || st.kind === 'owned';
-const passes = (st) => filter === 'all' || (filter === 'owned' ? isOwned(st) : ['buy', 'poor', 'login'].includes(st.kind));
+const passes = (st) => filter === 'all' || (filter === 'owned' ? isOwned(st) : ['buy', 'poor', 'login', 'level'].includes(st.kind));
 
 /** Objet affiché dans la cabine pour un rayon : l'essai en cours, sinon l'objet équipé */
 function shown(cat, items) {
     const list = items[cat] || [];
     return list.find(i => i.own === tried[cat]) || list.find(i => i.equipped) || list[0];
 }
+/** Cosmétique montré dans la cabine pour un emplacement : essayé, sinon équipé */
+const shownSlot = (slot) => triedSlot[slot] !== undefined ? triedSlot[slot] : Cosmetics.get(slot);
+
+const priceHtml = (st, id) => {
+    const deal = rules?.deal?.id === id && rules.deal.base;
+    return `${deal ? `<s>${fmtNum(deal)}</s> ` : ''}♟ ${fmtNum(st.price)}`;
+};
 
 function tile(item, acc) {
     const st = itemState(item, acc);
@@ -131,11 +213,13 @@ function tile(item, acc) {
     switch (st.kind) {
         case 'equipped': badge = `<span class="shop-tile__badge is-on"><i class="fas fa-check"></i></span>`; break;
         case 'owned': badge = `<span class="shop-tile__meta">${esc(item.free ? t('free') : t('owned'))}</span>`; break;
-        case 'exclusive': badge = `<span class="shop-tile__meta is-excl"><i class="fas fa-medal"></i> ${esc(t('exclusiveShort'))}</span>`; break;
-        default: badge = `<span class="shop-tile__price${st.kind === 'poor' ? ' is-poor' : ''}">♟ ${fmtNum(st.price)}</span>`;
+        case 'exclusive': badge = `<span class="shop-tile__meta is-excl"><i class="fas fa-medal"></i> ${esc(st.level ? t('levelShort', { n: st.level }) : t('exclusiveShort'))}</span>`; break;
+        case 'level': badge = `<span class="shop-tile__meta is-level"><i class="fas fa-lock"></i> ${esc(t('levelShort', { n: st.level }))}</span>`; break;
+        default: badge = `<span class="shop-tile__price${st.kind === 'poor' ? ' is-poor' : ''}">${priceHtml(st, item.own)}</span>`;
     }
+    const deal = rules?.deal?.id === item.own ? `<span class="shop-tile__deal">−25 %</span>` : '';
     return `<li><button type="button" class="shop-tile is-${st.kind}${sel ? ' is-selected' : ''}" data-shop-try="${esc(item.own)}" aria-pressed="${sel}">
-        <span class="shop-tile__preview">${item.preview}</span>
+        ${deal}<span class="shop-tile__preview">${item.preview}</span>
         <span class="shop-tile__name">${esc(item.name)}</span>
         ${badge}
     </button></li>`;
@@ -144,27 +228,56 @@ function tile(item, acc) {
 /** Bouton d'action de la cabine, pour l'objet sélectionné dans l'onglet */
 function action(item, acc) {
     const st = itemState(item, acc);
+    const listen = item.slot === 'sound' ? `<button class="btn btn--sm btn--ghost" data-shop-listen="${esc(item.own)}"><i class="fas fa-play"></i> ${esc(t('listen'))}</button>` : '';
+    const demo = ['trail', 'capture', 'win'].includes(item.slot) ? `<button class="btn btn--sm btn--ghost" data-shop-demo="${esc(item.own)}"><i class="fas fa-play"></i> ${esc(t('preview'))}</button>` : '';
+    const extra = listen + demo;
     switch (st.kind) {
         case 'equipped':
-            return `<span class="shop-tag shop-tag--on"><i class="fas fa-check"></i> ${esc(t('equipped'))}</span>`;
+            return `${extra}<span class="shop-tag shop-tag--on"><i class="fas fa-check"></i> ${esc(t('equipped'))}</span>${item.unequip ? `<button class="btn btn--sm btn--ghost" data-shop-unequip="${esc(item.own)}">${esc(t('unequip'))}</button>` : ''}`;
         case 'owned':
-            return `<button class="btn btn--sm btn--primary" data-shop-equip="${esc(item.own)}">${esc(t('use'))}</button>`;
+            return item.bundle ? `<span class="shop-tag shop-tag--on"><i class="fas fa-check"></i> ${esc(t('owned'))}</span>`
+                : `${extra}<button class="btn btn--sm btn--primary" data-shop-equip="${esc(item.own)}">${esc(t('use'))}</button>`;
         case 'exclusive':
-            return `<span class="shop-tag shop-tag--excl"><i class="fas fa-medal"></i> ${esc(st.reward ? t('exclusiveHint', { name: st.reward }) : t('exclusiveShort'))}</span>`;
+            return `${extra}<span class="shop-tag shop-tag--excl"><i class="fas fa-medal"></i> ${esc(st.level ? t('levelGift', { n: st.level }) : st.reward ? t('exclusiveHint', { name: st.reward }) : t('exclusiveShort'))}</span>`;
+        case 'level':
+            return `${extra}<span class="shop-price">${priceHtml(st, item.own)}</span><span class="shop-tag"><i class="fas fa-lock"></i> ${esc(t('levelNeed', { n: st.level }))}</span>`;
         case 'login':
-            return `<button class="btn btn--sm btn--primary" data-shop-login><i class="fab fa-twitch"></i> ${esc(t('loginToBuy', { n: fmtNum(st.price) }))}</button>`;
+            return `${extra}<button class="btn btn--sm btn--primary" data-shop-login><i class="fab fa-twitch"></i> ${esc(t('loginToBuy', { n: fmtNum(st.price) }))}</button>`;
         case 'poor':
-            return `<span class="shop-price is-poor">♟ ${fmtNum(st.price)}</span><span class="shop-tag">${esc(t('missing', { n: fmtNum(st.missing) }))}</span>`;
+            return `${extra}<span class="shop-price is-poor">${priceHtml(st, item.own)}</span><span class="shop-tag">${esc(t('missing', { n: fmtNum(st.missing) }))}</span>`;
         default: {
             const conf = confirming === item.own;
             const label = busy === item.own ? `<i class="fas fa-spinner fa-spin"></i>`
                 : conf ? esc(t('confirm', { n: fmtNum(st.price) })) : `${esc(t('buy'))} · ♟ ${fmtNum(st.price)}`;
-            return `<button class="btn btn--sm btn--primary${conf ? ' is-confirm' : ''}" data-shop-buy="${esc(item.own)}"${busy ? ' disabled' : ''}>${label}</button>`;
+            return `${extra}<button class="btn btn--sm btn--primary${conf ? ' is-confirm' : ''}" data-shop-buy="${esc(item.own)}"${busy ? ' disabled' : ''}>${label}</button>`;
         }
     }
 }
 
 let catalogCache = {};
+
+/** Démo de la cabine : traînée et prise Cf3xe5 sur l'échiquier de la cabine */
+function demoOnFitting(trailId, capId) {
+    const sq = document.querySelectorAll('.shop-fit__board > span');
+    if (sq.length !== 64) return;
+    window.BoardFx?.play({ fromRect: sq[DEMO.from].getBoundingClientRect(), toRect: sq[DEMO.to].getBoundingClientRect(), capture: true, trail: trailId, cap: capId });
+}
+
+/** Ligne « viewer » de la cabine (rayon Profil) : cadre, couleur, badge, envol */
+function viewerSample() {
+    const acc = window.economy?.account;
+    const name = acc?.login || 'viewer';
+    const color = ITEMS[shownSlot('color')]?.color;
+    const frame = ITEMS[shownSlot('frame')]?.cls;
+    const badge = ITEMS[shownSlot('badge')];
+    const fly = ITEMS[shownSlot('fly')]?.cls || '';
+    const pic = window.twitchAuth?.user?.profile_image_url;
+    return `<div class="shop-fit__viewer">
+        <span class="shop-avatar${frame ? ` look-frame ${frame}` : ''}">${pic ? `<img src="${esc(pic)}" alt="" referrerpolicy="no-referrer">` : `<i class="fas fa-user"></i>`}</span>
+        <b${color ? ` style="color:${color}"` : ''}>${esc(name)}${badge ? ` <i class="fas ${badge.icon} look-badge" style="color:${badge.color}"></i>` : ''}</b>
+        <span class="shop-flychip ${fly}">♟ +2</span>
+    </div>`;
+}
 
 /** Cabine d'essayage : échiquier et tirage avec les objets essayés de chaque rayon */
 function fitting(items, acc) {
@@ -187,17 +300,25 @@ function fitting(items, acc) {
             }
         }
     });
+    // Flèche du coup tiré (Cf3xe5, en L) et roue miniature : rayon Stream
+    const arrow = ITEMS[shownSlot('arrow')];
+    const arrowCol = arrow?.color || 'rgb(255, 138, 61)';
+    const overlay = tab === 'stream'
+        ? `<svg class="shop-fit__arrow" viewBox="0 0 8 8" aria-hidden="true"${arrow ? ` style="filter:drop-shadow(0 0 3px ${arrow.glow})"` : ''}><polyline points="5.5,5.2 5.5,4.5 4.5,4.5 4.5,3.95" fill="none" stroke="${arrowCol}" stroke-width=".2" stroke-linejoin="round" opacity=".9"/><path d="M4.18 3.95L4.5 3.45L4.82 3.95Z" fill="${arrowCol}" opacity=".9"/></svg>`
+        : '';
+    const wheel = tab === 'stream' ? `<span class="shop-wheel shop-wheel--fit" style="${wheelCss(ITEMS[shownSlot('wheel')] || WHEEL_DEFAULT)}"><i></i></span>` : '';
     const sel = shown(tab, items);
     const trying = Object.keys(tried).some(k => tried[k] && !(items[k] || []).find(i => i.own === tried[k])?.equipped);
     return `<aside class="shop-fit bg--${esc(bg)}">
         <div class="shop-fit__head"><span>${esc(t('fit.title'))}</span>${trying ? `<button type="button" class="shop-fit__reset" data-shop-reset><i class="fas fa-rotate-left"></i> ${esc(t('fit.reset'))}</button>` : ''}</div>
-        <div class="shop-fit__board mat--${esc(mat)}" style="--sq-light:${board?.light};--sq-dark:${board?.dark}">${squares}</div>
+        <div class="shop-fit__boardwrap"><div class="shop-fit__board mat--${esc(mat)}" style="--sq-light:${board?.light};--sq-dark:${board?.dark}">${squares}</div>${overlay}${wheel}</div>
         <div class="shop-fit__draw" title="${esc(tr('palette.title'))}">${SHARES.map((w, i) => `<span style="flex:${w};background:${colors[i] || '#555'}"></span>`).join('')}</div>
+        ${tab === 'profile' ? viewerSample() : ''}
         ${sel ? `<div class="shop-fit__item">
-            <div class="shop-fit__name"><small>${esc(t(`tab.${tab}`))}</small><b>${esc(sel.name)}</b></div>
+            <div class="shop-fit__name"><small>${esc(t(`tab.${tab}`))}</small><b>${esc(sel.name)}</b>${sel.bundle ? `<small>${esc(sel.bundle.map(itemName).join(' · '))}</small>` : ''}${sel.slot && !sel.free ? `<small>${esc(t(`slot.${sel.slot}`))}</small>` : ''}</div>
             <div class="shop-fit__action">${action(sel, acc)}</div>
         </div>` : ''}
-        <p class="shop-fit__hint">${esc(t('fit.hint'))}</p>
+        <p class="shop-fit__hint">${esc(t(CAT_SLOTS[tab] && tab !== 'profile' && tab !== 'stream' ? 'fit.hintFx' : 'fit.hint'))}</p>
     </aside>`;
 }
 
@@ -222,6 +343,21 @@ function wallet(acc) {
         <button class="btn btn--sm btn--twitch" data-shop-login><i class="fab fa-twitch"></i> ${esc(tr('twitch.connect'))}</button>${how}</div>`;
 }
 
+/** Bandeau de la vitrine de la semaine (un objet à −25 %) */
+function dealBanner(items) {
+    const d = rules?.deal;
+    if (!d) return '';
+    let cat = null, it = null;
+    for (const c of CATS) { it = (items[c.key] || []).find(i => i.own === d.id); if (it) { cat = c.key; break; } }
+    if (!it) return '';
+    const until = new Date(d.until).toLocaleDateString(window.i18n?.currentLang || 'fr', { weekday: 'long', day: 'numeric', month: 'long' });
+    return `<button type="button" class="shop-deal" data-shop-goto="${esc(d.id)}" data-shop-cat="${cat}">
+        <span class="shop-deal__icon"><i class="fas fa-tag"></i></span>
+        <span class="shop-deal__text"><small>${esc(t('deal.title'))}</small><b>${esc(it.name)}</b><small>${esc(t('deal.until', { date: until }))}</small></span>
+        <span class="shop-deal__price"><s>♟ ${fmtNum(d.base)}</s><b>♟ ${fmtNum(d.price)}</b></span>
+    </button>`;
+}
+
 const ShopPage = {
     async init() {
         const root = document.getElementById('shop-root');
@@ -238,6 +374,27 @@ const ShopPage = {
         this.render();
     },
 
+    /** Essayer un objet : cabine, et démo (son, effet) pour les cosmétiques */
+    tryItem(id, play = true) {
+        tried[tab] = id;
+        const it = ITEMS[id];
+        if (it) triedSlot[it.slot] = id;
+        if (id === 'kit-classic') triedSlot.sound = null;
+        if (confirming !== id) confirming = null;
+        this.render();
+        if (play) this.demo(id);
+    },
+
+    demo(id) {
+        const it = ITEMS[id];
+        if (id === 'kit-classic') { try { new Audio('mp3/move.mp3').play().catch(() => { }); } catch { } return; }
+        if (!it) return;
+        if (it.slot === 'sound') window.SoundKit?.demo(id);
+        else if (it.slot === 'trail') demoOnFitting(id, shownSlot('capture'));
+        else if (it.slot === 'capture') demoOnFitting(shownSlot('trail'), id);
+        else if (it.slot === 'win') window.BoardFx?.victory(id);
+    },
+
     bind(root) {
         root.dataset.bound = '1';
         const page = document.getElementById('page-shop');
@@ -247,23 +404,25 @@ const ShopPage = {
             if (tb) { tab = tb.dataset.shopTab; remember('shopTab', tab); confirming = null; return this.render(); }
             const fl = e.target.closest('[data-shop-filter]');
             if (fl) { filter = fl.dataset.shopFilter; remember('shopFilter', filter); return this.render(); }
+            const go = e.target.closest('[data-shop-goto]');
+            if (go) { tab = go.dataset.shopCat; remember('shopTab', tab); filter = 'all'; return this.tryItem(go.dataset.shopGoto, false); }
             const tryBtn = e.target.closest('[data-shop-try]');
-            if (tryBtn) {
-                const id = tryBtn.dataset.shopTry;
-                tried[tab] = id;
-                if (confirming !== id) confirming = null;
-                return this.render();
-            }
+            if (tryBtn) return this.tryItem(tryBtn.dataset.shopTry);
+            const ls = e.target.closest('[data-shop-listen],[data-shop-demo]');
+            if (ls) return this.demo(ls.dataset.shopListen || ls.dataset.shopDemo);
             if (e.target.closest('[data-shop-reset]')) {
                 for (const k of Object.keys(tried)) tried[k] = null;
+                for (const k of Object.keys(triedSlot)) delete triedSlot[k];
                 confirming = null;
                 return this.render();
             }
-            const eq = e.target.closest('[data-shop-equip]');
+            const eq = e.target.closest('[data-shop-equip],[data-shop-unequip]');
             if (eq) {
-                const it = this.find(eq.dataset.shopEquip);
-                it?.equip();
-                if (it) tried[it.cat] = null;
+                const off = !!eq.dataset.shopUnequip;
+                const it = this.find(eq.dataset.shopEquip || eq.dataset.shopUnequip);
+                try { await (off ? it?.unequip?.() : it?.equip()); }
+                catch { window.AppToast?.show(esc(t('errEquip')), 'error', 4000); }
+                if (it) { tried[it.cat] = null; if (it.slot) delete triedSlot[it.slot]; }
                 return this.render();
             }
             const b = e.target.closest('[data-shop-buy]');
@@ -283,12 +442,12 @@ const ShopPage = {
             try {
                 await window.economy.buy(id);
                 busy = null;
-                item?.equip();
-                if (item) tried[item.cat] = null;
+                try { await item?.equip(); } catch { }
+                if (item) { tried[item.cat] = null; if (item.slot) delete triedSlot[item.slot]; }
                 window.AppToast?.show(esc(t('bought', { name: item?.name || id })), 'success', 4000);
             } catch (err) {
                 busy = null;
-                window.AppToast?.show(esc(err.status === 402 ? t('errPoor') : t('errBuy')), 'error', 4000);
+                window.AppToast?.show(esc(err.status === 402 ? t('errPoor') : err.data?.level ? t('levelNeed', { n: err.data.level }) : t('errBuy')), 'error', 4000);
                 window.economy?.refresh();
             }
             this.render();
@@ -338,6 +497,7 @@ const ShopPage = {
         root.innerHTML = `<div class="shop-layout">
             ${fitting(items, acc)}
             <div class="shop-main">
+                ${dealBanner(items)}
                 <div class="shop-tabs" role="tablist">${tabs}</div>
                 <div class="shop-sub">
                     <p>${esc(t(`catDesc.${tab}`))}</p>
@@ -353,7 +513,7 @@ const ShopPage = {
 
 const isActive = () => document.getElementById('page-shop')?.classList.contains('is-active');
 const rerender = () => { if (isActive()) ShopPage.render(); };
-for (const ev of ['economyChanged', 'languageChanged', 'pieceSetChanged', 'boardThemeChanged', 'boardMatChanged', 'twitchAuthChange']) {
+for (const ev of ['economyChanged', 'languageChanged', 'pieceSetChanged', 'boardThemeChanged', 'boardMatChanged', 'twitchAuthChange', 'cosmeticsChanged']) {
     window.addEventListener(ev, rerender);
 }
 document.addEventListener('votePaletteChanged', rerender);

@@ -14,6 +14,8 @@ const TIER_ICON = { B: 'fa-medal', A: 'fa-medal', O: 'fa-medal', P: 'fa-gem', S:
 /** Nom d'une récompense : objet du menu Pièces ou titre */
 function rewardLabel(id) {
     if (id.startsWith('title-')) return t(`rewards.${id}`);
+    const shopKey = `shop.item.${id}`, shopName = tr(shopKey);   // objets du magasin (cadre, badge, kit de sons…)
+    if (shopName && shopName !== shopKey) return shopName;
     if (['flat', 'neon', 'token'].includes(id)) return `${tr('pieces.title')} ${tr(`pieces.${id}`)}`;
     return `${tr('pieces.boardTitle')} ${tr(`pieces.board.${id}`)}`;
 }

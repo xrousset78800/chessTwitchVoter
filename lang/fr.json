@@ -1263,7 +1263,9 @@
       "marble": "Marbre",
       "linen": "Lin",
       "stone": "Pierre"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lave"
   },
   "bilan": {
     "mode": {
@@ -1561,6 +1563,10 @@
       "mat-de-roi": {
         "name": "Mat de roi",
         "desc": "Donner mat en bougeant le roi (mat à la découverte)"
+      },
+      "fidele": {
+        "name": "Fidèle",
+        "desc": "Atteindre une série de 30 jours de bonus quotidien"
       }
     }
   },
@@ -1590,7 +1596,12 @@
       "boards": "Les deux couleurs des cases.",
       "mats": "Une texture posée sur tes couleurs de cases.",
       "palettes": "La roue, la bande et le podium des votes, vus aussi par tes spectateurs.",
-      "themes": "Le fond et les cartes de toutes les pages du site, pour toi seul."
+      "themes": "Le fond et les cartes de toutes les pages du site, pour toi seul.",
+      "sounds": "Le son des coups, des prises, des échecs et de la roue, pour toi seul.",
+      "effects": "Traînée du coup joué, effet de prise et animation de victoire sur l'échiquier.",
+      "stream": "Jante de la roue et flèche du coup tiré, sur ta page de partie.",
+      "profile": "Ce que les autres voient de toi : couleur du pseudo, cadre, badge, et ton envol de pions.",
+      "packs": "Plusieurs objets d'un coup, moins chers qu'à l'unité."
     },
     "buy": "Acheter",
     "confirm": "Confirmer ({n} ♟) ?",
@@ -1612,7 +1623,12 @@
       "boards": "Échiquiers",
       "mats": "Matières",
       "palettes": "Tirage",
-      "themes": "Thèmes"
+      "themes": "Thèmes",
+      "sounds": "Sons",
+      "effects": "Effets",
+      "stream": "Stream",
+      "profile": "Profil",
+      "packs": "Packs"
     },
     "filter": {
       "all": "Tout",
@@ -1622,9 +1638,75 @@
     "fit": {
       "title": "Cabine d'essayage",
       "hint": "Clique un objet pour l'essayer ici avant de l'acheter.",
-      "reset": "Revenir à mon équipement"
+      "reset": "Revenir à mon équipement",
+      "hintFx": "Clique un objet pour l'essayer : la démo se joue sur l'échiquier."
     },
-    "empty": "Rien ici avec ce filtre."
+    "empty": "Rien ici avec ce filtre.",
+    "levelShort": "Niv. {n}",
+    "levelNeed": "Niveau {n} requis",
+    "levelGift": "Offert au niveau {n}",
+    "listen": "Écouter",
+    "preview": "Voir",
+    "unequip": "Retirer",
+    "errEquip": "Impossible d'équiper cet objet pour l'instant.",
+    "deal": {
+      "title": "Promo de la semaine",
+      "until": "jusqu'au {date}"
+    },
+    "slot": {
+      "sound": "Kit de sons",
+      "trail": "Traînée",
+      "capture": "Effet de prise",
+      "win": "Victoire",
+      "wheel": "Roue",
+      "arrow": "Flèche",
+      "color": "Couleur du pseudo",
+      "frame": "Cadre d'avatar",
+      "badge": "Badge",
+      "fly": "Envol de pions"
+    },
+    "item": {
+      "kit-classic": "Classique",
+      "kit-wood": "Bois",
+      "kit-8bit": "8-bit",
+      "kit-marble": "Marbre",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orchestre",
+      "kit-fanfare": "Fanfare",
+      "trail-ember": "Braises",
+      "trail-ink": "Encre",
+      "trail-stars": "Étoiles",
+      "cap-shards": "Éclats",
+      "cap-dust": "Poussière",
+      "cap-shock": "Onde de choc",
+      "win-pawns": "Pluie de pions",
+      "win-crown": "Couronne",
+      "win-fireworks": "Feu d'artifice",
+      "wheel-neon": "Néon",
+      "wheel-wood": "Bois",
+      "wheel-gold": "Or",
+      "arrow-flame": "Flamme",
+      "arrow-ice": "Glace",
+      "arrow-gold": "Or",
+      "color-sky": "Ciel",
+      "color-violet": "Violet",
+      "color-rose": "Rose",
+      "color-gold": "Or",
+      "frame-bronze": "Bronze",
+      "frame-silver": "Argent",
+      "frame-gold": "Or",
+      "frame-mecene": "Mécène",
+      "frame-crown": "Couronne",
+      "badge-knight": "Cavalier",
+      "badge-flame": "Flamme",
+      "badge-star": "Étoile",
+      "badge-oracle": "Oracle",
+      "badge-fidele": "Fidèle",
+      "fly-stars": "Étoiles",
+      "fly-gold": "Or",
+      "pack-arcade": "Pack Arcade",
+      "pack-wood": "Pack Bois"
+    }
   },
   "seo": {
     "title": "Crowd Gambit — Les échecs joués par ton chat Twitch",

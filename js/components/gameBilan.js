@@ -112,6 +112,7 @@ function close() {
  * @param {string} [o.meta]    - ligne de contexte (coups, adversaire, durée…)
  * @param {string} [o.note]    - remarque mise en avant (record battu…)
  * @param {{label:string, icon?:string, run:Function}} [o.next] - bouton principal (partie suivante, rejouer…)
+ * @param {boolean} [o.win]   - victoire (ou record) : animation de victoire et fanfare du kit de sons
  * @param {number} [o.delay]   - ms avant de relire le compte (gain versé par le serveur juste après la fin)
  */
 async function show(o = {}) {
@@ -120,6 +121,7 @@ async function show(o = {}) {
     if (o.delay) await new Promise(r => setTimeout(r, o.delay));
     const a = window.twitchAuth?.isLoggedIn ? await window.economy?.refresh() : null;
     render(o, s, a);
+    if (o.win) window.BoardFx?.victory();
 }
 
 function computeGains(s, a) {
@@ -185,12 +187,12 @@ function render(o, s, a) {
     }
 
     const pic = (c, i) => c.pic
-        ? `<img class="bilan__pic" src="${esc(c.pic)}" alt="" loading="lazy">`
-        : `<span class="bilan__pic" data-i="${i}">${esc((c.name || '?')[0].toUpperCase())}</span>`;
+        ? `<img class="bilan__pic" data-look-pic="${esc(c.login)}" src="${esc(c.pic)}" alt="" loading="lazy">`
+        : `<span class="bilan__pic" data-look-pic="${esc(c.login)}" data-i="${i}">${esc((c.name || '?')[0].toUpperCase())}</span>`;
     const viewers = top.length
         ? `<ol class="bilan__top">${top.map((c, i) => `<li class="${c.login === me ? 'is-me' : ''}">
                 <span class="bilan__rank">${i + 1}</span>${pic(c, i)}
-                <span class="bilan__who"><b>${esc(c.name)}</b><small>${esc([c.via || T('coinfx.site', null, 'site'), c.best > 1 ? T('bilan.streakRow', { n: c.best }, `série de ${c.best}`) : ''].filter(Boolean).join(' · '))}</small></span>
+                <span class="bilan__who"><b data-look-name="${esc(c.login)}">${esc(c.name)}</b><small>${esc([c.via || T('coinfx.site', null, 'site'), c.best > 1 ? T('bilan.streakRow', { n: c.best }, `série de ${c.best}`) : ''].filter(Boolean).join(' · '))}</small></span>
                 <b class="bilan__n">+${fmt(c.coins)}</b></li>`).join('')}</ol>`
         : `<p class="bilan__empty">${esc(T('bilan.noViewers', null, 'Aucun viewer crédité cette partie'))}</p>`;
 

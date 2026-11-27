@@ -376,6 +376,9 @@ class GameEngine {
 
     playMoveSound(move) {
         try {
+            window.BoardFx?.move({ from: move.from, to: move.to, capture: !!move.captured });
+            const kind = this.chess.in_check?.() ? 'check' : move.captured ? 'capture' : 'move';
+            if (window.SoundKit?.play(kind, 1, { mate: !!this.chess.in_checkmate?.() })) return;
             if (this.chess.in_check?.()) {
                 this.sounds.check?.play();
             } else if (move.captured) {

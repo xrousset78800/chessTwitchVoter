@@ -19,6 +19,10 @@ import { registerPgnSource } from './utils/pgnExport.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import './core/economy.js';
+import './core/cosmetics.js';
+import './core/looks.js';
+import './utils/soundKit.js';
+import './components/boardFx.js';
 import './components/coinFx.js';
 import GameBilan from './components/gameBilan.js';
 import './core/achievements.js';
@@ -1006,6 +1010,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             title: tr('bilan.rushTitle', { n: result.score }),
             meta: `${tr('ui.rushEnd.ratingMax')} ${result.maxRating || '—'} · ${tr('ui.rushEnd.duration')} ${mins}:${String(secs).padStart(2, '0')}`,
             note: status,
+            win: !!result.isNewRecord && result.score > 0,
             next: { label: tr('ui.rushEnd.replay'), icon: 'fa-redo', run: () => this.restartRush() },
         });
     },
@@ -2671,7 +2676,12 @@ const PresetGame = {
         // Bilan : pions et XP de la partie, viewers crédités (Multi : le résultat est versé par le serveur juste après)
         const vs = gameEngine.vsBot;
         const opp = isMulti ? MultiRoom.opponent : null;
+        // Victoire du chat : mat donné par notre camp (contre Stockfish ou en Multi), ou tout mat en partie libre
+        const mated = gameEngine.chess.in_checkmate?.() ? gameEngine.chess.turn() : null;
+        const mySide = isMulti ? String(window.playerColor || '')[0] : vs ? (vs.color === 'w' ? 'b' : 'w') : null;
+        const win = !!mated && (!mySide || mated !== mySide);
         GameBilan.show({
+            win,
             mode: isMulti ? 'multi' : 'game',
             title: result,
             meta: [

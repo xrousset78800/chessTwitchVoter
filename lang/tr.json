@@ -1171,7 +1171,9 @@
       "marble": "Mermer",
       "linen": "Keten",
       "stone": "Taş"
-    }
+    },
+    "holo": "Holo",
+    "lava": "Lav"
   },
   "seo": {
     "title": "Crowd Gambit — Twitch sohbetinin oynadığı satranç",
@@ -1576,6 +1578,10 @@
       "mat-de-roi": {
         "name": "Şah matı",
         "desc": "Şahı oynatarak mat et (açık mat)"
+      },
+      "fidele": {
+        "name": "Sadık",
+        "desc": "Günlük bonusta 30 günlük seriye ulaş"
       }
     }
   },
@@ -1605,7 +1611,12 @@
       "boards": "Karelerin iki rengi.",
       "mats": "Kare renklerinin üstüne konan bir doku.",
       "palettes": "Oyların çarkı, şeridi ve podyumu, izleyicilerin de görür.",
-      "themes": "Sitenin tüm sayfalarının arka planı ve kartları, sadece sana."
+      "themes": "Sitenin tüm sayfalarının arka planı ve kartları, sadece sana.",
+      "sounds": "Hamle, alma, şah ve çark sesleri, sadece senin için.",
+      "effects": "Tahtada hamle izi, alma efekti ve zafer animasyonu.",
+      "stream": "Oyun sayfanda çark çemberi ve çekilen hamlenin oku.",
+      "profile": "Başkalarının gördüğü: isim rengi, çerçeve, rozet ve piyon uçuşun.",
+      "packs": "Birden fazla eşya bir arada, tek tek almaktan ucuz."
     },
     "buy": "Satın al",
     "confirm": "Onayla ({n} ♟)?",
@@ -1627,7 +1638,12 @@
       "boards": "Tahtalar",
       "mats": "Dokular",
       "palettes": "Çekiliş",
-      "themes": "Temalar"
+      "themes": "Temalar",
+      "sounds": "Sesler",
+      "effects": "Efektler",
+      "stream": "Yayın",
+      "profile": "Profil",
+      "packs": "Paketler"
     },
     "filter": {
       "all": "Hepsi",
@@ -1637,9 +1653,75 @@
     "fit": {
       "title": "Deneme kabini",
       "hint": "Satın almadan önce burada denemek için bir eşyaya tıkla.",
-      "reset": "Ekipmanıma dön"
+      "reset": "Ekipmanıma dön",
+      "hintFx": "Denemek için bir eşyaya tıkla: gösterim tahtada oynar."
     },
-    "empty": "Bu filtreyle burada bir şey yok."
+    "empty": "Bu filtreyle burada bir şey yok.",
+    "levelShort": "Sv. {n}",
+    "levelNeed": "Seviye {n} gerekli",
+    "levelGift": "Seviye {n} hediyesi",
+    "listen": "Dinle",
+    "preview": "Göster",
+    "unequip": "Çıkar",
+    "errEquip": "Bu eşya şu anda kuşanılamıyor.",
+    "deal": {
+      "title": "Haftanın fırsatı",
+      "until": "{date} tarihine kadar"
+    },
+    "slot": {
+      "sound": "Ses paketi",
+      "trail": "İz",
+      "capture": "Alma efekti",
+      "win": "Zafer",
+      "wheel": "Çark",
+      "arrow": "Ok",
+      "color": "İsim rengi",
+      "frame": "Avatar çerçevesi",
+      "badge": "Rozet",
+      "fly": "Piyon uçuşu"
+    },
+    "item": {
+      "kit-classic": "Klasik",
+      "kit-wood": "Ahşap",
+      "kit-8bit": "8-bit",
+      "kit-marble": "Mermer",
+      "kit-arcade": "Arcade",
+      "kit-orchestra": "Orkestra",
+      "kit-fanfare": "Fanfar",
+      "trail-ember": "Kor",
+      "trail-ink": "Mürekkep",
+      "trail-stars": "Yıldızlar",
+      "cap-shards": "Kıymıklar",
+      "cap-dust": "Toz",
+      "cap-shock": "Şok dalgası",
+      "win-pawns": "Piyon yağmuru",
+      "win-crown": "Taç",
+      "win-fireworks": "Havai fişek",
+      "wheel-neon": "Neon",
+      "wheel-wood": "Ahşap",
+      "wheel-gold": "Altın",
+      "arrow-flame": "Alev",
+      "arrow-ice": "Buz",
+      "arrow-gold": "Altın",
+      "color-sky": "Gök",
+      "color-violet": "Mor",
+      "color-rose": "Pembe",
+      "color-gold": "Altın",
+      "frame-bronze": "Bronz",
+      "frame-silver": "Gümüş",
+      "frame-gold": "Altın",
+      "frame-mecene": "Hami",
+      "frame-crown": "Taç",
+      "badge-knight": "At",
+      "badge-flame": "Alev",
+      "badge-star": "Yıldız",
+      "badge-oracle": "Kâhin",
+      "badge-fidele": "Sadık",
+      "fly-stars": "Yıldızlar",
+      "fly-gold": "Altın",
+      "pack-arcade": "Arcade paketi",
+      "pack-wood": "Ahşap paketi"
+    }
   },
   "tlive": {
     "nextOther": "Başka bir oyunu tahmin et",

@@ -37,7 +37,8 @@ const RULES = {
 // Les ids sont ceux du client (window.unlockedRewards) : js/utils/pieceSet.js (pièces, couleurs,
 // matières « mat-* ») et js/components/votePalettes.js (couleurs du tirage « pal-* »).
 // Repères : un stream de ~2 h rapporte ~300 pions (coups plafonnés + bonus du jour + Rush).
-//   commun 200–300 (≈ 1 stream), rare 400–600 (≈ 2 streams), épique 700–1500 (≈ 3 à 5 streams).
+//   commun 200–500 (≈ 1 stream), rare 600–1200 (≈ 2 à 4 streams), épique 1800–3000 (niveau 10),
+//   légendaire 4000–6000 (niveau 25). level : niveau requis pour acheter. unlockLevel : offert à ce niveau.
 const CATALOG = {
     // Sets de pièces
     flat:   { kind: 'pieces', price: 300 },
@@ -50,6 +51,8 @@ const CATALOG = {
     emerald:  { kind: 'pieces', price: 600 },
     obsidian: { kind: 'pieces', price: 700 },
     toxic:    { kind: 'pieces', price: 1000 },
+    holo:     { kind: 'pieces', price: 5000, level: 25 },
+    lava:     { kind: 'pieces', price: 6000, level: 25 },
     // Couleurs d'échiquier
     wood:   { kind: 'board', price: 200 },
     green:  { kind: 'board', price: 200 },
@@ -115,7 +118,72 @@ const CATALOG = {
     'bg-ink': { kind: 'theme', price: 400 },
     // Titres
     'title-touche-a-tout': { kind: 'title', price: null },
+    // Kits de sons (coup, prise, échec, tic de la roue)
+    'kit-wood':      { kind: 'sound', price: 400 },
+    'kit-8bit':      { kind: 'sound', price: 800 },
+    'kit-marble':    { kind: 'sound', price: 1000 },
+    'kit-arcade':    { kind: 'sound', price: 2000, level: 10 },
+    'kit-orchestra': { kind: 'sound', price: 4500, level: 25 },
+    'kit-fanfare':   { kind: 'sound', price: null },
+    // Traînées du coup joué
+    'trail-ember': { kind: 'trail', price: 600 },
+    'trail-ink':   { kind: 'trail', price: 800 },
+    'trail-stars': { kind: 'trail', price: 1200 },
+    // Effets de prise
+    'cap-shards': { kind: 'capture', price: 800 },
+    'cap-dust':   { kind: 'capture', price: 1000 },
+    'cap-shock':  { kind: 'capture', price: 1500 },
+    // Animations de victoire
+    'win-pawns':     { kind: 'win', price: 2000, level: 10 },
+    'win-crown':     { kind: 'win', price: 2500, level: 10 },
+    'win-fireworks': { kind: 'win', price: 3000, level: 10 },
+    // Stream : habillage de la roue, flèche du coup tiré
+    'wheel-neon': { kind: 'wheel', price: 700 },
+    'wheel-wood': { kind: 'wheel', price: 1000 },
+    'wheel-gold': { kind: 'wheel', price: 1500 },
+    'arrow-flame': { kind: 'arrow', price: 600 },
+    'arrow-ice':   { kind: 'arrow', price: 800 },
+    'arrow-gold':  { kind: 'arrow', price: 1000 },
+    // Vu par les autres : couleur du pseudo, cadre d'avatar, badge
+    'color-sky':    { kind: 'color', price: 500 },
+    'color-violet': { kind: 'color', price: 500 },
+    'color-rose':   { kind: 'color', price: 500 },
+    'color-gold':   { kind: 'color', price: 500 },
+    'frame-bronze': { kind: 'frame', price: 800 },
+    'frame-silver': { kind: 'frame', price: 1500 },
+    'frame-gold':   { kind: 'frame', price: 3000, level: 10 },
+    'frame-mecene': { kind: 'frame', price: null },
+    'frame-crown':  { kind: 'frame', price: null, unlockLevel: 50 },
+    'badge-knight': { kind: 'badge', price: 1000 },
+    'badge-flame':  { kind: 'badge', price: 1500 },
+    'badge-star':   { kind: 'badge', price: 2000 },
+    'badge-oracle': { kind: 'badge', price: null },
+    'badge-fidele': { kind: 'badge', price: null },
+    // Envol des pions gagnés
+    'fly-stars': { kind: 'fly', price: 1200 },
+    'fly-gold':  { kind: 'fly', price: 1200 },
+    // Packs (≈ −15 %)
+    'pack-arcade': { kind: 'bundle', price: 3300, level: 10, items: ['kit-arcade', 'trail-stars', 'wheel-neon'] },
+    'pack-wood':   { kind: 'bundle', price: 1850, items: ['kit-wood', 'wheel-wood', 'trail-ink'] },
 };
+// Emplacements d'apparence visibles par les autres (POST /api/economy/look)
+const LOOK_SLOTS = { color: 'color', frame: 'frame', badge: 'badge' };
+
+/** Vitrine de la semaine : un objet achetable à −25 %, tiré selon la semaine ISO (même pour tout le monde) */
+function weeklyDeal(t = Date.now()) {
+    const d = new Date(t);
+    const u = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    const dow = (new Date(u).getUTCDay() + 6) % 7;                // lundi = 0
+    const monday = u - dow * 864e5;
+    const thu = new Date(monday + 3 * 864e5);
+    const y = thu.getUTCFullYear();
+    const week = 1 + Math.floor((thu - Date.UTC(y, 0, 1)) / (7 * 864e5));
+    const ids = Object.keys(CATALOG).filter(id => CATALOG[id].price >= 400 && CATALOG[id].kind !== 'bundle').sort();
+    let h = 2166136261;
+    for (const c of `${y}-W${week}`) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+    const id = ids[h % ids.length];
+    return { id, price: Math.round(CATALOG[id].price * 0.75 / 50) * 50, base: CATALOG[id].price, until: monday + 7 * 864e5 };
+}
 
 // Succes (registre partage avec le client) : stat + goal = debloque cote serveur, sinon par le client
 const ACHIEVEMENTS = require('./js/core/achievements.json').list;
@@ -188,6 +256,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         if (a.day !== today) {
             // Première activité du jour : bonus et série
             a.streak = a.lastDay && dayDiff(a.lastDay, today) === 1 ? a.streak + 1 : 1;
+            stats(a).bestStreak = Math.max(stats(a).bestStreak || 0, a.streak);
             a.lastDay = today;
             a.day = today;
             a.dayCoins = 0;
@@ -207,7 +276,30 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         if (daily) a.log.push({ at: Date.now(), source: 'daily', xp: 0, coins: daily, streak: a.streak });
         if (a.log.length > MAX_LOG) a.log.splice(0, a.log.length - MAX_LOG);
         store.save();
-        return { xp, coins, daily, levelUp };
+        const result = { xp, coins, daily, levelUp };
+        if (daily) { const ach = checkAchievements(login); if (ach.length) result.achievements = ach; }
+        return result;
+    }
+
+    /** Objets possédés : achats + récompenses de succès récupérés + objets offerts au niveau atteint */
+    function ownedOf(a) {
+        if (!a) return [];
+        const set = new Set(a.owned || []);
+        for (const id of Object.keys(a.claimed || {})) { const r = ACH_BY_ID.get(id)?.reward; if (r) set.add(r); }
+        const lvl = levelInfo(a.xp || 0).level;
+        for (const [id, it] of Object.entries(CATALOG)) if (it.unlockLevel && lvl >= it.unlockLevel) set.add(id);
+        return [...set];
+    }
+
+    /** Apparence publique (couleur du pseudo, cadre, badge) : seulement des objets encore possédés */
+    function lookOf(a) {
+        if (!a?.look) return null;
+        const owned = new Set(ownedOf(a)), out = {};
+        for (const slot of Object.keys(LOOK_SLOTS)) {
+            const id = a.look[slot];
+            if (id && owned.has(id) && CATALOG[id]?.kind === LOOK_SLOTS[slot]) out[slot] = id;
+        }
+        return Object.keys(out).length ? out : null;
     }
 
     // ---------- Sources (appelées par server.js / stats.js) ----------
@@ -295,7 +387,8 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
             streak: a?.streak || 0,
             dayCoins: a?.day === day() ? a.dayCoins : 0,
             dailyCoinCap: RULES.dailyCoinCap,
-            owned: a?.owned || [],
+            owned: ownedOf(a),
+            look: lookOf(a) || {},
             achievements: a?.achievements || {},
             claimed: a?.claimed || {},
             stats: a?.stats || {},
@@ -306,7 +399,28 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
     // ---------- API ----------
 
     app.get('/api/economy/rules', (req, res) => {
-        res.json({ rules: RULES, catalog: CATALOG, levels: Array.from({ length: 20 }, (_, i) => xpForLevel(i + 1)) });
+        res.json({ rules: RULES, catalog: CATALOG, deal: weeklyDeal(), levels: Array.from({ length: 60 }, (_, i) => xpForLevel(i + 1)) });
+    });
+
+    // Choisir l'apparence publique : { slot: color|frame|badge, item: id|null }
+    app.post('/api/economy/look', requireTwitch, (req, res) => {
+        const slot = String(req.body?.slot || '');
+        if (!Object.hasOwn(LOOK_SLOTS, slot)) return res.status(400).json({ error: 'Emplacement inconnu' });
+        const id = req.body?.item == null ? null : String(req.body.item);
+        const a = account(req.twitch.login);
+        if (id && (CATALOG[id]?.kind !== LOOK_SLOTS[slot] || !ownedOf(a).includes(id))) return res.status(403).json({ error: 'Objet non possédé' });
+        a.look ||= {};
+        if (id) a.look[slot] = id; else delete a.look[slot];
+        store.save();
+        res.json(publicAccount(a.login));
+    });
+
+    // Apparence publique de plusieurs viewers : ?l=a,b,c (100 max) → { login: { color, frame, badge } }
+    app.get('/api/economy/looks', (req, res) => {
+        const logins = String(req.query.l || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean).slice(0, 100);
+        const out = {};
+        for (const l of logins) { const look = lookOf(store.data[l]); if (look) out[l] = look; }
+        res.set('Cache-Control', 'public, max-age=30').json(out);
     });
 
     app.get('/api/economy/me', requireTwitch, (req, res) => res.json(publicAccount(req.twitch.login)));
@@ -350,18 +464,24 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         if (!item) return res.status(404).json({ error: 'Objet inconnu' });
         if (item.price == null) return res.status(403).json({ error: 'Objet réservé aux succès' });
         const a = account(req.twitch.login);
-        if (a.owned.includes(id)) return res.status(409).json({ error: 'Déjà possédé' });
-        if (a.coins < item.price) return res.status(402).json({ error: 'Pas assez de pions', missing: item.price - a.coins });
-        a.coins -= item.price;
-        a.spent += item.price;
-        a.owned.push(id);
-        a.log.push({ at: Date.now(), source: 'buy', item: id, xp: 0, coins: -item.price });
+        const lvl = levelInfo(a.xp).level;
+        if (item.level && lvl < item.level) return res.status(403).json({ error: `Niveau ${item.level} requis`, level: item.level });
+        const owned = ownedOf(a);
+        const adds = item.kind === 'bundle' ? item.items.filter(x => !owned.includes(x)) : owned.includes(id) ? [] : [id];
+        if (!adds.length) return res.status(409).json({ error: 'Déjà possédé' });
+        const deal = weeklyDeal();
+        const price = deal.id === id ? deal.price : item.price;
+        if (a.coins < price) return res.status(402).json({ error: 'Pas assez de pions', missing: price - a.coins });
+        a.coins -= price;
+        a.spent += price;
+        a.owned.push(...adds);
+        a.log.push({ at: Date.now(), source: 'buy', item: id, xp: 0, coins: -price });
         if (a.log.length > MAX_LOG) a.log.splice(0, a.log.length - MAX_LOG);
         store.save();
         res.json(publicAccount(a.login));
     });
 
-    return { grant, checkAchievements, onTurns, onVotePicked, onRushRun, onMultiResult, onAchievement, claimAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store };
+    return { grant, checkAchievements, onTurns, onVotePicked, onRushRun, onMultiResult, onAchievement, claimAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store, weeklyDeal };
 };
 module.exports.RULES = RULES;
 module.exports.levelInfo = levelInfo;
