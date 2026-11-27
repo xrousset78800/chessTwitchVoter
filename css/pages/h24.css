@@ -225,6 +225,14 @@
     #page-h24[data-mode="predict"] .h24-plast > .tv-card { flex: 1 1 auto; min-height: 160px; display: flex; flex-direction: column; }
     #page-h24[data-mode="predict"] .h24-plast > .tv-card > .tv-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
     #page-h24[data-mode="predict"] .h24-plast .tv-list { max-height: none; }
+    /* Votes visibles (plus de bandeau « Votes » sous l'échiquier) : le tableau des votants prend toute la place qui reste */
+    #page-h24 .sandbox__sidebar > .votes-slot:has(.h24-vlist) { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 0; scrollbar-width: thin; display: flex; flex-direction: column; }
+    #page-h24 #h24-votes-panel:has(.h24-vlist) .votes-slot__podium,
+    #page-h24 #h24-votes:has(.h24-vlist) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; max-height: none; overflow: visible; }
+    #page-h24 .h24-vlist { flex: 1 1 auto; min-height: 0; }
+    #page-h24 .h24-vlist > .tv-card { flex: 1 1 auto; min-height: 160px; display: flex; flex-direction: column; }
+    #page-h24 .h24-vlist > .tv-card > .tv-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+    #page-h24 .h24-vlist .tv-list { max-height: none; }
     #page-h24 .h24-card { flex: none; }
 }
 
@@ -297,7 +305,6 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 /* Mode bande : le total des votes du tour dans l'étiquette « Votes » (plus en bas de la colonne de droite) */
 .h24-ticker__count { margin-left: 6px; padding-left: 6px; border-left: 1px solid rgba(255, 255, 255, 0.35); font-variant-numeric: tabular-nums; }
 .h24-ticker__count:empty { display: none; }
-#page-h24 #h24-votes-panel.is-band #h24-votes-total { display: none; }
 /* Un vote : photo Twitch, pseudo avec la provenance dessous (#chaîne, site, bot), puis le coup — compact */
 .vote-ticker__item--who { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 2px; border-radius: 2px; background: rgba(255, 255, 255, 0.05); }
 .vote-ticker__pic {

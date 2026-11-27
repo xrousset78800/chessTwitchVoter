@@ -1672,8 +1672,8 @@ const H24Page = {
         if (docked) {
             if (area.parentElement !== slot) slot.appendChild(area);
         } else {
-            // Bande sous le bandeau des votes, lui-même collé sous l'échiquier
-            const after = $('h24-ticker') || document.querySelector('#page-h24 .board-wrapper');
+            // Bande collée sous l'échiquier
+            const after = document.querySelector('#page-h24 .board-wrapper');
             if (after && area.previousElementSibling !== after) after.after(area);
         }
     },
