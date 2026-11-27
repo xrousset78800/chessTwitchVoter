@@ -926,7 +926,7 @@ const H24Page = {
 
     /**
      * Vue incrustée : échiquier ou vidéo ?
-     * - Phantom branché : la vidéo pendant qu'il déplace les pièces (et un instant après), l'échiquier le reste
+     * - Phantom branché : la vidéo pendant qu'il déplace les pièces, l'échiquier le reste
      *   du temps (votes, tirage, attente du moteur…) ;
      * - sans Phantom : la vidéo, sauf quand l'échiquier bouge (liveBusy).
      */
@@ -936,7 +936,7 @@ const H24Page = {
         const now = Date.now();
         const ph = this.state?.regie?.phantom;
         const phantom = ph === 'ok' || ph === 'busy';
-        if (this._livePh === 'busy' && ph !== 'busy') { this._livePhTail = now + 1200; this._livePhSoon = 0; }
+        if (this._livePh === 'busy' && ph !== 'busy') { this._livePhTail = now + 250; this._livePhSoon = 0; }
         this._livePh = ph;
         const board = phantom
             ? !(ph === 'busy' || now < (this._livePhTail || 0) || now < (this._livePhSoon || 0)) || this.revealing || now < (this._liveHoldUntil || 0)
