@@ -1660,6 +1660,8 @@ const H24Page = {
         slot.classList.toggle('votes-slot--wheel', docked);
         if (docked) {
             if (area.parentElement !== slot) slot.appendChild(area);
+            // Plus de largeur ni de décalage de la bande : sinon la roue déborde du panneau (barre de défilement horizontale)
+            this.fitBand();
         } else {
             // Bande collée sous l'échiquier
             const after = document.querySelector('#page-h24 .board-wrapper');
@@ -1672,7 +1674,7 @@ const H24Page = {
     fitBand() {
         const area = $('h24-wheel-area');
         if (!area) return;
-        if (!area.classList.contains('wheel-area--band')) { area.style.width = area.style.maxWidth = area.style.marginLeft = ''; return; }
+        if (!area.classList.contains('wheel-area--band')) { area.style.width = area.style.maxWidth = area.style.marginLeft = area.style.marginRight = ''; return; }
         const b = document.querySelector('#h24-board .board-b72b1') || $('h24-board');
         const parent = area.parentElement;
         if (!b || !parent) return;
