@@ -137,16 +137,16 @@
 .shop-tabs {
     display: flex;
     gap: 4px;
+    flex-wrap: wrap;   /* 10 rayons : ils passent à la ligne plutôt que de défiler sans barre visible */
+    row-gap: 0;
     border-bottom: 1px solid var(--border-subtle);
-    overflow-x: auto;
-    scrollbar-width: none;
 }
 .shop-tab {
     display: flex;
     align-items: center;
     gap: 7px;
     flex-shrink: 0;
-    padding: 9px 14px;
+    padding: 9px 12px;
     border: 0;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
