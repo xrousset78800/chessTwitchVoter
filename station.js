@@ -67,6 +67,7 @@ const WINNER_PTS = (ply) => ply < 30 ? 10 : ply < 60 ? 6 : ply < 90 ? 3 : 1;
 // Contre Stockfish : niveaux proposés au vote, dans l'ordre (1320 par défaut)
 const VS_LEVELS = [300, 600, 900, 1320, 1500, 1800, 2100, 2400];
 const VS_DEFAULT = 1320;
+const VS_AFTER_PHANTOM_MS = 2500;   // Phantom branché : Stockfish attend qu'il ait fini (et ce délai) avant de jouer
 const VS_MIN_MS = 1500;           // Stockfish joue au plus tôt après ce délai (coup lisible)
 // Options votées après le mode, une à une, choix dans l'ordre logique ; def = valeur si personne ne vote
 const OPT = {
@@ -541,13 +542,13 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!b && s.mode === 'predict') return startPredict();
         if (!b && s.mode === 'classic') s.mode = s.options.opponent || 'teams';
         if (!b) {
+            // Plus d'étape d'inscription : tout le monde est inscrit d'office (et peut rejoindre en cours de partie)
             s.teams = { w: [], b: [] };
             s.optOut.clear();
             if (s.mode === 'bot') s.vsSide = pick(['w', 'b']);
-            setPhase('signup', DUR.signup);
+            s.phase = 'play';
             autoJoin();
-            emitMeAll();
-            return;
+            return startGame();
         }
         s.ballot = { id: b.id, choices: b.choices, def: b.def, games: b.games, votes: new Map() };
         setPhase('voteOptions', DUR.voteOption);
@@ -645,6 +646,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             const play = () => {
                 if (s.game !== g || g.result || g.chess.fen() !== fen) return;
                 if (s.paused) return later(1000, play);
+                // Phantom : le coup des viewers d'abord posé sur le vrai échiquier, puis l'échiquier à l'écran un instant
+                const wait = regie.phantom === 'ok' ? VS_AFTER_PHANTOM_MS - (Date.now() - (regie.phantomIdleAt || 0)) : 0;
+                if (wait > 0) return later(wait, play);
                 playMove(san || fallback());
             };
             if (s.game !== g) return;
@@ -1498,7 +1502,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             const l = me();
             if (!l || !REGIE.has(l)) return;
             // Le Phantom appartient à l'onglet qui le suit : un autre onglet « hors direct » ne l'écrase pas
-            if (['ok', 'busy', 'error'].includes(data.phantom)) { regie.socket = socket.id; regie.phantom = data.phantom; }
+            if (['ok', 'busy', 'error'].includes(data.phantom)) {
+                if (data.phantom === 'ok' && regie.phantom !== 'ok') regie.phantomIdleAt = Date.now();
+                regie.socket = socket.id;
+                regie.phantom = data.phantom;
+            }
             else if (data.phantom === 'off' && regie.socket === socket.id) { regie.socket = null; regie.phantom = 'off'; }
             if (typeof data.paused === 'boolean') regie.paused = data.paused;
             if (Number.isInteger(data.bots) && data.bots !== bots.list.length) {

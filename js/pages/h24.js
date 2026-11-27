@@ -26,7 +26,7 @@ const $ = (id) => document.getElementById(id);
 const SOUNDS = { move: 'mp3/move.mp3', capture: 'mp3/take.mp3', check: 'mp3/check.mp3', end: 'mp3/end.wav' };
 const PIECES = p => window.pieceUrl(p);   // set de pièces choisi
 // Ordre d'affichage du cycle : on choisit (mode, options), on s'inscrit, on joue, puis le récap avant le tour suivant
-const STEPS = ['voteMode', 'voteOptions', 'signup', 'play', 'recap'];
+const STEPS = ['voteMode', 'voteOptions', 'play', 'recap'];
 
 /** Nombre de cases dont le contenu diffère entre deux positions (FEN ou 'start') */
 function squaresChanged(a, b) {
@@ -530,6 +530,8 @@ const H24Page = {
             // nouvelle partie remplace la position sans faire voyager les pièces à travers l'échiquier
             this.board.position(fen, this.boardFen != null && squaresChanged(this.boardFen, fen) <= 4);
             // L'échiquier bouge (coup, nouvelle partie, retournement) : on le montre, puis la vidéo revient en fondu
+            // Phantom branché : il va déplacer les pièces, la caméra passe tout de suite (sans attendre qu'il le signale)
+            if (this.boardFen != null) this._livePhSoon = Date.now() + 2000;
             this.liveBusy(2500, false, 0);
             this.boardKey = key;
             this.boardFen = fen;
@@ -934,15 +936,15 @@ const H24Page = {
         const now = Date.now();
         const ph = this.state?.regie?.phantom;
         const phantom = ph === 'ok' || ph === 'busy';
-        if (this._livePh === 'busy' && ph !== 'busy') this._livePhTail = now + 1200;
+        if (this._livePh === 'busy' && ph !== 'busy') { this._livePhTail = now + 1200; this._livePhSoon = 0; }
         this._livePh = ph;
         const board = phantom
-            ? !(ph === 'busy' || now < (this._livePhTail || 0)) || this.revealing || now < (this._liveHoldUntil || 0)
+            ? !(ph === 'busy' || now < (this._livePhTail || 0) || now < (this._livePhSoon || 0)) || this.revealing || now < (this._liveHoldUntil || 0)
             : now < (this._liveBusyUntil || 0);
         box.classList.toggle('is-board-busy', board);
         box.classList.toggle('is-phantom', phantom);
         clearTimeout(this._liveBusyT);
-        const next = [this._liveBusyUntil, this._liveHoldUntil, this._livePhTail].filter(x => x > now);
+        const next = [this._liveBusyUntil, this._liveHoldUntil, this._livePhTail, this._livePhSoon].filter(x => x > now);
         if (next.length) this._liveBusyT = setTimeout(() => this.liveSync(), Math.min(...next) - now + 30);
     },
 
@@ -2084,7 +2086,7 @@ const H24Page = {
             if (!this.revealing) return;
             this.revealing = false;
             // Coup révélé : encore quelques secondes d'échiquier, puis la vidéo revient
-            this.liveBusy(2500, true, 800);
+            this.liveBusy(2500, true, 0);
             area.classList.remove('is-spinning');
             markPodiumWinner($('h24-votes'), g.draw?.winner);
             this.markVoters(g.draw?.winner, g.draw?.voter);
