@@ -1367,7 +1367,8 @@
       "rush": "Puzzle Rush",
       "votes": "Sohbet oyları",
       "predict": "Tahminler",
-      "moves": "Dikkat çeken hamleler"
+      "moves": "Dikkat çeken hamleler",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Bronz",
@@ -1583,6 +1584,38 @@
       "fidele": {
         "name": "Sadık",
         "desc": "Günlük bonusta 30 günlük seriye ulaş"
+      },
+      "stockfish-300": {
+        "name": "Yavru balık",
+        "desc": "Stockfish'i 300 seviyesinde yen, tek başına ya da sohbetinle"
+      },
+      "stockfish-600": {
+        "name": "Kaya balığı",
+        "desc": "Stockfish'i 600 seviyesinde yen, tek başına ya da sohbetinle"
+      },
+      "stockfish-900": {
+        "name": "Alabalık",
+        "desc": "Stockfish'i 900 seviyesinde yen, tek başına ya da sohbetinle"
+      },
+      "stockfish-1320": {
+        "name": "Turna",
+        "desc": "Stockfish'i 1320 seviyesinde yen, tek başına ya da sohbetinle"
+      },
+      "stockfish-1500": {
+        "name": "Ton balığı",
+        "desc": "Stockfish'i 1500 seviyesinde yen, tek başına ya da sohbetinle"
+      },
+      "stockfish-1800": {
+        "name": "Kılıç balığı",
+        "desc": "Stockfish'i 1800 seviyesinde yen, tek başına ya da sohbetinle"
+      },
+      "stockfish-2100": {
+        "name": "Köpek balığı",
+        "desc": "Stockfish'i 2100 seviyesinde yen, tek başına ya da sohbetinle"
+      },
+      "stockfish-2400": {
+        "name": "Leviathan",
+        "desc": "Stockfish'i 2400+ seviyesinde yen, tek başına ya da sohbetinle"
       }
     }
   },

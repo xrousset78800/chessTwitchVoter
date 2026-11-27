@@ -1367,7 +1367,8 @@
       "rush": "Puzzle Rush",
       "votes": "Głosy czatu",
       "predict": "Typy",
-      "moves": "Wyjątkowe ruchy"
+      "moves": "Wyjątkowe ruchy",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Brąz",
@@ -1583,6 +1584,38 @@
       "fidele": {
         "name": "Wierny",
         "desc": "Osiągnij serię 30 dni bonusu dziennego"
+      },
+      "stockfish-300": {
+        "name": "Płotka",
+        "desc": "Pokonaj Stockfisha na poziomie 300, solo lub z czatem"
+      },
+      "stockfish-600": {
+        "name": "Kiełb",
+        "desc": "Pokonaj Stockfisha na poziomie 600, solo lub z czatem"
+      },
+      "stockfish-900": {
+        "name": "Pstrąg",
+        "desc": "Pokonaj Stockfisha na poziomie 900, solo lub z czatem"
+      },
+      "stockfish-1320": {
+        "name": "Szczupak",
+        "desc": "Pokonaj Stockfisha na poziomie 1320, solo lub z czatem"
+      },
+      "stockfish-1500": {
+        "name": "Tuńczyk",
+        "desc": "Pokonaj Stockfisha na poziomie 1500, solo lub z czatem"
+      },
+      "stockfish-1800": {
+        "name": "Miecznik",
+        "desc": "Pokonaj Stockfisha na poziomie 1800, solo lub z czatem"
+      },
+      "stockfish-2100": {
+        "name": "Rekin",
+        "desc": "Pokonaj Stockfisha na poziomie 2100, solo lub z czatem"
+      },
+      "stockfish-2400": {
+        "name": "Lewiatan",
+        "desc": "Pokonaj Stockfisha na poziomie 2400+, solo lub z czatem"
       }
     }
   },

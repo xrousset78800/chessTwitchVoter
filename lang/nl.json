@@ -1367,7 +1367,8 @@
       "rush": "Puzzle Rush",
       "votes": "Stemmen van de chat",
       "predict": "Voorspellingen",
-      "moves": "Opmerkelijke zetten"
+      "moves": "Opmerkelijke zetten",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Brons",
@@ -1583,6 +1584,38 @@
       "fidele": {
         "name": "Trouw",
         "desc": "Een reeks van 30 dagen dagbonus halen"
+      },
+      "stockfish-300": {
+        "name": "Klein grut",
+        "desc": "Versla Stockfish niveau 300, alleen of met je chat"
+      },
+      "stockfish-600": {
+        "name": "Grondel",
+        "desc": "Versla Stockfish niveau 600, alleen of met je chat"
+      },
+      "stockfish-900": {
+        "name": "Forel",
+        "desc": "Versla Stockfish niveau 900, alleen of met je chat"
+      },
+      "stockfish-1320": {
+        "name": "Snoek",
+        "desc": "Versla Stockfish niveau 1320, alleen of met je chat"
+      },
+      "stockfish-1500": {
+        "name": "Tonijn",
+        "desc": "Versla Stockfish niveau 1500, alleen of met je chat"
+      },
+      "stockfish-1800": {
+        "name": "Zwaardvis",
+        "desc": "Versla Stockfish niveau 1800, alleen of met je chat"
+      },
+      "stockfish-2100": {
+        "name": "Haai",
+        "desc": "Versla Stockfish niveau 2100, alleen of met je chat"
+      },
+      "stockfish-2400": {
+        "name": "Leviathan",
+        "desc": "Versla Stockfish niveau 2400+, alleen of met je chat"
       }
     }
   },

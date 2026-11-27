@@ -1367,7 +1367,8 @@
       "rush": "Puzzle Rush",
       "votes": "Votos do chat",
       "predict": "Palpites",
-      "moves": "Lances notáveis"
+      "moves": "Lances notáveis",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Bronze",
@@ -1583,6 +1584,38 @@
       "fidele": {
         "name": "Fiel",
         "desc": "Atingir uma série de 30 dias de bónus diário"
+      },
+      "stockfish-300": {
+        "name": "Peixinho",
+        "desc": "Vence o Stockfish nível 300, a solo ou com o teu chat"
+      },
+      "stockfish-600": {
+        "name": "Góbio",
+        "desc": "Vence o Stockfish nível 600, a solo ou com o teu chat"
+      },
+      "stockfish-900": {
+        "name": "Truta",
+        "desc": "Vence o Stockfish nível 900, a solo ou com o teu chat"
+      },
+      "stockfish-1320": {
+        "name": "Lúcio",
+        "desc": "Vence o Stockfish nível 1320, a solo ou com o teu chat"
+      },
+      "stockfish-1500": {
+        "name": "Atum",
+        "desc": "Vence o Stockfish nível 1500, a solo ou com o teu chat"
+      },
+      "stockfish-1800": {
+        "name": "Peixe-espada",
+        "desc": "Vence o Stockfish nível 1800, a solo ou com o teu chat"
+      },
+      "stockfish-2100": {
+        "name": "Tubarão",
+        "desc": "Vence o Stockfish nível 2100, a solo ou com o teu chat"
+      },
+      "stockfish-2400": {
+        "name": "Leviatã",
+        "desc": "Vence o Stockfish nível 2400+, a solo ou com o teu chat"
       }
     }
   },

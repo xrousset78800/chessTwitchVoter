@@ -1367,7 +1367,8 @@
       "rush": "Puzzle Rush",
       "votes": "Voti della chat",
       "predict": "Pronostici",
-      "moves": "Mosse notevoli"
+      "moves": "Mosse notevoli",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Bronzo",
@@ -1583,6 +1584,38 @@
       "fidele": {
         "name": "Fedele",
         "desc": "Raggiungere una serie di 30 giorni di bonus giornaliero"
+      },
+      "stockfish-300": {
+        "name": "Pesciolino",
+        "desc": "Batti Stockfish livello 300, da solo o con la tua chat"
+      },
+      "stockfish-600": {
+        "name": "Gobione",
+        "desc": "Batti Stockfish livello 600, da solo o con la tua chat"
+      },
+      "stockfish-900": {
+        "name": "Trota",
+        "desc": "Batti Stockfish livello 900, da solo o con la tua chat"
+      },
+      "stockfish-1320": {
+        "name": "Luccio",
+        "desc": "Batti Stockfish livello 1320, da solo o con la tua chat"
+      },
+      "stockfish-1500": {
+        "name": "Tonno",
+        "desc": "Batti Stockfish livello 1500, da solo o con la tua chat"
+      },
+      "stockfish-1800": {
+        "name": "Pesce spada",
+        "desc": "Batti Stockfish livello 1800, da solo o con la tua chat"
+      },
+      "stockfish-2100": {
+        "name": "Squalo",
+        "desc": "Batti Stockfish livello 2100, da solo o con la tua chat"
+      },
+      "stockfish-2400": {
+        "name": "Leviatano",
+        "desc": "Batti Stockfish livello 2400+, da solo o con la tua chat"
       }
     }
   },

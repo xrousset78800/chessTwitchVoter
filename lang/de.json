@@ -1367,7 +1367,8 @@
       "rush": "Puzzle Rush",
       "votes": "Chat-Stimmen",
       "predict": "Tipps",
-      "moves": "Besondere Züge"
+      "moves": "Besondere Züge",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Bronze",
@@ -1583,6 +1584,38 @@
       "fidele": {
         "name": "Treu",
         "desc": "Eine Serie von 30 Tagen Tagesbonus erreichen"
+      },
+      "stockfish-300": {
+        "name": "Kleiner Fisch",
+        "desc": "Schlage Stockfish auf Stufe 300, allein oder mit deinem Chat"
+      },
+      "stockfish-600": {
+        "name": "Gründling",
+        "desc": "Schlage Stockfish auf Stufe 600, allein oder mit deinem Chat"
+      },
+      "stockfish-900": {
+        "name": "Forelle",
+        "desc": "Schlage Stockfish auf Stufe 900, allein oder mit deinem Chat"
+      },
+      "stockfish-1320": {
+        "name": "Hecht",
+        "desc": "Schlage Stockfish auf Stufe 1320, allein oder mit deinem Chat"
+      },
+      "stockfish-1500": {
+        "name": "Thunfisch",
+        "desc": "Schlage Stockfish auf Stufe 1500, allein oder mit deinem Chat"
+      },
+      "stockfish-1800": {
+        "name": "Schwertfisch",
+        "desc": "Schlage Stockfish auf Stufe 1800, allein oder mit deinem Chat"
+      },
+      "stockfish-2100": {
+        "name": "Hai",
+        "desc": "Schlage Stockfish auf Stufe 2100, allein oder mit deinem Chat"
+      },
+      "stockfish-2400": {
+        "name": "Leviathan",
+        "desc": "Schlage Stockfish auf Stufe 2400+, allein oder mit deinem Chat"
       }
     }
   },

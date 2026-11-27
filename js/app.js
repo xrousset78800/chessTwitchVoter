@@ -2836,6 +2836,8 @@ const PresetGame = {
         const mated = gameEngine.chess.in_checkmate?.() ? gameEngine.chess.turn() : null;
         const mySide = isMulti ? String(window.playerColor || '')[0] : vs ? (vs.color === 'w' ? 'b' : 'w') : null;
         const win = !!mated && (!mySide || mated !== mySide);
+        // Stockfish maté : succès du niveau (js/core/achievements.js)
+        if (win && vs && !isMulti) window.dispatchEvent(new CustomEvent('cg:botBeaten', { detail: { elo: vs.elo, solo: !!GameSession.current?.solo } }));
         GameBilan.show({
             win,
             solo: !!GameSession.current?.solo,

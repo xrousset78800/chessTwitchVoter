@@ -167,6 +167,15 @@ window.addEventListener('cg:gameStart', (e) => {
     else if (mode !== 'problems') achievements.unlock('bac-a-sable');
 });
 
+// ---------- Stockfish battu (solo ou avec le chat) : ce niveau et tous ceux en dessous ----------
+
+window.addEventListener('cg:botBeaten', (e) => {
+    const levels = window.BotEngine?.LEVELS || [];
+    const elo = window.BotEngine?.snapLevel(e.detail?.elo);
+    if (!elo) return;
+    achievements.unlock(...levels.filter(l => l <= elo).map(l => `stockfish-${l}`));
+});
+
 window.addEventListener('cg:linkCopied', () => achievements.unlock('lien-partage'));
 window.addEventListener('pieceSetChanged', () => achievements.unlock('relooking'));
 window.addEventListener('boardThemeChanged', () => achievements.unlock('relooking'));

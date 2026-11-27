@@ -1352,7 +1352,8 @@
       "rush": "Puzzle Rush",
       "votes": "Chat votes",
       "predict": "Predictions",
-      "moves": "Remarkable moves"
+      "moves": "Remarkable moves",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Bronze",
@@ -1568,6 +1569,38 @@
       "fidele": {
         "name": "Loyal",
         "desc": "Reach a 30-day daily bonus streak"
+      },
+      "stockfish-300": {
+        "name": "Small Fry",
+        "desc": "Beat Stockfish level 300, solo or with your chat"
+      },
+      "stockfish-600": {
+        "name": "Minnow",
+        "desc": "Beat Stockfish level 600, solo or with your chat"
+      },
+      "stockfish-900": {
+        "name": "Trout",
+        "desc": "Beat Stockfish level 900, solo or with your chat"
+      },
+      "stockfish-1320": {
+        "name": "Pike",
+        "desc": "Beat Stockfish level 1320, solo or with your chat"
+      },
+      "stockfish-1500": {
+        "name": "Tuna",
+        "desc": "Beat Stockfish level 1500, solo or with your chat"
+      },
+      "stockfish-1800": {
+        "name": "Swordfish",
+        "desc": "Beat Stockfish level 1800, solo or with your chat"
+      },
+      "stockfish-2100": {
+        "name": "Shark",
+        "desc": "Beat Stockfish level 2100, solo or with your chat"
+      },
+      "stockfish-2400": {
+        "name": "Leviathan",
+        "desc": "Beat Stockfish level 2400+, solo or with your chat"
       }
     }
   },

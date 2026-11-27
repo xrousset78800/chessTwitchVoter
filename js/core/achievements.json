@@ -1,6 +1,6 @@
 {
     "tiers": ["B", "A", "O", "P", "S"],
-    "categories": ["start", "rush", "votes", "predict", "moves"],
+    "categories": ["start", "bot", "rush", "votes", "predict", "moves"],
     "list": [
         { "id": "bienvenue", "cat": "start", "tier": "B" },
         { "id": "premier-coup", "cat": "start", "tier": "B", "stat": "turns", "goal": 1 },
@@ -57,6 +57,14 @@
         { "id": "mat-du-berger", "cat": "moves", "tier": "S", "secret": true },
         { "id": "mat-du-lion", "cat": "moves", "tier": "A" },
         { "id": "mat-de-pion", "cat": "moves", "tier": "A" },
-        { "id": "mat-de-roi", "cat": "moves", "tier": "S", "secret": true }
+        { "id": "mat-de-roi", "cat": "moves", "tier": "S", "secret": true },
+        { "id": "stockfish-300", "cat": "bot", "tier": "B" },
+        { "id": "stockfish-600", "cat": "bot", "tier": "B" },
+        { "id": "stockfish-900", "cat": "bot", "tier": "B" },
+        { "id": "stockfish-1320", "cat": "bot", "tier": "A" },
+        { "id": "stockfish-1500", "cat": "bot", "tier": "A" },
+        { "id": "stockfish-1800", "cat": "bot", "tier": "O" },
+        { "id": "stockfish-2100", "cat": "bot", "tier": "O" },
+        { "id": "stockfish-2400", "cat": "bot", "tier": "P" }
     ]
 }

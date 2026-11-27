@@ -1352,7 +1352,8 @@
       "rush": "Puzzle Rush",
       "votes": "Votes du chat",
       "predict": "Pronostics",
-      "moves": "Coups remarquables"
+      "moves": "Coups remarquables",
+      "bot": "Stockfish"
     },
     "tier": {
       "B": "Bronze",
@@ -1568,6 +1569,38 @@
       "fidele": {
         "name": "Fidèle",
         "desc": "Atteindre une série de 30 jours de bonus quotidien"
+      },
+      "stockfish-300": {
+        "name": "Fretin",
+        "desc": "Battre Stockfish niveau 300, en solo ou avec ton chat"
+      },
+      "stockfish-600": {
+        "name": "Goujon",
+        "desc": "Battre Stockfish niveau 600, en solo ou avec ton chat"
+      },
+      "stockfish-900": {
+        "name": "Truite",
+        "desc": "Battre Stockfish niveau 900, en solo ou avec ton chat"
+      },
+      "stockfish-1320": {
+        "name": "Brochet",
+        "desc": "Battre Stockfish niveau 1320, en solo ou avec ton chat"
+      },
+      "stockfish-1500": {
+        "name": "Thon",
+        "desc": "Battre Stockfish niveau 1500, en solo ou avec ton chat"
+      },
+      "stockfish-1800": {
+        "name": "Espadon",
+        "desc": "Battre Stockfish niveau 1800, en solo ou avec ton chat"
+      },
+      "stockfish-2100": {
+        "name": "Requin",
+        "desc": "Battre Stockfish niveau 2100, en solo ou avec ton chat"
+      },
+      "stockfish-2400": {
+        "name": "Léviathan",
+        "desc": "Battre Stockfish niveau 2400+, en solo ou avec ton chat"
       }
     }
   },
