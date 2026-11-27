@@ -313,12 +313,15 @@ body #page-h24 #h24-wheel-area.wheel-area--band {
 body #page-h24 #h24-wheel-area.wheel-area--band .wheel-band { border-radius: 0; outline: 0; }
 body #page-h24 #h24-wheel-area.wheel-area--band .wheel-band__canvas { border-radius: 0; }
 body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):not(.is-live) { transform: translateY(100%); }
-#page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox { padding-bottom: 92px; }
+#page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .sandbox { padding-bottom: 92px; }
 /* Place gardée pour la bande : les colonnes (hauteur de la fenêtre) raccourcissent d'autant, sinon la page défile */
 @media (min-width: 901px) {
-    #page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar,
-    #page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox__left { max-height: calc(100vh - var(--nav-height) - 96px); }
-    #page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 96px); }
+    /* L'échiquier (et ses bandeaux, le guide dessous) tient dans la hauteur de la fenêtre : pas de défilement de la page */
+    #page-h24 .board-container { max-width: min(560px, max(360px, calc(100vh - var(--nav-height) - 196px))); }
+    #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .board-container { max-width: min(560px, max(360px, calc(100vh - var(--nav-height) - 276px))); }
+    #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar,
+    #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .sandbox__left { max-height: calc(100vh - var(--nav-height) - 96px); }
+    #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 96px); }
 }
 
 /* Bandeau des votes sous l'échiquier */
@@ -619,7 +622,12 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 }
 #page-h24 .h24-turn { font-size: 0.82rem; }
 #page-h24 #h24-moves { padding: 8px; }
-#page-h24 #h24-moves .moves-panel__content { gap: 4px; }
+#page-h24 #h24-moves .moves-panel__content { gap: 3px; }
+/* Coups un peu plus compacts ; les groupes gardent leur hauteur (la liste défile au lieu de les tasser l'un sur l'autre) */
+#page-h24 #h24-moves .moves-group { flex-shrink: 0; gap: 3px; padding: 3px; min-height: 28px; }
+#page-h24 #h24-moves .moves-group button { padding: 3px 6px; font-size: 0.76rem; }
+#page-h24 #h24-moves .moves-group .piece-icon { width: 20px; font-size: 1.05rem; }
+#page-h24 #h24-moves .piece-icon__img { width: 20px; height: 20px; }
 @media (min-width: 901px) {
     #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 36px); }
     #page-h24 .sandbox__left { top: calc(var(--nav-height) + 8px); }
@@ -835,7 +843,13 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 .h24-plast { display: flex; flex-direction: column; gap: 12px; padding: 4px 2px; }
 .h24-plast > .live-card { margin: 0; }
 /* Pronostics à gauche (mode Prédiction en cours seulement) */
-.h24-pred > .live-card { margin: 0 0 12px; }
+.h24-pred > .live-card { margin: 0; }
+/* Prédiction en cours : la carte Pronostics remplace l'en-tête (qui n'avait plus que le titre), numéros d'étapes compris */
+#page-h24[data-mode="predict"][data-phase="play"] .watch-head { display: none; }
+#h24-pred .tp-head { justify-content: flex-start; }
+#h24-pred .tp-head .tp-stat { margin-left: auto; }
+.h24-pred__steps:empty { display: none; }
+.h24-pred__steps .h24-steps { margin: 0; }
 #page-h24:not([data-mode="predict"]) .h24-pred, #page-h24:not([data-phase="play"]) .h24-pred { display: none; }
 /* Partie sélectionnée : comme la page Tournois (Elo en petit, pendule à droite) */
 .h24-pgame .player-row { gap: 8px; }

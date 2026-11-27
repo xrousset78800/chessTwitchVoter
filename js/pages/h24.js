@@ -658,6 +658,7 @@ const H24Page = {
         this.renderClock();
         this.renderRegie();
         this.renderLive();
+        this.placeSteps();
         this.mirror();
     },
 
@@ -1308,6 +1309,16 @@ const H24Page = {
         return running;
     },
 
+    /** Prédiction en cours : l'en-tête (titre seul) laisse sa place à la carte Pronostics, qui reprend les numéros d'étapes */
+    placeSteps() {
+        const el = $('h24-steps');
+        if (!el) return;
+        const s = this.state;
+        const slot = s?.mode === 'predict' && s?.phase === 'play' ? document.querySelector('#h24-pred .h24-pred__steps') : null;
+        const to = slot || $('h24-mode')?.parentNode;
+        if (to && el.parentNode !== to) to.appendChild(el);
+    },
+
     renderSteps() {
         const s = this.state;
         const el = $('h24-steps');
@@ -1747,7 +1758,7 @@ const H24Page = {
             `<span class="tp-wbar__seg tp-wbar__seg--${c}" style="flex:${w[k]}" title="${esc(`${t('predict.' + c, null, c)} : ${pct(k)} % (${w[k]})`)}">${pct(k) >= 14 ? pct(k) + ' %' : ''}</span>`).join('')
             : `<span class="tp-wbar__empty">${esc(t('tlive.noVotes', null, 'Aucun vote'))}</span>`;
         const cardPred = `<div class="live-card tp-card">
-            <div class="live-card__title tp-head"><span><i class="fas fa-bullseye"></i> ${esc(t('predict.title', null, 'Pronostics'))}</span> <small class="tp-stat" title="${esc(rules)}">${stat}</small></div>
+            <div class="live-card__title tp-head"><span><i class="fas fa-bullseye"></i> ${esc(t('predict.title', null, 'Pronostics'))}</span> <small class="tp-stat" title="${esc(rules)}">${stat}</small><span class="h24-pred__steps"></span></div>
             <div class="tp-body">
                 <div class="tp-picks tp-win" role="group" title="${esc(rules)}"><i class="fas fa-trophy"></i>${picks}</div>
                 <div class="tp-winbars"><div class="tp-wbars__title"><span>${esc(t('predict.winBars', null, 'Pronostics en cours'))}</span>
@@ -2147,6 +2158,7 @@ window.phantomPositionProviders['24h'] = () => (H24Page.me.regie && H24Page.regi
 // Mode « 24/24 (régie) » : le Phantom suit la partie 24/24
 window.PhantomOwner?.register('h24', {
     pages: ['h24'],
+    nav: false,   // la 24/24 a son propre lien dans le menu : pas d'entrée « Partie en cours » pour elle
     active: () => !!(H24Page.me.regie && H24Page.regie.live && window.phantomChessboard?.isConnected),
     label: () => t('phantomOwner.modeH24', null, '24/24 (régie)'),
     url: () => '/24h',

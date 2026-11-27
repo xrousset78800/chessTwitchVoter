@@ -67,7 +67,7 @@
         /** Ce qui tourne en ce moment, pour l'entrée « Partie en cours » du menu */
         current() {
             const here = page();
-            const act = [...modes.values()].filter(m => isActive(m.id));
+            const act = [...modes.values()].filter(m => m.nav !== false && isActive(m.id));
             for (const m of act) if (m.pages.includes(here)) seen[m.id] = Date.now();
             if (!act.length) return null;
             const own = window.phantomChessboard?.isConnected && act.find(m => m.id === PO.owner);
