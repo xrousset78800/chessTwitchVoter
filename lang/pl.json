@@ -1279,6 +1279,19 @@
     "modeGame": "Partia Twitch",
     "modeH24": "24/24 (reżyseria)"
   },
+  "coinfx": {
+    "credited": "Nagrodzeni za ten ruch",
+    "site": "strona",
+    "capped": "dzienny limit osiągnięty",
+    "more": "+ {n} innych widzów",
+    "close": "Zamknij",
+    "toastTitle": "+{n} pionów dodanych",
+    "mine": "Twój głos {move} został zagrany",
+    "mineSolved": "Twoja odpowiedź {move} była poprawna",
+    "soundOn": "Dźwięk monet: włączony (kliknij, aby wyciszyć)",
+    "soundOff": "Dźwięk monet: wyłączony (kliknij, aby włączyć)",
+    "today": "{n} / {cap} dziś"
+  },
   "achievements": {
     "desc": "Odblokowuj osiągnięcia, grając ze swoim czatem: każde daje XP i pionki, niektóre dają figury lub szachownice.",
     "loading": "Ładowanie…",

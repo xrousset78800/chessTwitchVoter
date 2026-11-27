@@ -908,7 +908,7 @@ showWheelAnimation(results) {
                 if (twitchVotes.length) {
                     window.ViewerStats?.recordTurn('game',
                         twitchVotes.map(v => ({ login: v.player, name: v.name, move: v.move })),
-                        (m) => m === move.san);
+                        (m) => m === move.san, { move: move.san, ply: this.chess.history().length });
                 }
             }
             const fen = this.chess.fen();

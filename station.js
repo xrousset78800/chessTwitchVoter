@@ -426,6 +426,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 // photo du votant mis en avant : relue à chaque envoi (elle arrive parfois après le tirage)
                 draw: withPic(g.draw),
                 chosen: withPic(g.chosen) || null,
+                credited: g.credited || null,
                 random: g.random,
                 result: g.result,
                 // rush
@@ -661,6 +662,46 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         });
     }
 
+    /**
+     * Votants du coup joué (ou de la bonne réponse du rush) : pions et XP (RULES.vote, dans le plafond du jour).
+     * g.credited : la fenêtre « Crédités sur ce coup » ; g.earn : les gains de la partie, pour le bilan.
+     * Les bots ne gagnent rien mais s'affichent avec le gain prévu (ils simulent des viewers).
+     */
+    function creditVoters(g, san) {
+        const R = economy?.RULES?.vote;
+        if (!R) return;
+        const rows = [], all = [];
+        g.earn ||= new Map();
+        for (const [login, list] of g.votes) {
+            if (!list.includes(san)) continue;
+            const bot = isBotLogin(login);
+            let coins = R.coins, xp = R.xp;
+            if (!bot) {
+                if (!LOGIN_RE.test(login)) continue;
+                try {
+                    const r = economy.onVotePicked ? economy.onVotePicked(login) : economy.grant(login, 'vote', { ...R, capped: true });
+                    coins = r?.coins || 0; xp = r?.xp || 0;
+                } catch (e) { log('🪙 24/24 : vote non crédité', login, e.message); continue; }
+                all.push(login);
+            }
+            const via = g.voteVia?.get(login) || null;
+            const e = g.earn.get(login) || { coins: 0, xp: 0, n: 0 };
+            e.coins += coins; e.xp += xp; e.n++; e.via = via;
+            g.earn.set(login, e);
+            rows.push({ u: login, v: via, c: coins, p: bot ? null : twitchApi.avatar(login) });
+        }
+        if (!rows.length) return;
+        rows.sort((a, b) => b.c - a.c);
+        g.credited = { ply: g.history.length, san, at: Date.now(), n: rows.length, coins: R.coins, rows: rows.slice(0, 8), all };
+    }
+    /** Bilan des gains de la partie : nombre de viewers crédités, total, les mieux servis */
+    function earnRecap(g) {
+        const list = [...(g.earn || new Map()).entries()];
+        return { n: list.length, coins: list.reduce((a, [, e]) => a + e.coins, 0),
+            top: list.sort((a, b) => b[1].coins - a[1].coins || b[1].n - a[1].n).slice(0, 6)
+                .map(([u, e]) => ({ u, c: e.coins, n: e.n, v: e.via || null, p: isBotLogin(u) ? null : twitchApi.avatar(u) })) };
+    }
+
     /** Coup retenu : part des votes et un viewer tiré parmi ceux qui l'ont voté (mis en avant sur l'échiquier) */
     function chosenInfo(move) {
         let total = 0, n = 0;
@@ -741,8 +782,10 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             const pct = Math.round(mine * 100 / total);
             if (options.size > 1 && (!g.key || pct <= g.key.pct)) g.key = { san: m.san, ply: g.history.length, pct, total, side: m.color };
         }
+        const voted = !g.engine && !g.random && total;
         g.engine = false;
         g.history.push(m.san);
+        if (voted) creditVoters(g, m.san);
         g.lastMove = { from: m.from, to: m.to };
         g.draw = null;
         g.chosen = null;
@@ -795,6 +838,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!ok) return failPuzzle('wrong', san);
         g.chess.move(san);
         g.history.push(m.san);
+        creditVoters(g, m.san);
         g.lastMove = { from: m.from, to: m.to };
         g.step++;
         if (g.step >= g.puzzle.moves.length || g.chess.isCheckmate()) return solvePuzzle();
@@ -866,6 +910,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             top: { w: top('w'), b: top('b') },
             mvp,
             key: g.key,
+            earn: earnRecap(g),
             vs: s.mode === 'bot' ? { elo: s.options.elo, side: s.vsSide } : null
         };
         s.lastResult = result;

@@ -160,6 +160,12 @@ const H24Page = {
             // Un coup vient d'être joué : son du coup (plus de carillon de fin de partie)
             const h = st.game?.history;
             if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
+            // Votants du coup joué crédités : fenêtre « Crédités sur ce coup », et toast si j'en suis
+            const cr = st.game?.credited;
+            if (cr && cr.at !== this.creditAt) {
+                this.creditAt = cr.at;
+                if (Date.now() + this.skew - cr.at < 8000) this.showCredited(cr, st.mode === 'rush');
+            }
             this.render();
         });
         socket.on('h24:me', (me) => {
@@ -1804,6 +1810,17 @@ const H24Page = {
         const list = rows.map(v => ({ login: v.u, name: v.u, pic: v.p, src: src(v), key: v.m, label: fmtMove(v.m), san: v.m, hit: !!v.hit }));
         return window.VotersCard.card(list, { me: this.me.login, turn, flash, gain, drawn, winner, footer,
             empty: over ? t('predict.ended', null, 'Partie terminée') : empty });
+    },
+
+    /** Coup joué : viewers crédités (fenêtre flottante, vue aussi sur le live) ; le mien en toast + envol vers mon compteur */
+    showCredited(cr, solved = false) {
+        const me = this.me.login;
+        const rows = (cr.rows || []).map(r => ({ login: r.u, name: r.u, via: r.v, coins: r.c, pic: r.p }));
+        window.CoinFx?.showCredits({ move: cr.san, ply: cr.ply, n: cr.n, rows, me });
+        if (me && cr.all?.includes(me)) {
+            window.CoinFx?.toastMine({ coins: rows.find(r => r.login === me)?.coins ?? cr.coins, move: cr.san, solved });
+            window.economy?.refresh();
+        }
     },
 
     /** Tirage terminé : la ligne du coup tiré passe en tête et s'allume, le votant tiré est mis en avant */

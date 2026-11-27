@@ -1264,6 +1264,19 @@
       "stone": "Pierre"
     }
   },
+  "coinfx": {
+    "credited": "Crédités sur ce coup",
+    "site": "site",
+    "capped": "plafond atteint",
+    "more": "+ {n} autre(s) viewer(s)",
+    "close": "Fermer",
+    "toastTitle": "+{n} pions crédités",
+    "mine": "Ton vote {move} a été joué",
+    "mineSolved": "Ta réponse {move} était la bonne",
+    "soundOn": "Son des gains : activé (clic pour couper)",
+    "soundOff": "Son des gains : coupé (clic pour activer)",
+    "today": "{n} / {cap} aujourd'hui"
+  },
   "achievements": {
     "desc": "Débloque des succès en jouant avec ton chat : chacun rapporte de l'XP et des pions, certains offrent des pièces ou des échiquiers.",
     "loading": "Chargement…",

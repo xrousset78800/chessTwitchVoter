@@ -1279,6 +1279,19 @@
     "modeGame": "Partida Twitch",
     "modeH24": "24/24 (regia)"
   },
+  "coinfx": {
+    "credited": "Creditados nesta jogada",
+    "site": "site",
+    "capped": "limite diário atingido",
+    "more": "+ {n} outro(s) espectador(es)",
+    "close": "Fechar",
+    "toastTitle": "+{n} peões creditados",
+    "mine": "O teu voto {move} foi jogado",
+    "mineSolved": "A tua resposta {move} estava certa",
+    "soundOn": "Som das moedas: ligado (clica para silenciar)",
+    "soundOff": "Som das moedas: desligado (clica para ligar)",
+    "today": "{n} / {cap} hoje"
+  },
   "achievements": {
     "desc": "Desbloqueie conquistas jogando com seu chat: cada uma rende XP e peões, algumas oferecem peças ou tabuleiros.",
     "loading": "Carregando…",

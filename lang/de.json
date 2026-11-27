@@ -1279,6 +1279,19 @@
     "modeGame": "Twitch-Partie",
     "modeH24": "24/7 (Regie)"
   },
+  "coinfx": {
+    "credited": "Gutgeschrieben für diesen Zug",
+    "site": "Website",
+    "capped": "Tageslimit erreicht",
+    "more": "+ {n} weitere Zuschauer",
+    "close": "Schließen",
+    "toastTitle": "+{n} Bauern gutgeschrieben",
+    "mine": "Dein Vorschlag {move} wurde gespielt",
+    "mineSolved": "Deine Antwort {move} war richtig",
+    "soundOn": "Münzton: an (klicken zum Stummschalten)",
+    "soundOff": "Münzton: aus (klicken zum Aktivieren)",
+    "today": "{n} / {cap} heute"
+  },
   "achievements": {
     "desc": "Schalte Erfolge frei, indem du mit deinem Chat spielst: Jeder bringt XP und Münzen, manche schenken Figuren oder Bretter.",
     "loading": "Lädt…",

@@ -1279,6 +1279,19 @@
     "modeGame": "Twitch oyunu",
     "modeH24": "7/24 (yönetim)"
   },
+  "coinfx": {
+    "credited": "Bu hamlede kazananlar",
+    "site": "site",
+    "capped": "günlük sınıra ulaşıldı",
+    "more": "+ {n} izleyici daha",
+    "close": "Kapat",
+    "toastTitle": "+{n} piyon kazandın",
+    "mine": "Oyladığın {move} oynandı",
+    "mineSolved": "Cevabın {move} doğruydu",
+    "soundOn": "Jeton sesi: açık (kapatmak için tıkla)",
+    "soundOff": "Jeton sesi: kapalı (açmak için tıkla)",
+    "today": "Bugün {n} / {cap}"
+  },
   "achievements": {
     "desc": "Sohbetinle oynayarak başarımların kilidini aç: her biri XP ve piyon kazandırır, bazıları taş ya da tahta hediye eder.",
     "loading": "Yükleniyor…",

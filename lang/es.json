@@ -1279,6 +1279,19 @@
     "modeGame": "Partida de Twitch",
     "modeH24": "24/7 (realización)"
   },
+  "coinfx": {
+    "credited": "Acreditados en esta jugada",
+    "site": "web",
+    "capped": "tope diario alcanzado",
+    "more": "+ {n} espectador(es) más",
+    "close": "Cerrar",
+    "toastTitle": "+{n} peones acreditados",
+    "mine": "Tu voto {move} se ha jugado",
+    "mineSolved": "Tu respuesta {move} era la correcta",
+    "soundOn": "Sonido de monedas: activado (clic para silenciar)",
+    "soundOff": "Sonido de monedas: desactivado (clic para activar)",
+    "today": "{n} / {cap} hoy"
+  },
   "achievements": {
     "desc": "Desbloquea logros jugando con tu chat: cada uno da XP y fichas, y algunos regalan piezas o tableros.",
     "loading": "Cargando…",

@@ -1279,6 +1279,19 @@
     "modeGame": "Twitch-spel",
     "modeH24": "24/24 (regie)"
   },
+  "coinfx": {
+    "credited": "Bijgeschreven voor deze zet",
+    "site": "site",
+    "capped": "daglimiet bereikt",
+    "more": "+ {n} andere kijker(s)",
+    "close": "Sluiten",
+    "toastTitle": "+{n} pionnen bijgeschreven",
+    "mine": "Jouw stem {move} is gespeeld",
+    "mineSolved": "Jouw antwoord {move} was goed",
+    "soundOn": "Muntgeluid: aan (klik om te dempen)",
+    "soundOff": "Muntgeluid: uit (klik om aan te zetten)",
+    "today": "{n} / {cap} vandaag"
+  },
   "achievements": {
     "desc": "Ontgrendel prestaties door met je chat te spelen: elk levert XP en pionnen op, sommige geven stukken of borden.",
     "loading": "Laden…",

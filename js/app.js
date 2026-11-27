@@ -19,6 +19,7 @@ import { registerPgnSource } from './utils/pgnExport.js';
 import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import './core/economy.js';
+import './components/coinFx.js';
 import './core/achievements.js';
 import AchievementsPage from './pages/achievements.js';
 import ShopPage from './pages/shop.js';
@@ -3095,7 +3096,7 @@ async function initApp() {
                 twitch.instantCooldownUntil = Date.now() + 1000;
                 window.ViewerStats?.recordTurn('game',
                     [{ login: voteContext.username, name: voteContext.displayName, move: resolved.san }],
-                    (m) => m === resolved.san);
+                    (m) => m === resolved.san, { move: resolved.san, ply: gameEngine.chess.history().length + 1 });
                 gameEngine.executeMove(resolved.san);
                 gameEngine.updateAvailableMoves();
                 return;

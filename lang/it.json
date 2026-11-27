@@ -1279,6 +1279,19 @@
     "modeGame": "Partita Twitch",
     "modeH24": "24/24 (regia)"
   },
+  "coinfx": {
+    "credited": "Accreditati su questa mossa",
+    "site": "sito",
+    "capped": "limite giornaliero raggiunto",
+    "more": "+ altri {n} spettatori",
+    "close": "Chiudi",
+    "toastTitle": "+{n} pedoni accreditati",
+    "mine": "Il tuo voto {move} è stato giocato",
+    "mineSolved": "La tua risposta {move} era giusta",
+    "soundOn": "Suono delle monete: attivo (clic per disattivare)",
+    "soundOff": "Suono delle monete: disattivato (clic per attivare)",
+    "today": "{n} / {cap} oggi"
+  },
   "achievements": {
     "desc": "Sblocca traguardi giocando con la tua chat: ognuno dà XP e pedoni, alcuni regalano pezzi o scacchiere.",
     "loading": "Caricamento…",

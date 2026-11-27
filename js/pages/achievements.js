@@ -177,9 +177,20 @@ function renderNavLevel() {
     document.querySelectorAll('.nav__level').forEach(el => {
         el.hidden = !acc;
         if (!acc) return;
-        const html = `<span class="nav__level-lv">${esc(t('levelShort'))} ${acc.level}</span><span class="nav__level-coins">♟ ${fmtNum(acc.coins)}</span>`;
-        if (el._html !== html) { el.innerHTML = html; el._html = html; }
-        const title = `${t('level')} ${acc.level} · ${fmtNum(acc.coins)} ${t('coins')}`;
+        // Pions + jauge du plafond du jour (gains des coups et puzzles) le long du bas de la pastille
+        const cap = acc.dailyCoinCap || 0, day = Math.min(acc.dayCoins || 0, cap);
+        const pct = cap ? Math.round(100 * day / cap) : 0;
+        const pawn = window.CoinFx?.PAWN || '♟';
+        const html = `<span class="nav__level-lv">${esc(t('levelShort'))} ${acc.level}</span><span class="nav__level-coins">${pawn}<b>${fmtNum(acc.coins)}</b></span>`
+            + (cap ? `<span class="nav__level-cap${day >= cap ? ' is-full' : ''}" aria-hidden="true"><i style="width:${pct}%"></i></span>` : '');
+        if (el._html !== html) {
+            // la bulle « +N » d'un gain en cours reste en place
+            const delta = el.querySelector('.nav__level-delta');
+            el.innerHTML = html; el._html = html;
+            if (delta) el.appendChild(delta);
+        }
+        const today = cap ? ` · ${tr('coinfx.today', { n: fmtNum(day), cap: fmtNum(cap) }, `${day} / ${cap} aujourd'hui`)}` : '';
+        const title = `${t('level')} ${acc.level} · ${fmtNum(acc.coins)} ${t('coins')}${today}`;
         if (el.title !== title) el.title = title;
     });
 }

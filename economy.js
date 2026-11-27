@@ -19,6 +19,7 @@ const RULES = {
     turn:        { xp: 2, coins: 1 },          // coup joué avec au moins un votant
     turnCrowd:   { xp: 1, per: 10, max: 5 },   // +1 xp par tranche de 10 votants, 5 max
     puzzleTurn:  { xp: 3, coins: 1 },          // tour de puzzle avec au moins un votant
+    vote:        { xp: 2, coins: 2 },          // viewer dont le coup a été joué (ou qui a trouvé le coup du puzzle)
     rushRun:     { xpPerPoint: 5, coinsPerPoint: 2 },
     rushRecord:  { xp: 100, coins: 50 },       // record personnel battu dans un mode
     multi:       { win: { xp: 60, coins: 30 }, draw: { xp: 30, coins: 15 }, loss: { xp: 15, coins: 5 } },
@@ -228,6 +229,16 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         return achievements.length ? { ...(gain || { xp: 0, coins: 0 }), achievements } : gain;
     }
 
+    /** Vote d'un viewer retenu (son coup joué, ou la bonne réponse d'un puzzle) : dans le plafond du jour */
+    function onVotePicked(login) {
+        const r = RULES.vote;
+        const gain = grant(login, 'vote', { xp: r.xp, coins: r.coins, capped: true });
+        const st = stats(account(login));
+        st.picked = (st.picked || 0) + 1;
+        checkAchievements(login);
+        return gain;
+    }
+
     /** Fin de run Puzzle Rush */
     function onRushRun(login, { score, isNewRecord, mode, at }) {
         const r = RULES.rushRun;
@@ -350,7 +361,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         res.json(publicAccount(a.login));
     });
 
-    return { grant, checkAchievements, onTurns, onRushRun, onMultiResult, onAchievement, claimAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store };
+    return { grant, checkAchievements, onTurns, onVotePicked, onRushRun, onMultiResult, onAchievement, claimAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store };
 };
 module.exports.RULES = RULES;
 module.exports.levelInfo = levelInfo;

@@ -175,7 +175,9 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords,
 
         let counted = 0;
         const gains = [];   // pour l'économie (XP / pions)
-        for (const t of turns) {
+        // Viewers crédités, tour par tour (même ordre que turns) : la fenêtre « Crédités sur ce coup » du streameur
+        const credits = turns.map(() => null);
+        turns.forEach((t, ti) => {
             const puzzle = t?.kind === 'puzzle';
             const seen = new Set();
             const voters = (Array.isArray(t?.voters) ? t.voters : []).slice(0, MAX_VOTERS_PER_TURN);
@@ -188,13 +190,20 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords,
                 if (puzzle) { s.puzzles++; if (v.picked) s.solved++; }
                 else        { s.votes++;   if (v.picked) s.picked++; }
                 s.lastAt = now;
+                // Coup retenu : pions et XP sur le compte du viewer (créé au besoin, faux viewers exclus)
+                if (v.picked && economy?.onVotePicked && !/^(sim_|bot_)/.test(vl)) {
+                    try {
+                        const g = economy.onVotePicked(vl);
+                        (credits[ti] ||= []).push({ login: vl, name: s.name, coins: g?.coins || 0, xp: g?.xp || 0 });
+                    } catch (e) { console.warn('🪙 Vote non crédité', vl, e.message); }
+                }
             }
-            if (!seen.size) continue;
+            if (!seen.size) return;
             if (puzzle) ch.puzzleTurns++; else ch.turns++;
             ch.votes += seen.size;
             counted++;
             gains.push({ puzzle, voters: seen.size });
-        }
+        });
         ch.lastAt = now;
 
         // Garde-fou : on oublie les viewers les moins actifs au-delà de la limite
@@ -206,7 +215,7 @@ module.exports = function setupStats({ app, requireTwitch, dataDir, rushRecords,
         }
         viewers.save();
         const gain = economy?.onTurns(login, gains) || null;
-        res.json({ ok: true, turns: counted, gain });
+        res.json({ ok: true, turns: counted, gain, credits });
     });
 
     const channelSummary = (ch) => ({

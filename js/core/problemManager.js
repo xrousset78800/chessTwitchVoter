@@ -722,9 +722,11 @@ resolveVotes() {
         const votes = (this.votesForCurrentTurn || []).filter(v => v.login && !v.counted);
         if (!votes.length) return;
         votes.forEach(v => { v.counted = true; });
+        const ok = (m) => { const u = this.normalizeToUCI(m); return !!u && this.compareUCI(u, expectedUCI); };
+        const right = votes.find(v => ok(v.move))?.move;
         window.ViewerStats?.recordTurn('puzzle',
             votes.map(v => ({ login: v.login, name: v.name, move: v.move })),
-            (m) => { const u = this.normalizeToUCI(m); return !!u && this.compareUCI(u, expectedUCI); });
+            ok, { move: typeof right === 'string' ? right : '' });
     }
 
     normalizeToUCI(move) {

@@ -1,0 +1,104 @@
+/*
+ * Gains de pions (js/components/coinFx.js) : compteur de la barre du haut, envol « +N », fenêtre
+ * « Crédités sur ce coup », toast du viewer crédité.
+ */
+
+/* ----- Compteur de la barre du haut : pions + jauge du plafond du jour ----- */
+.nav__level { position: relative; overflow: visible; }
+.nav__level-coins { display: inline-flex; align-items: center; gap: 4px; color: var(--text-primary); }
+.nav__level-coins b { font: 700 0.84rem 'JetBrains Mono', monospace; }
+.nav__level .coin-pawn { width: 15px; height: 15px; color: var(--accent); flex: none; }
+/* Jauge du jour : un trait le long du bas de la pastille */
+.nav__level-cap {
+    position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px;
+    border-radius: 2px; background: var(--border-subtle); overflow: hidden; pointer-events: none;
+}
+.nav__level-cap i { display: block; height: 100%; background: var(--accent); border-radius: 2px; transition: width .6s ease; }
+.nav__level-cap.is-full i { background: var(--accent-light); }
+/* Arrivée d'un gain : la pastille pulse, une bulle « +N » monte au-dessus */
+.nav__level.is-bump { animation: coin-bump .55s cubic-bezier(.3,1.6,.5,1); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 138, 61, .14); }
+@keyframes coin-bump { 0% { transform: scale(1); } 35% { transform: scale(1.09); } 100% { transform: scale(1); } }
+.nav__level-delta {
+    position: absolute; right: 6px; top: 100%; margin-top: 4px;
+    padding: 1px 6px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #100d0b);
+    font: 800 0.72rem 'JetBrains Mono', monospace; pointer-events: none; opacity: 0;
+}
+.nav__level-delta.is-on { animation: coin-delta 1.8s ease forwards; }
+@keyframes coin-delta {
+    0% { opacity: 0; transform: translateY(-6px); }
+    15%, 70% { opacity: 1; transform: none; }
+    100% { opacity: 0; transform: translateY(4px); }
+}
+.nav__coin-sound { background: none; border: 0; cursor: pointer; }
+.nav__coin-sound[hidden] { display: none; }
+.nav__coin-sound[aria-pressed="false"] { color: var(--text-muted); }
+
+/* ----- « +N ♟ » en vol vers le compteur ----- */
+.coin-fly {
+    position: fixed; left: 0; top: 0; z-index: var(--z-toast, 1000);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: 999px;
+    background: var(--accent); color: var(--on-accent, #100d0b);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .55);
+    font: 800 1.15rem 'JetBrains Mono', monospace;
+    pointer-events: none; will-change: transform, opacity;
+}
+.coin-fly .coin-pawn { width: 19px; height: 19px; }
+
+/* ----- Fenêtre « Crédités sur ce coup » (flottante, en bas à droite) ----- */
+.coin-credits {
+    position: fixed; right: 16px; bottom: 16px; z-index: calc(var(--z-toast, 1000) - 1);
+    width: min(320px, calc(100vw - 32px));
+    background: var(--bg-card, #1a1512); border: 1px solid var(--border-subtle, #2b2420); border-radius: 4px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .55);
+    color: var(--text-primary, #f4eee8); font-family: Inter, sans-serif;
+    opacity: 0; transform: translateY(16px); pointer-events: none; visibility: hidden;
+    transition: opacity .25s ease, transform .3s ease, visibility 0s linear .3s;
+}
+.coin-credits.is-in { opacity: 1; transform: none; pointer-events: auto; visibility: visible; transition: opacity .25s ease, transform .3s cubic-bezier(.2,1.3,.4,1); }
+.coin-credits__head { display: flex; align-items: center; gap: 10px; padding: 10px 8px 10px 14px; border-bottom: 1px solid var(--border-subtle, #2b2420); }
+.coin-credits__head h2 { margin: 0; font: 700 0.7rem Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.coin-credits__move { margin-left: auto; font: 500 0.78rem 'JetBrains Mono', monospace; color: var(--text-muted, #7f736b); }
+.coin-credits__move b { color: var(--text-primary, #f4eee8); }
+.coin-credits__close {
+    display: grid; place-items: center; width: 28px; height: 28px; padding: 0;
+    background: none; border: 0; border-radius: 3px; color: var(--text-muted, #7f736b); cursor: pointer;
+}
+.coin-credits__close:hover { color: var(--text-primary, #f4eee8); background: var(--bg-input, #15110e); }
+.coin-credits ul { margin: 0; padding: 0; list-style: none; }
+.coin-credits li {
+    display: flex; align-items: center; gap: 10px; padding: 7px 14px;
+    border-top: 1px solid #221c18;
+    animation: coin-row .35s ease both; animation-delay: calc(var(--i, 0) * 60ms);
+}
+.coin-credits li:first-child { border-top: 0; }
+.coin-credits li:nth-child(2) { --i: 1; } .coin-credits li:nth-child(3) { --i: 2; }
+.coin-credits li:nth-child(4) { --i: 3; } .coin-credits li:nth-child(5) { --i: 4; }
+@keyframes coin-row { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+.coin-credits li.is-me { background: rgba(255, 138, 61, .1); box-shadow: inset 2px 0 0 var(--accent); }
+.coin-credits__pic {
+    display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%;
+    object-fit: cover; font: 700 0.78rem Inter, sans-serif; color: #100d0b; background: var(--bg-input, #15110e);
+}
+.coin-credits__who { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.coin-credits__who b { font: 600 0.86rem Inter, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.coin-credits__who small { font: 500 0.7rem Inter, sans-serif; color: var(--text-muted, #7f736b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.coin-credits__n { display: inline-flex; align-items: center; gap: 3px; font: 800 0.92rem 'JetBrains Mono', monospace; color: var(--accent-light, #ffb27a); white-space: nowrap; }
+.coin-credits__n .coin-pawn { width: 14px; height: 14px; }
+.coin-credits__n.is-cap { font: 500 0.7rem Inter, sans-serif; color: var(--text-muted, #7f736b); }
+.coin-credits__more { margin: 0; padding: 8px 14px; border-top: 1px solid var(--border-subtle, #2b2420); font-size: 0.76rem; color: var(--text-secondary, #b9aea6); }
+
+/* ----- Toast du viewer crédité ----- */
+.coin-toast { display: flex; align-items: center; gap: 10px; }
+.coin-toast > .coin-pawn {
+    flex: none; width: 34px; height: 34px; padding: 6px; box-sizing: border-box;
+    border-radius: 50%; background: var(--accent); color: var(--on-accent, #100d0b);
+}
+.coin-toast > span { display: flex; flex-direction: column; gap: 2px; }
+.coin-toast small { color: var(--text-secondary, #b9aea6); }
+.coin-toast__move { font-family: 'JetBrains Mono', monospace; color: var(--text-primary, #f4eee8); }
+
+@media (prefers-reduced-motion: reduce) {
+    .nav__level.is-bump, .coin-credits li { animation: none; }
+    .coin-credits, .coin-credits.is-in { transition: none; transform: none; }
+}

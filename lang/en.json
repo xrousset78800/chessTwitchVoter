@@ -1264,6 +1264,19 @@
       "stone": "Stone"
     }
   },
+  "coinfx": {
+    "credited": "Credited on this move",
+    "site": "site",
+    "capped": "daily cap reached",
+    "more": "+ {n} more viewer(s)",
+    "close": "Close",
+    "toastTitle": "+{n} pawns credited",
+    "mine": "Your vote {move} was played",
+    "mineSolved": "Your answer {move} was right",
+    "soundOn": "Coin sound: on (click to mute)",
+    "soundOff": "Coin sound: off (click to enable)",
+    "today": "{n} / {cap} today"
+  },
   "achievements": {
     "desc": "Unlock achievements by playing with your chat: each one gives XP and pawns, some offer piece sets or boards.",
     "loading": "Loading…",

@@ -5,12 +5,15 @@
  * Un viewer compte une seule fois par coup, même avec plusieurs votes.
  * « picked » : son coup a été joué (partie) ou c'était la bonne réponse (puzzle).
  * Les stats sont rangées sous la chaîne Twitch connectée : sans connexion, rien n'est envoyé.
+ * Les viewers « picked » sont crédités en pions par le serveur : réponse rendue par l'événement
+ * « coinsCredited » (detail : { kind, move, ply, rows: [{ login, name, coins, xp }] }), affiché par CoinFx.
  */
 import twitchAuth from './twitchAuth.js';
 
 const API = '/api/stats/votes';
 const LOGIN_RE = /^[a-z0-9_]{1,25}$/;
-const FLUSH_MS = 4000;
+// Envoi presque immédiat : la fenêtre « Crédités sur ce coup » suit le coup joué
+const FLUSH_MS = 400;
 
 const queue = [];
 let timer = null;
@@ -19,8 +22,9 @@ let timer = null;
  * @param {'game'|'puzzle'} kind
  * @param {Array<{login:string, name?:string, move:string}>} votes - votes du tour
  * @param {(move:string) => boolean} isPicked
+ * @param {{move?:string, ply?:number}} [meta] - coup joué (ou bonne réponse), pour la fenêtre des crédités
  */
-export function recordTurn(kind, votes, isPicked) {
+export function recordTurn(kind, votes, isPicked, meta = {}) {
     if (!twitchAuth.isLoggedIn || !votes?.length) return;
     const voters = new Map();
     for (const v of votes) {
@@ -32,7 +36,7 @@ export function recordTurn(kind, votes, isPicked) {
         voters.set(login, e);
     }
     if (!voters.size) return;
-    queue.push({ kind, voters: [...voters.values()] });
+    queue.push({ kind, voters: [...voters.values()], meta });
     if (queue.length >= 50) flush();
     else if (!timer) timer = setTimeout(flush, FLUSH_MS);
 }
@@ -47,8 +51,15 @@ export function flush() {
         method: 'POST',
         keepalive: true,
         headers: { 'Content-Type': 'application/json', ...twitchAuth.authHeaders() },
-        body: JSON.stringify({ turns, displayName: user?.displayName, avatar: user?.avatar })
-    }).then(r => r.ok ? r.json() : null).then(d => window.economy?.noteGain(d?.gain)).catch(e => console.warn('📊 Stats viewers non envoyées:', e.message));
+        body: JSON.stringify({ turns: turns.map(({ meta, ...t }) => t), displayName: user?.displayName, avatar: user?.avatar })
+    }).then(r => r.ok ? r.json() : null).then(d => {
+        (d?.credits || []).forEach((rows, i) => {
+            if (!rows?.length || !turns[i]) return;
+            const { kind, meta } = turns[i];
+            window.dispatchEvent(new CustomEvent('coinsCredited', { detail: { kind, move: meta?.move || '', ply: meta?.ply || null, channel: user?.login || '', rows } }));
+        });
+        window.economy?.noteGain(d?.gain);
+    }).catch(e => console.warn('📊 Stats viewers non envoyées:', e.message));
     if (queue.length) timer = setTimeout(flush, FLUSH_MS);
 }
 
