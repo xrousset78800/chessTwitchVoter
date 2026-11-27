@@ -1707,6 +1707,20 @@
       "fly-gold": "Or",
       "pack-arcade": "Pack Arcade",
       "pack-wood": "Pack Bois"
+    },
+    "bench": {
+      "title": "Banc d'écoute",
+      "desc": "Écoute chaque son de chaque kit, même ceux que tu n'as pas encore. Le kit équipé est surligné.",
+      "move": "Coup",
+      "capture": "Prise",
+      "check": "Échec",
+      "mate": "Mat",
+      "tick": "Roue",
+      "win": "Victoire",
+      "all": "Tout",
+      "equipped": "équipé",
+      "owned": "possédé",
+      "open": "Écouter tous les kits"
     }
   },
   "seo": {

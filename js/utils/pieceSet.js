@@ -214,6 +214,7 @@
                 el.setAttribute('aria-label', matLabel(m));
             });
             box.querySelectorAll('.nav__pieces-shop span').forEach(s => { s.textContent = tr('nav.shop', 'Boutique'); });
+            box.querySelectorAll('.nav__pieces-bench span').forEach(s => { s.textContent = tr('shop.bench.open', 'Écouter tous les kits'); });
             box.querySelectorAll('.nav__pieces-heading').forEach(h => { h.firstElementChild.textContent = tr(h.dataset.key, h.dataset.fb); });
         });
     }
@@ -289,7 +290,7 @@
                     }).join(''))) : ''}
                     ${sec(head('pieces.themeTitle', 'Thème du site', 'theme') + grid('', THEMES.filter(unlocked).map(x => `<button type="button" class="nav__pieces-swatch nav__pieces-theme" data-site-theme="${x.id}"
                         style="--l:${x.card};--d:${x.bg}"></button>`).join('')))}
-                    ${kits.length ? sec(head('shop.tab.sounds', 'Sons', 'sound') + grid('', [['', { icon: 'fa-volume-low' }], ...kits].map(([id, x]) => `<button type="button" class="nav__pieces-swatch nav__pieces-kit" data-sound-kit="${id}"><i class="fas ${x.icon}" aria-hidden="true"></i></button>`).join(''))) : ''}
+                    ${sec(head('shop.tab.sounds', 'Sons', 'sound') + (kits.length ? grid('', [['', { icon: 'fa-volume-low' }], ...kits].map(([id, x]) => `<button type="button" class="nav__pieces-swatch nav__pieces-kit" data-sound-kit="${id}"><i class="fas ${x.icon}" aria-hidden="true"></i></button>`).join('')) : '') + `<a class="nav__pieces-bench" href="/shop"><i class="fas fa-headphones" aria-hidden="true"></i> <span></span></a>`)}
                     <li class="nav__pieces-sec nav__pieces-sec--shop"><a class="nav__pieces-shop" href="/shop"><i class="fas fa-store"></i> <span></span></a></li>
                 </ul>`;
             const btn = box.querySelector('.nav__pieces-current');
@@ -314,13 +315,18 @@
                     e.stopPropagation();
                     const id = kt.dataset.soundKit || null;
                     window.Cosmetics?.set('sound', id);
-                    if (id) window.SoundKit?.demo(id);
-                    else { try { new Audio('mp3/move.mp3').play().catch(() => { }); } catch (err) { } }
+                    window.SoundKit?.demo(id || 'kit-classic');
                     return;
                 }
                 const pl = e.target.closest('[data-vote-palette]');
                 if (pl) { e.stopPropagation(); vp?.setPaletteId(pl.dataset.votePalette); render(); return; }
                 if (e.target.closest('.nav__pieces-shop')) { toggle(false); return; }
+                if (e.target.closest('.nav__pieces-bench')) {   // banc d'écoute : rayon Sons de la boutique
+                    try { sessionStorage.setItem('shopBench', '1'); } catch (err) { }
+                    toggle(false);
+                    if (document.getElementById('page-shop')?.classList.contains('is-active')) { e.preventDefault(); window.dispatchEvent(new Event('shopBench')); }
+                    return;
+                }
                 const item = e.target.closest('[data-piece-set]');
                 if (!item) return;
                 e.stopPropagation();   // le menu reste ouvert, comme pour les couleurs

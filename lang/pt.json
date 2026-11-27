@@ -1722,6 +1722,20 @@
       "fly-gold": "Ouro",
       "pack-arcade": "Pacote Arcade",
       "pack-wood": "Pacote Madeira"
+    },
+    "bench": {
+      "title": "Banco de audição",
+      "desc": "Ouve cada som de cada kit, mesmo os que ainda não tens. O kit equipado está destacado.",
+      "move": "Lance",
+      "capture": "Captura",
+      "check": "Xeque",
+      "mate": "Mate",
+      "tick": "Roda",
+      "win": "Vitória",
+      "all": "Tudo",
+      "equipped": "equipado",
+      "owned": "teu",
+      "open": "Ouvir todos os kits"
     }
   },
   "tlive": {

@@ -503,3 +503,7 @@ body.game-mode .nav__page-title {
     text-decoration: none;
 }
 .nav__pieces-shop:hover { color: var(--text-primary); border-color: var(--accent); }
+/* Sons : lien vers le banc d'écoute de la boutique */
+.nav__pieces-bench { display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 0; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none; }
+.nav__pieces-bench i { color: var(--accent); }
+.nav__pieces-bench:hover { color: var(--text-primary); }

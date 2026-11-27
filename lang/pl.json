@@ -1722,6 +1722,20 @@
       "fly-gold": "Złoto",
       "pack-arcade": "Pakiet Arcade",
       "pack-wood": "Pakiet Drewno"
+    },
+    "bench": {
+      "title": "Odsłuch",
+      "desc": "Posłuchaj każdego dźwięku każdego zestawu, także tych, których jeszcze nie masz. Założony zestaw jest wyróżniony.",
+      "move": "Ruch",
+      "capture": "Bicie",
+      "check": "Szach",
+      "mate": "Mat",
+      "tick": "Koło",
+      "win": "Zwycięstwo",
+      "all": "Wszystko",
+      "equipped": "założony",
+      "owned": "posiadany",
+      "open": "Posłuchaj wszystkich zestawów"
     }
   },
   "tlive": {

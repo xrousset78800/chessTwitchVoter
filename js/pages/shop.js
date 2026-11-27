@@ -162,6 +162,27 @@ function catalog() {
     };
 }
 
+/** Banc d'écoute (rayon Sons) : chaque son de chaque kit, possédé ou non */
+const BENCH = ['move', 'capture', 'check', 'mate', 'tick', 'win', 'all'];
+function bench(acc) {
+    const eq = window.Cosmetics?.get('sound') || 'kit-classic';
+    const kits = ['kit-classic', ...(window.SoundKit?.KITS || [])];
+    const rows = kits.map(id => {
+        const own = id === 'kit-classic' || !!window.unlockedRewards?.has?.(id);
+        const tag = id === eq ? t('bench.equipped') : own ? t('bench.owned') : '';
+        return `<tr${id === eq ? ' class="is-equipped"' : ''}><th scope="row"><b>${esc(itemName(id))}</b>${tag ? `<small>${esc(tag)}</small>` : ''}</th>${BENCH.map(k =>
+            `<td><button type="button" class="shop-bench__play${k === 'all' ? ' shop-bench__play--all' : ''}" data-shop-bench="${esc(id)}" data-kind="${k}" title="${esc(itemName(id))} · ${esc(t(`bench.${k}`))}" aria-label="${esc(itemName(id))} · ${esc(t(`bench.${k}`))}"><i class="fas ${k === 'all' ? 'fa-forward' : 'fa-play'}" aria-hidden="true"></i></button></td>`).join('')}</tr>`;
+    }).join('');
+    return `<section class="shop-bench" id="shop-bench">
+        <h3><i class="fas fa-headphones" aria-hidden="true"></i> ${esc(t('bench.title'))}</h3>
+        <p>${esc(t('bench.desc'))}</p>
+        <div class="shop-bench__wrap"><table class="shop-bench__table">
+            <thead><tr><th></th>${BENCH.map(k => `<th scope="col">${esc(t(`bench.${k}`))}</th>`).join('')}</tr></thead>
+            <tbody>${rows}</tbody>
+        </table></div>
+    </section>`;
+}
+
 /** Succès qui offre cet objet (objets jamais en vente) */
 function rewardOf(own) {
     const def = window.achievements?.defs?.list?.find(d => d.reward === own);
@@ -371,7 +392,13 @@ const ShopPage = {
         await window.achievements?.ready;
         if (!rules) { root.innerHTML = `<div class="rec-empty">${esc(t('unavailable'))}</div>`; return; }
         if (!root.dataset.bound) this.bind(root);
+        let toBench = false;
+        try {
+            toBench = sessionStorage.getItem('shopBench') === '1';
+            if (toBench) { sessionStorage.removeItem('shopBench'); tab = 'sounds'; filter = 'all'; remember('shopTab', tab); }
+        } catch (e) { }
         this.render();
+        if (toBench) requestAnimationFrame(() => document.getElementById('shop-bench')?.scrollIntoView({ block: 'center' }));
     },
 
     /** Essayer un objet : cabine, et démo (son, effet) pour les cosmétiques */
@@ -387,7 +414,7 @@ const ShopPage = {
 
     demo(id) {
         const it = ITEMS[id];
-        if (id === 'kit-classic') { try { new Audio('mp3/move.mp3').play().catch(() => { }); } catch { } return; }
+        if (id === 'kit-classic') return window.SoundKit?.demo(id);
         if (!it) return;
         if (it.slot === 'sound') window.SoundKit?.demo(id);
         else if (it.slot === 'trail') demoOnFitting(id, shownSlot('capture'));
@@ -408,6 +435,11 @@ const ShopPage = {
             if (go) { tab = go.dataset.shopCat; remember('shopTab', tab); filter = 'all'; return this.tryItem(go.dataset.shopGoto, false); }
             const tryBtn = e.target.closest('[data-shop-try]');
             if (tryBtn) return this.tryItem(tryBtn.dataset.shopTry);
+            const bn = e.target.closest('[data-shop-bench]');
+            if (bn) {
+                const kit = bn.dataset.shopBench, kind = bn.dataset.kind;
+                return kind === 'all' ? window.SoundKit?.demo(kit) : window.SoundKit?.test(kit, kind);
+            }
             const ls = e.target.closest('[data-shop-listen],[data-shop-demo]');
             if (ls) return this.demo(ls.dataset.shopListen || ls.dataset.shopDemo);
             if (e.target.closest('[data-shop-reset]')) {
@@ -506,6 +538,7 @@ const ShopPage = {
                 ${visible.length
                     ? `<ul class="shop-grid" role="tabpanel">${visible.map(it => tile(it, acc)).join('')}</ul>`
                     : `<p class="shop-empty">${esc(t('empty'))}</p>`}
+                ${tab === 'sounds' ? bench(acc) : ''}
             </div>
         </div>`;
     },
@@ -517,5 +550,6 @@ for (const ev of ['economyChanged', 'languageChanged', 'pieceSetChanged', 'board
     window.addEventListener(ev, rerender);
 }
 document.addEventListener('votePaletteChanged', rerender);
+window.addEventListener('shopBench', () => { if (isActive()) ShopPage.init(); });   // lien du menu, déjà sur la boutique
 
 export default ShopPage;

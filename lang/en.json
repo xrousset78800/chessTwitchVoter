@@ -1707,6 +1707,20 @@
       "fly-gold": "Gold",
       "pack-arcade": "Arcade pack",
       "pack-wood": "Wood pack"
+    },
+    "bench": {
+      "title": "Listening bench",
+      "desc": "Hear every sound of every kit, even the ones you don't own yet. Your equipped kit is highlighted.",
+      "move": "Move",
+      "capture": "Capture",
+      "check": "Check",
+      "mate": "Mate",
+      "tick": "Wheel",
+      "win": "Victory",
+      "all": "All",
+      "equipped": "equipped",
+      "owned": "owned",
+      "open": "Listen to every kit"
     }
   },
   "seo": {

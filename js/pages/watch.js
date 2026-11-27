@@ -79,10 +79,15 @@ const WatchPage = {
         socket.on('connect', () => socket.emit('spectate:join', { id: this.id, token: twitchAuth.token || undefined }));
         socket.on('spectate:state', (state) => {
             if (socket !== this.socket || state?.id !== this.id) return;
+            // Un coup de plus que l'état précédent : son du coup (kit équipé) et effet sur l'échiquier
+            const before = this.state ? (this.state.history || []).length : -1;
+            const h = state.history || [];
+            const played = before >= 0 && h.length === before + 1 ? h[h.length - 1] : null;
             this.state = state;
             if (state.spectators) this.spectators = state.spectators;
             this.showMessage(null);
             this.render();
+            if (played) this.moveSound(played, state.lastMove);
             this.renderSpectators();
         });
         socket.on('spectators', (data) => {
@@ -327,6 +332,17 @@ const WatchPage = {
         } else {
             this.hideWheel();
         }
+    },
+
+    moveSound(san, last) {
+        let vol = 0.6;
+        try {
+            if (localStorage.getItem('h24Muted') === '1') vol = 0;
+            const v = parseFloat(localStorage.getItem('h24Volume'));
+            if (vol && Number.isFinite(v)) vol = Math.max(0, Math.min(1, v));
+        } catch { }
+        if (last?.from) requestAnimationFrame(() => window.BoardFx?.move({ from: last.from, to: last.to, capture: String(san).includes('x'), root: document.getElementById('watch-board') }));
+        window.SoundKit?.san(san, vol * 0.8);
     },
 
     highlight(move) {

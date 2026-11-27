@@ -382,3 +382,21 @@
     .shop-wallet small { display: none; }
     #page-shop .browse__title { font-size: 1.6rem; }
 }
+
+/* ----- Rayon Sons : banc d'écoute (chaque son de chaque kit) ----- */
+.shop-bench { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--border-subtle, #3a322c); border-radius: 12px; background: var(--bg-card, rgba(255, 255, 255, 0.03)); }
+.shop-bench h3 { margin: 0 0 4px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.shop-bench h3 i { color: var(--accent); }
+.shop-bench > p { margin: 0 0 12px; color: var(--text-muted); font-size: 0.85rem; }
+.shop-bench__wrap { overflow-x: auto; }
+.shop-bench__table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.shop-bench__table th, .shop-bench__table td { padding: 6px 4px; text-align: center; border-bottom: 1px solid var(--border-subtle, #3a322c); }
+.shop-bench__table thead th { color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.shop-bench__table tbody th { text-align: left; white-space: nowrap; padding-right: 12px; }
+.shop-bench__table tbody th small { display: block; color: var(--text-muted); font-weight: 400; font-size: 0.72rem; }
+.shop-bench__table tr:last-child > * { border-bottom: 0; }
+.shop-bench__table tr.is-equipped th b { color: var(--accent); }
+.shop-bench__table tr.is-equipped { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.shop-bench__play { width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--border-subtle, #3a322c); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.75rem; }
+.shop-bench__play:hover, .shop-bench__play:focus-visible { color: #fff; background: var(--accent); border-color: var(--accent); }
+.shop-bench__play--all { color: var(--accent); }

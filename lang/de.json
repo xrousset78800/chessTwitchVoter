@@ -1722,6 +1722,20 @@
       "fly-gold": "Gold",
       "pack-arcade": "Arcade-Paket",
       "pack-wood": "Holz-Paket"
+    },
+    "bench": {
+      "title": "Hörprobe",
+      "desc": "Hör dir jeden Sound jedes Kits an, auch die, die du noch nicht hast. Dein ausgerüstetes Kit ist hervorgehoben.",
+      "move": "Zug",
+      "capture": "Schlagen",
+      "check": "Schach",
+      "mate": "Matt",
+      "tick": "Rad",
+      "win": "Sieg",
+      "all": "Alle",
+      "equipped": "ausgerüstet",
+      "owned": "im Besitz",
+      "open": "Alle Kits anhören"
     }
   },
   "tlive": {

@@ -1722,6 +1722,20 @@
       "fly-gold": "Goud",
       "pack-arcade": "Arcade-pakket",
       "pack-wood": "Hout-pakket"
+    },
+    "bench": {
+      "title": "Luisterbank",
+      "desc": "Beluister elk geluid van elke kit, ook die je nog niet hebt. Je uitgeruste kit is gemarkeerd.",
+      "move": "Zet",
+      "capture": "Slaan",
+      "check": "Schaak",
+      "mate": "Mat",
+      "tick": "Rad",
+      "win": "Overwinning",
+      "all": "Alles",
+      "equipped": "uitgerust",
+      "owned": "in bezit",
+      "open": "Alle kits beluisteren"
     }
   },
   "tlive": {

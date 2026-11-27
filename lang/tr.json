@@ -1722,6 +1722,20 @@
       "fly-gold": "Altın",
       "pack-arcade": "Arcade paketi",
       "pack-wood": "Ahşap paketi"
+    },
+    "bench": {
+      "title": "Dinleme tezgâhı",
+      "desc": "Her setin her sesini dinle, henüz sahip olmadıkların dahil. Kuşandığın set vurgulanır.",
+      "move": "Hamle",
+      "capture": "Alma",
+      "check": "Şah",
+      "mate": "Mat",
+      "tick": "Çark",
+      "win": "Zafer",
+      "all": "Hepsi",
+      "equipped": "kuşanıldı",
+      "owned": "sende",
+      "open": "Tüm setleri dinle"
     }
   },
   "tlive": {

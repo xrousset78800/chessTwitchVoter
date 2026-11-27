@@ -1722,6 +1722,20 @@
       "fly-gold": "Oro",
       "pack-arcade": "Pacchetto Arcade",
       "pack-wood": "Pacchetto Legno"
+    },
+    "bench": {
+      "title": "Banco d'ascolto",
+      "desc": "Ascolta ogni suono di ogni kit, anche quelli che non hai ancora. Il kit equipaggiato è evidenziato.",
+      "move": "Mossa",
+      "capture": "Presa",
+      "check": "Scacco",
+      "mate": "Matto",
+      "tick": "Ruota",
+      "win": "Vittoria",
+      "all": "Tutto",
+      "equipped": "equipaggiato",
+      "owned": "posseduto",
+      "open": "Ascolta tutti i kit"
     }
   },
   "tlive": {
