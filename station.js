@@ -87,6 +87,10 @@ const BALLOTS = {
 const OPPONENT = { id: 'opponent', choices: ['bot', 'teams'], def: 'teams' };
 const BOT_NAMES = ['bot_fou', 'bot_tour', 'bot_pion', 'bot_dame', 'bot_roque', 'bot_gambit', 'bot_zugzwang',
     'bot_cavalier', 'bot_echec', 'bot_fianchetto', 'bot_sicilienne', 'bot_pat', 'bot_mat', 'bot_prise', 'bot_clouage', 'bot_fourchette'];
+// Rôles des bots, dans l'ordre d'ajout : viewers d'un chat surtout, quelques joueurs du site, un streameur sur cinq (3 au plus)
+const BOT_ROLES = ['streamer', 'viewer', 'site', 'viewer', 'viewer', 'site', 'streamer', 'viewer', 'site', 'viewer'];
+// Chaînes factices dont viennent les bots viewers quand aucun bot streameur n'est là (préfixe bot_ : jamais une vraie chaîne)
+const BOT_CHANNELS = ['bot_echecs_tv', 'bot_blitz_live', 'bot_roque_club', 'bot_gambit_stream'];
 // Niveaux des bots ajoutés en nombre (sim.js h24-bots, + / - de la régie) : un mélange, du plus courant au plus rare
 const BOT_MIX = [1320, 1500, 900, 1800, 600, 2100, 1500, 1320, 300, 2400, 900, 1800, 1500, 600, 2100, 1320];
 // Puzzle rush : mêmes réglages que rushManager (partie du streamer)
@@ -94,6 +98,7 @@ const RUSH = { startRating: 600, ratingStep: 60, ratingSpread: 120, maxStrikes: 
 
 const rand = (n) => Math.floor(Math.random() * n);
 const pick = (arr) => arr[rand(arr.length)];
+const isBotLogin = (login) => /^(bot_|sim_)/.test(login || '');
 /** chess.js 1.x lève une exception sur un coup illégal : null à la place */
 const tryMove = (chess, m) => { try { return chess.move(m); } catch { return null; } };
 
@@ -665,7 +670,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         // Provenance de son vote (chat d'une chaîne ou site) et sa photo Twitch, pour l'étiquette de la flèche
         const via = voter ? [...(s.game.recent || [])].reverse().find(r => r.u === voter && r.m === move)?.v || null : null;
         return { move, n, total, pct: total ? Math.round(n * 100 / total) : 0, voter,
-            via: via === 'bot' ? null : via, bot: via === 'bot' };
+            via, bot: isBotLogin(voter) };
     }
 
     /** Coup choisi à la fin du tour : majorité (ex æquo tirés au sort), tirage pondéré, ou hasard sans vote */
@@ -1271,11 +1276,11 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
     /** Vote d'un coup (SAN, UCI ou « e4 »), seulement pour l'équipe dont c'est le tour.
      *  Un vote par tour : il se change. Plusieurs (option « votes ») : chacun compte, le même coup peut être repris. */
-    /** Provenance d'un vote pour le bandeau : '#chaîne' (chat Twitch), 'bot' (bots de test) ou null (site) */
-    function viaOf(login, via) { return /^(bot_|sim_)/.test(login) ? 'bot' : via || null; }
+    /** Provenance d'un vote pour le bandeau : '#chaîne' (chat Twitch) ou null (site) ; les bots de test ont leur propre provenance (botVia) */
+    function viaOf(login, via) { return isBotLogin(login) ? botVia(login) : via || null; }
     /** Bandeau des votes : photo Twitch (si connue ; sinon demandée, l'état repart quand elle arrive) et provenance */
     function withPic(o) { return o && o.voter && !o.bot ? { ...o, pic: twitchApi.avatar(o.voter) } : o; }
-    function tickerItem(r, extra) { return { u: r.u, ...extra, v: r.v || null, p: r.v === 'bot' ? null : twitchApi.avatar(r.u) }; }
+    function tickerItem(r, extra) { return { u: r.u, ...extra, v: r.v || null, p: isBotLogin(r.u) ? null : twitchApi.avatar(r.u) }; }
     /** `lang` : notation du texte (chat : H24_LANG ; page : langue du spectateur ; bots : 'en') */
     function voteMove(login, text, via, lang = 'en') {
         const g = s.game;
@@ -1332,12 +1337,26 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     // et votent les coups à des moments aléatoires, répartis sur 2-3 coups (tirage au sort lisible).
     // Ils ne comptent pas comme spectateurs : sans vrai viewer, la station reste en pause.
     // Chaque bot a un niveau (elo) : ses coups sont ceux de Stockfish bridé à ce niveau.
-    const bots = { list: [], elo: new Map(), plans: new Map(), cands: null };
+    // Chaque bot a aussi un rôle, pour que le bandeau ressemble à une vraie partie : streameur (vote depuis le chat de sa
+    // propre chaîne), viewer du chat d'une chaîne (celle d'un bot streameur, sinon une chaîne factice) ou joueur du site.
+    const bots = { list: [], elo: new Map(), role: new Map(), chan: new Map(), plans: new Map(), cands: null };
     function botCount() { try { return bots.list.length; } catch { return 0; } }
-    const botList = () => bots.list.map(l => ({ l, elo: bots.elo.get(l) || 1500 }));
+    const botList = () => bots.list.map(l => ({ l, elo: bots.elo.get(l) || 1500, role: bots.role.get(l) || 'site', via: botVia(l) }));
+    function botVia(login) {
+        const role = bots.role.get(login);
+        if (role === 'streamer') return `#${login}`;
+        if (role !== 'viewer') return null;
+        let c = bots.chan.get(login);
+        if (!c || (c.startsWith('bot_') && bots.role.get(c) !== 'streamer')) {
+            const live = bots.list.filter(l => bots.role.get(l) === 'streamer');
+            c = live.length && Math.random() < 0.7 ? pick(live) : pick(BOT_CHANNELS);
+            bots.chan.set(login, c);
+        }
+        return `#${c}`;
+    }
     function setBots(count = 0) {
         const n = Math.max(0, Math.min(BOT_NAMES.length, Number(count) || 0));
-        for (const l of bots.list.slice(n)) { leave(l); bots.elo.delete(l); }
+        for (const l of bots.list.slice(n)) { leave(l); bots.elo.delete(l); bots.role.delete(l); bots.chan.delete(l); }
         bots.list = bots.list.slice(0, n);
         while (bots.list.length < n) addBot(BOT_MIX[bots.list.length % BOT_MIX.length], { quiet: true });
         bots.plans.clear();
@@ -1350,6 +1369,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!l) return null;
         bots.list.push(l);
         bots.elo.set(l, Stockfish.snapLevel(elo));
+        const streamers = bots.list.filter(x => bots.role.get(x) === 'streamer').length;
+        bots.role.set(l, BOT_ROLES[(bots.list.length - 1) % BOT_ROLES.length] === 'streamer' && streamers >= 3 ? 'viewer' : BOT_ROLES[(bots.list.length - 1) % BOT_ROLES.length]);
         // Ajouté en pleine partie : il rejoint tout de suite
         if (s.phase === 'play' && !teamOf(l)) join(l);
         if (!quiet) emit();
@@ -1359,6 +1380,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         if (!bots.list.includes(login)) return false;
         bots.list = bots.list.filter(l => l !== login);
         bots.elo.delete(login);
+        bots.role.delete(login);
+        bots.chan.delete(login);
         bots.plans.delete(login);
         leave(login);
         emit();

@@ -754,7 +754,7 @@ const H24Page = {
         const server = this.state?.regie || {};
         if (this.cam.devices === null) { this.cam.devices = []; listCameras().then(d => { this.cam.devices = d; this.renderRegie(true); }); }
         const camLive = !!this.camSender?.active;
-        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!this.me.chat, (this.state?.botList || []).map(b => b.l + b.elo).join()].join('|');
+        const key = [status, !!p?.isConnected, this.regie.live, !!server.paused, server.channel, this.state?.pauseReason, camLive, this.cam.error, this.cam.devices.length, this.regieFolded, !!this.me.chat, (this.state?.botList || []).map(b => b.l + b.elo + b.role).join()].join('|');
         if (!force && key === this.regieKey) return;
         this.regieKey = key;
         const typing = document.activeElement?.id === 'h24-regie-channel';
@@ -805,7 +805,7 @@ const H24Page = {
                 <button type="button" class="btn btn--sm" data-h24-bot-add title="${esc(t('h24.regie.botsMore', null, 'Ajouter un bot de ce niveau'))}"><i class="fas fa-plus"></i></button>
                 ${this.state?.bots ? `<button type="button" class="btn btn--sm btn--ghost" data-h24-bots-off><i class="fas fa-times"></i> ${esc(t('h24.botsOff', null, 'Retirer les bots'))}</button>` : ''}
             </div>
-            ${(this.state?.botList || []).length ? `<div class="h24-regie__botlist">${this.state.botList.map(b => `<span class="h24-regie__bot">${esc(b.l.replace(/^bot_/, ''))} · ${b.elo >= 2400 ? '2400+' : b.elo}<button type="button" data-h24-bot-remove="${esc(b.l)}" title="${esc(t('h24.regie.botsLess', null, 'Retirer ce bot'))}">×</button></span>`).join('')}</div>` : ''}
+            ${(this.state?.botList || []).length ? `<div class="h24-regie__botlist">${this.state.botList.map(b => `<span class="h24-regie__bot" title="${esc(b.via || t('h24.viaSite', null, 'site'))}">${b.role === 'streamer' ? '<i class="fas fa-video"></i> ' : b.role === 'viewer' ? '<i class="fas fa-comment"></i> ' : '<i class="fas fa-globe"></i> '}${esc(b.l.replace(/^bot_/, ''))} · ${b.elo >= 2400 ? '2400+' : b.elo}<button type="button" data-h24-bot-remove="${esc(b.l)}" title="${esc(t('h24.regie.botsLess', null, 'Retirer ce bot'))}">×</button></span>`).join('')}</div>` : ''}
             </div>`;
         el.querySelectorAll('[data-h24-cam-pref]').forEach(sel => sel.addEventListener('change', () => this.setCamPref(sel.dataset.h24CamPref, sel.value)));
         el.querySelector('[data-h24-bot-level]')?.addEventListener('change', (e) => { this.botLevel = Number(e.target.value) || 1500; });
