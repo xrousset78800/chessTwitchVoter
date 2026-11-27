@@ -238,7 +238,6 @@ getSortedVotes() {
         }
 
         let startAngle = this.currentRotation;
-        let raised = null; // Part du coup tiré, redessinée en relief par-dessus le reste
 
         sortedVotes.forEach((vote, index) => {
             const sliceAngle = (vote.count / totalVotes) * 2 * Math.PI;
@@ -260,8 +259,6 @@ getSortedVotes() {
 
             this.drawSliceLabel(ctx, centerX, centerY, radius, startAngle, sliceAngle, vote.move, turn);
 
-            if (!this.isSpinning && this.revealMove === vote.move) raised = { startAngle, sliceAngle, color, move: vote.move };
-
             startAngle = endAngle;
         });
 
@@ -279,7 +276,6 @@ getSortedVotes() {
         ctx.restore();
 
         this.drawRim(ctx, centerX, centerY, radius);
-        if (raised) this.drawRaisedSlice(ctx, centerX, centerY, radius, raised, turn);
 
         // Petit moyeu discret
         ctx.beginPath();
@@ -307,65 +303,6 @@ getSortedVotes() {
         this.drawMoveText(ctx, fmtMove(move), turn, 0, 0, fontSize);
         this.drawPiece(ctx, move, turn, 0, fontSize / 2 + 3 + pieceSize / 2, pieceSize);
         ctx.restore();
-    }
-
-    /** Coup tiré : le reste de la roue s'assombrit, sa part sort de la roue avec une ombre portée et un éclairage en relief */
-    drawRaisedSlice(ctx, cx, cy, radius, { startAngle, sliceAngle, color, move }, turn) {
-        const endAngle = startAngle + sliceAngle;
-        const mid = startAngle + sliceAngle / 2;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius + 20, 0, TAU);
-        ctx.fillStyle = 'rgba(8, 6, 5, 0.38)';
-        ctx.fill();
-
-        // Part décalée vers l'extérieur et un peu agrandie
-        const lift = Math.max(6, radius * 0.035);
-        const x = cx + Math.cos(mid) * lift;
-        const y = cy + Math.sin(mid) * lift;
-        const r = radius + lift * 0.6;
-        const path = () => {
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            if (sliceAngle < TAU - 0.001) ctx.arc(x, y, r, startAngle, endAngle);
-            else ctx.arc(x, y, r, 0, TAU);
-            ctx.closePath();
-        };
-        path();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
-        ctx.shadowBlur = Math.max(14, radius * 0.08);
-        ctx.shadowOffsetX = Math.cos(mid) * 3 + 2;
-        ctx.shadowOffsetY = Math.sin(mid) * 3 + 5;
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.shadowColor = 'transparent';
-
-        // Éclairage : plus clair vers le bord extérieur, plus sombre vers le centre
-        path();
-        const shade = ctx.createRadialGradient(x, y, 0, x, y, r);
-        shade.addColorStop(0, 'rgba(0, 0, 0, 0.22)');
-        shade.addColorStop(0.55, 'rgba(255, 255, 255, 0)');
-        shade.addColorStop(0.92, 'rgba(255, 255, 255, 0.22)');
-        shade.addColorStop(1, 'rgba(255, 255, 255, 0.32)');
-        ctx.fillStyle = shade;
-        ctx.fill();
-
-        // Arêtes : bord extérieur clair, côtés sombres
-        ctx.lineJoin = 'round';
-        path();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(10, 8, 7, 0.55)';
-        ctx.stroke();
-        if (sliceAngle < TAU - 0.001) {
-            ctx.beginPath();
-            ctx.arc(x, y, r - 1.5, startAngle + 0.01, endAngle - 0.01);
-            ctx.lineWidth = 2.5;
-            ctx.strokeStyle = 'rgba(255, 246, 236, 0.6)';
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        this.drawSliceLabel(ctx, x, y, r, startAngle, sliceAngle, move, turn);
     }
 
     /** Jante sombre et ses lampes : défilent pendant le tirage, clignotent à l'arrêt, puis restent allumées */
