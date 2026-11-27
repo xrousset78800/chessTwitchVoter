@@ -487,6 +487,7 @@ const H24Page = {
             new ResizeObserver(() => {
                 const w = el.clientWidth;
                 if (w && w !== this.boardWidth && this.board) { this.boardWidth = w; this.board.resize(); }
+                requestAnimationFrame(() => this.fitBand());
             }).observe(el);
         }
     },
@@ -1675,7 +1676,24 @@ const H24Page = {
             // Bande collée sous l'échiquier
             const after = document.querySelector('#page-h24 .board-wrapper');
             if (after && area.previousElementSibling !== after) after.after(area);
+            this.fitBand();
         }
+    },
+
+    /** Bande sobre : exactement la largeur de l'échiquier, alignée sur lui */
+    fitBand() {
+        const area = $('h24-wheel-area');
+        if (!area) return;
+        if (!area.classList.contains('wheel-area--band')) { area.style.width = area.style.maxWidth = area.style.marginLeft = ''; return; }
+        const b = document.querySelector('#h24-board .board-b72b1') || $('h24-board');
+        const parent = area.parentElement;
+        if (!b || !parent) return;
+        const r = b.getBoundingClientRect(), p = parent.getBoundingClientRect();
+        if (!r.width) return;
+        area.style.maxWidth = 'none';
+        area.style.width = `${Math.round(r.width)}px`;
+        area.style.marginLeft = `${Math.round(r.left - p.left - (parseFloat(getComputedStyle(parent).paddingLeft) || 0))}px`;
+        area.style.marginRight = '0';
     },
 
     hideDraw() {

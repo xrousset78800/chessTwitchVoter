@@ -525,7 +525,10 @@ input[type=range] {
 .eval-bar__white { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: #f1f1f1; transition: height .4s ease; }
 .eval-bar__label { position: absolute; left: 0; right: 0; top: 3px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; color: #f1f1f1; z-index: 1; }
 .eval-bar__label.is-white { top: auto; bottom: 3px; color: #403d39; }
-#btnEvalT.is-on { color: var(--accent-purple, #ff8a3d); border-color: currentColor; }
+/* Icône de la jauge : dans la marge gauche, juste au-dessus du bord de l'échiquier */
+.eval-toggle { position: absolute; left: 0; width: 20px; height: 20px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted, #7f736b); font-size: 13px; cursor: pointer; opacity: .7; transition: color .15s, opacity .15s; z-index: 2; }
+.eval-toggle:hover, .eval-toggle.is-on { color: var(--accent-purple, #ff8a3d); opacity: 1; }
+.eval-toggle:focus-visible { outline: 2px solid var(--accent-purple, #ff8a3d); outline-offset: 1px; }
 .t-side__elo { flex: none; font-size: 0.78rem; font-weight: 600; color: var(--text-muted, #7f736b); font-variant-numeric: tabular-nums; }
 .t-side__score { flex: none; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--accent-purple, #ff8a3d); }
 
@@ -1065,6 +1068,9 @@ input[type=range] {
 .tv-faces { flex: 1; min-width: 0; display: flex; align-items: center; padding-left: 6px; overflow: hidden; }
 .tv-faces .tv-pic { flex: 0 0 22px; width: 22px; height: 22px; margin-left: -6px; font-size: 0.62rem; box-shadow: 0 0 0 2px var(--bg-card, #1c1814); }
 .tv-more { margin-left: 4px; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+.tv-endhead { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; }
+.tv-endhead .fa-trophy { color: var(--accent-purple, #ff8a3d); }
+.tv-gain .fa-chess-pawn { font-size: 0.72rem; }
 .tv-n { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); }
 .tv-bots { background: none; border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; cursor: pointer; }
 .tv-bots[hidden] { display: none; }

@@ -219,6 +219,36 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
         res.json({ guesses });
     });
 
+    /**
+     * Pronostics « vainqueur » de tous les comptes pour une partie (bloc Votants en fin de partie) :
+     * gain réel une fois jugé, sinon gain prévu d'après la cote (jugé au prochain passage du compte).
+     */
+    app.get('/api/predict/winners', async (req, res) => {
+        try {
+            const room = str(req.query.room), gameId = str(req.query.game);
+            const key = `${room}:${gameId}`;
+            let result = null;
+            try { const { game } = await findGame(room, gameId); result = game?.result && game.result !== '*' ? normResult(game.result) : null; } catch { /* partie introuvable */ }
+            const list = [];
+            for (const [login, u] of Object.entries(store.data)) {
+                const w = u?.winners?.[key];
+                const done = !w && (u?.results || []).find(r => r.kind === 'winner' && r.key === key);
+                if (!w && !done) continue;
+                const pick = w ? w.pick : done.pick;
+                let coins = 0;
+                if (done) coins = done.gain?.coins || 0;
+                else if (result && pick === result) {
+                    const g = result === '1/2-1/2' ? R().winnerDraw : R().winner;
+                    coins = Math.max(1, Math.round(g.coins * (Number.isFinite(w.f) ? w.f : 1)));
+                }
+                list.push({ login, pick, coins, pic: twitchApi.avatar(login), at: w ? w.at : done.at });
+                if (list.length >= 300) break;
+            }
+            list.sort((a, b) => b.coins - a.coins || a.at - b.at);
+            res.json({ result, winners: list });
+        } catch (err) { fail(res, err); }
+    });
+
     async function currentOdds(room, gameId) {
         if (!room || !gameId) return null;
         try {

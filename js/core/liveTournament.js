@@ -1524,17 +1524,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Jauge d'évaluation à gauche de l'échiquier (choix mémorisé dans le navigateur)
     const evalCol = document.querySelector('#page-tournament .t-boardcol');
-    const evalBtn = document.getElementById('btnEvalT');
-    if (window.EvalBar && evalCol && evalBtn) {
+    if (window.EvalBar && evalCol) {
+        let setEvalT = () => {};
         const evalT = EvalBar.attach({
             host: evalCol,
             boardEl: document.getElementById('liveBoardT'),
             getFen: () => simT.active ? simFenT() : stateT.chess?.fen(),
+            onToggle: on => setEvalT(on),
+            toggleTitle: window.tt?.('ui.tour.evalTitle', null, '') || "Afficher ou masquer la jauge d'évaluation (Stockfish)",
         });
-        const setEvalT = on => {
+        setEvalT = on => {
             evalCol.classList.toggle('has-eval', on);
-            evalBtn.setAttribute('aria-pressed', String(on));
-            evalBtn.classList.toggle('is-on', on);
             evalT.setEnabled(on);
             requestAnimationFrame(() => { stateT.board?.resize(); evalT.place(); });
             try { localStorage.setItem('tEval', on ? '1' : '0'); } catch { /* stockage indisponible */ }
@@ -1542,7 +1542,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let saved = false;
         try { saved = localStorage.getItem('tEval') === '1'; } catch { /* stockage indisponible */ }
         if (saved) setEvalT(true);
-        evalBtn.addEventListener('click', () => setEvalT(!evalT.enabled));
     }
 
     document.getElementById('tournamentRoomSelect')?.addEventListener('change', async function () {

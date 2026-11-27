@@ -15,7 +15,7 @@
     /** Part des Blancs (0 à 1) pour un avantage en centipions (même courbe que les sites d'échecs) */
     const share = cp => 1 / (1 + Math.exp(-0.004 * cp));
 
-    function attach({ host, boardEl, getFen }) {
+    function attach({ host, boardEl, getFen, onToggle = null, toggleTitle = '' }) {
         const bar = document.createElement('div');
         bar.className = 'eval-bar';
         bar.hidden = true;
@@ -23,6 +23,21 @@
         host.appendChild(bar);
         const fill = bar.querySelector('.eval-bar__white');
         const label = bar.querySelector('.eval-bar__label');
+
+        // Petite icône dans la marge, au-dessus du bord gauche de l'échiquier : affiche / masque la jauge
+        let toggle = null;
+        if (onToggle) {
+            toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'eval-toggle';
+            toggle.title = toggleTitle;
+            toggle.setAttribute('aria-pressed', 'false');
+            toggle.innerHTML = '<i class="fas fa-adjust"></i>';
+            toggle.addEventListener('click', () => onToggle(!enabled));
+            host.appendChild(toggle);
+            bar.style.cursor = 'pointer';
+            bar.addEventListener('click', () => onToggle(false));
+        }
 
         let worker = null, enabled = false, timer = null;
         let fen = null, turn = 'w', searching = false, ignore = 0;
@@ -33,7 +48,9 @@
             if (!r.height) return;
             bar.style.top = `${r.top - h.top}px`;
             bar.style.height = `${r.height}px`;
+            if (toggle) toggle.style.top = `${Math.max(0, r.top - h.top - 24)}px`;
         }
+        if (toggle && typeof ResizeObserver === 'function') new ResizeObserver(() => place()).observe(boardEl);
 
         /** Score du point de vue des Blancs : { cp } ou { mate: coups, whiteWins } (mate 0 : déjà mat) */
         function show(s) {
@@ -94,6 +111,7 @@
         function setEnabled(on) {
             enabled = !!on;
             bar.hidden = !enabled;
+            if (toggle) { toggle.setAttribute('aria-pressed', String(enabled)); toggle.classList.toggle('is-on', enabled); place(); }
             clearInterval(timer);
             timer = null;
             if (enabled) {

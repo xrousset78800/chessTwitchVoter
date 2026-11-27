@@ -572,12 +572,73 @@
         voters.timer = setTimeout(() => { voters.flash = null; renderVoters(); }, 5000);
         renderVoters();
     }
+    /** Pronostics vainqueur des comptes du site pour une partie terminée (une fois, puis gardés) */
+    const endWin = { key: null, list: null, busy: false, tries: 0 };
+    async function loadEndWinners(c) {
+        if (endWin.busy || (endWin.key === c.key && (endWin.list || endWin.tries >= 3))) return;
+        if (endWin.key !== c.key) { endWin.key = c.key; endWin.list = null; endWin.tries = 0; }
+        endWin.busy = true; endWin.tries++;
+        try {
+            const r = await fetch('/api/predict/winners?' + new URLSearchParams({ room: c.room, game: c.g.id }));
+            if (r.ok && endWin.key === c.key) endWin.list = (await r.json()).winners || [];
+        } catch { /* nouvel essai au prochain rendu */ }
+        endWin.busy = false;
+        if (endWin.key === c.key && endWin.list) renderVoters();
+        else if (endWin.tries < 3) setTimeout(renderVoters, 3000);
+    }
+    /** Partie terminée : qui a voté 1-0 / ½ / 0-1 (site + chat), le bon résultat et les pions gagnés */
+    function renderEndVoters(el, c, face, me) {
+        const result = PICKS.includes(c.g.result) ? c.g.result : c.g.result === '½-½' ? '1/2-1/2' : null;
+        if (endWin.key !== c.key || !endWin.list) loadEndWinners(c);
+        const site = endWin.key === c.key ? endWin.list || [] : [];
+        const all = new Map();
+        for (const [login, v] of chatWin.get(c.key) || []) all.set(login, { login, name: v.name, pick: v.pick, coins: 0, src: v.bot ? 'bot' : 'chat' });
+        for (const v of site) all.set(v.login, { ...v, name: v.login, src: 'site' });
+        const list = [...all.values()];
+        const sig = JSON.stringify(['end', c.key, result, list.map(v => [v.login, v.pick, v.coins, picOf(v)]), document.documentElement.lang]);
+        if (el.dataset.sig === sig) return;
+        el.dataset.sig = sig;
+        el.querySelector('.tv-count').textContent = list.length ? String(list.length) : '';
+        const label = p => p === '1/2-1/2' ? '½-½' : p;
+        const order = [...PICKS].sort((a, b) => (b === result) - (a === result));
+        const MAXF = 10;
+        const pawn = n => `<b class="tv-gain">+${n} <i class="fas fa-chess-pawn"></i></b>`;
+        const row = (p, i) => {
+            const gr = list.filter(v => v.pick === p).sort((a, b) => b.coins - a.coins);
+            const hit = result === p;
+            const coins = gr.reduce((s, v) => s + (v.coins || 0), 0);
+            const mine = gr.find(v => v.login === me);
+            const mark = !result ? '' : hit
+                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${coins ? pawn(mine?.coins || coins) : ''}</span>`
+                : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
+            const more = gr.length - MAXF;
+            const tip = v => `${v.name || v.login}${v.coins ? ` · +${v.coins} ♟` : ''}`;
+            return `<li class="tv-item tv-grp${mine ? ' is-me' : ''}${result ? (hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i};--p:${list.length ? Math.round(100 * gr.length / list.length) : 0}%" title="${esc(T('predict.' + PICK_KEY[p]))}">
+                <span class="tv-move">${esc(label(p))}</span>
+                <span class="tv-faces">${gr.slice(0, MAXF).map(v => face(v).replace(/title="[^"]*"/, `title="${esc(tip(v))}"`)).join('')}${more > 0 ? `<span class="tv-more">+${more}</span>` : ''}</span>
+                <span class="tv-n">${gr.length}</span>${mark}</li>`;
+        };
+        el.querySelector('.tv-body').innerHTML = `<p class="tp-hint tv-endhead"><i class="fas fa-trophy"></i> ${esc(T('predict.winnerTitle', null, 'Vainqueur'))}${result ? ` · <strong>${esc(label(result))}</strong>` : ''}</p>
+            ${list.length ? `<ul class="tv-list tv-groups is-flash">${order.map(row).join('')}</ul>`
+                : `<p class="tp-hint">${esc(T('tlive.noVotes', null, 'Aucun vote'))}</p>`}`;
+    }
     function renderVoters() {
         const el = document.getElementById('tVoters');
         if (!el) return;
         const c = current();
         el.hidden = !c;
         if (!c) return;
+        const me0 = window.twitchAuth?.user?.login?.toLowerCase();
+        if (c.ended && !(voters.flash?.key === c.key)) {
+            const face0 = v => {
+                if (v.src === 'bot') return `<span class="tv-pic is-bot" title=""><i class="fas fa-robot"></i></span>`;
+                const url = picOf(v);
+                return url ? `<img class="tv-pic" src="${esc(url)}" alt="" loading="lazy" title="">`
+                    : `<span class="tv-pic" title="">${esc(String(v.name || v.login || '?')[0].toUpperCase())}</span>`;
+            };
+            renderEndVoters(el, c, face0, me0);
+            return;
+        }
         const flash = voters.flash?.key === c.key ? voters.flash : null;
         const list = flash ? flash.list : votersOf(c.key, c.fen);
         const me = window.twitchAuth?.user?.login?.toLowerCase();
