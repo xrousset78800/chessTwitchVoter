@@ -402,12 +402,22 @@ body.game-mode .nav__page-title {
 .nav__pieces-current:focus-visible { outline: 2px solid rgba(255, 138, 61, 0.5); outline-offset: 1px; }
 .nav__pieces-menu {
     position: absolute; top: calc(100% + 6px); right: 0; z-index: 1000;
-    width: min(320px, calc(100vw - 16px)); max-height: calc(100vh - 80px); overflow-y: auto; scrollbar-width: thin;
+    width: min(560px, calc(100vw - 16px)); max-height: calc(100vh - 80px); overflow-y: auto; scrollbar-width: thin;
     margin: 0; padding: 4px 4px 2px; list-style: none;
+    columns: 2; column-gap: 4px;
     background: var(--bg-card, #1a1512); border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md, 10px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
 .nav__pieces-menu[hidden] { display: none; }
+/* Deux colonnes : chaque rubrique (titre + choix) reste d'un seul tenant */
+.nav__pieces-sec { break-inside: avoid; }
+.nav__pieces-sec--shop { column-span: all; }
+@media (max-width: 560px) { .nav__pieces-menu { columns: 1; width: min(320px, calc(100vw - 16px)); } }
+.nav__pieces-swatch.nav__pieces-kit {
+    display: grid; place-items: center; background: var(--bg-card-hover, #2a221d);
+    color: var(--text-secondary, #d8cfc8); font-size: 0.8rem;
+}
+.nav__pieces-swatch.nav__pieces-kit.is-active { color: var(--accent, #ff8a3d); }
 .nav__pieces-item {
     display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px;
     border: none; border-radius: var(--radius-sm, 6px); background: none;

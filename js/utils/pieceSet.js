@@ -178,7 +178,16 @@
                 el.setAttribute('aria-label', el.title);
             });
             // Le choix en cours, à droite de chaque titre
-            const cur = { board: boardLabel(board), mat: matLabel(mat), pieces: label(current), theme: themeLabel(theme), palette: pal ? palLabel(pal) : '' };
+            const kit = window.Cosmetics?.get('sound') || '';
+            const kitName = id => tr(`shop.item.${id || 'kit-classic'}`, id ? id : 'Classique');
+            box.querySelectorAll('[data-sound-kit]').forEach(el => {
+                const on = el.dataset.soundKit === kit;
+                el.classList.toggle('is-active', on);
+                el.setAttribute('aria-pressed', String(on));
+                el.title = kitName(el.dataset.soundKit);
+                el.setAttribute('aria-label', el.title);
+            });
+            const cur = { board: boardLabel(board), mat: matLabel(mat), pieces: label(current), theme: themeLabel(theme), palette: pal ? palLabel(pal) : '', sound: kitName(kit) };
             box.querySelectorAll('[data-cur]').forEach(b => { b.textContent = cur[b.dataset.cur] || ''; });
             box.querySelectorAll('[data-board-theme]').forEach(el => {
                 const b = boardById(el.dataset.boardTheme);
@@ -259,29 +268,29 @@
         const mats = MATS.filter(unlocked);
         const pals = vp ? vp.PALETTE_IDS.filter(vp.paletteAvailable) : [];
         // Titre de rubrique : le nom à gauche, le choix en cours à droite
-        const head = (key, fb, cur) => `<li class="nav__pieces-heading" data-key="${key}" data-fb="${fb}"><span></span><b data-cur="${cur}"></b></li>`;
+        const head = (key, fb, cur) => `<div class="nav__pieces-heading" data-key="${key}" data-fb="${fb}"><span></span><b data-cur="${cur}"></b></div>`;
+        // Kits de sons possédés (magasin, js/core/cosmetics.js) : « Classique » + les kits achetés
+        const kits = Object.entries(window.Cosmetics?.ITEMS || {}).filter(([id, x]) => x.slot === 'sound' && window.unlockedRewards?.has?.(id));
+        const sec = (html) => `<li class="nav__pieces-sec">${html}</li>`;
+        const grid = (cls, html) => `<div class="nav__pieces-grid${cls ? ` ${cls}` : ''}">${html}</div>`;
         document.querySelectorAll('.nav__pieces').forEach(box => {
             const wasOpen = box.classList.contains('is-open');   // reconstruit pendant qu'on choisit : il reste ouvert
             box.innerHTML = `
                 <button class="nav__pieces-current" type="button" aria-haspopup="true" aria-expanded="false"></button>
                 <ul class="nav__pieces-menu" hidden>
-                    ${head('pieces.boardTitle', 'Échiquier', 'board')}
-                    <li class="nav__pieces-grid">${BOARDS.filter(unlocked).map(b => `<button type="button" class="nav__pieces-swatch" data-board-theme="${b.id}"
-                        style="--l:${b.light};--d:${b.dark}"></button>`).join('')}</li>
-                    ${mats.length > 1 ? `${head('pieces.matTitle', 'Matière', 'mat')}
-                    <li class="nav__pieces-grid">${mats.map(m => `<button type="button" class="nav__pieces-swatch nav__pieces-mat mat--${m.id}" data-board-mat="${m.id}"></button>`).join('')}</li>` : ''}
-                    ${sets.length > 1 ? `${head('pieces.title', 'Pièces', 'pieces')}
-                    <li class="nav__pieces-grid">${sets.map(s => `<button type="button" class="nav__pieces-swatch nav__pieces-set" data-piece-set="${s.id}"><img src="${url('wN', s)}" alt="" loading="lazy"></button>`).join('')}</li>` : ''}
-                    ${pals.length > 1 ? `${head('palette.title', 'Couleurs du tirage', 'palette')}
-                    <li class="nav__pieces-grid nav__pieces-grid--pal">${pals.map(id => {
+                    ${sec(head('pieces.boardTitle', 'Échiquier', 'board') + grid('', BOARDS.filter(unlocked).map(b => `<button type="button" class="nav__pieces-swatch" data-board-theme="${b.id}"
+                        style="--l:${b.light};--d:${b.dark}"></button>`).join('')))}
+                    ${mats.length > 1 ? sec(head('pieces.matTitle', 'Matière', 'mat') + grid('', mats.map(m => `<button type="button" class="nav__pieces-swatch nav__pieces-mat mat--${m.id}" data-board-mat="${m.id}"></button>`).join(''))) : ''}
+                    ${sets.length > 1 ? sec(head('pieces.title', 'Pièces', 'pieces') + grid('', sets.map(s => `<button type="button" class="nav__pieces-swatch nav__pieces-set" data-piece-set="${s.id}"><img src="${url('wN', s)}" alt="" loading="lazy"></button>`).join(''))) : ''}
+                    ${pals.length > 1 ? sec(head('palette.title', 'Couleurs du tirage', 'palette') + grid('nav__pieces-grid--pal', pals.map(id => {
                         const c = vp.PALETTES[id].slice(0, 5);
                         const stops = c.map((x, i) => `${x} ${i * 20}% ${(i + 1) * 20}%`).join(',');
                         return `<button type="button" class="nav__pieces-swatch nav__pieces-pal" data-vote-palette="${id}" style="background:linear-gradient(90deg,${stops})"></button>`;
-                    }).join('')}</li>` : ''}
-                    ${head('pieces.themeTitle', 'Thème du site', 'theme')}
-                    <li class="nav__pieces-grid">${THEMES.filter(unlocked).map(x => `<button type="button" class="nav__pieces-swatch nav__pieces-theme" data-site-theme="${x.id}"
-                        style="--l:${x.card};--d:${x.bg}"></button>`).join('')}</li>
-                    <li><a class="nav__pieces-shop" href="/shop"><i class="fas fa-store"></i> <span></span></a></li>
+                    }).join(''))) : ''}
+                    ${sec(head('pieces.themeTitle', 'Thème du site', 'theme') + grid('', THEMES.filter(unlocked).map(x => `<button type="button" class="nav__pieces-swatch nav__pieces-theme" data-site-theme="${x.id}"
+                        style="--l:${x.card};--d:${x.bg}"></button>`).join('')))}
+                    ${kits.length ? sec(head('shop.tab.sounds', 'Sons', 'sound') + grid('', [['', { icon: 'fa-volume-low' }], ...kits].map(([id, x]) => `<button type="button" class="nav__pieces-swatch nav__pieces-kit" data-sound-kit="${id}"><i class="fas ${x.icon}" aria-hidden="true"></i></button>`).join(''))) : ''}
+                    <li class="nav__pieces-sec nav__pieces-sec--shop"><a class="nav__pieces-shop" href="/shop"><i class="fas fa-store"></i> <span></span></a></li>
                 </ul>`;
             const btn = box.querySelector('.nav__pieces-current');
             const menu = box.querySelector('.nav__pieces-menu');
@@ -300,6 +309,15 @@
                 if (th) { e.stopPropagation(); setSiteTheme(th.dataset.siteTheme); return; }
                 const mt = e.target.closest('button[data-board-mat]');
                 if (mt) { e.stopPropagation(); setBoardMat(mt.dataset.boardMat); return; }
+                const kt = e.target.closest('[data-sound-kit]');
+                if (kt) {   // kit de sons : équipé et joué tout de suite (Classique : le son de coup habituel)
+                    e.stopPropagation();
+                    const id = kt.dataset.soundKit || null;
+                    window.Cosmetics?.set('sound', id);
+                    if (id) window.SoundKit?.demo(id);
+                    else { try { new Audio('mp3/move.mp3').play().catch(() => { }); } catch (err) { } }
+                    return;
+                }
                 const pl = e.target.closest('[data-vote-palette]');
                 if (pl) { e.stopPropagation(); vp?.setPaletteId(pl.dataset.votePalette); render(); return; }
                 if (e.target.closest('.nav__pieces-shop')) { toggle(false); return; }
@@ -342,6 +360,7 @@
     });
 
     window.addEventListener('languageChanged', render);
+    window.addEventListener('cosmeticsChanged', render);
     // Couleurs du tirage changées (ici, à la Boutique) ou objets du compte relus : le menu suit
     document.addEventListener('votePaletteChanged', render);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
