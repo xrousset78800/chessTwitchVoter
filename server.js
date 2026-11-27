@@ -1265,7 +1265,7 @@ app.get('/api/h24/stats', (req, res) => {
 
 // Simulation d'activité (chaînes sim_*), pilotée depuis la machine : voir sim.js et sim-cli.js
 require('./sim')({
-    app, io, games, multiRooms, stats, emitSpectate, broadcastGamesList, newPublicId, dataDir: DATA_DIR, station,
+    app, io, games, multiRooms, stats, emitSpectate, broadcastGamesList, newPublicId, dataDir: DATA_DIR, station, economy,
     rush: { get: () => rushRecords, set: (r) => { rushRecords = r || {}; }, save: saveRushRecords }
 });
 

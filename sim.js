@@ -81,7 +81,7 @@ function chooseMove(chess, skill = 0.75) {
     return best;
 }
 
-module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, emitSpectate, broadcastGamesList, newPublicId, dataDir, station }) {
+module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, emitSpectate, broadcastGamesList, newPublicId, dataDir, station, economy }) {
     const key = crypto.randomBytes(24).toString('hex');
     try { fs.writeFileSync(KEY_FILE, key, { mode: 0o600 }); } catch (e) { console.warn('🧪 Clé de simulation non écrite:', e.message); }
 
@@ -452,7 +452,18 @@ module.exports = function setupSim({ app, io, games, multiRooms, stats, rush, em
     // Bots de la page 24/24 (count=0 pour les retirer)
     const h24Bots = (o) => station ? station.setBots(o.count) : { error: 'station absente' };
     const h24Status = (o) => station?.diag ? station.diag(o) : { error: 'station absente' };
-    const ACTIONS = { seed, 'live-start': liveStart, 'live-stop': liveStop, purge, snapshot, restore, status, 'h24-bots': h24Bots, 'h24-status': h24Status };
+    // Pions (et XP) offerts à un compte : login=… (par défaut le premier compte de la régie, H24_REGIE) coins=… xp=…
+    const grantAction = (o) => {
+        if (!economy) return { error: 'économie absente' };
+        const login = String(o.login || String(process.env.H24_REGIE || '').split(',')[0] || '').trim().toLowerCase();
+        const coins = Math.max(0, Math.min(1e7, Number(o.coins) || 0)), xp = Math.max(0, Math.min(1e7, Number(o.xp) || 0));
+        if (!login || (!coins && !xp)) return { error: 'login (ou H24_REGIE) et coins / xp requis' };
+        const gain = economy.grant(login, 'admin', { coins, xp });
+        economy.store?.save?.();
+        const acc = economy.publicAccount?.(login);
+        return { login, gain, coins: acc?.coins ?? null };
+    };
+    const ACTIONS = { seed, 'live-start': liveStart, 'live-stop': liveStop, purge, snapshot, restore, status, 'h24-bots': h24Bots, 'h24-status': h24Status, grant: grantAction };
     app.post('/api/sim/:action', (req, res) => {
         const given = String(req.headers['x-sim-key'] || '');
         const ok = LOOPBACK.has(req.socket.remoteAddress) && !req.headers['x-forwarded-for']

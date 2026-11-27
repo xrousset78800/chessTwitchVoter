@@ -19,6 +19,7 @@ on:
           - restore
           - h24-bots
           - h24-status
+          - grant
       args:
         description: "Options (ex : games=10 moveMs=6000)"
         type: string
