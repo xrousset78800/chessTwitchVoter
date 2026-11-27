@@ -94,8 +94,14 @@ module.exports = function lichessTv({ log = console.log } = {}) {
     const player = (p) => ({ name: p?.user?.name || 'Anonyme', elo: p?.rating ?? null, title: p?.user?.title || null, fide: null });
 
     /** Parties proposées, sous la forme de la liste chess.com */
-    async function candidates() {
+    async function candidates(retry = true) {
         const list = await channelIds();
+        // Partie vedette terminée mais liste des chaînes encore en cache : on relit tout de suite les chaînes
+        // (sinon aucune partie pendant une minute, et « Prédiction » arrive en retard au vote du mode)
+        if (retry && list.some(({ id }) => games.get(id) && games.get(id).result !== '*')) {
+            chan = null;
+            return candidates(false);
+        }
         const out = await Promise.all(list.map(async ({ id, name }) => {
             const e = follow(id);
             await e.ready;

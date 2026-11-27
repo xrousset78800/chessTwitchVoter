@@ -863,8 +863,9 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         }).catch(() => {});
     }
     refreshCands();
-    // Liste tenue à jour en continu (sinon vide ou périmée au vote du mode, et « Prédiction » arrive en retard)
-    setInterval(refreshCands, 2 * 60 * 1000).unref?.();
+    // Liste tenue à jour en continu (sinon vide ou périmée au vote du mode, et « Prédiction » arrive en retard) ;
+    // les sources sont en cache (30 s chess.com, 60 s Lichess TV) : relire souvent ne coûte presque rien
+    setInterval(refreshCands, 30 * 1000).unref?.();
     /** Vote de la partie à suivre : g0…g4 (le chat tape 1 à 5), la plus forte par défaut */
     function gameBallot() {
         if (!pred.cands.length) return null;
