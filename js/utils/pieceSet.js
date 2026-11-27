@@ -145,6 +145,8 @@
     const PIECE_SRC = /\/chesspieces\/[^/]+\/([wb][PNBRQK])\.(?:png|svg)(?:[?#].*)?$/;
     function refreshImages() {
         document.querySelectorAll('img').forEach(img => {
+            // Aperçus d'un set précis (menu des pièces, boutique) : ils gardent leur set
+            if (img.closest('[data-piece-set], .shop-pieces')) return;
             const m = (img.getAttribute('src') || '').match(PIECE_SRC);
             if (m) img.src = url(m[1]);
         });
