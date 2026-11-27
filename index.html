@@ -1099,13 +1099,14 @@
                                     <div class="panel__content h24-histpop__sc"><div class="history-list" id="h24-history"></div></div>
                                 </div>
                             </div>
-                            <!-- Régie (PC du streamer) : ouverte / fermée par un petit bouton orange -->
-                            <button type="button" class="h24-settings__btn h24-regiebtn" data-h24-regie-toggle aria-expanded="false" data-i18n-title="h24.regie.title" title="Régie" hidden><i class="fas fa-sliders-h"></i><span class="h24-regiebtn__dot"></span></button>
+                            <!-- Régie (PC du streamer : Phantom, pause, chaîne de la vue réelle) : fenêtre sous un petit bouton orange, comme l'historique -->
+                            <div class="h24-regiewrap">
+                                <button type="button" class="h24-settings__btn h24-regiebtn" data-h24-regie-toggle aria-expanded="false" aria-haspopup="true" data-i18n-title="h24.regie.title" title="Régie" hidden><i class="fas fa-sliders-h"></i><span class="h24-regiebtn__dot"></span></button>
+                                <div class="h24-regie" id="h24-regie" hidden></div>
+                            </div>
                             <!-- Tirage en bande ou en roue (les couleurs se choisissent dans le menu du cavalier, en haut) -->
                             <button type="button" class="h24-settings__btn h24-stylebtn" data-h24-style-toggle></button>
                         </div>
-                        <!-- Régie (PC du streamer) : Phantom, pause, chaîne de la vue réelle -->
-                        <div class="h24-regie" id="h24-regie" hidden></div>
                         <div class="panel h24-teams-panel" data-h24-panel="teams">
                             <button type="button" class="panel__header h24-fold" data-h24-fold="teams" aria-expanded="true"><i class="fas fa-users"></i> <span data-i18n="h24.teamsTitle">Équipes</span><i class="fas fa-chevron-up h24-fold__chev"></i></button>
                             <div class="panel__content">

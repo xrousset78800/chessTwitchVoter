@@ -212,7 +212,6 @@
     @supports (overflow-clip-margin: 8px) { #page-h24 .sandbox__sidebar { overflow: clip; overflow-clip-margin: 8px; } }
     #page-h24 .sandbox__sidebar > * { flex-shrink: 0; }
     /* Régie ouverte ou longues équipes sur un petit écran : ces blocs rétrécissent et défilent eux-mêmes plutôt que de pousser le podium */
-    #page-h24 .sandbox__sidebar > .h24-regie { flex: 0 1 auto; min-height: 44px; overflow-y: auto; scrollbar-width: thin; }
     #page-h24 .sandbox__sidebar > .h24-teams-panel { flex: 0 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
     /* La roue tient avec les panneaux au-dessus */
     #page-h24 #h24-votes-panel.votes-slot { --dock-size: min(380px, 82vw, calc(var(--sidebar-width) - 50px), 32vh); }
@@ -240,6 +239,14 @@
     flex: none;
 }
 .h24-regie[hidden] { display: none; }
+/* Fenêtre sous le bouton orange de la barre d'outils, comme l'historique */
+.h24-regiewrap { position: relative; }
+.h24-regiewrap > .h24-regie {
+    position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; width: 340px; max-width: calc(100vw - 32px);
+    max-height: calc(100vh - var(--nav-height, 56px) - 120px); overflow-y: auto; scrollbar-width: thin;
+    border-style: solid; background: linear-gradient(rgba(255, 138, 61, 0.08), rgba(255, 138, 61, 0.08)), var(--bg-secondary, #18181b);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); animation: h24-settings-in 0.18s ease-out; text-align: left;
+}
 .h24-regie__head {
     display: flex; align-items: center; gap: 6px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
     font: inherit; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7);
@@ -256,6 +263,8 @@
 #page-h24 [data-h24-panel].is-folded > .panel__content { display: none; }
 #page-h24 [data-h24-panel].is-folded > .h24-fold { border-bottom-width: 0; }
 @media (min-width: 901px) { #page-h24 .sandbox__sidebar > .votes-slot { margin-top: auto; } }
+/* Votants : sous les équipes, la liste part du haut et descend */
+@media (min-width: 901px) { #page-h24 .sandbox__sidebar > .votes-slot:has(.h24-vlist) { margin-top: 0; } }
 
 /* Plus de podium : la roue (style roue) ou le nombre de votes (style bande) tiennent sa place, sans bouger */
 /* Tirage au sort : roue ou bande en direct, sans podium ; majorité : podium, roue ou bande seulement en cas d'égalité */

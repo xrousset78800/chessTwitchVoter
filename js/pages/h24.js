@@ -230,6 +230,13 @@ const H24Page = {
         // (chemin du clic figé au départ : un bouton redessiné pendant le clic compte toujours comme « dedans »)
         document.addEventListener('click', (e) => { if (!e.composedPath().some(n => n.classList?.contains('h24-histbtn'))) this.toggleHist(false); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.toggleHist(false); });
+        // Régie : se ferme aussi d'un clic ailleurs (ou Échap), comme l'historique
+        document.addEventListener('click', (e) => {
+            if (this.regieFolded) return;
+            if (e.composedPath().some(n => n.classList?.contains('h24-regiewrap')) || !e.target.isConnected) return;
+            this.regieAction('fold');
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !this.regieFolded) this.regieAction('fold'); });
         // Couleurs du tirage choisies dans le menu du cavalier (ou objets du compte relus)
         document.addEventListener('votePaletteChanged', () => this.applyPalette());
         window.addEventListener('languageChanged', () => this.renderStyle());
