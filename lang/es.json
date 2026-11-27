@@ -383,6 +383,8 @@
     }
   },
   "browsePage": {
+    "event": "Torneo",
+    "winnerPicks": "Pronósticos del ganador",
     "desc": "Partidas en curso. Para jugar, ve a Nueva; las clasificaciones están en Récords.",
     "empty": "¡Empieza una partida desde Nueva!",
     "players": "inscrito(s)",

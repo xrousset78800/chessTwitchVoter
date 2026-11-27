@@ -592,6 +592,13 @@
 .mode-pill--rush     { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
 .mode-pill--problems { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
 .mode-pill--sandbox  { background: rgba(236, 72, 153, 0.15); color: #f9a8d4; }
+.mode-pill--picks    { background: rgba(239, 68, 68, 0.15);  color: #fca5a5; }
+/* Pronos live : joueurs du match (titre, nom, Elo) et tournoi */
+.games-table__duo { display: flex; flex-direction: column; gap: 2px; }
+.games-table__player { display: flex; align-items: center; gap: 5px; white-space: nowrap; min-width: 0; }
+.games-table__pname { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.games-table__event { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; color: var(--text-secondary); }
+.browse-preview__sub { margin: 0 0 6px; font-size: 0.75rem; color: var(--text-secondary); }
 
 .game-row__private { margin-left: 4px; font-size: 0.75rem; }
 

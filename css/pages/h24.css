@@ -37,15 +37,16 @@
 /* Entre deux parties : pas de coups, le panneau s'efface */
 #page-h24:not([data-phase="play"]) #h24-moves { display: none; }
 #h24-moves .moves-panel__title.is-active { color: var(--text-primary); }
-/* Guide de la partie : l'action en cours, qui pulse doucement, centré au-dessus de l'échiquier */
+/* Guide de la partie : l'action en cours, qui pulse doucement, centré sous l'échiquier
+   (sa place est gardée même vide : l'échiquier et la bande ne bougent pas quand le texte change) */
 #page-h24 #h24-hint {
     display: block; box-sizing: border-box; width: fit-content; max-width: 100%;
-    margin: 0 auto; min-height: 22px; padding: 8px 16px; border-radius: 999px; text-align: center;
+    margin: -8px auto 0; min-height: 36px; line-height: 22px; padding: 6px 16px;   /* 12 px sous l'échiquier (écart de colonne 20 px) */ border-radius: 999px; text-align: center;
     font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 1rem;
     color: var(--text-primary); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
     animation: h24-guide 2.6s ease-in-out infinite;
 }
-#page-h24 #h24-hint:empty { display: none; }
+#page-h24 #h24-hint:empty { visibility: hidden; animation: none; }
 #page-h24 #h24-hint .h24-guide__piece { display: inline-block; width: 26px; height: 26px; margin: -6px 4px -6px 0; vertical-align: middle; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); }
 #page-h24 #h24-hint .h24-guide__san { font-size: 1.15em; color: #fff; }
 #page-h24 #h24-hint .h24-guide__pct { color: var(--accent); }
@@ -55,13 +56,6 @@
 @media (prefers-reduced-motion: reduce) { #page-h24 #h24-hint .h24-guide__vote { animation-name: h24-vote-glow; } }
 @keyframes h24-vote-glow { 50% { text-shadow: 0 0 12px rgba(255, 138, 61, 0.65); } }
 #page-h24 #h24-hint .h24-guide__voter { font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; font-size: 0.85em; color: var(--text-secondary); }
-/* Grand écran avec souris : dans la bande du menu (transparent tant qu'on ne le survole pas) */
-@media (hover: hover) and (min-width: 1101px) {
-    #page-h24 .sandbox__main > #h24-hint {
-        position: absolute; left: 50%; top: calc(-1 * var(--nav-height) / 2 - 2px); transform: translate(-50%, -50%);
-        max-width: min(100%, 720px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-}
 #page-h24 #h24-hint::before {
     content: ''; display: inline-block; vertical-align: middle; margin: -2px 10px 0 0; width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary);
     animation: h24-guide-dot 1.3s ease-in-out infinite;

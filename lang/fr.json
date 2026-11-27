@@ -465,6 +465,8 @@
     }
   },
   "browsePage": {
+    "event": "Tournoi",
+    "winnerPicks": "Pronostics du vainqueur",
     "desc": "Les parties en cours. Pour jouer, passe par Nouveau ; les classements sont dans Records.",
     "empty": "Lance une partie depuis Nouveau !",
     "players": "inscrit(s)",

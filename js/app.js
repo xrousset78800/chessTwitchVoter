@@ -1842,10 +1842,12 @@ const BrowsePage = {
             this.setupSocket();
             document.getElementById('browse-refresh-btn')?.addEventListener('click', () => {
                 this.socket?.emit('getGames');
+                BrowseTable.loadLive(true);
             });
             this.initialized = true;
         } else {
             this.socket?.emit('getGames');
+            BrowseTable.loadLive();
         }
     },
 

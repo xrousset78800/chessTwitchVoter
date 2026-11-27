@@ -383,6 +383,8 @@
     }
   },
   "browsePage": {
+    "event": "Torneio",
+    "winnerPicks": "Palpites do vencedor",
     "desc": "Partidas ao vivo. Para jogar, vá em Novo; os rankings ficam em Recordes.",
     "empty": "Comece uma partida em Novo!",
     "players": "jogador(es)",

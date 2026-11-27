@@ -383,6 +383,8 @@
     }
   },
   "browsePage": {
+    "event": "Torneo",
+    "winnerPicks": "Pronostici sul vincitore",
     "desc": "Le partite in corso. Per giocare vai su Nuova; le classifiche sono in Record.",
     "empty": "Avvia una partita da Nuova!",
     "players": "iscritti",

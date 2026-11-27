@@ -383,6 +383,8 @@
     }
   },
   "browsePage": {
+    "event": "Toernooi",
+    "winnerPicks": "Voorspellingen van de winnaar",
     "desc": "Lopende partijen. Om te spelen ga je naar Nieuw; de ranglijsten staan bij Records.",
     "empty": "Start een partij via Nieuw!",
     "players": "speler(s)",

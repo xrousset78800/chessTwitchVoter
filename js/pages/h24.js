@@ -1663,8 +1663,8 @@ const H24Page = {
             // Plus de largeur ni de décalage de la bande : sinon la roue déborde du panneau (barre de défilement horizontale)
             this.fitBand();
         } else {
-            // Bande collée sous l'échiquier
-            const after = document.querySelector('#page-h24 .board-wrapper');
+            // Bande sous l'échiquier, après le guide de la partie
+            const after = $('h24-hint') || document.querySelector('#page-h24 .board-wrapper');
             if (after && area.previousElementSibling !== after) after.after(area);
             this.fitBand();
         }

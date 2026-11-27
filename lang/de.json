@@ -383,6 +383,8 @@
     }
   },
   "browsePage": {
+    "event": "Turnier",
+    "winnerPicks": "Tipps auf den Sieger",
     "desc": "Laufende Partien. Zum Spielen geh auf Neu; die Ranglisten findest du unter Rekorde.",
     "empty": "Starte eine Partie unter Neu!",
     "players": "Spieler",

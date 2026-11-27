@@ -1082,8 +1082,6 @@
                     </div>
 
                     <div class="sandbox__main">
-                        <!-- Guide de la partie : l'action en cours, en haut au centre (dans la bande du menu escamotable) -->
-                        <div class="h24-guide" id="h24-hint" aria-live="polite"></div>
                         <div class="board-wrapper">
                             <!-- Pendant la partie : une équipe en haut, l'autre en bas (nombre de joueurs, trait, ton équipe) -->
                             <div class="h24-side h24-side--top" id="h24-side-top" hidden></div>
@@ -1092,6 +1090,8 @@
                             </div>
                             <div class="h24-side h24-side--bottom" id="h24-side-bottom" hidden></div>
                         </div>
+                        <!-- Guide de la partie : l'action en cours, juste sous l'échiquier (place gardée : rien ne saute) -->
+                        <div class="h24-guide" id="h24-hint" aria-live="polite"></div>
                         <!-- Bande sous l'échiquier ou roue dans la colonne : remplies en direct par les votes -->
                         <div id="h24-wheel-area" class="watch-wheel"></div>
                     <!-- Entre deux parties : récap, votes du mode et des options, inscription, avec le temps restant, au milieu de la page -->

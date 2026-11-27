@@ -7,14 +7,27 @@
  */
 import { spectatorsLabel } from '../components/spectators.js';
 import { fmtMove } from '../utils/moveMatch.js';
+import { go } from '../core/route.js';
 
 const t = (key, params) => window.i18n?.t(key, params) ?? key;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $ = (id) => document.getElementById(id);
 const PIECES = p => window.pieceUrl(p);   // set de pièces choisi
-const MODE_ICON = { multi: '⚔', mono: '👥', rush: '🔥', sandbox: '🧪', problems: '🧩' };
-const MODE_KEY = { multi: 'browsePage.modeMulti', mono: 'browsePage.modeMono', rush: 'browsePage.modeRush', sandbox: 'browsePage.modeSandbox', problems: 'browsePage.modeProblems' };
-const MODES = ['multi', 'mono', 'rush', 'sandbox', 'problems'];
+const MODE_ICON = { multi: '⚔', mono: '👥', rush: '🔥', sandbox: '🧪', problems: '🧩', picks: '🎯' };
+const MODE_KEY = { multi: 'browsePage.modeMulti', mono: 'browsePage.modeMono', rush: 'browsePage.modeRush', sandbox: 'browsePage.modeSandbox', problems: 'browsePage.modeProblems', picks: 'nav.tournament' };
+const MODES = ['multi', 'mono', 'rush', 'sandbox', 'problems', 'picks'];
+// Pronos live : vrais matchs de tournoi en direct (/api/tournament/live), une ligne par match
+const PICKS = [['1-0', 'white'], ['1/2-1/2', 'draw'], ['0-1', 'black']];
+const PICKS_COLORS = { white: '#e8e8e8', draw: '#9a9aa2', black: '#3a3a40' };
+const LIVE_MS = 30000;
+const picksTotal = v => (v ? PICKS.reduce((a, [k]) => a + (+v[k] || 0), 0) : 0);
+const picksHref = g => `/tournament?event=${encodeURIComponent(g.event?.slug || '')}&room=${encodeURIComponent(g.room?.slug || '')}&game=${encodeURIComponent(g.id)}`;
+/** Match de tournoi → ligne du tableau (mêmes champs que les parties du site) */
+const liveRow = g => ({
+    gameId: `picks:${g.room?.slug || ''}:${g.id}`, mode: 'picks', status: 'playing', live: g,
+    spectators: picksTotal(g.votes), moveCount: Math.max(0, (+String(g.fen || '').split(' ')[5] || 1) - 1),
+    startedAt: g.startAt ? (g.startAt < 1e12 ? g.startAt * 1000 : +g.startAt) || Date.parse(g.startAt) || 0 : 0,
+});
 const VOTE_COLORS = ['#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 const STORE = 'browseFilters';
 const PEEK_MS = 2000;
@@ -30,6 +43,38 @@ const BrowseTable = {
     joinHref: () => null,
     bound: false,
     peekTimer: null,
+    live: [],          // lignes Pronos live
+    liveAt: 0,
+    liveBusy: false,
+
+    /** Parties du site + matchs Pronos live */
+    all() {
+        return this.games.concat(this.live);
+    },
+
+    async loadLive(force = false) {
+        if (this.liveBusy || (!force && Date.now() - this.liveAt < LIVE_MS)) return;
+        this.liveBusy = true;
+        try {
+            const r = await fetch('/api/tournament/live');
+            if (r.ok) {
+                const d = await r.json();
+                this.live = (Array.isArray(d.games) ? d.games : []).map(liveRow);
+                this.liveAt = Date.now();
+                this.renderToolbar();
+                this.render();
+            }
+        } catch { /* nouvel essai au prochain tour */ }
+        this.liveBusy = false;
+    },
+
+    /** Ouvre le match sur la page Pronos live */
+    openPicks(id) {
+        const g = this.live.find(x => x.gameId === id)?.live;
+        if (!g) return;
+        go('/tournament');
+        setTimeout(() => window.tournamentPredict?.openLiveGame?.(g), 0);
+    },
 
     /** socket : celui de Parcourir ; joinHref(game) : lien Rejoindre d'un salon Multi */
     setup(socket, joinHref) {
@@ -41,8 +86,16 @@ const BrowseTable = {
         this.bindToolbar();
         window.addEventListener('languageChanged', () => { this.renderToolbar(); this.render(); this.renderPreview(); });
         window.addEventListener('resize', () => this.resizeBoard());
-        // Aperçu rafraîchi tant que Parcourir est affiché
-        this.peekTimer = setInterval(() => { if (this.visible()) this.fetchPeek(); }, PEEK_MS);
+        // Aperçu rafraîchi tant que Parcourir est affiché ; matchs Pronos live relus toutes les 30 s
+        this.peekTimer = setInterval(() => { if (this.visible()) { this.fetchPeek(); this.loadLive(); } }, PEEK_MS);
+        // Pronostiquer : ouvre le match sur place (clic simple), lien normal sinon
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('[data-picks-open]');
+            if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+            e.preventDefault();
+            this.openPicks(a.dataset.picksOpen);
+        });
+        this.loadLive(true);
     },
 
     visible() {
@@ -98,9 +151,10 @@ const BrowseTable = {
         const box = $('browse-modes');
         if (!box) return;
         const counts = {};
-        for (const g of this.games) counts[g.mode || 'multi'] = (counts[g.mode || 'multi'] || 0) + 1;
+        const all = this.all();
+        for (const g of all) counts[g.mode || 'multi'] = (counts[g.mode || 'multi'] || 0) + 1;
         const chip = (mode, label, n) => `<button type="button" class="browse-chip${this.filters.mode === mode ? ' is-active' : ''}" data-mode="${mode}" aria-pressed="${this.filters.mode === mode}">${label}<span class="browse-chip__count">${n}</span></button>`;
-        box.innerHTML = chip('all', esc(t('browsePage.all')), this.games.length)
+        box.innerHTML = chip('all', esc(t('browsePage.all')), all.length)
             + MODES.map(m => chip(m, `${MODE_ICON[m]} ${esc(t(MODE_KEY[m]))}`, counts[m] || 0)).join('');
     },
 
@@ -115,12 +169,13 @@ const BrowseTable = {
     filtered() {
         const f = this.filters;
         const q = (f.q || '').trim().toLowerCase();
-        const list = this.games.filter(g => {
+        const list = this.all().filter(g => {
             if (f.mode !== 'all' && (g.mode || 'multi') !== f.mode) return false;
             if (f.status === 'playing' && g.status !== 'playing') return false;
             if (f.status === 'waiting' && g.status === 'playing') return false;
             if (f.status === 'open' && !g.join) return false;
-            if (q && !`${g.host || ''} ${g.guest || ''}`.toLowerCase().includes(q)) return false;
+            const who = g.live ? `${g.live.white?.name || ''} ${g.live.black?.name || ''} ${g.live.event?.name || ''} ${g.live.room?.name || ''}` : `${g.host || ''} ${g.guest || ''}`;
+            if (q && !who.toLowerCase().includes(q)) return false;
             return true;
         });
         const by = {
@@ -159,7 +214,40 @@ const BrowseTable = {
             : `<span class="games-table__muted">${esc(t('browsePage.anonymous'))}</span>`;
     },
 
+    /** Joueur d'un match de tournoi : titre, nom, Elo */
+    livePlayer(p = {}, side) {
+        return `<span class="games-table__player"><span class="watch__dot watch__dot--${side}"></span>${p.title ? `<span class="player-title">${esc(p.title)}</span> ` : ''}<span class="games-table__pname">${esc(p.name || '?')}</span>${p.elo ? ` <span class="games-table__muted">${esc(p.elo)}</span>` : ''}</span>`;
+    },
+
+    liveEvent(g) {
+        const e = g.event?.name || '', r = g.room?.name || '';
+        return r && r !== e ? `${e} · ${r}` : e || r;
+    },
+
+    /** Bouton Pronostiquer : icône seule dans le tableau, avec le texte dans l'aperçu */
+    pickBtn(g, cls, label = false) {
+        const txt = esc(t('home.picks.cta'));
+        return `<a class="btn btn--sm ${cls}" data-picks-open="${esc(g.gameId)}" href="${esc(picksHref(g.live))}" title="${txt}"><i class="fas fa-crosshairs"></i>${label ? ` <span>${txt}</span>` : `<span class="visually-hidden">${txt}</span>`}</a>`;
+    },
+
+    liveRowHtml(g) {
+        const m = g.live, n = g.spectators || 0;
+        return `
+            <tr class="game-row${this.selected === g.gameId ? ' is-selected' : ''}" data-game-id="${esc(g.gameId)}" tabindex="0">
+                <td class="games-table__mode"><span class="mode-pill mode-pill--picks">${MODE_ICON.picks} ${esc(t(MODE_KEY.picks))}</span></td>
+                <td class="games-table__channels"><span class="games-table__duo">${this.livePlayer(m.white, 'white')}${this.livePlayer(m.black, 'black')}</span></td>
+                <td><span class="status-dot status-dot--playing"></span>${esc(t('browsePage.statusPlaying'))}</td>
+                <td class="games-table__vote col-md"><span class="games-table__event">${esc(this.liveEvent(m))}</span></td>
+                <td class="games-table__num">${esc(this.progress(g))}</td>
+                <td class="games-table__num col-md"><span class="games-table__muted">—</span></td>
+                <td class="games-table__num"><span class="game-row__spectators" title="${esc(t('predict.votes', { n }))}"><i class="fas fa-crosshairs"></i> ${n}</span></td>
+                <td class="games-table__num col-lg">${this.duration(g.startedAt)}</td>
+                <td class="games-table__actions">${this.pickBtn(g, 'btn--primary')}</td>
+            </tr>`;
+    },
+
     row(g) {
+        if (g.live) return this.liveRowHtml(g);
         const mode = g.mode || 'multi';
         const playing = g.status === 'playing';
         const channels = mode === 'multi'
@@ -191,8 +279,8 @@ const BrowseTable = {
         const count = $('browse-count');
         if (count) count.textContent = t(list.length > 1 ? 'browsePage.countMany' : 'browsePage.countOne', { n: list.length });
 
-        if (!this.games.length || !list.length) {
-            const none = !this.games.length;
+        if (!this.all().length || !list.length) {
+            const none = !this.all().length;
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state__icon">${none ? '⚔' : '🔍'}</div>
@@ -236,7 +324,7 @@ const BrowseTable = {
 
     fetchPeek() {
         const id = this.selected;
-        if (!id || !this.socket?.connected) return;
+        if (!id || String(id).startsWith('picks:') || !this.socket?.connected) return;
         this.socket.timeout(4000).emit('game:peek', id, (err, state) => {
             if (err || id !== this.selected) return;
             this.peek = state || null;
@@ -247,9 +335,10 @@ const BrowseTable = {
     renderPreview() {
         const box = $('browse-preview');
         if (!box) return;
-        const g = this.games.find(x => x.gameId === this.selected);
+        const g = this.all().find(x => x.gameId === this.selected);
         box.hidden = !g;
         if (!g) return;
+        if (g.live) return this.renderLivePreview(g);
         const s = this.peek;
         const mode = g.mode || 'multi';
         $('browse-preview-mode').innerHTML = `${MODE_ICON[mode] || '♟'} ${esc(t(MODE_KEY[mode] || 'browsePage.modeSandbox'))}${g.isPublic === false ? ` <span class="game-row__private">🔒 ${esc(t('browsePage.private'))}</span>` : ''}`;
@@ -291,6 +380,30 @@ const BrowseTable = {
             <a class="btn ${join ? 'btn--ghost' : 'btn--primary'} btn--sm" data-preview-watch href="/watch?g=${encodeURIComponent(g.gameId)}"><i class="fas fa-eye"></i> ${esc(t('browsePage.watch'))}</a>`;
 
         this.renderBoard(s);
+    },
+
+    /** Aperçu d'un match Pronos live : position, joueurs, tournoi, pronostics du vainqueur */
+    renderLivePreview(g) {
+        const m = g.live;
+        $('browse-preview-mode').innerHTML = `${MODE_ICON.picks} ${esc(t(MODE_KEY.picks))}`;
+        $('browse-preview-players').innerHTML = `<div class="browse-preview__team">${this.livePlayer(m.white, 'white')}</div><div class="browse-preview__team">${this.livePlayer(m.black, 'black')}</div>`;
+        const turn = String(m.fen || '').split(' ')[1] === 'b' ? t('browsePage.blackToPlay') : t('browsePage.whiteToPlay');
+        const n = g.spectators || 0;
+        $('browse-preview-facts').innerHTML = [
+            [t('browsePage.event'), this.liveEvent(m)],
+            [t('browsePage.colStatus'), `${t('browsePage.statusPlaying')} · ${turn}`],
+            [t('browsePage.colProgress'), this.progress(g)],
+            [t('browsePage.colTime'), this.duration(g.startedAt)],
+        ].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+        const v = m.votes || {};
+        $('browse-preview-votes').innerHTML = `<p class="browse-preview__sub">${esc(t('browsePage.winnerPicks'))}</p>` + (n
+            ? PICKS.map(([k, c]) => {
+                const pct = Math.round((+v[k] || 0) * 100 / n);
+                return `<div class="browse-preview__vote"><span class="browse-preview__vote-bar" style="width:${pct}%;background:${PICKS_COLORS[c]}33"></span><span class="browse-preview__vote-move">${esc(t('predict.' + c))}</span><span class="browse-preview__vote-n">${+v[k] || 0} · ${pct}%</span></div>`;
+            }).join('')
+            : `<p class="browse-preview__empty">${esc(t('tlive.noVotes'))}</p>`);
+        $('browse-preview-actions').innerHTML = this.pickBtn(g, 'btn--primary', true);
+        this.renderBoard({ fen: m.fen });
     },
 
     renderBoard(s) {

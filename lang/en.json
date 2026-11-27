@@ -465,6 +465,8 @@
     }
   },
   "browsePage": {
+    "event": "Tournament",
+    "winnerPicks": "Winner predictions",
     "desc": "Live games. To play, go to New; leaderboards are in Records.",
     "empty": "Start a game from New!",
     "players": "player(s)",

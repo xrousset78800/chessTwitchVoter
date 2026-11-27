@@ -383,6 +383,8 @@
     }
   },
   "browsePage": {
+    "event": "Turniej",
+    "winnerPicks": "Typy na zwycięzcę",
     "desc": "Trwające partie. Żeby zagrać, wejdź w Nowa gra; rankingi są w Rekordach.",
     "empty": "Zacznij partię w zakładce Nowa gra!",
     "players": "graczy",

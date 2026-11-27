@@ -383,6 +383,8 @@
     }
   },
   "browsePage": {
+    "event": "Turnuva",
+    "winnerPicks": "Kazanan tahminleri",
     "desc": "Canlı oyunlar. Oynamak için Yeni'ye git; sıralamalar Rekorlar'da.",
     "empty": "Yeni'den bir oyun başlat!",
     "players": "oyuncu",
