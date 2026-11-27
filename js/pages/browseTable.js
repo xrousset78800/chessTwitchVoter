@@ -29,12 +29,13 @@ const liveRow = g => ({
     startedAt: g.startAt ? (g.startAt < 1e12 ? g.startAt * 1000 : +g.startAt) || Date.parse(g.startAt) || 0 : 0,
 });
 const VOTE_COLORS = ['#8b5cf6', '#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
-const STORE = 'browseFilters';
+// v2 : tri par défaut « Moins avancées » (les anciens réglages enregistrés sont ignorés)
+const STORE = 'browseFilters2';
 const PEEK_MS = 2000;
 
 const BrowseTable = {
     games: [],
-    filters: { q: '', mode: 'all', status: 'all', sort: 'spectators' },
+    filters: { q: '', mode: 'all', status: 'all', sort: 'moves' },
     selected: null,
     peek: null,
     board: null,
