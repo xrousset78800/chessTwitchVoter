@@ -696,40 +696,6 @@ body.phantom-connected .phantom-menu__dot {
     }
 }
 
-/* Minuteur : à côté de l'échiquier quand la colonne a la place, plus par-dessus la colonne h */
-#page-sandbox .board-wrapper {
-    container-type: inline-size;
-}
-
-@container (min-width: 640px) {
-    #page-sandbox .board-container {
-        max-width: min(560px, calc(100cqi - 200px));
-    }
-
-    #page-sandbox .board-timer-container {
-        top: 0;
-        right: auto;
-        left: calc(50% + min(280px, 50cqi - 100px) + 10px);
-        padding: 8px;
-        gap: 6px;
-    }
-
-    #page-sandbox .board-timer-container .countdown {
-        width: 72px;
-        height: 72px;
-    }
-
-    #page-sandbox .board-timer-container #timer-value {
-        font-size: 1rem;
-        min-width: 0;
-    }
-
-    #page-sandbox .board-timer-container .timer-pause-btn {
-        padding: 4px 8px;
-        font-size: 0.75rem;
-    }
-}
-
 /* Sans timer : le cadre du minuteur annonce que le premier vote est joué tout de suite */
 .vote-timer--board .timer-instant { display: none; }
 
@@ -940,16 +906,16 @@ body:not(.wheel-mode) .draw-tools { display: none; }
 }
 
 /* ------------------------------------------------ Chrono : jamais par-dessus l'échiquier
-   ≥ 640px de colonne : à droite de l'échiquier (règle @container plus haut)
-   560–639 : échiquier et chrono côte à côte, l'échiquier cède la place
+   ≥ 560 px de colonne : échiquier et chrono côte à côte, l'échiquier prend toute la place restante
    < 560   : chrono compact au-dessus de l'échiquier, l'échiquier garde sa taille */
 #page-sandbox .sandbox__main { container: board-col / inline-size; }
 
-@container board-col (max-width: 639.98px) {
+@container board-col (min-width: 0px) {
     body:not(.no-vote-timer) #page-sandbox .board-wrapper {
         display: flex;
         flex-direction: row;
         align-items: flex-start;
+        justify-content: center;
         gap: 10px;
     }
 

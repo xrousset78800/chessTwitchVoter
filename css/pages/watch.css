@@ -299,15 +299,9 @@ a.spectators__chip:hover { border-color: rgba(242, 112, 15, 0.6); }
 }
 
 
-/* Minuteur : à droite de l'échiquier quand la colonne a la place (comme chez les joueurs) */
-:is(#page-watch, #page-h24) .board-wrapper { container-type: inline-size; position: relative; }
-
-:is(#page-watch, #page-h24) .watch__player { max-width: 560px; margin-left: auto; margin-right: auto; }
-
-@container (min-width: 640px) {
-    :is(#page-watch, #page-h24) .board-container { max-width: min(560px, calc(100cqi - 220px)); margin-left: auto; margin-right: auto; }
-    :is(#page-watch, #page-h24) .watch__timer { left: calc(50% + min(280px, 50cqi - 110px) + 16px); }
-}
+/* Échiquier : toute la largeur de sa colonne, quelle que soit la taille de l'écran
+   (avant : plafonné à 560 px moins une réserve de minuteur dès 640 px de colonne, il rapetissait en élargissant) */
+:is(#page-watch, #page-h24) .board-wrapper { position: relative; }
 
 /* ==================== Roue / bande de tirage (spectateur) ==================== */
 :is(#watch-wheel-area, #h24-wheel-area) { display: none; margin-top: 12px; }
