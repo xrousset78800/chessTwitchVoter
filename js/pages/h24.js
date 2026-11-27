@@ -530,7 +530,7 @@ const H24Page = {
             // nouvelle partie remplace la position sans faire voyager les pièces à travers l'échiquier
             this.board.position(fen, this.boardFen != null && squaresChanged(this.boardFen, fen) <= 4);
             // L'échiquier bouge (coup, nouvelle partie, retournement) : on le montre, puis la vidéo revient en fondu
-            this.liveBusy(2500);
+            this.liveBusy(2500, false, 0);
             this.boardKey = key;
             this.boardFen = fen;
         }
@@ -910,15 +910,40 @@ const H24Page = {
      * Par défaut on ne fait que prolonger (un coup arrivé pendant le tirage ne coupe pas l'affichage du tirage) ;
      * force : nouvelle échéance quoi qu'il arrive (fin du tirage, pièce lâchée).
      */
-    liveBusy(ms, force = false) {
+    liveBusy(ms, force = false, holdMs = null) {
+        const now = Date.now();
+        const until = now + ms;
+        if (force || !(this._liveBusyUntil > until)) this._liveBusyUntil = until;
+        // Avec le Phantom, seuls les gestes (tirage, pièce en main) retiennent l'échiquier : holdMs (0 = rien)
+        if (holdMs !== 0 || force) {
+            const hold = now + (holdMs ?? ms);
+            if (force || !(this._liveHoldUntil > hold)) this._liveHoldUntil = hold;
+        }
+        this.liveSync();
+    },
+
+    /**
+     * Vue incrustée : échiquier ou vidéo ?
+     * - Phantom branché : la vidéo pendant qu'il déplace les pièces (et un instant après), l'échiquier le reste
+     *   du temps (votes, tirage, attente du moteur…) ;
+     * - sans Phantom : la vidéo, sauf quand l'échiquier bouge (liveBusy).
+     */
+    liveSync() {
         const box = $('h24-live');
         if (!box) return;
-        const until = Date.now() + ms;
-        if (!force && this._liveBusyUntil > until) return;
-        this._liveBusyUntil = until;
-        box.classList.add('is-board-busy');
+        const now = Date.now();
+        const ph = this.state?.regie?.phantom;
+        const phantom = ph === 'ok' || ph === 'busy';
+        if (this._livePh === 'busy' && ph !== 'busy') this._livePhTail = now + 1200;
+        this._livePh = ph;
+        const board = phantom
+            ? !(ph === 'busy' || now < (this._livePhTail || 0)) || this.revealing || now < (this._liveHoldUntil || 0)
+            : now < (this._liveBusyUntil || 0);
+        box.classList.toggle('is-board-busy', board);
+        box.classList.toggle('is-phantom', phantom);
         clearTimeout(this._liveBusyT);
-        this._liveBusyT = setTimeout(() => { this._liveBusyUntil = 0; box.classList.remove('is-board-busy'); }, ms);
+        const next = [this._liveBusyUntil, this._liveHoldUntil, this._livePhTail].filter(x => x > now);
+        if (next.length) this._liveBusyT = setTimeout(() => this.liveSync(), Math.min(...next) - now + 30);
     },
 
     setLiveMode(mode) {
@@ -1035,6 +1060,7 @@ const H24Page = {
         box.hidden = !channel && !camOn;
         box.classList.toggle('is-folded', this.liveFolded);
         this.placeLive(box);
+        this.liveSync();
         const frame = $('h24-live-frame');
         const src = this.liveFolded ? ''
             : camOn ? 'cam'
@@ -1807,7 +1833,7 @@ const H24Page = {
         if (!this.drawSig) return;
         this.drawSig = null;
         this.revealing = false;
-        if (this._liveBusyUntil) this.liveBusy(1500, true);
+        if (this._liveBusyUntil > Date.now()) this.liveBusy(1500, true, 0);
         // Onglet caché : la roue gelée finirait son tour plus tard et réafficherait le coup par-dessus le vote
         if (this.wheel?.isSpinning) this.wheel.abort?.();
         const slot = $('h24-votes-panel');
@@ -2058,7 +2084,7 @@ const H24Page = {
             if (!this.revealing) return;
             this.revealing = false;
             // Coup révélé : encore quelques secondes d'échiquier, puis la vidéo revient
-            this.liveBusy(2500, true);
+            this.liveBusy(2500, true, 800);
             area.classList.remove('is-spinning');
             markPodiumWinner($('h24-votes'), g.draw?.winner);
             this.markVoters(g.draw?.winner, g.draw?.voter);

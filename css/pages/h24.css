@@ -495,6 +495,9 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 }
 /* L'échiquier bouge (coup joué, nouvelle partie, pièce prise en main) : la vidéo s'efface pour le laisser voir */
 .h24-live.is-overlay.is-board-busy .h24-live__frame { opacity: 0; transition: opacity 0.15s ease-out; }
+/* Phantom branché : la vidéo arrive dès que les pièces bougent */
+.h24-live.is-overlay.is-phantom .h24-live__frame { transition-duration: 0.3s; }
+.h24-live.is-overlay.is-phantom.is-board-busy .h24-live__frame { transition-duration: 0.4s; }
 .h24-live.is-overlay .h24-live__frame iframe { position: absolute; top: 0; left: 50%; width: calc(100% * 16 / 9); height: 100%; transform: translateX(-50%); }
 .h24-live.is-overlay .h24-live__cam { object-fit: cover; background: #000; }
 .h24-live.is-overlay .h24-live__msg { background: rgba(0, 0, 0, 0.35); }
