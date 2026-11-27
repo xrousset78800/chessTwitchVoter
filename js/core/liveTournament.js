@@ -513,7 +513,7 @@ function moveSoundT(prevFEN, fen) {
     try {
         const ch = new Chess(fen);
         const count = f => String(f).split(' ')[0].replace(/[^a-zA-Z]/g, '').length;
-        playSoundT(ch.game_over() ? 'end' : ch.in_check() ? 'check' : count(fen) < count(prevFEN) ? 'capture' : 'move');
+        playSoundT(ch.in_check() ? 'check' : count(fen) < count(prevFEN) ? 'capture' : 'move');
     } catch {}
 }
 
@@ -525,7 +525,7 @@ function simMoveT(from, to) {
     if (!m) return 'snapback';
     simT.line = simT.line.slice(0, simT.idx).concat({ fen: ch.fen(), san: m.san, from: m.from, to: m.to });
     simT.idx++;
-    playSoundT(ch.game_over() ? 'end' : ch.in_check() ? 'check' : m.captured ? 'capture' : 'move');
+    playSoundT(ch.in_check() ? 'check' : m.captured ? 'capture' : 'move');
     paintLastMoveT(m.from, m.to);
     renderSimT();
     return undefined;

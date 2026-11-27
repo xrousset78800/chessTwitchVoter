@@ -83,7 +83,7 @@ class ProblemsManager {
                 move: new Audio('mp3/move.mp3'),
                 capture: new Audio('mp3/take.mp3'),
                 check: new Audio('mp3/check.mp3'),
-                success: new Audio('mp3/end.wav'),
+                // (plus de son de réussite : c'était le carillon de mat)
                 fail: new Audio('mp3/check.mp3')
             };
         } catch (e) {
@@ -830,7 +830,6 @@ handleProblemSolved() {
     console.log('🎉 PROBLÈME RÉSOLU !');
     this.isActive = false;
     this._resetWheel();
-    try { this.sounds.success?.play(); } catch {}
     if (this.onProblemSolved) this.onProblemSolved(this.currentProblem);
     this.emitStateChange();
     this.startPauseTimer('solved');
@@ -948,9 +947,7 @@ skipPause() {
 
     playSound(move) {
         try {
-            if (this.chess?.in_checkmate?.() || this.chess?.isCheckmate?.()) {
-                this.sounds.success?.play();
-            } else if (this.chess?.in_check?.() || this.chess?.inCheck?.()) {
+            if (this.chess?.in_check?.() || this.chess?.inCheck?.()) {
                 this.sounds.check?.play();
             } else if (move.captured) {
                 this.sounds.capture?.play();

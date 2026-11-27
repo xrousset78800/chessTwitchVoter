@@ -109,11 +109,9 @@ var globalVolume = 1;
 var takeAudio = new Audio('mp3/take.mp3');
 var checkAudio = new Audio('mp3/check.mp3');
 var moveAudio = new Audio('mp3/move.mp3');
-var mateAudio = new Audio('mp3/end.wav');
 takeAudio.volume = globalVolume*0.8;
 checkAudio.volume = globalVolume*0.8;
 moveAudio.volume = globalVolume*0.8;
-mateAudio.volume = globalVolume*0.4;
 
 //http-server C:\Users\gnole\Documents\GitHub\chessTwitchVoter
 
@@ -1470,9 +1468,7 @@ function playSoundForMove(chess) {
   const history = chess.history({ verbose: true });
   const lastMove = history[history.length - 1];
 
-  if (chess.in_checkmate()) {
-    mateAudio.play();
-  } else if (chess.in_check()) {
+  if (chess.in_check()) {
     checkAudio.play();
   } else if (lastMove && lastMove.captured) {
     takeAudio.play();

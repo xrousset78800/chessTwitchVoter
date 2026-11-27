@@ -157,10 +157,9 @@ const H24Page = {
             this.skew = st.now - Date.now();
             const prev = this.state?.game;
             this.state = st;
-            // Fin de partie : carillon (mat, nulle ou fin du rush) ; sinon un coup vient d'être joué : son du coup
+            // Un coup vient d'être joué : son du coup (plus de carillon de fin de partie)
             const h = st.game?.history;
-            if (prev && st.game?.result && !prev.result) this.playSound('end');
-            else if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
+            if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
             this.render();
         });
         socket.on('h24:me', (me) => {
@@ -301,7 +300,7 @@ const H24Page = {
 
     playMoveSound(san) {
         if (!san) return;
-        this.playSound(san.includes('#') ? 'end' : san.includes('+') ? 'check' : san.includes('x') ? 'capture' : 'move');
+        this.playSound(/[+#]/.test(san) ? 'check' : san.includes('x') ? 'capture' : 'move');
     },
 
     playSound(kind) {

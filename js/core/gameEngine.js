@@ -53,8 +53,7 @@ class GameEngine {
         this.sounds = {
             move: new Audio('mp3/move.mp3'),
             capture: new Audio('mp3/take.mp3'),
-            check: new Audio('mp3/check.mp3'),
-            mate: new Audio('mp3/end.wav')
+            check: new Audio('mp3/check.mp3')
         };
     }
 
@@ -377,9 +376,7 @@ class GameEngine {
 
     playMoveSound(move) {
         try {
-            if (this.chess.in_checkmate?.() || this.chess.game_over?.()) {
-                this.sounds.mate?.play();
-            } else if (this.chess.in_check?.()) {
+            if (this.chess.in_check?.()) {
                 this.sounds.check?.play();
             } else if (move.captured) {
                 this.sounds.capture?.play();
