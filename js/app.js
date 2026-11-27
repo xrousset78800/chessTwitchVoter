@@ -20,6 +20,7 @@ import lobby, { normalizeLogin } from './core/lobby.js';
 import './core/viewerStats.js';
 import './core/economy.js';
 import './components/coinFx.js';
+import GameBilan from './components/gameBilan.js';
 import './core/achievements.js';
 import AchievementsPage from './pages/achievements.js';
 import ShopPage from './pages/shop.js';
@@ -247,6 +248,15 @@ const GameSession = {
      * peut pas être rétablie sans un clic de l'utilisateur, survit ainsi aux changements de partie.
      */
     reset() {
+        // Séance de problèmes quittée : son bilan (les autres modes ont le leur à la fin de la partie)
+        const { solved, failed } = GameBilan.counts();
+        if (!rushManager.active && solved + failed > 0) {
+            GameBilan.show({
+                mode: 'problems',
+                title: tr('bilan.problemsTitle', { n: solved, total: solved + failed }),
+                meta: tr('bilan.problemsMeta', { n: failed }),
+            });
+        } else GameBilan.discard();
         SandboxPage.fullReset();
         rushManager.stop?.();
         problemsManager.reset?.();
@@ -919,6 +929,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         // Problème résolu
         problemsManager.onProblemSolved = (problem) => {
             console.log('🎉 Résolu!');
+            GameBilan.note('solved');
             this.showProblemFeedback('solved');
             // Le suivant est enchaîné par problemsManager.startPauseTimer()
         };
@@ -926,6 +937,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         // Problème échoué
         problemsManager.onProblemFailed = (problem) => {
             console.log('💔 Échoué');
+            GameBilan.note('failed');
             this.showProblemFeedback('failed');
             // Le suivant est enchaîné par problemsManager.startPauseTimer()
         };
@@ -944,18 +956,10 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
 
         rushManager.onUpdate = (state) => this.updateRushHUD(state);
         rushManager.onEnd    = (result) => this.showRushEnd(result);
-
-        document.getElementById('rush-restart-btn')?.addEventListener('click', () => this.restartRush());
-        document.getElementById('rush-end-close')?.addEventListener('click', () => {
-            document.getElementById('rush-end')?.classList.remove('is-active');
-        });
-        document.getElementById('rush-login-btn')?.addEventListener('click', () => {
-            window.twitchAuth?.login();
-        });
     },
 
     restartRush() {
-        document.getElementById('rush-end')?.classList.remove('is-active');
+        GameBilan.close();
         rushManager.stop();
         gameEngine.hideWheel?.();
         rushManager.start({ startRating: AppState.config.rushStartRating || 100 });
@@ -984,46 +988,26 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         banner.classList.toggle('rush-banner--ended', state.ended);
     },
 
+    /** Fin du run : bilan commun (score, rating max, durée, record, pions) */
     showRushEnd(result) {
-        const overlay = document.getElementById('rush-end');
-        if (!overlay) return;
-
-        const set = (id, value) => { const el = document.getElementById(id); if (el) el.innerHTML = value; };
         const mins = Math.floor(result.durationMs / 60000);
         const secs = Math.floor((result.durationMs % 60000) / 1000);
-
-        set('rush-end-score',    result.score);
-        set('rush-end-rating',   result.maxRating || '—');
-        set('rush-end-duration', `${mins}:${String(secs).padStart(2, '0')}`);
-
-        let status, cls = '';
-        const loggedIn = !!window.twitchAuth?.isLoggedIn;
-        if (!loggedIn) {
-            status = tr('ui.rushEnd.loginToSave');
-            cls = 'rush-end__status--muted';
-        } else if (result.error) {
-            status = tr('ui.rushEnd.notSaved', { error: result.error });
-            cls = 'rush-end__status--error';
-        } else if (result.score === 0) {
-            status = tr('ui.rushEnd.nothing');
-            cls = 'rush-end__status--muted';
-        } else if (result.isNewRecord) {
-            status = tr('ui.rushEnd.newRecord');
-            cls = 'rush-end__status--record';
-        } else {
+        let status;
+        if (!window.twitchAuth?.isLoggedIn) status = tr('ui.rushEnd.loginToSave');
+        else if (result.error) status = tr('ui.rushEnd.notSaved', { error: result.error });
+        else if (result.score === 0) status = tr('ui.rushEnd.nothing');
+        else if (result.isNewRecord) status = tr('ui.rushEnd.newRecord');
+        else {
             const best = result.record?.best?.score;
             status = best != null ? tr('ui.rushEnd.best', { n: best }) : tr('ui.rushEnd.saved');
         }
-        const statusEl = document.getElementById('rush-end-status');
-        if (statusEl) {
-            statusEl.textContent = status;
-            statusEl.className = `rush-end__status ${cls}`.trim();
-        }
-
-        const loginBtn = document.getElementById('rush-login-btn');
-        if (loginBtn) loginBtn.style.display = loggedIn ? 'none' : '';
-
-        overlay.classList.add('is-active');
+        GameBilan.show({
+            mode: 'rush',
+            title: tr('bilan.rushTitle', { n: result.score }),
+            meta: `${tr('ui.rushEnd.ratingMax')} ${result.maxRating || '—'} · ${tr('ui.rushEnd.duration')} ${mins}:${String(secs).padStart(2, '0')}`,
+            note: status,
+            next: { label: tr('ui.rushEnd.replay'), icon: 'fa-redo', run: () => this.restartRush() },
+        });
     },
 
     // ========== UI HELPERS POUR PROBLÈMES ==========
@@ -2683,6 +2667,20 @@ const PresetGame = {
         this.setBanner({
             title: result,
             actions: isMulti ? ['revenge', 'back'] : ['rematch', 'new-lobby']
+        });
+        // Bilan : pions et XP de la partie, viewers crédités (Multi : le résultat est versé par le serveur juste après)
+        const vs = gameEngine.vsBot;
+        const opp = isMulti ? MultiRoom.opponent : null;
+        GameBilan.show({
+            mode: isMulti ? 'multi' : 'game',
+            title: result,
+            meta: [
+                tr('bilan.moves', { n: Math.ceil(gameEngine.chess.history().length / 2) }),
+                vs ? `Stockfish ${window.BotEngine?.levelLabel(vs.elo) || vs.elo}` : '',
+                opp ? tr('bilan.vs', { name: opp }) : '',
+            ].filter(Boolean).join(' · '),
+            delay: isMulti ? 1500 : 0,
+            next: isMulti ? null : { label: tr('lobby.rematch'), icon: 'fa-redo', run: () => this.rematch() },
         });
     },
 

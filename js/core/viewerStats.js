@@ -58,7 +58,7 @@ export function flush() {
             const { kind, meta } = turns[i];
             window.dispatchEvent(new CustomEvent('coinsCredited', { detail: { kind, move: meta?.move || '', ply: meta?.ply || null, channel: user?.login || '', rows } }));
         });
-        window.economy?.noteGain(d?.gain);
+        window.economy?.noteGain(d?.gain, 'turns');
     }).catch(e => console.warn('📊 Stats viewers non envoyées:', e.message));
     if (queue.length) timer = setTimeout(flush, FLUSH_MS);
 }

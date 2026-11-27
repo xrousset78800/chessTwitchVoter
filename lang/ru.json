@@ -743,6 +743,7 @@
     "chromaReset": "Вернуть зелёный по умолчанию"
   },
   "h24": {
+    "earnMine": "Твой доход",
     "phase": { "play": "Партия", "recap": "Итоги", "voteMode": "Режим", "voteOptions": "Настройки", "signup": "Запись" },
     "mode": { "bot": "Против Stockfish", "teams": "Две команды", "rush": "Puzzle rush", "classic": "Обычная партия", "predict": "Прогноз" },
     "entry": { "classic": "Обычная партия", "rush": "Задачи", "predict": "Прогноз" },
@@ -1278,6 +1279,51 @@
     "followWarn": "Внимание: сейчас Phantom следует за «{cur}». Если продолжить, он будет полностью переставлен на эту партию.",
     "modeGame": "Партия Twitch",
     "modeH24": "24/24 (режиссура)"
+  },
+  "bilan": {
+    "mode": {
+      "game": "Партия",
+      "multi": "Мульти",
+      "problems": "Задачи",
+      "rush": "Puzzle Rush",
+      "predict": "Прогноз"
+    },
+    "title": "Конец партии",
+    "coins": "пешек",
+    "xp": "XP",
+    "viewers": "зрителей с наградой",
+    "streak": "лучшая серия",
+    "streakBy": "{name}",
+    "detail": "Твои пешки",
+    "src": {
+      "turns": "Сыгранные ходы",
+      "vote": "Твои сыгранные голоса",
+      "rush": "Забег Puzzle Rush",
+      "predictMove": "Угаданные ходы",
+      "predictWinner": "Прогноз победителя",
+      "multi": "Итог дуэли",
+      "daily": "Бонус дня",
+      "other": "Прочее"
+    },
+    "none": "В этот раз без пешек",
+    "cap": "Дневной лимит",
+    "level": "Уровень {n} · {xp} XP до уровня {next}",
+    "levelMax": "Уровень {n} (макс.)",
+    "ach": "Открыто достижений: {n} — забери награду",
+    "viewersTitle": "Зрители с наградой",
+    "viewersSum": "{n} · {coins} пешек",
+    "noViewers": "В этой партии никто не получил награду",
+    "streakRow": "серия {n}",
+    "shop": "Магазин",
+    "close": "Закрыть",
+    "login": "Подключи канал Twitch, чтобы получать пешки и XP в каждой партии.",
+    "loginBtn": "Вход через Twitch",
+    "moves": "ходов: {n}",
+    "vs": "против {name}",
+    "guessed": "угадано ходов: {n}",
+    "problemsTitle": "Решено задач: {n} из {total}",
+    "problemsMeta": "не решено: {n}",
+    "rushTitle": "Забег: {n} задач"
   },
   "coinfx": {
     "credited": "Начислено за этот ход",

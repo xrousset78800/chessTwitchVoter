@@ -743,6 +743,7 @@
     "chromaReset": "Varsayılan yeşile dön"
   },
   "h24": {
+    "earnMine": "Kazancın",
     "phase": { "play": "Oyun", "recap": "Özet", "voteMode": "Mod", "voteOptions": "Seçenekler", "signup": "Kayıt" },
     "mode": { "bot": "Stockfish'e karşı", "teams": "İki takım", "rush": "Puzzle rush", "classic": "Klasik oyun", "predict": "Tahmin" },
     "entry": { "classic": "Klasik oyun", "rush": "Bulmacalar", "predict": "Tahmin" },
@@ -1278,6 +1279,51 @@
     "followWarn": "Dikkat: Phantom şu an «{cur}» oyununu izliyor. Devam edersen tamamen bu oyuna göre yeniden dizilecek.",
     "modeGame": "Twitch oyunu",
     "modeH24": "7/24 (yönetim)"
+  },
+  "bilan": {
+    "mode": {
+      "game": "Oyun",
+      "multi": "Multi",
+      "problems": "Bulmacalar",
+      "rush": "Puzzle Rush",
+      "predict": "Tahmin"
+    },
+    "title": "Oyun bitti",
+    "coins": "piyon",
+    "xp": "XP",
+    "viewers": "ödüllü izleyici",
+    "streak": "en iyi seri",
+    "streakBy": "{name}",
+    "detail": "Piyonlarının dökümü",
+    "src": {
+      "turns": "Oynanan hamleler",
+      "vote": "Oynanan oyların",
+      "rush": "Puzzle Rush koşusu",
+      "predictMove": "Bilinen hamleler",
+      "predictWinner": "Kazanan tahmini",
+      "multi": "Düello sonucu",
+      "daily": "Günlük bonus",
+      "other": "Diğer kazançlar"
+    },
+    "none": "Bu sefer piyon kazanılmadı",
+    "cap": "Günlük sınır",
+    "level": "Seviye {n} · seviye {next} için {xp} XP",
+    "levelMax": "Seviye {n} (maks.)",
+    "ach": "{n} başarım açıldı — ödülünü al",
+    "viewersTitle": "Ödüllü izleyiciler",
+    "viewersSum": "{n} · {coins} piyon",
+    "noViewers": "Bu oyunda ödül alan izleyici yok",
+    "streakRow": "{n} seri",
+    "shop": "Mağaza",
+    "close": "Kapat",
+    "login": "Her oyunda piyon ve XP kazanmak için Twitch kanalını bağla.",
+    "loginBtn": "Twitch girişi",
+    "moves": "{n} hamle",
+    "vs": "{name} karşısında",
+    "guessed": "{n} hamle bilindi",
+    "problemsTitle": "{total} bulmacadan {n} çözüldü",
+    "problemsMeta": "{n} kaçırıldı",
+    "rushTitle": "{n} bulmacalık koşu"
   },
   "coinfx": {
     "credited": "Bu hamlede kazananlar",

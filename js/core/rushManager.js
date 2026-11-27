@@ -285,7 +285,7 @@ class RushManager {
             throw new Error(body.error || `HTTP ${r.status}`);
         }
         const data = await r.json();
-        window.economy?.noteGain(data.gain);
+        window.economy?.noteGain(data.gain, 'rush');
         return data;
     }
 

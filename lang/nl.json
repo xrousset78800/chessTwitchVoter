@@ -743,6 +743,7 @@
     "chromaReset": "Terug naar standaard groen"
   },
   "h24": {
+    "earnMine": "Jouw winst",
     "phase": { "play": "Partij", "recap": "Overzicht", "voteMode": "Modus", "voteOptions": "Opties", "signup": "Inschrijving" },
     "mode": { "bot": "Tegen Stockfish", "teams": "Twee teams", "rush": "Puzzle rush", "classic": "Klassieke partij", "predict": "Voorspelling" },
     "entry": { "classic": "Klassieke partij", "rush": "Puzzels", "predict": "Voorspelling" },
@@ -1278,6 +1279,51 @@
     "followWarn": "Let op: de Phantom volgt momenteel « {cur} ». Als je doorgaat, wordt hij volledig op deze partij gezet.",
     "modeGame": "Twitch-spel",
     "modeH24": "24/24 (regie)"
+  },
+  "bilan": {
+    "mode": {
+      "game": "Partij",
+      "multi": "Multi",
+      "problems": "Opgaven",
+      "rush": "Puzzle Rush",
+      "predict": "Voorspelling"
+    },
+    "title": "Einde van de partij",
+    "coins": "pionnen",
+    "xp": "XP",
+    "viewers": "kijkers beloond",
+    "streak": "beste reeks",
+    "streakBy": "door {name}",
+    "detail": "Jouw pionnen in detail",
+    "src": {
+      "turns": "Gespeelde zetten",
+      "vote": "Jouw gespeelde stemmen",
+      "rush": "Puzzle Rush-run",
+      "predictMove": "Geraden zetten",
+      "predictWinner": "Winnaarvoorspelling",
+      "multi": "Uitslag van het duel",
+      "daily": "Dagbonus",
+      "other": "Overige winst"
+    },
+    "none": "Deze keer geen pionnen verdiend",
+    "cap": "Daglimiet",
+    "level": "Level {n} · {xp} XP tot level {next}",
+    "levelMax": "Level {n} (max)",
+    "ach": "{n} prestatie(s) ontgrendeld — ophalen",
+    "viewersTitle": "Beloonde kijkers",
+    "viewersSum": "{n} · {coins} pionnen",
+    "noViewers": "Geen kijker beloond deze partij",
+    "streakRow": "reeks van {n}",
+    "shop": "Winkel",
+    "close": "Sluiten",
+    "login": "Koppel je Twitch-kanaal om elke partij pionnen en XP te verdienen.",
+    "loginBtn": "Twitch-login",
+    "moves": "{n} zetten",
+    "vs": "tegen {name}",
+    "guessed": "{n} zet(ten) geraden",
+    "problemsTitle": "{n} van {total} opgave(n) opgelost",
+    "problemsMeta": "{n} gemist",
+    "rushTitle": "Run van {n} puzzel(s)"
   },
   "coinfx": {
     "credited": "Bijgeschreven voor deze zet",

@@ -85,6 +85,7 @@
     <link rel="stylesheet" href="css/components/votePanels.css">
     <link rel="stylesheet" href="css/components/movesSheet.css">
     <link rel="stylesheet" href="css/components/coinFx.css">
+    <link rel="stylesheet" href="css/components/gameBilan.css">
 </head>
 <body>
     <!-- Background effects -->
@@ -645,27 +646,6 @@
                         <div class="sandbox-setup__footer launch-only">
                             <button class="btn" id="btn-save-config"><i class="fas fa-save"></i> <span data-i18n="actions.save">Sauvegarder</span></button>
                             <button class="btn btn--primary" id="btn-apply-config"><i class="fas fa-play"></i> <span data-i18n="setup.launch">Lancer</span></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Écran de fin Puzzle Rush -->
-                <div id="rush-end" class="rush-end">
-                    <div class="rush-end__card">
-                        <button class="rush-end__close" id="rush-end-close" data-i18n-title="ui.close" title="Fermer"><i class="fas fa-times"></i></button>
-                        <div class="rush-end__icon">🔥</div>
-                        <h2 class="rush-end__title" data-i18n="ui.rushEnd.title">Run terminé</h2>
-                        <div class="rush-end__score" id="rush-end-score">0</div>
-                        <div class="rush-end__subtitle" data-i18n="ui.rushEnd.solved">puzzles résolus</div>
-                        <div class="rush-end__stats">
-                            <div><span class="rush-end__stat-label" data-i18n="ui.rushEnd.ratingMax">Rating max</span><span class="rush-end__stat-value" id="rush-end-rating">—</span></div>
-                            <div><span class="rush-end__stat-label" data-i18n="ui.rushEnd.duration">Durée</span><span class="rush-end__stat-value" id="rush-end-duration">0:00</span></div>
-                        </div>
-                        <p class="rush-end__status" id="rush-end-status"></p>
-                        <div class="rush-end__actions">
-                            <button class="btn btn--primary" id="rush-restart-btn"><i class="fas fa-redo"></i> <span data-i18n="ui.rushEnd.replay">Rejouer</span></button>
-                            <button class="btn btn--ghost" id="rush-login-btn" style="display:none;"><i class="fab fa-twitch"></i> <span data-i18n="lobby.login">Se connecter</span></button>
-                            <a class="btn btn--ghost" href="/records"><i class="fas fa-trophy"></i> <span data-i18n="ui.rushEnd.records">Voir les records</span></a>
                         </div>
                     </div>
                 </div>

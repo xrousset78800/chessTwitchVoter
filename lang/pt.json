@@ -743,6 +743,7 @@
     "chromaReset": "Voltar ao verde padrão"
   },
   "h24": {
+    "earnMine": "Os teus ganhos",
     "phase": { "play": "Partida", "recap": "Resumo", "voteMode": "Modo", "voteOptions": "Opções", "signup": "Inscrição" },
     "mode": { "bot": "Contra o Stockfish", "teams": "Duas equipes", "rush": "Puzzle rush", "classic": "Partida clássica", "predict": "Previsão" },
     "entry": { "classic": "Partida clássica", "rush": "Problemas", "predict": "Previsão" },
@@ -1278,6 +1279,51 @@
     "followWarn": "Atenção: o Phantom está seguindo «{cur}» no momento. Se continuar, ele será totalmente reposicionado nesta partida.",
     "modeGame": "Partida Twitch",
     "modeH24": "24/24 (regia)"
+  },
+  "bilan": {
+    "mode": {
+      "game": "Partida",
+      "multi": "Multi",
+      "problems": "Problemas",
+      "rush": "Puzzle Rush",
+      "predict": "Previsão"
+    },
+    "title": "Fim da partida",
+    "coins": "peões",
+    "xp": "XP",
+    "viewers": "espectadores creditados",
+    "streak": "melhor série",
+    "streakBy": "de {name}",
+    "detail": "Detalhe dos teus peões",
+    "src": {
+      "turns": "Jogadas",
+      "vote": "Os teus votos jogados",
+      "rush": "Run de Puzzle Rush",
+      "predictMove": "Jogadas adivinhadas",
+      "predictWinner": "Previsão do vencedor",
+      "multi": "Resultado da batalha",
+      "daily": "Bónus do dia",
+      "other": "Outros ganhos"
+    },
+    "none": "Nenhum peão ganho desta vez",
+    "cap": "Limite diário",
+    "level": "Nível {n} · {xp} XP até ao nível {next}",
+    "levelMax": "Nível {n} (máx.)",
+    "ach": "{n} conquista(s) desbloqueada(s) — por resgatar",
+    "viewersTitle": "Espectadores creditados",
+    "viewersSum": "{n} · {coins} peões",
+    "noViewers": "Nenhum espectador creditado nesta partida",
+    "streakRow": "série de {n}",
+    "shop": "Loja",
+    "close": "Fechar",
+    "login": "Liga o teu canal Twitch para ganhar peões e XP em cada partida.",
+    "loginBtn": "Ligação Twitch",
+    "moves": "{n} jogadas",
+    "vs": "contra {name}",
+    "guessed": "{n} jogada(s) adivinhada(s)",
+    "problemsTitle": "{n} de {total} problema(s) resolvido(s)",
+    "problemsMeta": "{n} falhado(s)",
+    "rushTitle": "Run de {n} puzzle(s)"
   },
   "coinfx": {
     "credited": "Creditados nesta jogada",

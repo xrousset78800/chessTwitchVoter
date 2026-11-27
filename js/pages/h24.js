@@ -156,7 +156,14 @@ const H24Page = {
         socket.on('h24:state', (st) => {
             this.skew = st.now - Date.now();
             const prev = this.state?.game;
+            const prevPhase = this.state?.phase;
             this.state = st;
+            // Début de partie : photo de mon compte, pour « Tes gains » dans le récap
+            if (st.phase === 'play' && (prevPhase !== 'play' || !this.earn0)) {
+                const a = window.economy?.account;
+                this.earn0 = a ? { coins: a.coins || 0, spent: a.spent || 0, xp: a.xp || 0 } : { pending: true };
+            }
+            if (st.phase === 'recap' && prevPhase !== 'recap') window.economy?.refresh();
             // Un coup vient d'être joué : son du coup (plus de carillon de fin de partie)
             const h = st.game?.history;
             if (st.phase === 'play' && prev && h && h.length === (prev.history?.length || 0) + 1) this.playMoveSound(h[h.length - 1]);
@@ -2029,7 +2036,29 @@ const H24Page = {
             </div>
             ${this.recapHighlights(r)}
             ${tops ? `<p class="h24-recap__label">${esc(t('h24.topVoters', null, 'Plus gros votants'))}</p><div class="h24-recap__tops">${tops}</div>` : ''}
+            ${this.recapEarnHtml(r)}
             <p class="h24-card__next">${esc(t('h24.nextSoon', null, 'Vote du prochain mode juste après.'))}</p>`;
+    },
+
+    /** Récap : mes gains de la partie (écart de mon compte) et viewers crédités (pions versés aux votants) */
+    recapEarnHtml(r) {
+        const a = window.economy?.account, e0 = this.earn0;
+        let mine = '';
+        if (this.me.login && a && e0 && !e0.pending) {
+            const coins = (a.coins - e0.coins) + ((a.spent || 0) - e0.spent), xp = (a.xp || 0) - e0.xp;
+            if (coins > 0 || xp > 0) mine = `<p class="h24-earn__mine"><i class="fas fa-chess-pawn"></i> ${esc(t('h24.earnMine', null, 'Tes gains'))} <strong>+${coins}</strong> ${esc(t('bilan.coins', null, 'pions'))} · <strong>+${xp}</strong> XP</p>`;
+        }
+        const E = r.earn;
+        let crowd = '';
+        if (E?.n) {
+            const rows = (E.top || []).map((x, i) => `<li class="${x.u === this.me.login ? 'is-me' : ''}"><span class="h24-earn__rank">${i + 1}</span>`
+                + `<span class="h24-earn__name" style="color:${nameColor(x.u)}">${esc(x.u)}</span>`
+                + `<small>${esc(x.v || t('coinfx.site', null, 'site'))}</small>`
+                + `<span class="h24-earn__c">+${x.c}</span></li>`).join('');
+            crowd = `<p class="h24-recap__label">${esc(t('bilan.viewersTitle', null, 'Viewers crédités'))} <small>${esc(t('bilan.viewersSum', { n: E.n, coins: E.coins }, `${E.n} · ${E.coins} pions`))}</small></p>`
+                + `<ol class="h24-earn__list">${rows}</ol>`;
+        }
+        return mine + crowd;
     },
 
     /** Récap de la prédiction : la partie, son issue, les meilleurs devins */
@@ -2054,6 +2083,7 @@ const H24Page = {
                 ${r.result?.winner ? `<span><strong>${P.rightWinner || 0}</strong> ${esc(t('h24.pred.rightWinner', null, 'bons pronostics'))}</span>` : ''}
             </div>
             ${best ? `<p class="h24-recap__label">${esc(t('h24.pred.bestGuessers', null, 'Meilleurs devins'))}</p><ol class="h24-pboard__list h24-pboard__list--recap">${best}</ol>` : ''}
+            ${this.recapEarnHtml(r)}
             <p class="h24-card__next">${esc(t('h24.nextSoon', null, 'Vote du prochain mode juste après.'))}</p>`;
     },
 

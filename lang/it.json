@@ -743,6 +743,7 @@
     "chromaReset": "Torna al verde predefinito"
   },
   "h24": {
+    "earnMine": "I tuoi guadagni",
     "phase": { "play": "Partita", "recap": "Riepilogo", "voteMode": "Modalità", "voteOptions": "Opzioni", "signup": "Iscrizione" },
     "mode": { "bot": "Contro Stockfish", "teams": "Due squadre", "rush": "Puzzle rush", "classic": "Partita classica", "predict": "Previsione" },
     "entry": { "classic": "Partita classica", "rush": "Problemi", "predict": "Previsione" },
@@ -1278,6 +1279,51 @@
     "followWarn": "Attenzione: il Phantom sta seguendo « {cur} ». Continuando, verrà completamente riportato a questa partita.",
     "modeGame": "Partita Twitch",
     "modeH24": "24/24 (regia)"
+  },
+  "bilan": {
+    "mode": {
+      "game": "Partita",
+      "multi": "Multi",
+      "problems": "Problemi",
+      "rush": "Puzzle Rush",
+      "predict": "Pronostico"
+    },
+    "title": "Fine partita",
+    "coins": "pedoni",
+    "xp": "XP",
+    "viewers": "spettatori accreditati",
+    "streak": "serie migliore",
+    "streakBy": "di {name}",
+    "detail": "Dettaglio dei tuoi pedoni",
+    "src": {
+      "turns": "Mosse giocate",
+      "vote": "I tuoi voti giocati",
+      "rush": "Run di Puzzle Rush",
+      "predictMove": "Mosse indovinate",
+      "predictWinner": "Pronostico del vincitore",
+      "multi": "Risultato della sfida",
+      "daily": "Bonus del giorno",
+      "other": "Altri guadagni"
+    },
+    "none": "Nessun pedone guadagnato questa volta",
+    "cap": "Limite giornaliero",
+    "level": "Livello {n} · {xp} XP al livello {next}",
+    "levelMax": "Livello {n} (max)",
+    "ach": "{n} obiettivo/i sbloccato/i — da riscattare",
+    "viewersTitle": "Spettatori accreditati",
+    "viewersSum": "{n} · {coins} pedoni",
+    "noViewers": "Nessuno spettatore accreditato in questa partita",
+    "streakRow": "serie di {n}",
+    "shop": "Negozio",
+    "close": "Chiudi",
+    "login": "Collega il tuo canale Twitch per guadagnare pedoni e XP a ogni partita.",
+    "loginBtn": "Accesso Twitch",
+    "moves": "{n} mosse",
+    "vs": "contro {name}",
+    "guessed": "{n} mossa/e indovinata/e",
+    "problemsTitle": "{n} problema/i risolto/i su {total}",
+    "problemsMeta": "{n} sbagliato/i",
+    "rushTitle": "Run di {n} puzzle"
   },
   "coinfx": {
     "credited": "Accreditati su questa mossa",

@@ -168,15 +168,27 @@
         return ' · ' + T('predict.gain', { xp: gain.xp || 0, coins: gain.coins || 0 }, `+${gain.xp} XP · +${gain.coins}`);
     }
 
+    let guessed = 0;   // coups devinés depuis le dernier bilan
     function showResults(results) {
         for (const r of results) {
             // Coup : pas de message, la liste des votants l'anime déjà (✓ +XP / ✗)
-            if (r.kind === 'move') { if (r.hit) window.economy?.noteGain(r.gain); continue; }
+            if (r.kind === 'move') { if (r.hit) { guessed++; window.economy?.noteGain(r.gain, 'predictMove'); } continue; }
+            if (r.hit) window.economy?.noteGain(r.gain, 'predictWinner');
+            const names = (r.names || []).join(' – ');
+            // Partie terminée : bilan de la prédiction (pronostic du vainqueur, coups devinés, pions)
+            if (window.GameBilan) {
+                window.GameBilan.show({
+                    mode: 'predict',
+                    title: T(r.hit ? 'predict.winnerHit' : 'predict.winnerMiss', { names }, r.hit ? 'Pronostic gagnant' : 'Pronostic perdu'),
+                    meta: [names, T('bilan.guessed', { n: guessed }, `${guessed} coup(s) deviné(s)`)].filter(Boolean).join(' · '),
+                });
+                guessed = 0;
+                continue;
+            }
             const html = r.hit
-                ? `<strong>${esc(T('predict.winnerHit', { names: (r.names || []).join(' – ') }, 'Pronostic gagnant'))}</strong>${esc(gainText(r.gain))}`
-                : esc(T('predict.winnerMiss', { names: (r.names || []).join(' – ') }, 'Pronostic perdu'));
+                ? `<strong>${esc(T('predict.winnerHit', { names }, 'Pronostic gagnant'))}</strong>${esc(gainText(r.gain))}`
+                : esc(T('predict.winnerMiss', { names }, 'Pronostic perdu'));
             window.AppToast?.show(html, r.hit ? 'success' : 'info', 4000);
-            if (r.hit) window.economy?.noteGain(r.gain);
         }
     }
 

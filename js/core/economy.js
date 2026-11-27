@@ -5,6 +5,7 @@
  *   window.economy.buy(id)   → achète un objet du magasin
  * Les objets possédés alimentent window.unlockedRewards (menu Pièces, js/utils/pieceSet.js).
  * Événement « economyChanged » (detail : compte) à chaque mise à jour.
+ * Événement « economyGain » (detail : { gain, source }) à chaque gain signalé (bilan de fin de partie).
  */
 import twitchAuth from './twitchAuth.js';
 
@@ -33,9 +34,11 @@ const economy = {
         return this._set(data);
     },
 
-    /** Gain renvoyé par le serveur (fin de run, coups…) : on relit le compte */
-    noteGain(gain) {
-        if (gain && (gain.xp || gain.coins || gain.daily || gain.achievements?.length)) this.refresh();
+    /** Gain renvoyé par le serveur (fin de run, coups…) : on relit le compte. source : turns, rush, predictMove… */
+    noteGain(gain, source = 'other') {
+        if (!gain || !(gain.xp || gain.coins || gain.daily || gain.achievements?.length)) return;
+        window.dispatchEvent(new CustomEvent('economyGain', { detail: { gain, source } }));
+        this.refresh();
     },
 
     _set(account) {

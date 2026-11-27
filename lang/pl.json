@@ -743,6 +743,7 @@
     "chromaReset": "Przywróć domyślną zieleń"
   },
   "h24": {
+    "earnMine": "Twoje zyski",
     "phase": { "play": "Partia", "recap": "Podsumowanie", "voteMode": "Tryb", "voteOptions": "Opcje", "signup": "Zapisy" },
     "mode": { "bot": "Przeciw Stockfishowi", "teams": "Dwie drużyny", "rush": "Puzzle rush", "classic": "Klasyczna partia", "predict": "Przewidywanie" },
     "entry": { "classic": "Klasyczna partia", "rush": "Zadania", "predict": "Przewidywanie" },
@@ -1278,6 +1279,51 @@
     "followWarn": "Uwaga: Phantom śledzi teraz „{cur}”. Jeśli kontynuujesz, zostanie w całości ustawiony na tę partię.",
     "modeGame": "Partia Twitch",
     "modeH24": "24/24 (reżyseria)"
+  },
+  "bilan": {
+    "mode": {
+      "game": "Partia",
+      "multi": "Multi",
+      "problems": "Zadania",
+      "rush": "Puzzle Rush",
+      "predict": "Typowanie"
+    },
+    "title": "Koniec partii",
+    "coins": "pionów",
+    "xp": "XP",
+    "viewers": "nagrodzonych widzów",
+    "streak": "najlepsza seria",
+    "streakBy": "{name}",
+    "detail": "Twoje piony",
+    "src": {
+      "turns": "Zagrane ruchy",
+      "vote": "Twoje zagrane głosy",
+      "rush": "Run Puzzle Rush",
+      "predictMove": "Odgadnięte ruchy",
+      "predictWinner": "Typ zwycięzcy",
+      "multi": "Wynik pojedynku",
+      "daily": "Bonus dzienny",
+      "other": "Inne zyski"
+    },
+    "none": "Tym razem bez pionów",
+    "cap": "Limit dzienny",
+    "level": "Poziom {n} · {xp} XP do poziomu {next}",
+    "levelMax": "Poziom {n} (maks.)",
+    "ach": "Odblokowane osiągnięcia: {n} — do odebrania",
+    "viewersTitle": "Nagrodzeni widzowie",
+    "viewersSum": "{n} · {coins} pionów",
+    "noViewers": "Żaden widz nie został nagrodzony w tej partii",
+    "streakRow": "seria {n}",
+    "shop": "Sklep",
+    "close": "Zamknij",
+    "login": "Połącz kanał Twitch, aby zdobywać piony i XP w każdej partii.",
+    "loginBtn": "Logowanie Twitch",
+    "moves": "ruchy: {n}",
+    "vs": "przeciw {name}",
+    "guessed": "odgadnięte ruchy: {n}",
+    "problemsTitle": "Rozwiązane zadania: {n} z {total}",
+    "problemsMeta": "nieudane: {n}",
+    "rushTitle": "Run: {n} zadań"
   },
   "coinfx": {
     "credited": "Nagrodzeni za ten ruch",

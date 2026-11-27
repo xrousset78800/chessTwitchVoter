@@ -743,6 +743,7 @@
     "chromaReset": "Zurück zum Standard-Grün"
   },
   "h24": {
+    "earnMine": "Deine Gewinne",
     "phase": { "play": "Partie", "recap": "Rückblick", "voteMode": "Modus", "voteOptions": "Optionen", "signup": "Anmeldung" },
     "mode": { "bot": "Gegen Stockfish", "teams": "Zwei Teams", "rush": "Puzzle Rush", "classic": "Klassische Partie", "predict": "Vorhersage" },
     "entry": { "classic": "Klassische Partie", "rush": "Aufgaben", "predict": "Vorhersage" },
@@ -1278,6 +1279,51 @@
     "followWarn": "Achtung: Das Phantom folgt gerade „{cur}“. Wenn du fortfährst, wird es komplett auf diese Partie zurückgesetzt.",
     "modeGame": "Twitch-Partie",
     "modeH24": "24/7 (Regie)"
+  },
+  "bilan": {
+    "mode": {
+      "game": "Partie",
+      "multi": "Multi",
+      "problems": "Aufgaben",
+      "rush": "Puzzle Rush",
+      "predict": "Vorhersage"
+    },
+    "title": "Partie beendet",
+    "coins": "Bauern",
+    "xp": "XP",
+    "viewers": "Zuschauer belohnt",
+    "streak": "beste Serie",
+    "streakBy": "von {name}",
+    "detail": "Deine Bauern im Detail",
+    "src": {
+      "turns": "Gespielte Züge",
+      "vote": "Deine gespielten Vorschläge",
+      "rush": "Puzzle-Rush-Lauf",
+      "predictMove": "Erratene Züge",
+      "predictWinner": "Sieger-Tipp",
+      "multi": "Ergebnis des Duells",
+      "daily": "Tagesbonus",
+      "other": "Weitere Gewinne"
+    },
+    "none": "Diesmal keine Bauern verdient",
+    "cap": "Tageslimit",
+    "level": "Level {n} · {xp} XP bis Level {next}",
+    "levelMax": "Level {n} (max)",
+    "ach": "{n} Erfolg(e) freigeschaltet — abholen",
+    "viewersTitle": "Belohnte Zuschauer",
+    "viewersSum": "{n} · {coins} Bauern",
+    "noViewers": "Kein Zuschauer in dieser Partie belohnt",
+    "streakRow": "Serie von {n}",
+    "shop": "Shop",
+    "close": "Schließen",
+    "login": "Verbinde deinen Twitch-Kanal, um in jeder Partie Bauern und XP zu verdienen.",
+    "loginBtn": "Twitch-Login",
+    "moves": "{n} Züge",
+    "vs": "gegen {name}",
+    "guessed": "{n} Zug/Züge erraten",
+    "problemsTitle": "{n} von {total} Aufgabe(n) gelöst",
+    "problemsMeta": "{n} verfehlt",
+    "rushTitle": "Lauf mit {n} Puzzle(s)"
   },
   "coinfx": {
     "credited": "Gutgeschrieben für diesen Zug",
