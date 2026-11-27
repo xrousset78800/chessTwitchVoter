@@ -459,7 +459,19 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emit();
     }
 
-    function startModeVote() {
+    function startModeVote(ready = false) {
+        // Pas encore de partie à suivre (serveur tout juste relancé, partie vedette Lichess finie…) : le récap
+        // patiente le temps de les relire (12 s au plus) pour que « Prédiction » soit là dès l'ouverture du vote
+        if (!ready && liveGames && !pred.cands.length && s.phase === 'recap' && Date.now() - (pred.heldAt || 0) > 60000) {
+            pred.heldAt = Date.now();
+            s.endsAt = Date.now() + 12000;
+            emit();
+            const cycle = s.cycle;
+            refreshCands().then(() => {
+                if (s.phase === 'recap' && s.cycle === cycle && !s.paused && pred.cands.length) startModeVote(true);
+            });
+            return;
+        }
         s.recap = null;
         // Prédiction proposée seulement s'il y a des parties longues en direct
         s.ballot = { id: 'mode', choices: ENTRIES.filter(m => m !== 'predict' || pred.cands.length), def: 'classic', votes: new Map() };
@@ -844,8 +856,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     const pred = { cands: [], timer: null };
     /** Parties candidates : en direct, cadence d'au moins 10 min, les plus fortes (somme des Elo) */
     function refreshCands() {
-        if (!liveGames) return;
-        Promise.resolve().then(liveGames).then(list => {
+        if (!liveGames) return Promise.resolve();
+        return Promise.resolve().then(liveGames).then(list => {
             // Les parties les plus jeunes d'abord (à égalité, l'ordre d'origine : les plus fortes)
             // (pas de plafond de coups : si aucune ne commence, on prend les moins avancées, le mode reste proposé)
             // Parties commencées il y a plus de 12 h : sans doute figées, écartées
