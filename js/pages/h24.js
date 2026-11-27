@@ -1484,11 +1484,12 @@ const H24Page = {
         if (this.wheel?.isSpinning || this.revealing) return;
         if (g.predict) { $('h24-votes')?.querySelector('.h24-vlist')?.remove(); return this.predictPanel(g); }
         $('h24-votes')?.querySelector('.h24-plast')?.remove();
-        if (this.podiumMode()) {
+        // Votes visibles, dans tous les modes (tirage compris) : le tableau des votants de la page Tournois
+        // à la place du podium et de la roue / bande (la roue ne sert plus qu'à tourner au moment du tirage)
+        if (g.secret === false && Array.isArray(g.ballots)) {
             if (slot.classList.contains('is-live')) { this.clearLive(); this.wheel = null; area.innerHTML = ''; }
             const list = $('h24-votes');
-            // Votes visibles : le tableau des votants de la page Tournois à la place du podium
-            if (g.secret === false && Array.isArray(g.ballots)) {
+            {
                 list?.querySelector('.podium')?.remove();
                 let box = list?.querySelector('.h24-vlist');
                 if (list && !box) { box = document.createElement('div'); box.className = 'h24-vlist'; list.appendChild(box); }
@@ -1502,7 +1503,11 @@ const H24Page = {
                 this.tickerTotal((g.votes || []).reduce((a, v) => a + (v.count || 0), 0));
                 return;
             }
-            list?.querySelector('.h24-vlist')?.remove();
+        }
+        $('h24-votes')?.querySelector('.h24-vlist')?.remove();
+        if (this.podiumMode()) {
+            if (slot.classList.contains('is-live')) { this.clearLive(); this.wheel = null; area.innerHTML = ''; }
+            const list = $('h24-votes');
             // Nouveau tour : le podium repart de zéro (pas de coup fantôme du tour précédent)
             if (this.podiumKey !== g.fen) { this.podiumKey = g.fen; list?.querySelector('.podium')?.remove(); }
             renderPodium(list, $('h24-votes-total'), g.votes || [], { turn: g.turn, colors: COLORS, secret: g.secret, masked: g.masked });

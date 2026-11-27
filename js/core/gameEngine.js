@@ -235,7 +235,8 @@ class GameEngine {
 
             // Vote en cours : le coup posé compte comme un vote, il n'est pas joué
             if (this.dropIsVote()) {
-                window.problemsManager.receiveVote(moveUCI);
+                // Vote du streamer (son pseudo) : même limite de votes que le chat, plus de votes « anonymes » à l'infini
+                window.problemsManager.receiveVote({ move: moveUCI, ...this.streamerVoter() }, 'en');
                 return 'snapback';
             }
 

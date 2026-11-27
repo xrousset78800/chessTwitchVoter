@@ -1468,7 +1468,7 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
             if (isPuzzleMode() && problemsManager.isActive) {
                 const move = source + target;
                 // Vote en cours : le coup posé compte comme un vote, il n'est pas joué
-                if (gameEngine.dropIsVote?.()) { problemsManager.receiveVote(move); return 'snapback'; }
+                if (gameEngine.dropIsVote?.()) { problemsManager.receiveVote({ move, ...gameEngine.streamerVoter() }, 'en'); return 'snapback'; }
                 const result = problemsManager.validateAndPlayMove(move);
 
                 if (!result.valid || !result.correct) {
