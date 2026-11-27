@@ -1652,6 +1652,7 @@
     "yourOdds": "Ta cote : {odds}.",
     "voted": "Vote enregistré : {pick}",
     "stats": "{hits}/{total} coups devinés · série {streak} · vainqueurs {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} coups devinés sur ce match",
     "loginText": "Devine le prochain coup et le vainqueur pour gagner de l'XP et des pions.",
     "loginBtn": "Se connecter avec Twitch",
     "login": "Connecte-toi avec Twitch pour pronostiquer",

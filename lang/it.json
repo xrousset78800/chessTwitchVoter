@@ -1652,6 +1652,7 @@
     "yourOdds": "La tua quota: {odds}.",
     "voted": "Voto registrato: {pick}",
     "stats": "{hits}/{total} mosse indovinate · serie {streak} · vincitori {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} mosse indovinate in questa partita",
     "loginText": "Indovina la prossima mossa e il vincitore per guadagnare XP e pedoni.",
     "loginBtn": "Accedi con Twitch",
     "login": "Accedi con Twitch per pronosticare",

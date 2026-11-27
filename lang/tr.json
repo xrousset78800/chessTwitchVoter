@@ -1652,6 +1652,7 @@
     "yourOdds": "Oranın: {odds}.",
     "voted": "Oy kaydedildi: {pick}",
     "stats": "{hits}/{total} hamle bilindi · seri {streak} · kazananlar {whits}/{wtotal}",
+    "matchStats": "Bu maçta {hits}/{total} hamle bilindi",
     "loginText": "XP ve piyon kazanmak için sıradaki hamleyi ve kazananı tahmin et.",
     "loginBtn": "Twitch ile giriş yap",
     "login": "Tahmin etmek için Twitch ile giriş yap",

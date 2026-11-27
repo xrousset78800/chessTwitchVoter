@@ -150,8 +150,11 @@ const AchievementsPage = {
             defs.categories.map(cat => {
                 const items = defs.list.filter(d => d.cat === cat);
                 const n = items.filter(d => unlocked[d.id]).length;
+                // Pronostics : bilan cumulé de tous les matchs
+                const pst = cat === 'predict' && (stats.predictMoves || stats.predictWinners)
+                    ? `<p class="ach-cat__stat">${esc(tr('predict.stats', { hits: stats.predictMoveHits || 0, total: stats.predictMoves || 0, streak: stats.predictBestStreak || 0, whits: stats.predictWinnerHits || 0, wtotal: stats.predictWinners || 0 }))}</p>` : '';
                 return `<section class="ach-cat">
-                    <h2 class="ach-cat__title">${esc(t(`cat.${cat}`))} <span>${n} / ${items.length}</span></h2>
+                    <h2 class="ach-cat__title">${esc(t(`cat.${cat}`))} <span>${n} / ${items.length}</span></h2>${pst}
                     <ul class="ach-grid">${items.map(d => card(d, unlocked[d.id], stats, pending.has(d.id))).join('')}</ul>
                 </section>`;
             }).join('');

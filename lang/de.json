@@ -1652,6 +1652,7 @@
     "yourOdds": "Deine Quote: {odds}.",
     "voted": "Stimme gespeichert: {pick}",
     "stats": "{hits}/{total} Züge erraten · Serie {streak} · Sieger {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} Züge in dieser Partie erraten",
     "loginText": "Errate den nächsten Zug und den Sieger, um XP und Münzen zu gewinnen.",
     "loginBtn": "Mit Twitch anmelden",
     "login": "Melde dich mit Twitch an, um zu tippen",

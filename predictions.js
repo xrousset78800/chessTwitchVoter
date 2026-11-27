@@ -86,6 +86,20 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
         return { game, data: r.body };
     }
 
+    const MAX_MATCHES = 60;              // scores par match gardés par compte (les plus anciens sautent)
+    function matchOf(u, key) {
+        const all = u.match ||= {};
+        if (!all[key]) {
+            const keys = Object.keys(all);
+            if (keys.length >= MAX_MATCHES) {
+                keys.sort((a, b) => (all[a].at || 0) - (all[b].at || 0));
+                for (const k of keys.slice(0, keys.length - MAX_MATCHES + 1)) delete all[k];
+            }
+            all[key] = { hits: 0, total: 0, at: Date.now() };
+        }
+        return all[key];
+    }
+
     function pushResult(login, res) {
         const u = user(login);
         u.results.push(res);
@@ -141,6 +155,10 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
             const hit = played.uci.slice(0, 4) === p.uci.slice(0, 4) && (played.uci[4] || 'q') === (p.uci[4] || 'q');
             const st = statsOf(login);
             st.predictMoves = (st.predictMoves || 0) + 1;
+            // Score du match (affiché sur la carte) ; le cumul reste dans les stats du compte
+            const m = matchOf(u, key);
+            m.total++; m.at = now;
+            if (hit) m.hits++;
             let gain = null;
             if (hit) {
                 st.predictMoveHits = (st.predictMoveHits || 0) + 1;
@@ -198,6 +216,7 @@ module.exports = function setupPredictions({ app, requireTwitch, dataDir, jsonSt
                 votes: tally(key),
                 results: u.results.filter(r => r.at > since),
                 stats: publicStats(login),
+                match: { hits: u.match?.[key]?.hits || 0, total: u.match?.[key]?.total || 0 },
                 rules: R(),
                 now: Date.now(),
             });

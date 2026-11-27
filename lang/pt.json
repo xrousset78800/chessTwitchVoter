@@ -1652,6 +1652,7 @@
     "yourOdds": "Sua cotação: {odds}.",
     "voted": "Voto registrado: {pick}",
     "stats": "{hits}/{total} lances adivinhados · sequência {streak} · vencedores {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} lances acertados nesta partida",
     "loginText": "Adivinhe o próximo lance e o vencedor para ganhar XP e peões.",
     "loginBtn": "Conectar com a Twitch",
     "login": "Conecte-se com a Twitch para dar palpites",

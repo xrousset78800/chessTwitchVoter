@@ -1652,6 +1652,7 @@
     "yourOdds": "Jouw quotering: {odds}.",
     "voted": "Stem geregistreerd: {pick}",
     "stats": "{hits}/{total} zetten geraden · reeks {streak} · winnaars {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} zetten geraden in deze partij",
     "loginText": "Raad de volgende zet en de winnaar om XP en pionnen te verdienen.",
     "loginBtn": "Inloggen met Twitch",
     "login": "Log in met Twitch om te voorspellen",

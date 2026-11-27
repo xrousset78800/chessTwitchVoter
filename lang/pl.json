@@ -1652,6 +1652,7 @@
     "yourOdds": "Twój kurs: {odds}.",
     "voted": "Głos zapisany: {pick}",
     "stats": "{hits}/{total} ruchów odgadniętych · seria {streak} · zwycięzcy {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} trafionych ruchów w tej partii",
     "loginText": "Zgadnij następny ruch i zwycięzcę, by zdobyć XP i pionki.",
     "loginBtn": "Zaloguj się przez Twitch",
     "login": "Zaloguj się przez Twitch, by typować",

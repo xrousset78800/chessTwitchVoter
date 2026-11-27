@@ -1652,6 +1652,7 @@
     "yourOdds": "Tu cuota: {odds}.",
     "voted": "Voto registrado: {pick}",
     "stats": "{hits}/{total} jugadas adivinadas · racha {streak} · ganadores {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} jugadas acertadas en esta partida",
     "loginText": "Adivina la próxima jugada y el ganador para ganar XP y fichas.",
     "loginBtn": "Conectar con Twitch",
     "login": "Conéctate con Twitch para pronosticar",

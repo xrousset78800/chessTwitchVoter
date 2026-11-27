@@ -204,6 +204,7 @@
                     if (pred.winner) myWinnerPicks[c.key] = pred.winner;
                     pred.votes = d.votes;
                     pred.stats = d.stats;
+                    pred.match = d.match || null;
                     renderPredict();
                 }
             }
@@ -342,7 +343,7 @@
         card.classList.toggle('is-ended', !!result);
         card.classList.toggle('is-won', !!result && pred.winner === result);
         card.classList.toggle('is-lost', !!result && !!pred.winner && pred.winner !== result);
-        if (pred.key !== c.key) { pred.key = c.key; pred.move = null; pred.winner = myWinnerPicks[c.key] || null; pred.f = null; pred.odds = null; pred.votes = null; pred.confirm = null; }
+        if (pred.key !== c.key) { pred.key = c.key; pred.move = null; pred.winner = myWinnerPicks[c.key] || null; pred.f = null; pred.odds = null; pred.votes = null; pred.confirm = null; pred.match = null; }
         if (pred.winner || c.ended) pred.confirm = null;
         const body = card.querySelector('.tp-body');
         if (!logged()) {
@@ -351,11 +352,12 @@
             return;
         }
         // Compact : le vainqueur sur une ligne, les explications en infobulle, la liste des coups prend le reste
-        const st = pred.stats;
+        // Score de CE match (coups devinés / pronos jugés) ; le cumul est sur la page Succès
+        const st = pred.stats, mt = pred.match;
         const stat = card.querySelector('.tp-stat');
         if (stat) {
-            stat.innerHTML = st ? `${st.moveHits}/${st.moveTotal}${st.streak ? ` · <i class="fas fa-fire"></i> ${st.streak}` : ''}` : '';
-            stat.title = st ? T('predict.stats', { hits: st.moveHits, total: st.moveTotal, streak: st.streak, whits: st.winnerHits, wtotal: st.winnerTotal }) : '';
+            stat.innerHTML = mt?.total ? `${mt.hits}/${mt.total}${st?.streak ? ` · <i class="fas fa-fire"></i> ${st.streak}` : ''}` : '';
+            stat.title = mt?.total ? T('predict.matchStats', { hits: mt.hits, total: mt.total }) : '';
         }
         const rulesText = T('predict.rules', { xp: rules.move.xp, coins: rules.move.coins, every: rules.streak.every, sxp: rules.streak.xp, scoins: rules.streak.coins, wxp: rules.winner.xp, wcoins: rules.winner.coins, dxp: rules.winnerDraw.xp, dcoins: rules.winnerDraw.coins, omin: fmtOdds(rules.oddsMin ?? 0.2), omax: fmtOdds(rules.oddsMax ?? 2) });
         const winTip = T('predict.winnerTitle', null, 'Vainqueur') + ' — ' + T('predict.oddsHint') + (pred.winner && pred.f ? ' ' + T('predict.yourOdds', { odds: fmtOdds(pred.f) }) : '')

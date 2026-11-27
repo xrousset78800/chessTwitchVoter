@@ -1652,6 +1652,7 @@
     "yourOdds": "Your odds: {odds}.",
     "voted": "Vote saved: {pick}",
     "stats": "{hits}/{total} moves guessed · streak {streak} · winners {whits}/{wtotal}",
+    "matchStats": "{hits}/{total} moves guessed in this game",
     "loginText": "Guess the next move and the winner to earn XP and pawns.",
     "loginBtn": "Log in with Twitch",
     "login": "Log in with Twitch to make predictions",
