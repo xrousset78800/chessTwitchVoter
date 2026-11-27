@@ -529,8 +529,8 @@ const H24Page = {
                 const m = find(g.chosen.move);
                 if (m) overlay = { kind: 'win', from: m.from, to: m.to, label: label(m.san, g.chosen.pct), who: who(g.chosen) };
             } else {
-                const top = g.votes?.[0]?.count || 0;
-                const moves = top ? g.votes.filter(v => v.count === top).map(v => find(v.move)).filter(Boolean) : [];
+                // Une flèche par coup voté, avec son nombre de votes
+                const moves = (g.votes || []).filter(v => v.count > 0).map(v => { const m = find(v.move); return m && { ...m, n: v.count }; }).filter(Boolean);
                 if (moves.length) overlay = { kind: 'lead', moves };
             }
         }
@@ -1399,6 +1399,7 @@ const H24Page = {
             this.podiumKey = null;
             $('h24-votes')?.querySelector('.podium')?.remove();
             $('h24-votes')?.querySelector('.h24-plast')?.remove();
+            $('h24-votes')?.querySelector('.h24-vlist')?.remove();
         }
     },
 
@@ -1481,11 +1482,27 @@ const H24Page = {
         const area = $('h24-wheel-area');
         if (!slot || !area || g.draw || g.result) return;
         if (this.wheel?.isSpinning || this.revealing) return;
-        if (g.predict) return this.predictPanel(g);
+        if (g.predict) { $('h24-votes')?.querySelector('.h24-vlist')?.remove(); return this.predictPanel(g); }
         $('h24-votes')?.querySelector('.h24-plast')?.remove();
         if (this.podiumMode()) {
             if (slot.classList.contains('is-live')) { this.clearLive(); this.wheel = null; area.innerHTML = ''; }
             const list = $('h24-votes');
+            // Votes visibles : le tableau des votants de la page Tournois à la place du podium
+            if (g.secret === false && Array.isArray(g.ballots)) {
+                list?.querySelector('.podium')?.remove();
+                let box = list?.querySelector('.h24-vlist');
+                if (list && !box) { box = document.createElement('div'); box.className = 'h24-vlist'; list.appendChild(box); }
+                const chosen = g.chosen?.move || null;
+                const rows = g.ballots.map(v => chosen ? { ...v, hit: v.m === chosen } : v);
+                const html = this.votersCard(rows, { flash: !!chosen && rows.length > 0, over: !!g.result,
+                    empty: t('wheelStyle.waiting', null, 'En attente des votes…') });
+                if (box && box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; }
+                const tot = $('h24-votes-total');
+                if (tot) tot.textContent = '';
+                this.tickerTotal((g.votes || []).reduce((a, v) => a + (v.count || 0), 0));
+                return;
+            }
+            list?.querySelector('.h24-vlist')?.remove();
             // Nouveau tour : le podium repart de zéro (pas de coup fantôme du tour précédent)
             if (this.podiumKey !== g.fen) { this.podiumKey = g.fen; list?.querySelector('.podium')?.remove(); }
             renderPodium(list, $('h24-votes-total'), g.votes || [], { turn: g.turn, colors: COLORS, secret: g.secret, masked: g.masked });
@@ -1493,6 +1510,7 @@ const H24Page = {
             return;
         }
         $('h24-votes')?.querySelector('.podium')?.remove();
+        $('h24-votes')?.querySelector('.h24-vlist')?.remove();
         // Nouveau coup à jouer : roue neuve (plus de coup gagnant affiché au centre)
         if (this.liveKey !== g.fen) {
             this.liveKey = g.fen;
@@ -1569,11 +1587,25 @@ const H24Page = {
         clearTimeout(this.pvTimer);
         if (flash) this.pvTimer = setTimeout(() => this.render(), 5100 - (Date.now() + (this.skew || 0) - flash.at));
         const rows = flash ? flash.who : (P.guesses || []);
+        const cardVoters = this.votersCard(rows, { flash: !!flash, over,
+            gain: `+1 pt${P.moveCoins ? ` · +${P.moveCoins} <i class="fas fa-chess-pawn"></i>` : ''}`,
+            footer: flash ? `<p class="tp-hint">${esc(fmtMove(flash.san))} · ${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</p>` : '' });
+        // Pronostics dans la colonne de gauche, comme sur la page Tournois ; la partie et les votants à droite
+        const left = $('h24-pred');
+        if (left && left.dataset.html !== cardPred) { left.dataset.html = cardPred; left.innerHTML = cardPred; }
+        // (la carte « Partie sélectionnée » n'est plus affichée : les bandes autour de l'échiquier donnent joueurs, Elo et pendules)
+        const html = cardVoters;
+        if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; this.paintPclocks(); }
+    },
+
+    /** Carte « Votants » de la page Tournois : une ligne par coup (part des votes, photos, nombre) ;
+     *  flash : la ligne du coup joué reçoit ✓ (et le gain), les autres ✗ */
+    votersCard(rows, { flash = false, over = false, gain = '', footer = '', empty = '' } = {}) {
+        const me = this.me.login;
         const who = (v) => (v.u || '?') + (v.v === 'chat' ? ` · ${t('voters.chat', null, 'Chat Twitch')}` : v.v === 'bot' ? ` · ${t('voters.bot', null, 'Bot de test')}` : '');
         const face = (v) => v.v === 'bot' ? `<span class="tv-pic is-bot" title="${esc(who(v))}"><i class="fas fa-robot"></i></span>`
             : v.p ? `<img class="tv-pic" src="${esc(v.p)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="${esc(who(v))}">`
             : `<span class="tv-pic" title="${esc(who(v))}">${esc((v.u || '?')[0].toUpperCase())}</span>`;
-        // Une ligne par coup (part des votes, photos des votants, nombre), comme sur la page Tournois
         const groups = [...rows.reduce((m, v) => {
             if (!m.has(v.m)) m.set(v.m, []);
             m.get(v.m).push(v);
@@ -1583,7 +1615,7 @@ const H24Page = {
         const MAXF = 10;
         const row = (gr, i) => {
             const mark = !flash ? '' : gr.hit
-                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i><b class="tv-gain">+1 pt${P.moveCoins ? ` · +${P.moveCoins} <i class="fas fa-chess-pawn"></i>` : ''}</b></span>`
+                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${gain ? `<b class="tv-gain">${gain}</b>` : ''}</span>`
                 : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
             const more = gr.list.length - MAXF;
             return `<li class="tv-item tv-grp${gr.list.some(v => v.u === me) ? ' is-me' : ''}${flash ? (gr.hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i};--p:${Math.round(100 * gr.list.length / rows.length)}%">
@@ -1591,19 +1623,13 @@ const H24Page = {
                 <span class="tv-faces">${gr.list.slice(0, MAXF).map(face).join('')}${more > 0 ? `<span class="tv-more">+${more}</span>` : ''}</span>
                 <span class="tv-n">${gr.list.length}</span>${mark}</li>`;
         };
-        const cardVoters = `<div class="live-card tv-card">
+        return `<div class="live-card tv-card">
             <div class="live-card__title tv-head"><span><i class="fas fa-users"></i> ${esc(t('voters.title', null, 'Votants'))}</span> <span class="tv-headright"><small class="tv-count">${rows.length || ''}</small></span></div>
             <div class="tv-body">
                 ${rows.length ? `<ul class="tv-list tv-groups${flash ? ' is-flash' : ''}">${groups.map(row).join('')}</ul>`
-                    : `<p class="tp-hint">${esc(over ? t('predict.ended', null, 'Partie terminée') : t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
-                ${flash ? `<p class="tp-hint">${esc(fmtMove(flash.san))} · ${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</p>` : ''}
+                    : `<p class="tp-hint">${esc(over ? t('predict.ended', null, 'Partie terminée') : empty || t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
+                ${footer}
             </div></div>`;
-        // Pronostics dans la colonne de gauche, comme sur la page Tournois ; la partie et les votants à droite
-        const left = $('h24-pred');
-        if (left && left.dataset.html !== cardPred) { left.dataset.html = cardPred; left.innerHTML = cardPred; }
-        // (la carte « Partie sélectionnée » n'est plus affichée : les bandes autour de l'échiquier donnent joueurs, Elo et pendules)
-        const html = cardVoters;
-        if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; this.paintPclocks(); }
     },
 
     /** Mode bande : le total des votes du tour dans l'étiquette « Votes » (et plus en bas de la colonne de droite) */

@@ -596,12 +596,12 @@ highlightMostVoted() {
         ) || null;
     }
 
-    /** Pendant le vote : flèche du coup en tête, qui bouge quand la tête change */
+    /** Pendant le vote : une flèche par coup voté, avec son nombre de votes (les coups en tête ressortent) */
     showLeadArrow(results) {
         const ann = this.annotations;
         if (!ann) return;
-        const top = !secretVotes() && results?.[0]?.count > 0 ? results[0].count : 0;
-        const moves = top ? results.filter(r => r.count === top).map(r => this.resolveMove(r.move)).filter(Boolean) : [];
+        const moves = secretVotes() ? [] : (results || []).filter(r => r.count > 0)
+            .map(r => { const m = this.resolveMove(r.move); return m && { ...m, n: r.count }; }).filter(Boolean);
         ann.setOverlay(moves.length ? { kind: 'lead', moves } : null);
     }
 

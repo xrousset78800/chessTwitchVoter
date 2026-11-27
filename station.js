@@ -409,6 +409,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
                 // (prédiction : les devinettes restent cachées jusqu'au coup joué)
                 votes: hidden || g.predict ? [] : tally(g.votes).map(({ k, n }) => ({ move: k, count: n })),
                 predict: g.predict ? predictPublic(g) : null,
+                // Tableau des votants (comme sur la page Tournois) : pseudo, photo et coup, votes visibles seulement
+                ballots: hidden || g.predict ? null : [...g.votes].slice(-80).flatMap(([u, l]) => l.map(m => tickerItem({ u, v: g.voteVia?.get(u) || null }, { m }))),
                 secret: hidden ? [...g.votes.values()].reduce((a, v) => a + v.length, 0) : false,
                 masked: hidden ? tally(g.votes).map(({ n }) => n) : null,
                 voters: g.votes.size,
@@ -1258,6 +1260,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             g.votes.set(login, [...mine, m.san]);
         }
         g.recent.push({ u: login, m: m.san, v: viaOf(login, via) });
+        (g.voteVia ||= new Map()).set(login, viaOf(login, via));
         g.recentN = (g.recentN || 0) + 1;
         if (g.recent.length > 30) g.recent.shift();
         const vc = g.voteCount[s.mode === 'rush' ? 'w' : side];

@@ -184,7 +184,7 @@
                 o = moves.length ? { ...o, moves, from: moves[0].from, to: moves[0].to } : null;
             }
             if (o && !(o.from && o.to)) o = null;
-            const sig = o ? `${o.kind}${(o.moves || [o]).map(m => m.from + m.to).join(',')}${o.label || ''}${o.who ? `${o.who.name}${o.who.via}${o.who.pic}` : ''}` : '';
+            const sig = o ? `${o.kind}${(o.moves || [o]).map(m => m.from + m.to + (m.n ? ':' + m.n : '')).join(',')}${o.label || ''}${o.who ? `${o.who.name}${o.who.via}${o.who.pic}` : ''}` : '';
             if (sig === (this.overlaySig || '')) return;
             this.overlaySig = sig;
             this.overlay = o;
@@ -251,9 +251,17 @@
             if (!o) return;
             const win = o.kind === 'win';
             if (!win) {
-                // Coup(s) en tête : orange pâle plein (le coup retenu est orange vif), une flèche par coup ex aequo
-                (o.moves || [o]).forEach(m => this.drawArrow(m.from, m.to, 'rgb(255, 196, 150)', { opacity: 0.85, scale: 0.95 })
-                    ?.classList.add('board-annotations__vote', 'is-lead'));
+                // Tous les coups votés : une flèche par coup, le nombre de votes en pastille près de la pointe.
+                // Le ou les coups en tête en orange pâle plein (le coup retenu est orange vif), les autres plus discrets.
+                const moves = o.moves || [o];
+                const top = Math.max(0, ...moves.map(m => m.n || 0));
+                const sorted = [...moves].sort((a, b) => (a.n || 0) - (b.n || 0));
+                sorted.forEach(m => {
+                    const lead = !top || (m.n || 0) === top;
+                    this.drawArrow(m.from, m.to, lead ? 'rgb(255, 196, 150)' : 'rgb(214, 196, 182)', { opacity: lead ? 0.85 : 0.55, scale: lead ? 0.95 : 0.75 })
+                        ?.classList.add('board-annotations__vote', lead ? 'is-lead' : 'is-other');
+                });
+                sorted.forEach(m => { if (m.n) this.drawCount(m, m.n === top); });
                 return;
             }
             // Coup retenu : orange posé, à peine plus épais qu'une flèche normale
@@ -330,6 +338,25 @@
                 line2.setAttribute('y', ay + av / 2);
                 label.appendChild(line2);
             }
+        }
+
+        /** Pastille du nombre de votes, aux trois quarts de la flèche (côté pointe) */
+        drawCount(m, lead) {
+            const a = this.geometry(m.from), b = this.geometry(m.to);
+            if (!a || !b || !a.size) return;
+            const x = a.x + (b.x - a.x) * 0.72, y = a.y + (b.y - a.y) * 0.72;
+            const r = a.size * 0.15;
+            const g = document.createElementNS(SVG_NS, 'g');
+            g.classList.add('board-annotations__count');
+            const c = document.createElementNS(SVG_NS, 'circle');
+            Object.entries({ cx: x, cy: y, r, fill: lead ? 'rgb(255, 138, 61)' : 'rgba(16, 13, 11, 0.82)', stroke: lead ? 'rgba(16, 13, 11, 0.7)' : 'rgba(255, 255, 255, 0.35)', 'stroke-width': 1 })
+                .forEach(([k, v]) => c.setAttribute(k, v));
+            const t = document.createElementNS(SVG_NS, 'text');
+            Object.entries({ x, y, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': r * (m.n > 99 ? 0.95 : 1.2), 'font-weight': 700,
+                'font-family': "'JetBrains Mono', monospace", fill: lead ? '#1a1310' : '#f4eee8' }).forEach(([k, v]) => t.setAttribute(k, v));
+            t.textContent = String(m.n);
+            g.append(c, t);
+            this.svg.appendChild(g);
         }
 
         drawArrow(from, to, color, opts = {}) {

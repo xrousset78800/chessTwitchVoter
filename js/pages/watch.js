@@ -195,8 +195,8 @@ const WatchPage = {
                         label: random || !total ? `🎲 ${fmtMove(m.san)}` : `${fmtMove(m.san)} · ${Math.round(n / total * 100)} %` };
                 }
             } else if (s.votes?.length) {
-                const top = s.votes[0].n || 0;
-                const moves = top ? s.votes.filter(v => v.n === top).map(v => find(v.m)).filter(Boolean) : [];
+                // Une flèche par coup voté, avec son nombre de votes
+                const moves = s.votes.filter(v => v.n > 0).map(v => { const m = find(v.m); return m && { ...m, n: v.n }; }).filter(Boolean);
                 if (moves.length) overlay = { kind: 'lead', moves };
             }
         }

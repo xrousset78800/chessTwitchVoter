@@ -760,3 +760,7 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-recap__game small, .h24-recap__game span { color: var(--text-secondary); font-weight: 500; }
 .h24-recap__event { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }
 .h24-settings__btn[hidden] { display: none; }
+/* Votes visibles (majorité, rush) : le tableau des votants de la page Tournois à la place du podium */
+.h24-vlist { display: flex; flex-direction: column; padding: 4px 2px; }
+.h24-vlist > .live-card { margin: 0; }
+.h24-vlist .tv-list { max-height: 420px; }
