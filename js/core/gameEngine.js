@@ -82,6 +82,13 @@ class GameEngine {
 
         this.board = Chessboard('myBoard', boardConfig);
         window.BoardAnnotations?.attach('myBoard', { draggable: true });
+        // Survol : la pièce qu'on peut jouer se soulève (mêmes règles que le glisser)
+        document.getElementById('myBoard')?.addEventListener('mouseover', (e) => {
+            const sq = e.target.closest?.('[data-square]');
+            if (!sq) return;
+            const piece = sq.querySelector('img[data-piece]')?.dataset.piece;
+            sq.classList.toggle('can-grab', !!piece && this.onDragStart(sq.dataset.square, piece) !== false);
+        });
 
         // Initialiser le timer avec les callbacks
         timer.init({
@@ -137,10 +144,7 @@ class GameEngine {
         // ========== MODE PROBLÈMES ==========
         if (window.problemsManager?.isActive) {
             // Vérifier que c'est le tour du joueur (index impair)
-            if (window.problemsManager.attemptIndex % 2 !== 1) {
-                console.log('🧩 [onDragStart] Pas le tour du joueur');
-                return false;
-            }
+            if (window.problemsManager.attemptIndex % 2 !== 1) return false;
 
             // Vérifier la couleur de la pièce
             const turn = this.chess.turn();

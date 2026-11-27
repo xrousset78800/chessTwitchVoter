@@ -1,4 +1,15 @@
 /* Couleurs de l'échiquier : choisies dans le menu « Pièces » de la barre du haut (js/utils/pieceSet.js) */
+
+/* Pièce jouable (case .can-grab, posée au survol par chaque page) : elle se soulève un peu sous la souris */
+.can-grab img[data-piece] { transition: transform 0.15s ease, filter 0.15s ease; }
+@media (hover: hover) {
+    .can-grab:hover img[data-piece] { transform: translateY(-3px) scale(1.06); filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.45)); }
+}
+body.is-dragging-piece .can-grab img[data-piece] { transform: none; filter: none; }
+@media (prefers-reduced-motion: reduce) {
+    .can-grab:hover img[data-piece] { transform: none; }
+}
+#myBoard .can-grab, #myBoard .can-grab img { cursor: grab; }
 :root { --sq-light: #9db0d3; --sq-dark: #42598c; }
 .white-1e1d7 { background-color: var(--sq-light) !important; color: var(--sq-dark) !important; }
 .black-3c85d { background-color: var(--sq-dark) !important; color: var(--sq-light) !important; }
