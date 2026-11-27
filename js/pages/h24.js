@@ -825,7 +825,7 @@ const H24Page = {
         const devs = [{ id: '', label: t('h24.regie.camDefault', null, 'Caméra par défaut') }, ...this.cam.devices];
         const info = this.camSender?.info;
         const hint = this.cam.error ? `<span class="h24-regie__err">${esc(this.cam.error)}</span>`
-            : camLive && info ? esc(t('h24.regie.camOn', { w: info.width, h: info.height, fps: info.fps, codec: info.codec }, `Caméra en direct : ${info.width}×${info.height} · ${info.fps} i/s · ${info.codec}`))
+            : camLive && info ? esc(t('h24.regie.camOn', { w: info.width, h: info.height, fps: info.fps, codec: info.codec }, `Caméra en direct : ${info.width}×${info.height} · ${info.fps} i/s · ${info.codec}`)) + '<span id="h24-cam-lag"></span>'
             : esc(t('h24.regie.camOff', null, 'Caméra : la vue réelle passe par le site, sans Twitch'));
         return `
             <div class="h24-regie__row h24-regie__cam">
@@ -906,6 +906,14 @@ const H24Page = {
         const text = this.camPlayerState === 'unsupported' ? t('h24.camUnsupported', null, 'Ton navigateur ne peut pas lire cette vidéo : mets-le à jour (Chrome, Edge, Firefox ou Safari récents)')
             : this.camPlayer.stalled(5000) ? t('h24.camWaiting', null, 'Connexion à la caméra…') : '';
         if (msg.textContent !== text) { msg.textContent = text; msg.hidden = !text; }
+        // Régie : retard mesuré (encodage, et capture -> affichage si la vue réelle est ouverte ici)
+        const lagEl = $('h24-cam-lag');
+        if (lagEl) {
+            const enc = this.camSender?.active ? Math.round(this.camSender.encMs || 0) : null;
+            const lag = this.camPlayer?.lagMs != null && !this.camPlayer.stalled(3000) ? Math.round(this.camPlayer.lagMs) : null;
+            const txt = enc == null ? '' : ` · ⏱ ${lag != null ? lag : enc} ms`;
+            if (lagEl.textContent !== txt) { lagEl.textContent = txt; lagEl.title = `enc ${enc} ms` + (lag != null ? ` · capture→écran ${lag} ms` : ''); }
+        }
     },
 
     /**

@@ -19,9 +19,9 @@ export const CAM_QUALITIES = {
     mid:  { width: 960,  height: 540, fps: 15, bitrate: 800_000 },
     high: { width: 1280, height: 720, fps: 20, bitrate: 1_500_000 }
 };
-const KEY_EVERY_MS = 2000;
+const KEY_EVERY_MS = 1000;   // un viewer en retard ou qui arrive rattrape le direct à la clé suivante
 export const CAM_ZOOM = { min: 1, max: 4, step: 0.1 };
-const MAX_IN_FLIGHT = 6;   // morceaux envoyés sans accusé de réception : au-delà, le réseau ne suit pas
+const MAX_IN_FLIGHT = 4;   // morceaux envoyés sans accusé de réception : au-delà, le réseau ne suit pas
 
 export const camSupported = {
     send: () => typeof VideoEncoder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia,
@@ -87,6 +87,8 @@ export class CamSender {
         this.lastFrame = 0;
         this.sent = 0;
         this.dropped = 0;
+        this.capAt = new Map();   // horodatage de l'image -> heure de capture (mesure du retard de bout en bout)
+        this.encMs = 0;
         this.info = { width, height, fps: q.fps, codec: cfg.codec.startsWith('avc1') ? 'H.264' : 'VP8', label: track.label };
         this.zoomCaps = (() => { try { return track.getCapabilities?.().zoom || null; } catch { return null; } })();
         this.crop = 1;
@@ -177,6 +179,8 @@ export class CamSender {
             this.lastFrame = now;
             const key = this.needKey || now - this.lastKey >= KEY_EVERY_MS;
             if (key) { this.lastKey = now; this.needKey = false; }
+            this.capAt.set(frame.timestamp, Date.now());
+            if (this.capAt.size > 60) this.capAt.delete(this.capAt.keys().next().value);
             if (this.crop > 1.001) {
                 const out = this.cropped(frame);
                 try { enc.encode(out, { keyFrame: key }); } finally { out.close(); }
@@ -192,7 +196,10 @@ export class CamSender {
         chunk.copyTo(data);
         this.inFlight++;
         this.sent++;
-        this.socket.timeout(5000).emit('h24:cam:chunk', { k: chunk.type === 'key' ? 1 : 0, t: chunk.timestamp }, data, (err, ok) => {
+        const w = this.capAt?.get(chunk.timestamp) || Date.now();
+        this.capAt?.delete(chunk.timestamp);
+        this.encMs = this.encMs * 0.9 + (Date.now() - w) * 0.1;
+        this.socket.timeout(5000).emit('h24:cam:chunk', { k: chunk.type === 'key' ? 1 : 0, t: chunk.timestamp, w }, data, (err, ok) => {
             this.inFlight = Math.max(0, this.inFlight - 1);
             if (err || ok === false) this.needKey = true;
         });
@@ -231,6 +238,8 @@ export class CamPlayer {
         this.cfg = cfg;
         this.waitKey = true;
         this.lastSeq = 0;
+        this.capAt = new Map();
+        this.lagMs = null;
         const decoder = new VideoDecoder({
             output: (frame) => {
                 if (this.canvas.width !== frame.displayWidth || this.canvas.height !== frame.displayHeight) {
@@ -238,6 +247,9 @@ export class CamPlayer {
                     this.canvas.height = frame.displayHeight;
                 }
                 this.ctx.drawImage(frame, 0, 0);
+                // Retard de bout en bout (capture -> affichage), exact quand régie et viewer sont sur le même PC
+                const w = this.capAt.get(frame.timestamp);
+                if (w) { this.capAt.delete(frame.timestamp); const lag = Date.now() - w; this.lagMs = this.lagMs == null ? lag : this.lagMs * 0.85 + lag * 0.15; }
                 frame.close();
                 if (!this.lastFrameAt) this.onState('playing');
                 this.lastFrameAt = performance.now();
@@ -266,8 +278,10 @@ export class CamPlayer {
         if (this.lastSeq && meta.s !== this.lastSeq + 1) this.waitKey = true;   // morceau perdu en route
         this.lastSeq = meta.s;
         if (this.waitKey && !meta.k) return;
-        if (d.decodeQueueSize > 20) { this.waitKey = true; return; }            // en retard : on rattrape à la prochaine clé
+        // En retard (décodeur engorgé) : on saute jusqu'à la prochaine clé plutôt que d'accumuler du retard
+        if (d.decodeQueueSize > 3) { this.waitKey = true; return; }
         this.waitKey = false;
+        if (meta.w) { this.capAt.set(meta.t, meta.w); if (this.capAt.size > 60) this.capAt.delete(this.capAt.keys().next().value); }
         try {
             d.decode(new EncodedVideoChunk({ type: meta.k ? 'key' : 'delta', timestamp: meta.t, data }));
         } catch { this.waitKey = true; }

@@ -1557,7 +1557,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             if (cam.tokens < data.length) return reply(false);
             cam.tokens -= data.length;
             const k = meta.k ? 1 : 0;
-            const c = { k, t, s: ++cam.seq };
+            const w = Number(meta.w);
+            const c = { k, t, s: ++cam.seq, w: Number.isFinite(w) ? w : 0 };
             if (k) { cam.gop = []; cam.gopBytes = 0; }
             if (cam.gop.length || k) {
                 cam.gop.push([c, data]);
