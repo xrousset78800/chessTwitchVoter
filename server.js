@@ -426,8 +426,9 @@ const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '5lgt1omtgbo8gp4bla49kt
 const DATA_DIR     = process.env.DATA_DIR || path.join(__dirname, 'data');
 const RECORDS_FILE = path.join(DATA_DIR, 'rush-records.json');
 
-// Un classement par temps de vote : 0 = illimité (le premier vote valide est joué), sinon secondes
-const RUSH_MODES = ['0', '30', '60', '120'];
+// Un classement par temps de vote : 0 = illimité (le premier vote valide est joué), sinon secondes.
+// 'solo' : Puzzle Rush joué seul (page Jouer), record personnel absent des classements des chaînes.
+const RUSH_MODES = ['0', '30', '60', '120', 'solo'];
 const RUSH_DEFAULT_MODE = '0';
 
 // { [login]: { login, userId, displayName, avatar, modes: { [mode]: { best: {score, maxRating, durationMs, at}, runs, lastScore, lastAt } } } }

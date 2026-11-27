@@ -584,3 +584,96 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 
 /* Contre Stockfish : reflexion du moteur dans le bandeau des votes */
 .vote-ticker__item.engine-thinking { color: #facc15; font-style: italic; }
+
+/* ── Jouer (/new) : Seul ou En stream (PlayPage, js/app.js) ── */
+.play {
+    max-width: 1180px; margin: 0 auto; padding: calc(var(--nav-height) + 12px) 16px 0;
+    display: flex; flex-direction: column; gap: 18px;
+}
+#page-new .new-pick { padding-top: 6px; min-height: 0; }
+#page-new:not([data-side="stream"]) .new-pick { display: none; }
+#page-new .new-pick .new-tabs { margin-top: 0; }
+#page-new .new-pick .new-tabs__title { display: none; }
+.play__head { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+.play__title {
+    margin: 0; font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 2.4rem; line-height: 1.1;
+    color: var(--text-primary);
+}
+.play__switch {
+    display: inline-flex; padding: 4px; gap: 4px; border-radius: 999px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+}
+.play__switch button {
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border: 0; border-radius: 999px;
+    background: transparent; color: var(--text-secondary); cursor: pointer;
+    font: 700 0.95rem 'Chakra Petch', sans-serif;
+}
+.play__switch button:hover { color: var(--text-primary); }
+.play__switch button.is-active { background: var(--accent); color: #1a1512; }
+#page-new:not([data-side="solo"]):not([data-side="stream"]) .play__switch { display: none; }
+
+/* Premier passage : deux grandes cartes */
+.play__choose { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 2vh; }
+#page-new[data-side="solo"] .play__choose, #page-new[data-side="stream"] .play__choose { display: none; }
+.play-side {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 32px 28px; text-align: left;
+    background: var(--bg-card); border: 2px solid var(--border-subtle); border-radius: var(--radius-lg);
+    color: var(--text-secondary); cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.play-side:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.play-side__icon {
+    display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: var(--radius-md);
+    background: rgba(255, 138, 61, 0.14); color: var(--accent-light); font-size: 1.5rem;
+}
+.play-side__title { font: 700 1.7rem 'Chakra Petch', sans-serif; color: var(--text-primary); }
+.play-side__desc { font-size: 1rem; line-height: 1.5; }
+
+/* Seul : trois cartes, un clic pour jouer */
+.play__solo { display: none; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+#page-new[data-side="solo"] .play__solo { display: grid; }
+.play-card {
+    display: flex; flex-direction: column; gap: 10px; padding: 22px;
+    background: var(--bg-card); border: 2px solid var(--border-subtle); border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+}
+.play-card__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.play-card__meta { font: 700 0.85rem 'JetBrains Mono', monospace; color: var(--accent-light); text-align: right; }
+.play-card__title { margin: 0; font: 700 1.35rem 'Chakra Petch', sans-serif; color: var(--text-primary); }
+.play-card__desc { margin: 0; font-size: 0.93rem; line-height: 1.45; }
+.play-card__label { margin-top: 4px; font-size: 0.75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.play-card__select { width: 100%; }
+.play-card__go { margin-top: auto; justify-content: center; padding-top: 11px; padding-bottom: 11px; font-size: 1rem; }
+.play-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.play-chip {
+    padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border-subtle);
+    background: var(--bg-card-hover); color: var(--text-secondary); cursor: pointer;
+    font: 600 0.8rem 'IBM Plex Sans', sans-serif;
+}
+.play-chip:hover { color: var(--text-primary); border-color: #4a3c33; }
+.play-chip.is-active { background: rgba(255, 138, 61, 0.16); border-color: var(--accent); color: var(--accent-light); }
+.play__coins { grid-column: 1 / -1; margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+.play__coins i { color: var(--accent-light); margin-right: 4px; }
+@media (max-width: 600px) {
+    .play__title { font-size: 1.9rem; }
+    .play-side { padding: 22px 18px; }
+}
+
+/* Bandeau des puzzles solo (au-dessus de la liste des coups) */
+.solo-banner__last { flex-basis: 100%; font: 600 0.85rem 'IBM Plex Sans', sans-serif; min-height: 1.2em; }
+.solo-banner__last.is-ok { color: var(--accent-light); }
+.solo-banner__last.is-ko { color: #ff7a7a; }
+
+/* Seul (page Jouer) : on joue à la souris, rien de ce qui sert au vote du chat */
+body.solo-mode .vote-ticker,
+body.solo-mode #wheel-area,
+body.solo-mode .voting-panel__wheel-area,
+body.solo-mode .wheel-band,
+body.solo-mode .vote-timer--board,
+body.solo-mode #votes-panel,
+body.solo-mode .coin-credits,
+body.solo-mode .moves-panel__typeit,
+body.solo-mode .moves-panel__content,
+body.solo-mode #multi-turn-indicator,
+body.solo-mode #spectators-badge,
+body.solo-mode #spectators-panel { display: none !important; }

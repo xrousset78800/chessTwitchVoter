@@ -18,9 +18,9 @@ import { PAWN } from './coinFx.js';
 const T = (k, p, f) => (window.tt ? window.tt(k, p, f) : f);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => Number(n || 0).toLocaleString(document.documentElement.lang || 'fr');
-const SOURCES = ['turns', 'vote', 'rush', 'predictMove', 'predictWinner', 'multi', 'daily', 'other'];
+const SOURCES = ['turns', 'vote', 'puzzle', 'rush', 'predictMove', 'predictWinner', 'multi', 'daily', 'other'];
 const SOURCE_FALLBACK = {
-    turns: 'Coups joués', vote: 'Tes votes retenus', rush: 'Run Puzzle Rush', predictMove: 'Coups devinés',
+    turns: 'Coups joués', vote: 'Tes votes retenus', puzzle: 'Puzzles résolus', rush: 'Run Puzzle Rush', predictMove: 'Coups devinés',
     predictWinner: 'Pronostic du vainqueur', multi: 'Résultat de la bataille', daily: 'Bonus du jour', other: 'Autres gains'
 };
 const MODE_FALLBACK = { game: 'Partie', multi: 'Multi', problems: 'Problèmes', rush: 'Puzzle Rush', predict: 'Prédiction' };
@@ -158,8 +158,11 @@ function render(o, s, a) {
     const stats = [
         stat(`+${fmt(g.coins)}`, T('bilan.coins', null, 'pions'), 'is-main'),
         stat(`+${fmt(g.xp)}`, T('bilan.xp', null, 'XP')),
-        stat(fmt(credits.length), T('bilan.viewers', null, 'viewers crédités')),
-        stat(best ? fmt(best.best) : '—', T('bilan.streak', null, 'meilleure série'), '', best && best.best > 1 ? T('bilan.streakBy', { name: best.name }, `par ${best.name}`) : ''),
+        // Seul (page Jouer) : pas de chat, donc pas de viewers crédités
+        ...(o.solo ? [] : [
+            stat(fmt(credits.length), T('bilan.viewers', null, 'viewers crédités')),
+            stat(best ? fmt(best.best) : '—', T('bilan.streak', null, 'meilleure série'), '', best && best.best > 1 ? T('bilan.streakBy', { name: best.name }, `par ${best.name}`) : ''),
+        ]),
     ].join('');
 
     let detail;
@@ -198,7 +201,7 @@ function render(o, s, a) {
 
     const nextBtn = o.next ? `<button type="button" class="btn btn--primary" data-bilan="next">${o.next.icon ? `<i class="fas ${esc(o.next.icon)}" aria-hidden="true"></i> ` : ''}${esc(o.next.label)}</button>` : '';
     const el = document.createElement('div');
-    el.className = 'bilan';
+    el.className = o.solo ? 'bilan bilan--solo' : 'bilan';
     el.innerHTML = `<section class="bilan__card" role="dialog" aria-modal="true" aria-labelledby="bilan-title">
         <button type="button" class="bilan__close" data-bilan="close" aria-label="${esc(T('bilan.close', null, 'Fermer'))}" title="${esc(T('bilan.close', null, 'Fermer'))}"><i class="fas fa-times" aria-hidden="true"></i></button>
         <header class="bilan__head">
@@ -212,10 +215,10 @@ function render(o, s, a) {
                 <h2>${PAWN} ${esc(T('bilan.detail', null, 'Détail de tes pions'))}</h2>
                 ${detail}
             </section>
-            <section class="bilan__box">
+            ${o.solo ? '' : `<section class="bilan__box">
                 <h2>${esc(T('bilan.viewersTitle', null, 'Viewers crédités'))}${credits.length ? `<span>${esc(T('bilan.viewersSum', { n: fmt(credits.length), coins: fmt(creditCoins) }, `${credits.length} · ${creditCoins} pions`))}</span>` : ''}</h2>
                 ${viewers}
-            </section>
+            </section>`}
         </div>
         <footer class="bilan__actions">
             ${a ? `<button type="button" class="btn btn--ghost" data-bilan="shop"><i class="fas fa-store" aria-hidden="true"></i> ${esc(T('bilan.shop', null, 'Boutique'))}</button>` : ''}

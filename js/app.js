@@ -12,6 +12,7 @@ import timer from './core/timer.js';
 import voting from './core/voting.js';
 import problemsManager from './core/problemManager.js';
 import rushManager from './core/rushManager.js';
+import soloPuzzles from './core/soloPuzzles.js';
 import twitch from './managers/twitch.js';
 import twitchAuth from './core/twitchAuth.js';
 import { matchLegalMove, fmtMove } from './utils/moveMatch.js';
@@ -223,7 +224,7 @@ const rushMode = () => {
     const m = String(AppState.config.rushTimer ?? '30');
     return RUSH_MODES.includes(m) ? m : '30';
 };
-const rushModeLabel = (m) => ({ '0': tr('rushPage.modeUnlimited'), '30': '30 s', '60': '1 min', '120': '2 min' }[m] || m);
+const rushModeLabel = (m) => ({ '0': tr('rushPage.modeUnlimited'), '30': '30 s', '60': '1 min', '120': '2 min', solo: tr('play.solo') }[m] || m);
 
 const GameSession = {
     current: null,    // Session d'une route préconfigurée (null pour une partie libre)
@@ -257,12 +258,15 @@ const GameSession = {
         if (!rushManager.active && solved + failed > 0) {
             GameBilan.show({
                 mode: 'problems',
+                solo: soloPuzzles.active,
                 title: tr('bilan.problemsTitle', { n: solved, total: solved + failed }),
-                meta: tr('bilan.problemsMeta', { n: failed }),
+                meta: soloPuzzles.active ? tr('play.bilanMeta', { n: failed, streak: soloPuzzles.sessionBest, level: soloPuzzles.rating })
+                    : tr('bilan.problemsMeta', { n: failed }),
             });
         } else GameBilan.discard();
         SandboxPage.fullReset();
         rushManager.stop?.();
+        soloPuzzles.stop();
         problemsManager.reset?.();
         PresetGame.stopCountdown();
         PresetGame.setBanner(null);
@@ -282,7 +286,7 @@ const GameSession = {
             gameEngine.hideWheel?.();
         }
         [...document.body.classList].forEach(c => {
-            if (c.startsWith('preset-') || c.startsWith('problem-') || ['multi-active', 'randomWheel', 'showTimer', 'accepting-moves'].includes(c)) {
+            if (c.startsWith('preset-') || c.startsWith('problem-') || ['multi-active', 'randomWheel', 'showTimer', 'accepting-moves', 'solo-mode'].includes(c)) {
                 document.body.classList.remove(c);
             }
         });
@@ -316,7 +320,8 @@ const GameSession = {
         updateConnectionUI();
         if (start) {
             SandboxPage.applyConfigAfterReload();
-            GameAnnouncer.start();
+            // Partie en solo : rien à montrer dans Parcourir
+            if (!this.current?.solo) GameAnnouncer.start();
         }
     },
 
@@ -340,6 +345,8 @@ const GameSession = {
         AppState.gameMode = session.gameMode;
         Object.assign(AppState.config, session.config);
         document.body.classList.add(`preset-${session.route}`, 'preset-game');
+        // Seul (page Jouer) : ni vote, ni minuteur, ni roue, ni viewers crédités
+        document.body.classList.toggle('solo-mode', !!session.solo);
     },
 
     clear() {
@@ -518,6 +525,8 @@ const Router = {
             MultiPage.init();
         } else if (pageName === 'achievements') {
             AchievementsPage.init();
+        } else if (pageName === 'new') {
+            PlayPage.init();
         } else if (pageName === 'shop') {
             ShopPage.init();
         }
@@ -774,9 +783,11 @@ async startConfiguredGame() {
         problemsManager.config.votesPerViewer = 1;
         AppState.problems.isActive = true;
         this.setupRushUI();
-        rushManager.config.mode = rushMode();
+        // Seul : record personnel à part (mode « solo »), absent des classements des chaînes
+        const mode = GameSession.current?.solo ? 'solo' : rushMode();
+        rushManager.config.mode = mode;
         await rushManager.fetchChannelRecord();
-        rushManager.start({ startRating: AppState.config.rushStartRating || 100, mode: rushMode() });
+        rushManager.start({ startRating: AppState.config.rushStartRating || 100, mode });
         return;
     }
 
@@ -786,12 +797,17 @@ async startConfiguredGame() {
             if (!success) { Toast.error(tr('ui.toast.problemsInit')); return; }
         }
         problemsManager.clearThemes();
-        AppState.problems.selectedThemes.forEach(t => problemsManager.toggleTheme(t));
+        const solo = GameSession.current?.solo;
+        (solo ? GameSession.current.themes || [] : AppState.problems.selectedThemes).forEach(t => problemsManager.toggleTheme(t));
         syncProblemsTimer();
         problemsManager.config.pauseAfterEnd = AppState.config.pauseAfterEnd;
         problemsManager.config.votesPerViewer = AppState.config.votesPerViewer;
         AppState.problems.isActive = true;
-        problemsManager.loadRandomProblem();
+        // Seul : série sans fin à ton niveau (js/core/soloPuzzles.js)
+        if (solo) {
+            soloPuzzles.onUpdate = (state) => this.updateSoloHUD(state);
+            soloPuzzles.start();
+        } else problemsManager.loadRandomProblem();
         return;
     }
 
@@ -992,21 +1008,42 @@ problemsManager.onResolveWithWheel = (results, callback, seconds) => {
         banner.classList.toggle('rush-banner--ended', state.ended);
     },
 
+    /** Puzzles en solo : série, réussite, niveau, meilleure série */
+    updateSoloHUD(state) {
+        const banner = document.getElementById('solo-banner');
+        if (!banner) return;
+        banner.style.display = state.active ? '' : 'none';
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('solo-streak', state.streak);
+        set('solo-rate', state.rate == null ? '—' : `${state.rate} %`);
+        set('solo-level', state.rating);
+        set('solo-best', state.bestStreak);
+        const last = document.getElementById('solo-last');
+        if (last) {
+            last.className = 'solo-banner__last' + (state.last ? (state.last.ok ? ' is-ok' : ' is-ko') : '');
+            last.textContent = !state.last ? '' : state.last.ok ? tr('play.solved')
+                : state.last.san ? tr('play.failedWith', { san: state.last.san }) : tr('play.failed');
+        }
+    },
+
     /** Fin du run : bilan commun (score, rating max, durée, record, pions) */
     showRushEnd(result) {
         const mins = Math.floor(result.durationMs / 60000);
         const secs = Math.floor((result.durationMs % 60000) / 1000);
+        // Seul : record personnel, pas celui de la chaîne
+        const solo = !!GameSession.current?.solo;
         let status;
-        if (!window.twitchAuth?.isLoggedIn) status = tr('ui.rushEnd.loginToSave');
+        if (!window.twitchAuth?.isLoggedIn) status = solo ? tr('play.loginToSave') : tr('ui.rushEnd.loginToSave');
         else if (result.error) status = tr('ui.rushEnd.notSaved', { error: result.error });
         else if (result.score === 0) status = tr('ui.rushEnd.nothing');
-        else if (result.isNewRecord) status = tr('ui.rushEnd.newRecord');
+        else if (result.isNewRecord) status = solo ? tr('play.newRecord') : tr('ui.rushEnd.newRecord');
         else {
             const best = result.record?.best?.score;
-            status = best != null ? tr('ui.rushEnd.best', { n: best }) : tr('ui.rushEnd.saved');
+            status = best != null ? (solo ? tr('play.rushBest', { n: best }) : tr('ui.rushEnd.best', { n: best })) : tr('ui.rushEnd.saved');
         }
         GameBilan.show({
             mode: 'rush',
+            solo,
             title: tr('bilan.rushTitle', { n: result.score }),
             meta: `${tr('ui.rushEnd.ratingMax')} ${result.maxRating || '—'} · ${tr('ui.rushEnd.duration')} ${mins}:${String(secs).padStart(2, '0')}`,
             note: status,
@@ -2379,6 +2416,125 @@ const PresetForm = {
     }
 };
 
+// ============================================
+// JOUER (/new) : « Seul » ou « En stream »
+// ============================================
+// Seul : trois modes lancés en un clic, sans vote ni minuteur (session.solo, body.solo-mode).
+// En stream : l'écran de choix habituel (#new-tabs). Le dernier choix est retenu.
+const SOLO_THEMES = ['mate', 'fork', 'pin', 'skewer', 'discoveredAttack', 'sacrifice', 'hangingPiece', 'endgame'];
+const PlayPage = {
+    initialized: false,
+    prefs: { themes: [], side: 'w', elo: 1320 },
+
+    side() {
+        try { const s = localStorage.getItem('play_side'); return s === 'solo' || s === 'stream' ? s : ''; } catch { return ''; }
+    },
+
+    setSide(side) {
+        try { localStorage.setItem('play_side', side); } catch { }
+        this.render();
+    },
+
+    savePrefs() {
+        try { localStorage.setItem('play_solo', JSON.stringify(this.prefs)); } catch { }
+    },
+
+    init() {
+        const page = document.getElementById('page-new');
+        if (!page) return;
+        if (!this.initialized) {
+            this.initialized = true;
+            try { Object.assign(this.prefs, JSON.parse(localStorage.getItem('play_solo') || '{}')); } catch { }
+            this.prefs.themes = (this.prefs.themes || []).filter(t => SOLO_THEMES.includes(t));
+            page.addEventListener('click', (e) => {
+                const sideBtn = e.target.closest('[data-play-side]');
+                if (sideBtn) { this.setSide(sideBtn.dataset.playSide); return; }
+                const theme = e.target.closest('[data-solo-theme]');
+                if (theme) {
+                    const t = theme.dataset.soloTheme;
+                    this.prefs.themes = t === '' ? [] : this.prefs.themes.includes(t) ? this.prefs.themes.filter(x => x !== t) : [...this.prefs.themes, t];
+                    this.savePrefs();
+                    this.renderSolo();
+                    return;
+                }
+                const color = e.target.closest('[data-solo-color]');
+                if (color) { this.prefs.side = color.dataset.soloColor; this.savePrefs(); this.renderSolo(); return; }
+                const go = e.target.closest('[data-solo-start]');
+                if (go) this.launch(go.dataset.soloStart);
+            });
+            page.querySelector('#solo-bot-elo')?.addEventListener('change', (e) => {
+                this.prefs.elo = Number(e.target.value) || 1320;
+                this.savePrefs();
+            });
+            window.addEventListener('languageChanged', () => { if (AppState.currentPage === 'new') this.renderSolo(); });
+            window.addEventListener('twitchAuthChange', () => { if (AppState.currentPage === 'new') this.loadRushBest(); });
+        }
+        this.render();
+        this.loadRushBest();
+    },
+
+    render() {
+        const page = document.getElementById('page-new');
+        const side = this.side();
+        page.dataset.side = side;
+        page.querySelectorAll('.play__switch [data-play-side]').forEach(b => {
+            b.classList.toggle('is-active', b.dataset.playSide === side);
+            b.setAttribute('aria-pressed', String(b.dataset.playSide === side));
+        });
+        if (side === 'solo') this.renderSolo();
+    },
+
+    renderSolo() {
+        const page = document.getElementById('page-new');
+        const box = page.querySelector('#solo-themes');
+        if (box) {
+            const on = new Set(this.prefs.themes);
+            box.innerHTML = [`<button type="button" class="play-chip${on.size ? '' : ' is-active'}" data-solo-theme="">${escapeHtml(tr('play.themeAll'))}</button>`,
+                ...SOLO_THEMES.map(t => `<button type="button" class="play-chip${on.has(t) ? ' is-active' : ''}" data-solo-theme="${t}">${escapeHtml(tr('play.theme.' + t))}</button>`)].join('');
+        }
+        page.querySelectorAll('[data-solo-color]').forEach(b => b.classList.toggle('is-active', b.dataset.soloColor === this.prefs.side));
+        const elo = page.querySelector('#solo-bot-elo');
+        if (elo) {
+            const levels = window.BotEngine?.LEVELS || [300, 600, 900, 1320, 1500, 1800, 2100, 2400];
+            const cur = window.BotEngine?.snapLevel?.(this.prefs.elo) ?? this.prefs.elo;
+            elo.innerHTML = levels.map(v => `<option value="${v}"${v === cur ? ' selected' : ''}>${window.BotEngine?.levelOption(v) || v}</option>`).join('');
+        }
+        const lvl = page.querySelector('#solo-puzzle-level');
+        if (lvl) lvl.textContent = tr('play.puzzlesLevel', { n: window.soloPuzzles?.rating ?? 800 });
+        const coins = page.querySelector('#solo-coins');
+        if (coins) coins.textContent = twitchAuth.isLoggedIn ? tr('play.coinsOn') : tr('play.coinsOff');
+    },
+
+    async loadRushBest() {
+        const el = document.getElementById('solo-rush-best');
+        if (!el) return;
+        const login = twitchAuth.user?.login;
+        el.textContent = '';
+        if (!login) return;
+        try {
+            const r = await fetch(`/api/rush/records/${encodeURIComponent(login)}?mode=solo`);
+            const best = r.ok ? (await r.json())?.best?.score : null;
+            el.textContent = best != null ? tr('play.rushBest', { n: best }) : '';
+        } catch { }
+    },
+
+    launch(kind) {
+        if (!GameSession.confirmReplace()) return;
+        GameSession.clear();
+        const base = { timerEnabled: false, majorityMode: true, votesPerViewer: 1, followersOnly: false, subsOnly: false };
+        if (kind === 'puzzles') {
+            GameSession.launch({ route: 'new', gameMode: 'problems', solo: true, themes: [...this.prefs.themes],
+                config: { ...base, pauseAfterEnd: 2 } });
+        } else if (kind === 'rush') {
+            GameSession.launch({ route: 'new', gameMode: 'rush', solo: true,
+                config: { ...base, rushStartRating: 100, pauseAfterEnd: 2 } });
+        } else if (kind === 'bot') {
+            GameSession.launch({ route: 'new', gameMode: 'vsBot', solo: true,
+                config: { ...base, botSide: this.prefs.side, botElo: Number(this.prefs.elo) || 1320, pauseAfterEnd: 15 } });
+        }
+    }
+};
+
 const RushPage = {
     initialized: false,
 
@@ -2682,6 +2838,7 @@ const PresetGame = {
         const win = !!mated && (!mySide || mated !== mySide);
         GameBilan.show({
             win,
+            solo: !!GameSession.current?.solo,
             mode: isMulti ? 'multi' : 'game',
             title: result,
             meta: [
@@ -3060,6 +3217,9 @@ async function initApp() {
                 window.tournamentPredict?.chatVote(voteContext, chess => matchLegalMove(chess, voteContext.move));
                 return;
             }
+
+            // ---- Partie en solo (page Jouer) : le chat ne joue pas ----
+            if (GameSession.current?.solo) return;
 
             // ---- Mode problèmes ----
             if (isPuzzleMode() && problemsManager.isActive) {

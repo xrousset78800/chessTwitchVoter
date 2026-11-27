@@ -103,7 +103,7 @@
             <div class="nav__links">
                 <a class="nav__link nav__link--game" id="nav-game" data-navigate="/game" data-i18n-title="nav.game" title="Partie en cours" hidden><span class="nav__game-dot"></span> <span data-i18n="nav.game">Partie en cours</span></a>
                 <button type="button" class="nav__game-quit" id="nav-game-quit" data-i18n-title="nav.quit" title="Quitter la partie" hidden><i class="fas fa-times"></i></button>
-                <a class="nav__link" data-navigate="/new" data-i18n="nav.new">Nouveau</a>
+                <a class="nav__link" data-navigate="/new" data-i18n="nav.new">Jouer</a>
                 <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
                 <a class="nav__link nav__link--picks" data-navigate="/tournament"><span class="nav__game-dot" data-picks-dot hidden></span> <span data-i18n="nav.tournament">Pronos live</span></a>
                 <span class="nav__cursor" aria-hidden="true"></span>
@@ -694,6 +694,15 @@
                                 </div>
                             </div>
                             <!-- Puzzle Rush : score / vies / rating / record -->
+                            <!-- Puzzles en solo (page Jouer) -->
+                            <div id="solo-banner" class="rush-banner solo-banner" style="display:none;">
+                                <span class="rush-banner__title">🧩 <span data-i18n="play.puzzles">Puzzles</span></span>
+                                <span class="rush-banner__stat"><span class="rush-banner__label" data-i18n="play.streak">Série</span><span class="rush-banner__value" id="solo-streak">0</span></span>
+                                <span class="rush-banner__stat"><span class="rush-banner__label" data-i18n="play.rate">Réussite</span><span class="rush-banner__value" id="solo-rate">—</span></span>
+                                <span class="rush-banner__stat"><span class="rush-banner__label" data-i18n="play.levelShort">Niveau</span><span class="rush-banner__value" id="solo-level">—</span></span>
+                                <span class="rush-banner__stat"><span class="rush-banner__label" data-i18n="play.best">Record</span><span class="rush-banner__value" id="solo-best">0</span></span>
+                                <span class="solo-banner__last" id="solo-last"></span>
+                            </div>
                             <div id="rush-banner" class="rush-banner" style="display:none;">
                                 <span class="rush-banner__title">🔥 Puzzle Rush</span>
                                 <span class="rush-banner__stat"><span class="rush-banner__label">Score</span><span class="rush-banner__value" id="rush-score">0</span></span>
@@ -815,8 +824,61 @@
             </div>
         </div>
 
-        <!-- ==================== NOUVEAU : CHOIX DU MODE ==================== -->
+        <!-- ==================== JOUER : SEUL OU EN STREAM ==================== -->
+        <!-- data-side (PlayPage, js/app.js) : '' = premier passage (deux grandes cartes), solo, stream -->
         <div class="page" id="page-new">
+            <div class="play">
+                <div class="play__head">
+                    <h1 class="play__title" data-i18n="play.title">Jouer</h1>
+                    <div class="play__switch" role="group">
+                        <button type="button" data-play-side="solo"><i class="fas fa-user" aria-hidden="true"></i> <span data-i18n="play.solo">Seul</span></button>
+                        <button type="button" data-play-side="stream"><i class="fab fa-twitch" aria-hidden="true"></i> <span data-i18n="play.stream">En stream</span></button>
+                    </div>
+                </div>
+                <div class="play__choose">
+                    <button type="button" class="play-side" data-play-side="solo">
+                        <span class="play-side__icon"><i class="fas fa-user" aria-hidden="true"></i></span>
+                        <span class="play-side__title" data-i18n="play.solo">Seul</span>
+                        <span class="play-side__desc" data-i18n="play.soloDesc">Des puzzles, un Puzzle Rush ou Stockfish, à la souris. Un clic et tu joues : pas de vote, pas de minuteur.</span>
+                    </button>
+                    <button type="button" class="play-side" data-play-side="stream">
+                        <span class="play-side__icon"><i class="fab fa-twitch" aria-hidden="true"></i></span>
+                        <span class="play-side__title" data-i18n="play.stream">En stream</span>
+                        <span class="play-side__desc" data-i18n="play.streamDesc">Ton chat joue avec toi : votes, roue, Mono, Multi, Puzzle Rush du chat, pronostics.</span>
+                    </button>
+                </div>
+                <div class="play__solo">
+                    <div class="play-card">
+                        <div class="play-card__top"><span class="new-tab__icon"><i class="fas fa-puzzle-piece" aria-hidden="true"></i></span><span class="play-card__meta" id="solo-puzzle-level"></span></div>
+                        <h2 class="play-card__title" data-i18n="play.puzzles">Puzzles</h2>
+                        <p class="play-card__desc" data-i18n="play.puzzlesDesc">Une série sans fin, à ton niveau : il monte quand tu trouves, baisse quand tu rates. Pas de chrono.</p>
+                        <div class="play-card__label" data-i18n="play.themes">Thèmes (facultatif)</div>
+                        <div class="play-chips" id="solo-themes"></div>
+                        <button type="button" class="btn btn--primary play-card__go" data-solo-start="puzzles"><i class="fas fa-play" aria-hidden="true"></i> <span data-i18n="play.go">Jouer</span></button>
+                    </div>
+                    <div class="play-card">
+                        <div class="play-card__top"><span class="new-tab__icon"><i class="fas fa-bolt" aria-hidden="true"></i></span><span class="play-card__meta" id="solo-rush-best"></span></div>
+                        <h2 class="play-card__title">Puzzle Rush</h2>
+                        <p class="play-card__desc" data-i18n="play.rushDesc">Des puzzles de plus en plus durs. Trois erreurs et c'est fini. Ton record perso reste à part de celui de ta chaîne.</p>
+                        <button type="button" class="btn btn--primary play-card__go" data-solo-start="rush"><i class="fas fa-play" aria-hidden="true"></i> <span data-i18n="play.go">Jouer</span></button>
+                    </div>
+                    <div class="play-card">
+                        <div class="play-card__top"><span class="new-tab__icon"><i class="fas fa-robot" aria-hidden="true"></i></span></div>
+                        <h2 class="play-card__title" data-i18n="play.bot">Contre Stockfish</h2>
+                        <p class="play-card__desc" data-i18n="play.botDesc">Une partie contre l'ordinateur. Choisis ta couleur et son niveau.</p>
+                        <div class="play-card__label" data-i18n="play.color">Ta couleur</div>
+                        <div class="play-chips">
+                            <button type="button" class="play-chip" data-solo-color="w" data-i18n="play.white">Blancs</button>
+                            <button type="button" class="play-chip" data-solo-color="r" data-i18n="play.random">Au hasard</button>
+                            <button type="button" class="play-chip" data-solo-color="b" data-i18n="play.black">Noirs</button>
+                        </div>
+                        <label class="play-card__label" for="solo-bot-elo" data-i18n="play.level">Niveau de Stockfish</label>
+                        <select class="input input--sm play-card__select" id="solo-bot-elo"></select>
+                        <button type="button" class="btn btn--primary play-card__go" data-solo-start="bot"><i class="fas fa-play" aria-hidden="true"></i> <span data-i18n="play.go">Jouer</span></button>
+                    </div>
+                    <p class="play__coins"><i class="fas fa-coins" aria-hidden="true"></i> <span id="solo-coins"></span></p>
+                </div>
+            </div>
             <div class="preset new-pick"></div>
         </div>
 

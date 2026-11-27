@@ -21,6 +21,7 @@ const RULES = {
     puzzleTurn:  { xp: 3, coins: 1 },          // tour de puzzle avec au moins un votant
     vote:        { xp: 2, coins: 2 },          // viewer dont le coup a été joué (ou qui a trouvé le coup du puzzle)
     rushRun:     { xpPerPoint: 5, coinsPerPoint: 2 },
+    soloPuzzle:  { xp: 3, coins: 2, minGapMs: 2500 },   // puzzle résolu seul (page Jouer), dans le plafond du jour
     rushRecord:  { xp: 100, coins: 50 },       // record personnel battu dans un mode
     multi:       { win: { xp: 60, coins: 30 }, draw: { xp: 30, coins: 15 }, loss: { xp: 15, coins: 5 } },
     achievement: { B: { xp: 50, coins: 25 }, A: { xp: 150, coins: 75 }, O: { xp: 400, coins: 200 }, P: { xp: 1000, coins: 500 }, S: { xp: 200, coins: 100 } },
@@ -331,6 +332,19 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         return gain;
     }
 
+    /** Puzzle résolu seul (page Jouer) : dans le plafond du jour, un gain toutes les 2,5 s au plus */
+    const soloLast = new Map();
+    function onSoloPuzzle(login) {
+        const r = RULES.soloPuzzle, now = Date.now();
+        if (now - (soloLast.get(login) || 0) < r.minGapMs) return { xp: 0, coins: 0, tooFast: true };
+        soloLast.set(login, now);
+        const gain = grant(login, 'puzzle', { xp: r.xp, coins: r.coins, capped: true });
+        const st = stats(account(login));
+        st.soloPuzzles = (st.soloPuzzles || 0) + 1;
+        const achievements = checkAchievements(login);
+        return achievements.length ? { ...gain, achievements } : gain;
+    }
+
     /** Fin de run Puzzle Rush */
     function onRushRun(login, { score, isNewRecord, mode, at }) {
         const r = RULES.rushRun;
@@ -425,6 +439,12 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
 
     app.get('/api/economy/me', requireTwitch, (req, res) => res.json(publicAccount(req.twitch.login)));
 
+    // Puzzle résolu en solo (page Jouer) : pas d'anti-triche au-delà du plafond du jour et du délai minimal
+    app.post('/api/economy/solo-puzzle', requireTwitch, (req, res) => {
+        const gain = onSoloPuzzle(req.twitch.login);
+        res.json({ gain, account: publicAccount(req.twitch.login) });
+    });
+
     // Niveau public d'une chaîne (Records, Parcourir)
     app.get('/api/economy/level/:login', (req, res) => {
         const login = String(req.params.login).toLowerCase();
@@ -481,7 +501,7 @@ module.exports = function setupEconomy({ app, requireTwitch, dataDir, jsonStore 
         res.json(publicAccount(a.login));
     });
 
-    return { grant, checkAchievements, onTurns, onVotePicked, onRushRun, onMultiResult, onAchievement, claimAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store, weeklyDeal };
+    return { grant, checkAchievements, onTurns, onVotePicked, onSoloPuzzle, onRushRun, onMultiResult, onAchievement, claimAchievement, levelInfo, xpForLevel, publicAccount, RULES, CATALOG, store, weeklyDeal };
 };
 module.exports.RULES = RULES;
 module.exports.levelInfo = levelInfo;
