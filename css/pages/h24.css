@@ -314,6 +314,12 @@ body #page-h24 #h24-wheel-area.wheel-area--band .wheel-band { border-radius: 0; 
 body #page-h24 #h24-wheel-area.wheel-area--band .wheel-band__canvas { border-radius: 0; }
 body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):not(.is-live) { transform: translateY(100%); }
 #page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox { padding-bottom: 92px; }
+/* Place gardée pour la bande : les colonnes (hauteur de la fenêtre) raccourcissent d'autant, sinon la page défile */
+@media (min-width: 901px) {
+    #page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar,
+    #page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox__left { max-height: calc(100vh - var(--nav-height) - 96px); }
+    #page-h24:has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 96px); }
+}
 
 /* Bandeau des votes sous l'échiquier */
 #page-h24 .h24-ticker { margin-top: 8px; }
