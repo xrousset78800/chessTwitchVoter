@@ -484,7 +484,7 @@ const H24Page = {
                 return ok;
             },
             onDrop: (from, to) => {
-                this.liveBusy(1500);
+                this.liveBusy(1500, true);
                 const g = this.state?.game;
                 if (!g) return 'snapback';
                 const chess = new Chess(g.fen);
@@ -530,7 +530,7 @@ const H24Page = {
             // nouvelle partie remplace la position sans faire voyager les pièces à travers l'échiquier
             this.board.position(fen, this.boardFen != null && squaresChanged(this.boardFen, fen) <= 4);
             // L'échiquier bouge (coup, nouvelle partie, retournement) : on le montre, puis la vidéo revient en fondu
-            this.liveBusy(1800);
+            this.liveBusy(2500);
             this.boardKey = key;
             this.boardFen = fen;
         }
@@ -905,13 +905,20 @@ const H24Page = {
         if (msg.textContent !== text) { msg.textContent = text; msg.hidden = !text; }
     },
 
-    /** Vue incrustée : laisse voir l'échiquier pendant ms (relancé à chaque mouvement), puis la vidéo revient */
-    liveBusy(ms) {
+    /**
+     * Vue incrustée : laisse voir l'échiquier pendant ms, puis la vidéo revient en fondu.
+     * Par défaut on ne fait que prolonger (un coup arrivé pendant le tirage ne coupe pas l'affichage du tirage) ;
+     * force : nouvelle échéance quoi qu'il arrive (fin du tirage, pièce lâchée).
+     */
+    liveBusy(ms, force = false) {
         const box = $('h24-live');
         if (!box) return;
+        const until = Date.now() + ms;
+        if (!force && this._liveBusyUntil > until) return;
+        this._liveBusyUntil = until;
         box.classList.add('is-board-busy');
         clearTimeout(this._liveBusyT);
-        this._liveBusyT = setTimeout(() => box.classList.remove('is-board-busy'), ms);
+        this._liveBusyT = setTimeout(() => { this._liveBusyUntil = 0; box.classList.remove('is-board-busy'); }, ms);
     },
 
     setLiveMode(mode) {
@@ -1799,6 +1806,7 @@ const H24Page = {
         if (!this.drawSig) return;
         this.drawSig = null;
         this.revealing = false;
+        if (this._liveBusyUntil) this.liveBusy(1500, true);
         // Onglet caché : la roue gelée finirait son tour plus tard et réafficherait le coup par-dessus le vote
         if (this.wheel?.isSpinning) this.wheel.abort?.();
         const slot = $('h24-votes-panel');
@@ -2036,10 +2044,14 @@ const H24Page = {
         // La roue est déjà en place (remplie pendant le vote) : elle tourne sans changer de place
         if (area.classList.contains('wheel-area--docked') && !slot.classList.contains('is-live')) slot.classList.add('is-drawing');
         this.revealing = true;
+        // Tirage : l'échiquier reste visible (flèche sous le curseur, puis le coup joué)
+        this.liveBusy(60000);
         // Dès que la roue s'arrête (et pas 2 s plus tard, à la fin de son effet) : flèche, podium et coup retenu
         const reveal = () => {
             if (!this.revealing) return;
             this.revealing = false;
+            // Coup révélé : encore quelques secondes d'échiquier, puis la vidéo revient
+            this.liveBusy(2500, true);
             area.classList.remove('is-spinning');
             markPodiumWinner($('h24-votes'), g.draw?.winner);
             this.markVoters(g.draw?.winner, g.draw?.voter);
