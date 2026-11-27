@@ -63,11 +63,6 @@ function choiceLabel(ballot, c) {
 }
 const CHOICE_ICON = { classic: 'fa-chess', predict: 'fa-magic', teams: 'fa-users', rush: 'fa-bolt', bot: 'fa-robot', majority: 'fa-check-double', draw: 'fa-dice', none: 'fa-eye', secret: 'fa-eye-slash',
     fast: 'fa-forward', normal: 'fa-play', slow: 'fa-hourglass-half' };
-/** « 1, 2 ou 3 » */
-const numList = (n) => {
-    const nums = Array.from({ length: n }, (_, i) => String(i + 1));
-    return nums.length < 2 ? nums.join('') : `${nums.slice(0, -1).join(', ')} ${t('h24.or', null, 'ou')} ${nums[nums.length - 1]}`;
-};
 const myVotes = (me) => Array.isArray(me?.votes) ? me.votes : [];
 
 /** Le Phantom vu de la régie : 'off' (pas en direct), 'ok', 'busy' (pièces en mouvement), 'error' (décroché) */
@@ -970,30 +965,23 @@ const H24Page = {
         } else if (g.draw) msg = t('h24.flowDrawing', null, 'Tirage au sort…');
         else if (g.settle) {
             const n = Math.max(1, this.remaining(s.endsAt) ?? 1);
-            msg = [last, t('h24.flowNextIn', { n }, `Vote dans ${n} s`)].filter(Boolean).join(' · ');
+            msg = t('h24.flowNextIn', { n }, `Vote dans ${n} s`);
         } else if (s.vs?.thinking) msg = t('h24.botThinking', null, 'Stockfish réfléchit…');
         else if (!g.turnEndsAt) msg = last;
-        else if (!this.me.login) msg = t('h24.watchOnly', null, 'Tu regardes. Connecte-toi pour jouer.');
-        else if (!this.me.team) msg = t('h24.joinToVote', null, 'Rejoins une équipe pour voter.');
+        else if (!this.me.login) msg = t('h24.watchOnly', null, 'Connecte-toi pour jouer');
+        else if (!this.me.team) msg = t('h24.joinToVote', null, 'Rejoins une équipe');
         else if (mine) return this.setGuide(hint, ...this.voteGuide(g.turn, t('h24.clickToVote', null, 'Clique un coup ou déplace une pièce')));
         else if (s.mode === 'teams') msg = t('h24.flowVoteOf', { side }, g.turn === 'w' ? 'Vote des Blancs' : 'Vote des Noirs');
         else msg = last;
-        // Chat Twitch relié : les viewers votent aussi
-        if (this.me.chat && mine && !s.paused && !g.draw && !g.chosen) msg += ' · ' + t('h24.guideViewersMove', null, 'tes viewers votent aussi dans ton chat (ex. e4)');
         this.setGuide(hint, msg, mine && !s.paused && !g.draw && !g.chosen, html);
     },
 
-    /** Prédiction : deviner le coup suivant, ma devinette, le dernier coup et combien l'avaient trouvé → [message, à toi d'agir] */
+    /** Prédiction : une seule action, deviner le coup suivant (ou se connecter) → [message, à toi d'agir] */
     predictGuide(g) {
         if (g.result) return [this.resultInfo(g.result)?.title || '', false];
         const side = t(g.turn === 'w' ? 'h24.sideW' : 'h24.sideB', null, g.turn === 'w' ? 'Blancs' : 'Noirs');
-        const h = g.predict.lastHit;
-        const last = h?.total ? t('h24.pred.lastHit', { move: fmtMove(h.san), n: h.n, total: h.total }, `${h.san} : ${h.n}/${h.total} l'avaient trouvé`) : '';
-        const mine = myVotes(this.me)[0];
-        let msg, go = false;
-        if (!this.me.login) msg = t('h24.pred.login', null, 'Connecte-toi avec Twitch pour deviner les coups');
-        else return this.voteGuide(g.turn, t('h24.pred.guess', { side }, `Devine le prochain coup des ${side}`));
-        return [[msg, last].filter(Boolean).join(' · '), go];
+        if (!this.me.login) return [t('h24.pred.login', null, 'Connecte-toi pour deviner'), false];
+        return this.voteGuide(g.turn, t('h24.pred.guess', { side }, `Devine le prochain coup des ${side}`));
     },
 
     /** Entre deux parties : vote du mode et des options, inscription, récap → [message, à toi d'agir] */
@@ -1004,18 +992,15 @@ const H24Page = {
         if (s.paused) return [s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'), false];
         if ((s.phase === 'voteMode' || s.phase === 'voteOptions') && b) {
             if (b.winner != null) return [t('h24.guideDecided', { choice: choiceLabel(b.id, b.winner) }, `Choix retenu : ${choiceLabel(b.id, b.winner)}`), false];
-            const nums = numList(b.choices.length);
-            const viewers = this.me.chat ? ' · ' + t('h24.guideViewersVote', { nums }, `tes viewers tapent ${nums} dans ton chat`) : '';
-            if (this.me.ballot != null) return [t('h24.yourVote', { move: choiceLabel(b.id, this.me.ballot) }, `Ton vote : ${choiceLabel(b.id, this.me.ballot)}`) + viewers, false];
-            if (this.me.login) return [t('h24.guideClickOption', null, 'Clique une option pour voter') + viewers, true];
-            return [t('h24.guideLoginVote', null, 'Connecte-toi avec Twitch pour voter'), false];
+            if (this.me.ballot != null) return [t('h24.yourVote', { move: choiceLabel(b.id, this.me.ballot) }, `Ton vote : ${choiceLabel(b.id, this.me.ballot)}`), false];
+            if (this.me.login) return [t('h24.guideClickOption', null, 'Choisis une option'), true];
+            return [t('h24.guideLoginVote', null, 'Connecte-toi pour voter'), false];
         }
         if (s.phase === 'signup') {
             const start = n ? ' · ' + t('h24.guideStartIn', { n }, `Départ dans ${n} s`) : '';
-            const viewers = this.me.chat ? ' · ' + t('h24.guideViewersJoin', null, 'tes viewers tapent join dans ton chat') : '';
-            if (this.me.team) return [t('h24.registered', null, 'Tu es inscrit !') + viewers + start, false];
-            if (this.me.login) return [t('h24.guideJoin', null, 'Clique sur Rejoindre pour entrer dans la partie') + viewers + start, true];
-            return [t('h24.watchOnly', null, 'Tu regardes. Connecte-toi pour jouer.') + start, false];
+            if (this.me.team) return [t('h24.registered', null, 'Tu es inscrit !') + start, false];
+            if (this.me.login) return [t('h24.guideJoin', null, 'Rejoins la partie') + start, true];
+            return [t('h24.watchOnly', null, 'Connecte-toi pour jouer') + start, false];
         }
         if (s.phase === 'recap') {
             const end = this.resultInfo(s.recap?.result || s.game?.result);
@@ -1670,20 +1655,10 @@ const H24Page = {
         }
     },
 
-    /** Bande sobre : exactement la largeur de l'échiquier, alignée sur lui */
+    /** Bande : pleine largeur en bas de l'écran (CSS) ; plus aucune taille posée à la main */
     fitBand() {
         const area = $('h24-wheel-area');
-        if (!area) return;
-        if (!area.classList.contains('wheel-area--band')) { area.style.width = area.style.maxWidth = area.style.marginLeft = area.style.marginRight = ''; return; }
-        const b = document.querySelector('#h24-board .board-b72b1') || $('h24-board');
-        const parent = area.parentElement;
-        if (!b || !parent) return;
-        const r = b.getBoundingClientRect(), p = parent.getBoundingClientRect();
-        if (!r.width) return;
-        area.style.maxWidth = 'none';
-        area.style.width = `${Math.round(r.width)}px`;
-        area.style.marginLeft = `${Math.round(r.left - p.left - (parseFloat(getComputedStyle(parent).paddingLeft) || 0))}px`;
-        area.style.marginRight = '0';
+        if (area) area.style.width = area.style.maxWidth = area.style.marginLeft = area.style.marginRight = '';
     },
 
     hideDraw() {
