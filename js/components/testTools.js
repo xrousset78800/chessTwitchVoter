@@ -69,6 +69,8 @@ const TestTools = {
     relevant() {
         const route = location.hash.startsWith('#/') ? location.hash : '#' + appPath() + location.search;
         const page = window.AppState?.currentPage;
+        // Jouer › Seul (puzzles, rush, Stockfish) : pas de chat, rien à simuler
+        if (document.body.classList.contains('solo-mode')) return false;
         if (!this.allowed) {
             // Tout le monde : partie, problèmes, Mono (pas de rush ni de Multi)
             if (route.startsWith('#/multi/') || window.AppState?.gameMode === 'rush') return false;

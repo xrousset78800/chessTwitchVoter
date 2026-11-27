@@ -943,7 +943,14 @@ input[type=range] {
 .tp-crow.is-hit .tp-cbar i { background: var(--accent); }
 .tp-clast { display: flex; flex-direction: column; gap: 6px; }
 .tp-clast p { margin: 0; font-size: 0.84rem; }
-#tLogCard[hidden] { display: none; }
+#tLogCard[hidden], .t-log__pop[hidden] { display: none; }
+/* Log de la régie : icône dans l'en-tête de la colonne Tournoi, journal en surimpression */
+.t-sidehead__right { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.t-log { position: relative; display: inline-flex; }
+.t-log__btn { width: 28px; height: 28px; display: inline-grid; place-items: center; padding: 0; border: 1px solid var(--border-subtle, #2b2420); border-radius: var(--radius-sm, 2px); background: transparent; color: var(--text-muted, #8a7f78); font-size: 0.75rem; cursor: pointer; }
+.t-log__btn:hover, .t-log.is-open .t-log__btn { color: var(--accent); border-color: var(--accent); }
+.t-log__pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; width: min(320px, 80vw); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
+.t-log__pop .live-log { display: block; max-height: 260px; }
 
 /* Prono : coups disponibles (même présentation que les autres échiquiers) */
 .tp-moves { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; max-height: 280px; overflow-y: auto; padding: 8px 6px 2px 0; scrollbar-width: thin; -webkit-user-select: none; user-select: none; }

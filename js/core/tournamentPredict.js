@@ -675,6 +675,22 @@
         renderWinBars();
         scheduleChat();
     }
+    // Pronos live ouverts depuis Jouer › Seul : pas de stream, donc ni bots ni outils de régie
+    let solo = false;
+    try { solo = sessionStorage.getItem('tourSolo') === '1'; } catch { /* navigation privée */ }
+    const regieOn = () => regie && !solo;
+    function setSolo(on) {
+        if (solo === on) return;
+        solo = on;
+        try { on ? sessionStorage.setItem('tourSolo', '1') : sessionStorage.removeItem('tourSolo'); } catch { /* navigation privée */ }
+        botsStop();
+        botsClear();
+        paintRegie();
+    }
+    document.addEventListener('click', e => {
+        const a = e.target.closest?.('[data-navigate="/tournament"]');
+        if (a) setSolo(a.hasAttribute('data-tour-solo'));
+    }, true);
     function setBots(on) {
         bots.on = on;
         saveBots();
@@ -685,13 +701,13 @@
     }
     function paintBotsBtn() {
         const b = document.querySelector('[data-tv-bots]');
-        if (b) { b.hidden = !regie; b.setAttribute('aria-pressed', String(bots.on && regie)); }
+        if (b) { b.hidden = !regieOn(); b.setAttribute('aria-pressed', String(bots.on && regieOn())); }
         paintBotsPanel();
     }
     /** Panneau de la régie (créé à la demande, visible sur la page Tournoi seulement) */
     function paintBotsPanel() {
         let el = document.getElementById('tBotsPanel');
-        if (!regie) { if (el) el.hidden = true; return; }
+        if (!regieOn()) { if (el) el.hidden = true; return; }
         if (!el) {
             el = document.createElement('div');
             el.id = 'tBotsPanel';
@@ -787,7 +803,7 @@
         paintBotsPanel();
     }
     function botsTick(c) {
-        if (!regie) return;
+        if (!regieOn()) return;
         if (!bots.on || !c || c.ended || reviewT.game || !c.fen) { if (bots.key) botsStop(); paintBotsPanel(); return; }
         if (bots.key === c.key && boardOf(bots.fen) === boardOf(c.fen)) return;
         botsWave(false);
@@ -897,10 +913,32 @@
                 if (r.ok) regie = !!(await r.json()).regie;
             } catch { /* journal masqué */ }
         }
+        paintRegie();
+    }
+    function paintRegie() {
         const card = document.getElementById('tLogCard');
-        if (card) card.hidden = !regie;
+        if (card) {
+            card.hidden = !regieOn();
+            if (card.hidden) logOpen(false);
+        }
         paintBotsBtn();
     }
+    /** Journal : petite icône en haut de la colonne, le texte s'ouvre en dessous */
+    function logOpen(on) {
+        const card = document.getElementById('tLogCard');
+        if (!card) return;
+        card.querySelector('.t-log__pop').hidden = !on;
+        card.querySelector('[data-tlog]').setAttribute('aria-expanded', String(on));
+        card.classList.toggle('is-open', on);
+        if (on) { const l = document.getElementById('liveLogT'); if (l) l.scrollTop = l.scrollHeight; }
+    }
+    document.addEventListener('click', e => {
+        const card = document.getElementById('tLogCard');
+        if (!card || card.hidden) return;
+        if (e.target.closest?.('[data-tlog]')) { logOpen(card.querySelector('.t-log__pop').hidden); return; }
+        if (!card.contains(e.target)) logOpen(false);
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') logOpen(false); });
 
     // ───────────── Branchements ─────────────
     document.addEventListener('DOMContentLoaded', () => {

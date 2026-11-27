@@ -881,7 +881,7 @@
                         <div class="play-card__top"><span class="new-tab__icon"><i class="fas fa-crosshairs" aria-hidden="true"></i></span><span class="play-card__meta"><span class="nav__game-dot"></span> <span data-i18n="newTabs.tag.live">En direct</span></span></div>
                         <h2 class="play-card__title" data-i18n="nav.tournament">Pronos live</h2>
                         <p class="play-card__desc" data-i18n="play.liveDesc">Suis un vrai match de tournoi en direct : devine le prochain coup et le vainqueur. Chaque bonne réponse rapporte des pions.</p>
-                        <a class="btn btn--primary play-card__go" data-navigate="/tournament"><i class="fas fa-play" aria-hidden="true"></i> <span data-i18n="play.go">Jouer</span></a>
+                        <a class="btn btn--primary play-card__go" data-navigate="/tournament" data-tour-solo><i class="fas fa-play" aria-hidden="true"></i> <span data-i18n="play.go">Jouer</span></a>
                     </div>
                     <p class="play__coins"><i class="fas fa-coins" aria-hidden="true"></i> <span id="solo-coins"></span></p>
                 </div>
@@ -1421,10 +1421,17 @@
                         <!-- Titre et état du suivi (ancien en-tête de page) -->
                         <div class="t-sidehead">
                             <h1 class="live-header__title" data-i18n="ui.tour.title">Tournois en direct</h1>
+                            <div class="t-sidehead__right">
                             <span class="live-badge idle" id="statusBadgeT">
                                 <span class="dot"></span>
                                 <span id="statusTextT" data-i18n="live.status.idle">En attente</span>
                             </span>
+                            <!-- Log : régie uniquement, petite icône qui ouvre le journal (js/core/tournamentPredict.js) -->
+                            <div class="t-log" id="tLogCard" hidden>
+                                <button type="button" class="t-log__btn" data-tlog aria-expanded="false" data-i18n-title="live.card.log" title="Log"><i class="fas fa-terminal" aria-hidden="true"></i></button>
+                                <div class="t-log__pop" hidden><div class="live-log" id="liveLogT"></div></div>
+                            </div>
+                            </div>
                         </div>
 
                         <!-- Revue d'une partie terminée : en haut de la colonne, sous le titre -->
@@ -1630,12 +1637,6 @@
                             <div class="tv-body"></div>
                         </div>
 
-
-                        <!-- Log : régie uniquement (js/core/tournamentPredict.js) -->
-                        <div class="live-card" id="tLogCard" hidden>
-                            <div class="live-card__title" data-i18n="live.card.log">Log</div>
-                            <div class="live-log" id="liveLogT"></div>
-                        </div>
 
                     </div>
                 </div>
