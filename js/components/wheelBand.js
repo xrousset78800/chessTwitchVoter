@@ -128,6 +128,29 @@ class WheelBand extends VotingWheel {
         ctx.restore();
     }
 
+    /** Coup de la case sous le curseur (milieu de la bande) */
+    pointerMove() {
+        const votes = this.spinVotes || this.getSortedVotes();
+        const total = this.spinTotalVotes || this.getTotalVotes();
+        const period = this.spinPeriod;
+        if (!votes.length || !total || !period) return null;
+        const x = (((this.position ?? 0) % period) + period) % period;
+        let acc = 0;
+        for (const v of votes) {
+            acc += (v.count / total) * period;
+            if (x < acc) return v.move;
+        }
+        return votes[votes.length - 1].move;
+    }
+
+    /** Pendant le tirage : prévient la page quand le coup sous le curseur change (flèche sur l'échiquier) */
+    trackPointer() {
+        const mv = this.pointerMove();
+        if (mv === this.pointerAt) return;
+        this.pointerAt = mv;
+        try { this.onPointer?.(mv); } catch { /* affichage seulement */ }
+    }
+
     /**
      * Fait défiler la bande jusqu'au coup tiré au sort
      */
@@ -189,6 +212,7 @@ class WheelBand extends VotingWheel {
             if (peg !== lastPeg && duration > 0) wheelTick();
             lastPeg = peg;
             this.draw();
+            this.trackPointer();
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {

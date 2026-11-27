@@ -383,6 +383,28 @@ getSortedVotes() {
         return votes.length - 1;
     }
 
+    /** Coup du segment sous le curseur (la roue s'arrête à -angle du milieu choisi) */
+    pointerMove() {
+        const votes = this.spinVotes || this.getSortedVotes();
+        const total = this.spinTotalVotes || votes.reduce((s, v) => s + v.count, 0);
+        if (!votes.length || !total) return null;
+        const a = ((-this.currentRotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        let acc = 0;
+        for (const v of votes) {
+            acc += (v.count / total) * 2 * Math.PI;
+            if (a < acc) return v.move;
+        }
+        return votes[votes.length - 1].move;
+    }
+
+    /** Pendant le tirage : prévient la page quand le coup sous le curseur change (flèche sur l'échiquier) */
+    trackPointer() {
+        const mv = this.pointerMove();
+        if (mv === this.pointerAt) return;
+        this.pointerAt = mv;
+        try { this.onPointer?.(mv); } catch { /* affichage seulement */ }
+    }
+
     /**
      * Faire tourner la roue
      */
@@ -463,6 +485,7 @@ spin(duration = 5000, forcedWinner = null, stop = null) {
         }
         this.flap = (this.flap || 0) * 0.84;
         this.draw();
+        this.trackPointer();
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {

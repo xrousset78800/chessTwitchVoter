@@ -193,6 +193,8 @@ const WatchPage = {
                     const n = votes.find(v => v.m === s.draw.winner)?.n || 0;
                     if (m) overlay = { kind: 'win', from: m.from, to: m.to,
                         label: random || !total ? `🎲 ${fmtMove(m.san)}` : `${fmtMove(m.san)} · ${Math.round(n / total * 100)} %` };
+                } else if (this.revealing && this.spinArrow?.fen === s.fen) {
+                    overlay = this.spinArrow.overlay;
                 }
             } else if (s.votes?.length) {
                 // Une flèche par coup voté, avec son nombre de votes
@@ -223,6 +225,15 @@ const WatchPage = {
         };
         wheel.currentTurn = () => (this.state?.fen?.split(' ')[1] === 'b' ? 'b' : 'w');
         wheel.paletteColors = this.palette();
+        // Pendant le tirage : flèche du coup sous le curseur
+        wheel.onPointer = (mv) => {
+            const fen = this.state?.fen;
+            if (!this.revealing || !fen || !mv) return;
+            let m = null;
+            try { m = new Chess(fen).move(mv, { sloppy: true }); } catch { m = null; }
+            this.spinArrow = { fen, overlay: m ? { kind: 'spin', from: m.from, to: m.to } : null };
+            this.annotations?.setOverlay(this.spinArrow.overlay);
+        };
         this.wheel = wheel;
         this.wheelStyle = style;
         return wheel;

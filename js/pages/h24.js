@@ -533,9 +533,11 @@ const H24Page = {
             // Étiquette du coup retenu : coup · part des votes, puis le viewer tiré parmi ceux qui l'ont voté (photo, pseudo, chaîne)
             const label = (san, pct) => [fmtMove(san), pct != null ? `${pct} %` : null].filter(Boolean).join(' · ');
             const who = (o) => o?.voter ? { name: o.voter, via: o.via || null, pic: o.pic || null } : null;
-            if (g.draw) {
-                // Rien pendant que la roue tourne : le suspense reste entier
-                const m = !this.revealing && find(g.draw.winner);
+            if (g.draw && this.revealing) {
+                // Roue ou bande en train de tourner : flèche du coup sous le curseur
+                if (this.spinArrow?.fen === g.fen) overlay = this.spinArrow.overlay;
+            } else if (g.draw) {
+                const m = find(g.draw.winner);
                 const votes = g.draw.votes || [];
                 const total = votes.reduce((a, v) => a + (v.n || 0), 0);
                 const n = votes.find(v => v.m === g.draw.winner)?.n || 0;
@@ -1942,6 +1944,15 @@ const H24Page = {
         wheel.currentTurn = () => (this.state?.game?.turn === 'b' ? 'b' : 'w');
         // Le coup tiré s'affiche dans l'historique (renderNextMove), plus à la place du podium
         wheel.highlightWinner = () => {};
+        // Pendant le tirage : flèche du coup sous le curseur
+        wheel.onPointer = (mv) => {
+            const g = this.state?.game;
+            if (!this.revealing || !g?.fen || !mv) return;
+            let m = null;
+            try { m = new Chess(g.fen).move(mv); } catch { m = null; }
+            this.spinArrow = { fen: g.fen, overlay: m ? { kind: 'spin', from: m.from, to: m.to } : null };
+            this.annotations?.setOverlay?.(this.spinArrow.overlay);
+        };
         // La page tient sans scroll : pas de défilement vers la bande
         if (wheel.container) wheel.container.scrollIntoView = () => {};
         this.wheel = wheel;

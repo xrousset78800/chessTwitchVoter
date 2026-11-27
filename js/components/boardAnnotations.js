@@ -249,6 +249,12 @@
         drawOverlay() {
             const o = this.overlay;
             if (!o) return;
+            // Tirage en cours : flèche du coup sous le curseur de la roue ou de la bande
+            if (o.kind === 'spin') {
+                this.drawArrow(o.from, o.to, 'rgb(255, 138, 61)', { opacity: 0.8, scale: 1.05 })
+                    ?.classList.add('board-annotations__vote', 'is-spin');
+                return;
+            }
             const win = o.kind === 'win';
             if (!win) {
                 // Tous les coups votés : une flèche par coup, le nombre de votes en pastille près de la pointe.

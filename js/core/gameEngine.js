@@ -760,6 +760,11 @@ setWheelStyle(style) {
     this.votingWheel = style === 'band' ? new WheelBand('wheel-area') : new VotingWheel('wheel-area');
     // Le coup tiré s'affiche en grand dans l'encart du podium, pas sur la roue ni sur la bande
     this.votingWheel.showResultInside = false;
+    // Pendant le tirage : flèche du coup sous le curseur
+    this.votingWheel.onPointer = (mv) => {
+        const m = this.resolveMove(mv);
+        this.annotations?.setOverlay(m ? { kind: 'spin', from: m.from, to: m.to } : null);
+    };
     if (votes) {
         this.votingWheel.votes = votes;
         this.votingWheel.draw();
