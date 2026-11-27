@@ -37,11 +37,11 @@
 /* Entre deux parties : pas de coups, le panneau s'efface */
 #page-h24:not([data-phase="play"]) #h24-moves { display: none; }
 #h24-moves .moves-panel__title.is-active { color: var(--text-primary); }
-/* Guide de la partie : l'action en cours, qui pulse doucement, centré sous l'échiquier
-   (sa place est gardée même vide : l'échiquier et la bande ne bougent pas quand le texte change) */
+/* Guide de la partie : l'action en cours, qui pulse doucement, centré au-dessus des coups disponibles
+   (sa place est gardée même vide : les coups ne bougent pas quand le texte change) */
 #page-h24 #h24-hint {
     display: block; box-sizing: border-box; width: fit-content; max-width: 100%;
-    margin: -8px auto 0; min-height: 36px; line-height: 22px; padding: 6px 16px;   /* 12 px sous l'échiquier (écart de colonne 20 px) */ border-radius: 999px; text-align: center;
+    flex: none; margin: 0 auto; min-height: 36px; line-height: 22px; padding: 6px 16px; border-radius: 999px; text-align: center;
     font-family: 'Chakra Petch', sans-serif; font-weight: 700; font-size: 1rem;
     color: var(--text-primary); background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
     animation: h24-guide 2.6s ease-in-out infinite;
@@ -317,8 +317,8 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 /* Place gardée pour la bande : les colonnes (hauteur de la fenêtre) raccourcissent d'autant, sinon la page défile */
 @media (min-width: 901px) {
     /* L'échiquier (et ses bandeaux, le guide dessous) tient dans la hauteur de la fenêtre : pas de défilement de la page */
-    #page-h24 .board-container { max-width: min(560px, max(360px, calc(100vh - var(--nav-height) - 196px))); }
-    #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .board-container { max-width: min(560px, max(360px, calc(100vh - var(--nav-height) - 276px))); }
+    #page-h24 .board-container { max-width: min(560px, max(360px, calc(100vh - var(--nav-height) - 148px))); }
+    #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .board-container { max-width: min(560px, max(360px, calc(100vh - var(--nav-height) - 228px))); }
     #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar,
     #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .sandbox__left { max-height: calc(100vh - var(--nav-height) - 96px); }
     #page-h24:not([data-mode="predict"]):has(#h24-wheel-area.wheel-area--band) .sandbox__sidebar { height: calc(100vh - var(--nav-height) - 96px); }
