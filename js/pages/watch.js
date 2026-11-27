@@ -424,7 +424,7 @@ const WatchPage = {
         });
         list.innerHTML = Object.entries(groups).filter(([, g]) => g.length).map(([piece, g]) => `
             <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : window.pieceIcon ? window.pieceIcon(turn + piece) : PIECE_ICONS[turn][piece]}</span>${
-                g.map(m => `<li><button type="button" tabindex="-1" disabled data-move="${esc(m)}">${esc(m)}</button></li>`).join('')
+                g.map(m => `<li><button type="button" tabindex="-1" disabled${m.includes('x') ? ' class="is-cap"' : ''} data-move="${esc(m)}">${esc(m)}</button></li>`).join('')
             }</ul>`).join('');
         // Exemples à taper, pris parmi les coups de la position (comme chez les joueurs)
         const ex = $('watch-moves-example');

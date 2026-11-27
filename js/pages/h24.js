@@ -1615,7 +1615,7 @@ const H24Page = {
             const picked = myVotes(this.me).map(clean);
             list.innerHTML = Object.entries(groups).filter(([, a]) => a.length).map(([piece, a]) => `
                 <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : window.pieceIcon ? window.pieceIcon(turn + piece) : PIECE_ICONS[turn][piece]}</span>${
-                    a.map(m => `<li><button type="button" ${mine ? '' : 'tabindex="-1" disabled'} class="${picked.includes(m) ? 'is-mine' : ''}" data-move="${esc(m)}" data-h24-move="${esc(m)}">${esc(fmtMove(m))}</button></li>`).join('')
+                    a.map(m => `<li><button type="button" ${mine ? '' : 'tabindex="-1" disabled'} class="${[picked.includes(m) && 'is-mine', m.includes('x') && 'is-cap'].filter(Boolean).join(' ')}" data-move="${esc(m)}" data-h24-move="${esc(m)}">${esc(fmtMove(m))}</button></li>`).join('')
                 }</ul>`).join('');
         }
         paintMoveChips($('h24-moves'), g?.votes || [], COLORS);

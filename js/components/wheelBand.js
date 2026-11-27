@@ -79,15 +79,23 @@ class WheelBand extends VotingWheel {
         const offset = width / 2 - (this.position ?? width / 2);
 
         // Depuis la première répétition qui touche le bord gauche
+        const raised = []; // Cases du coup tiré, redessinées en relief par-dessus le reste
         for (let origin = ((offset % period) + period) % period - period; origin < width; origin += period) {
             let x = origin;
             sortedVotes.forEach((vote, index) => {
                 const cellWidth = (vote.count / totalVotes) * period;
                 if (x + cellWidth > 0 && x < width) {
-                    this.drawCell(vote.move, this.colors[index % this.colors.length], x, cellWidth, height);
+                    const color = this.colors[index % this.colors.length];
+                    this.drawCell(vote.move, color, x, cellWidth, height);
+                    if (!this.isSpinning && this.revealMove === vote.move) raised.push({ move: vote.move, color, x, cellWidth });
                 }
                 x += cellWidth;
             });
+        }
+        if (raised.length) {
+            ctx.fillStyle = 'rgba(8, 6, 5, 0.42)';
+            ctx.fillRect(0, 0, width, height);
+            for (const c of raised) this.drawRaisedCell(c, height);
         }
 
         // Picots en haut et en bas, entraînés avec la bande
@@ -128,6 +136,39 @@ class WheelBand extends VotingWheel {
         ctx.restore();
     }
 
+    /** Coup tiré : case un peu élargie, ombre portée sur ses voisines, éclairée par le haut */
+    drawRaisedCell({ move, color, x, cellWidth }, height) {
+        const ctx = this.ctx;
+        const grow = 5;
+        const x0 = x - grow;
+        const w = cellWidth + grow * 2;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 16;
+        ctx.shadowOffsetY = 3;
+        ctx.fillStyle = color;
+        ctx.fillRect(x0, 0, w, height);
+        ctx.restore();
+        this.drawCell(move, color, x0, w, height);
+        ctx.save();
+        // Lumière en haut, ombre en bas
+        const shade = ctx.createLinearGradient(0, 0, 0, height);
+        shade.addColorStop(0, 'rgba(255, 255, 255, 0.34)');
+        shade.addColorStop(0.45, 'rgba(255, 255, 255, 0.04)');
+        shade.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+        ctx.fillStyle = shade;
+        ctx.fillRect(x0, 0, w, height);
+        // Arête claire en haut et sur les côtés, sombre en bas
+        ctx.fillStyle = 'rgba(255, 246, 236, 0.65)';
+        ctx.fillRect(x0, 0, w, 2);
+        ctx.fillStyle = 'rgba(255, 246, 236, 0.25)';
+        ctx.fillRect(x0, 0, 1.5, height);
+        ctx.fillRect(x0 + w - 1.5, 0, 1.5, height);
+        ctx.fillStyle = 'rgba(10, 8, 7, 0.5)';
+        ctx.fillRect(x0, height - 2, w, 2);
+        ctx.restore();
+    }
+
     /** Coup de la case sous le curseur (milieu de la bande) */
     pointerMove() {
         const votes = this.spinVotes || this.getSortedVotes();
@@ -160,6 +201,7 @@ class WheelBand extends VotingWheel {
         stop = Number.isFinite(stop) && stop >= 0.15 && stop <= 0.85 ? stop : 0.15 + Math.random() * 0.7;
 
         this.isSpinning = true;
+        this.revealMove = null;
         const token = this.spinToken = (this.spinToken || 0) + 1;
         this.container.classList.add('is-spinning');
         // Sur un petit écran la bande peut être sous la ligne de flottaison
@@ -228,6 +270,7 @@ class WheelBand extends VotingWheel {
     abort() {
         this.spinToken = (this.spinToken || 0) + 1;
         this.isSpinning = false;
+        this.revealMove = null;
         this._spinResolve = null;
         this.container?.classList.remove('is-spinning');
         this.centerEl?.classList.remove('is-revealed');
@@ -249,6 +292,8 @@ class WheelBand extends VotingWheel {
             this.centerEl.classList.add('is-revealed');
         }
         this.highlightWinner();
+        this.revealMove = this.winner;
+        this.draw();
 
         const token = this.spinToken;
         setTimeout(() => {

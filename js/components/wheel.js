@@ -238,6 +238,7 @@ getSortedVotes() {
         }
 
         let startAngle = this.currentRotation;
+        let raised = null; // Part du coup tiré, redessinée en relief par-dessus le reste
 
         sortedVotes.forEach((vote, index) => {
             const sliceAngle = (vote.count / totalVotes) * 2 * Math.PI;
@@ -257,35 +258,9 @@ getSortedVotes() {
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Texte du coup
-            const midAngle = startAngle + sliceAngle / 2;
-            // Tailles selon la place : largeur de la part et rayon de la roue
-            const arc = sliceAngle * radius * 0.8;
-            const fontSize = Math.max(12, Math.min(radius * 0.11, arc * 0.4, 30));
-            const pieceSize = Math.max(16, Math.min(radius * 0.2, arc * 0.62, 46));
-            const r0 = radius - 8 - fontSize / 2;
+            this.drawSliceLabel(ctx, centerX, centerY, radius, startAngle, sliceAngle, vote.move, turn);
 
-            ctx.save();
-            ctx.translate(centerX + Math.cos(midAngle) * r0, centerY + Math.sin(midAngle) * r0);
-            ctx.rotate(midAngle + Math.PI / 2);
-
-            // Coup près du bord, pièce en dessous (vers le centre), tous deux à la couleur du camp
-            this.drawMoveText(ctx, fmtMove(vote.move), turn, 0, 0, fontSize);
-            this.drawPiece(ctx, vote.move, turn, 0, fontSize / 2 + 3 + pieceSize / 2, pieceSize);
-
-            ctx.restore();
-
-            // Coup tiré : part cerclée de clair
-            if (!this.isSpinning && this.revealMove === vote.move) {
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius - 2, startAngle, endAngle);
-                ctx.closePath();
-                ctx.lineJoin = 'round';
-                ctx.lineWidth = 4;
-                ctx.strokeStyle = '#fff3ea';
-                ctx.stroke();
-            }
+            if (!this.isSpinning && this.revealMove === vote.move) raised = { startAngle, sliceAngle, color, move: vote.move };
 
             startAngle = endAngle;
         });
@@ -304,6 +279,7 @@ getSortedVotes() {
         ctx.restore();
 
         this.drawRim(ctx, centerX, centerY, radius);
+        if (raised) this.drawRaisedSlice(ctx, centerX, centerY, radius, raised, turn);
 
         // Petit moyeu discret
         ctx.beginPath();
@@ -315,6 +291,81 @@ getSortedVotes() {
         ctx.stroke();
 
         this.drawFlapper(ctx, centerX, centerY, radius);
+    }
+
+    /** Coup près du bord, pièce en dessous (vers le centre), tous deux à la couleur du camp */
+    drawSliceLabel(ctx, cx, cy, radius, startAngle, sliceAngle, move, turn) {
+        const midAngle = startAngle + sliceAngle / 2;
+        // Tailles selon la place : largeur de la part et rayon de la roue
+        const arc = sliceAngle * radius * 0.8;
+        const fontSize = Math.max(12, Math.min(radius * 0.11, arc * 0.4, 30));
+        const pieceSize = Math.max(16, Math.min(radius * 0.2, arc * 0.62, 46));
+        const r0 = radius - 8 - fontSize / 2;
+        ctx.save();
+        ctx.translate(cx + Math.cos(midAngle) * r0, cy + Math.sin(midAngle) * r0);
+        ctx.rotate(midAngle + Math.PI / 2);
+        this.drawMoveText(ctx, fmtMove(move), turn, 0, 0, fontSize);
+        this.drawPiece(ctx, move, turn, 0, fontSize / 2 + 3 + pieceSize / 2, pieceSize);
+        ctx.restore();
+    }
+
+    /** Coup tiré : le reste de la roue s'assombrit, sa part sort de la roue avec une ombre portée et un éclairage en relief */
+    drawRaisedSlice(ctx, cx, cy, radius, { startAngle, sliceAngle, color, move }, turn) {
+        const endAngle = startAngle + sliceAngle;
+        const mid = startAngle + sliceAngle / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + 20, 0, TAU);
+        ctx.fillStyle = 'rgba(8, 6, 5, 0.38)';
+        ctx.fill();
+
+        // Part décalée vers l'extérieur et un peu agrandie
+        const lift = Math.max(6, radius * 0.035);
+        const x = cx + Math.cos(mid) * lift;
+        const y = cy + Math.sin(mid) * lift;
+        const r = radius + lift * 0.6;
+        const path = () => {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            if (sliceAngle < TAU - 0.001) ctx.arc(x, y, r, startAngle, endAngle);
+            else ctx.arc(x, y, r, 0, TAU);
+            ctx.closePath();
+        };
+        path();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+        ctx.shadowBlur = Math.max(14, radius * 0.08);
+        ctx.shadowOffsetX = Math.cos(mid) * 3 + 2;
+        ctx.shadowOffsetY = Math.sin(mid) * 3 + 5;
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+
+        // Éclairage : plus clair vers le bord extérieur, plus sombre vers le centre
+        path();
+        const shade = ctx.createRadialGradient(x, y, 0, x, y, r);
+        shade.addColorStop(0, 'rgba(0, 0, 0, 0.22)');
+        shade.addColorStop(0.55, 'rgba(255, 255, 255, 0)');
+        shade.addColorStop(0.92, 'rgba(255, 255, 255, 0.22)');
+        shade.addColorStop(1, 'rgba(255, 255, 255, 0.32)');
+        ctx.fillStyle = shade;
+        ctx.fill();
+
+        // Arêtes : bord extérieur clair, côtés sombres
+        ctx.lineJoin = 'round';
+        path();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(10, 8, 7, 0.55)';
+        ctx.stroke();
+        if (sliceAngle < TAU - 0.001) {
+            ctx.beginPath();
+            ctx.arc(x, y, r - 1.5, startAngle + 0.01, endAngle - 0.01);
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = 'rgba(255, 246, 236, 0.6)';
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        this.drawSliceLabel(ctx, x, y, r, startAngle, sliceAngle, move, turn);
     }
 
     /** Jante sombre et ses lampes : défilent pendant le tirage, clignotent à l'arrêt, puis restent allumées */

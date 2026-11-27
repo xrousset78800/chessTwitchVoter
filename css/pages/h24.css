@@ -622,12 +622,7 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 }
 #page-h24 .h24-turn { font-size: 0.82rem; }
 #page-h24 #h24-moves { padding: 8px; }
-#page-h24 #h24-moves .moves-panel__content { gap: 4px; }
-/* Coups un peu plus compacts ; les groupes gardent leur hauteur (la liste défile au lieu de les tasser l'un sur l'autre) */
-#page-h24 #h24-moves .moves-group { flex-shrink: 0; gap: 4px; padding: 5px; min-height: 32px; }
-#page-h24 #h24-moves .moves-group button { padding: 4px 8px; font-size: 0.81rem; }
-#page-h24 #h24-moves .moves-group .piece-icon { width: 24px; font-size: 1.22rem; }
-#page-h24 #h24-moves .piece-icon__img { width: 24px; height: 24px; }
+/* Coups disponibles : style commun « feuille de partie » (css/components/movesSheet.css) */
 @media (min-width: 901px) {
     #page-h24 .sandbox__left { max-height: calc(100vh - var(--nav-height) - 36px); }
     #page-h24 .sandbox__left { top: calc(var(--nav-height) + 8px); }

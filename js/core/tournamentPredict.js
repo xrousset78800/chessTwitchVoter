@@ -320,7 +320,7 @@
         }
         box.innerHTML = Object.entries(groups).filter(([, l]) => l.length).map(([piece, l]) => `
             <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : window.pieceIcon ? window.pieceIcon(turn + piece) : PIECE_ICONS[turn][piece]}</span>${
-                l.map(m => `<li><button type="button" data-tp-move="${esc(m.uci)}" class="${mine === m.uci ? 'is-mine' : ''}" ${locked ? 'disabled' : ''}>${esc(sanLocal(m.san))}${counts[m.uci] ? `<b>${counts[m.uci]}</b>` : ''}</button></li>`).join('')
+                l.map(m => `<li><button type="button" data-tp-move="${esc(m.uci)}" class="${[mine === m.uci && 'is-mine', m.san.includes('x') && 'is-cap'].filter(Boolean).join(' ')}" ${locked ? 'disabled' : ''}>${esc(sanLocal(m.san))}${counts[m.uci] ? `<b>${counts[m.uci]}</b>` : ''}</button></li>`).join('')
             }</ul>`).join('');
     }
     /** Survol d'un coup de la liste : flèche d'aperçu sur l'échiquier */

@@ -1056,6 +1056,7 @@ updateAvailableMoves() {
                 const btn = document.createElement('button');
                 btn.textContent = fmtMove(move);
                 btn.dataset.move = move;
+                if (move.includes('x')) btn.className = 'is-cap';
                 btn.onclick = () => { hoverOff(); this.onMoveClick(move); };
                 btn.onpointerenter = () => hoverOn(move);
                 btn.onpointerleave = hoverOff;

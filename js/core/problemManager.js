@@ -696,6 +696,7 @@ resolveVotes() {
                     const li = document.createElement('li');
                     const btn = document.createElement('button');
                     btn.textContent = fmtMove(move.replace("#", ""));
+                    if (move.includes('x')) btn.className = 'is-cap';
                     btn.onclick = () => {
                         if (this.config.timerEnabled && this.votingOpen) {
                             this.receiveVote({ move, ...(window.gameEngine?.streamerVoter?.() || {}) }, 'en');
