@@ -846,8 +846,11 @@ body #page-h24 #h24-wheel-area.wheel-area--band:not(.is-spinning):not(.is-soon):
 .h24-pred > .live-card { margin: 0; }
 /* Prédiction en cours : la carte Pronostics remplace l'en-tête (qui n'avait plus que le titre), numéros d'étapes compris */
 #page-h24[data-mode="predict"][data-phase="play"] .watch-head { display: none; }
-#h24-pred .tp-head { justify-content: flex-start; }
-#h24-pred .tp-head .tp-stat { margin-left: auto; }
+/* Titre et numéros d'étapes sur la première ligne ; le score dessous, à droite (il peut être long) */
+#h24-pred .tp-head { justify-content: flex-start; flex-wrap: wrap; row-gap: 2px; }
+#h24-pred .tp-head .h24-pred__steps { margin-left: auto; }
+#h24-pred .tp-head .tp-stat { order: 3; flex-basis: 100%; text-align: right; }
+#h24-pred .tp-head .tp-stat:empty { display: none; }
 .h24-pred__steps:empty { display: none; }
 .h24-pred__steps .h24-steps { margin: 0; }
 #page-h24:not([data-mode="predict"]) .h24-pred, #page-h24:not([data-phase="play"]) .h24-pred { display: none; }

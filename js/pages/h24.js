@@ -1777,7 +1777,14 @@ const H24Page = {
             footer: flash ? `<p class="tp-hint">${esc(fmtMove(flash.san))} · ${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</p>` : '' });
         // Pronostics dans la colonne de gauche, comme sur la page Tournois ; la partie et les votants à droite
         const left = $('h24-pred');
-        if (left && left.dataset.html !== cardPred) { left.dataset.html = cardPred; left.innerHTML = cardPred; }
+        if (left && left.dataset.html !== cardPred) {
+            // Les numéros d'étapes logent dans la carte : on les met à l'abri avant de la redessiner, puis on les y remet
+            const steps = $('h24-steps');
+            if (steps && left.contains(steps)) $('h24-mode')?.parentNode.appendChild(steps);
+            left.dataset.html = cardPred;
+            left.innerHTML = cardPred;
+            this.placeSteps();
+        }
         // (la carte « Partie sélectionnée » n'est plus affichée : les bandes autour de l'échiquier donnent joueurs, Elo et pendules)
         const html = cardVoters;
         if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; this.paintPclocks(); }

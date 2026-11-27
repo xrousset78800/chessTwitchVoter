@@ -6,8 +6,9 @@
     .can-grab:hover img[data-piece] { transform: translateY(-3px) scale(1.06); filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.45)); }
 }
 body.is-dragging-piece .can-grab img[data-piece] { transform: none; filter: none; }
+/* Animations réduites : la pièce se soulève quand même, mais d'un coup (sans transition) */
 @media (prefers-reduced-motion: reduce) {
-    .can-grab:hover img[data-piece] { transform: none; }
+    .can-grab img[data-piece] { transition: none; }
 }
 #myBoard .can-grab, #myBoard .can-grab img { cursor: grab; }
 :root { --sq-light: #9db0d3; --sq-dark: #42598c; }
