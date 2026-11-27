@@ -318,7 +318,7 @@
             groups[castle ? 'O' : m.piece.toUpperCase()].push({ uci: m.from + m.to + (m.promotion || ''), san: m.san.replace(/[+#]/g, '') });
         }
         box.innerHTML = Object.entries(groups).filter(([, l]) => l.length).map(([piece, l]) => `
-            <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : PIECE_ICONS[turn][piece]}</span>${
+            <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : window.pieceIcon ? window.pieceIcon(turn + piece) : PIECE_ICONS[turn][piece]}</span>${
                 l.map(m => `<li><button type="button" data-tp-move="${esc(m.uci)}" class="${mine === m.uci ? 'is-mine' : ''}" ${locked ? 'disabled' : ''}>${esc(sanLocal(m.san))}${counts[m.uci] ? `<b>${counts[m.uci]}</b>` : ''}</button></li>`).join('')
             }</ul>`).join('');
     }

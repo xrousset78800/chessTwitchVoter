@@ -687,6 +687,8 @@ resolveVotes() {
 
             const icon = list.querySelector('.piece-icon');
             list.innerHTML = '';
+            // Icône de la couleur au trait (pièces noires quand les Noirs jouent)
+            if (icon && piece !== 'O' && window.pieceIcon) icon.innerHTML = window.pieceIcon(this.chess.turn() + piece);
             if (icon) list.appendChild(icon);
 
             if (groups[piece]) {

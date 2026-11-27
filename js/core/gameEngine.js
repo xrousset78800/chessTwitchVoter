@@ -1033,7 +1033,8 @@ updateAvailableMoves() {
         if (piece !== 'O') {
             const iconSpan = document.createElement('span');
             iconSpan.className = 'piece-icon';
-            iconSpan.textContent = pieceIcons[turn][piece];
+            if (window.pieceIcon) iconSpan.innerHTML = window.pieceIcon(turn + piece);
+            else iconSpan.textContent = pieceIcons[turn][piece];
             list.appendChild(iconSpan);
         } else if (icon) {
             list.appendChild(icon);

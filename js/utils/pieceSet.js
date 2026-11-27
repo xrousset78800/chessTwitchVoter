@@ -125,6 +125,8 @@
     const url = (piece, set = current) => `/img/chesspieces/${set.id}/${piece}.${set.ext}`;
     window.pieceUrl = piece => url(piece);
     window.pieceTheme = piece => url(piece);
+    /** Icône d'une pièce dans les listes de coups : l'image du jeu choisi (blanche ou noire selon le trait) */
+    window.pieceIcon = piece => `<img class="piece-icon__img" src="${url(piece)}" alt="" draggable="false">`;
 
     const label = s => {
         const v = window.i18n?.t?.(`pieces.${s.key}`);

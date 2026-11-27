@@ -49,6 +49,11 @@
 #page-h24 #h24-hint .h24-guide__piece { display: inline-block; width: 26px; height: 26px; margin: -6px 4px -6px 0; vertical-align: middle; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); }
 #page-h24 #h24-hint .h24-guide__san { font-size: 1.15em; color: #fff; }
 #page-h24 #h24-hint .h24-guide__pct { color: var(--accent); }
+/* « Votez » : à la couleur de l'accent, qui pulse un peu */
+#page-h24 #h24-hint .h24-guide__vote { display: inline-block; color: var(--accent); font-size: 1.1em; letter-spacing: 0.04em; text-transform: uppercase; animation: h24-vote-pulse 1.4s ease-in-out infinite; }
+@keyframes h24-vote-pulse { 50% { transform: scale(1.08); text-shadow: 0 0 12px rgba(255, 138, 61, 0.65); } }
+@media (prefers-reduced-motion: reduce) { #page-h24 #h24-hint .h24-guide__vote { animation-name: h24-vote-glow; } }
+@keyframes h24-vote-glow { 50% { text-shadow: 0 0 12px rgba(255, 138, 61, 0.65); } }
 #page-h24 #h24-hint .h24-guide__voter { font-family: 'IBM Plex Sans', sans-serif; font-weight: 600; font-size: 0.85em; color: var(--text-secondary); }
 /* Grand écran avec souris : dans la bande du menu (transparent tant qu'on ne le survole pas) */
 @media (hover: hover) and (min-width: 1101px) {
@@ -628,6 +633,15 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-settings__pop[hidden] { display: none; }
 /* Historique des coups : petit bouton, la liste s'ouvre en dessous */
 .h24-histbtn { position: relative; }
+/* Régie : petit bouton orange discret, son point garde l'état du Phantom */
+.h24-regiebtn { position: relative; padding: 0 9px; color: rgba(255, 138, 61, 0.85); border-color: rgba(255, 138, 61, 0.35); background: rgba(255, 138, 61, 0.06); }
+.h24-regiebtn[hidden] { display: none; }
+.h24-regiebtn:hover, .h24-regiebtn[aria-expanded="true"] { color: #fff; border-color: rgba(255, 138, 61, 0.7); background: rgba(255, 138, 61, 0.2); }
+.h24-regiebtn[aria-expanded="true"] i { transform: none; }
+.h24-regiebtn__dot { position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #6b7280; }
+.h24-regiebtn[data-status="ok"] .h24-regiebtn__dot { background: var(--accent); }
+.h24-regiebtn[data-status="busy"] .h24-regiebtn__dot { background: #f59e0b; }
+.h24-regiebtn[data-status="error"] .h24-regiebtn__dot { background: var(--danger, #e5534b); }
 .h24-histbtn .h24-settings__btn[aria-expanded="true"] i { transform: none; }
 .h24-histpop { width: 300px; gap: 6px; padding: 10px 0 6px; }
 .h24-histpop__title { padding: 0 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-secondary, #cbd5e1); }

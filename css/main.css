@@ -1005,6 +1005,10 @@ body.showTimer .board-timer-container {
     opacity: 0.7;
 }
 
+/* Image du jeu de pièces (blanche ou noire selon le trait) à la place du symbole */
+.moves-group .piece-icon:has(.piece-icon__img) { opacity: 1; display: inline-flex; align-items: center; justify-content: center; }
+.piece-icon__img { width: 24px; height: 24px; display: block; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.55)); pointer-events: none; }
+
 .moves-group li {
     list-style: none;
 }

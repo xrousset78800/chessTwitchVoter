@@ -89,7 +89,8 @@ const H24Page = {
     camPlayer: null,
     camWatching: false,
     liveFolded: (() => { try { return localStorage.getItem('h24LiveFolded') === '1'; } catch { return false; } })(),
-    regieFolded: (() => { try { return localStorage.getItem('h24RegieFolded') === '1'; } catch { return false; } })(),
+    // Régie fermée par défaut : le petit bouton orange de la barre d'outils l'ouvre
+    regieFolded: (() => { try { return localStorage.getItem('h24RegieOpen') !== '1'; } catch { return true; } })(),
     // Panneaux Équipes / Historique repliés (retenu par navigateur)
     folds: (() => { try { return JSON.parse(localStorage.getItem('h24Fold') || '{}') || {}; } catch { return {}; } })(),
     // Son : volume 0..1 et coupure, retenus par navigateur
@@ -187,6 +188,7 @@ const H24Page = {
             if (e.target.closest('[data-h24-login]')) { twitchAuth.login?.(); return; }
             if (e.target.closest('[data-h24-style-toggle]')) { this.setStyle(this.style === 'wheel' ? 'band' : 'wheel'); return; }
             if (e.target.closest('[data-h24-hist]')) { this.toggleHist(); return; }
+            if (e.target.closest('[data-h24-regie-toggle]')) { this.regieAction('fold'); return; }
             const rg = e.target.closest('[data-h24-regie]');
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
@@ -665,7 +667,7 @@ const H24Page = {
         const p = window.phantomChessboard;
         if (action === 'fold') {
             this.regieFolded = !this.regieFolded;
-            try { localStorage.setItem('h24RegieFolded', this.regieFolded ? '1' : '0'); } catch {}
+            try { localStorage.setItem('h24RegieOpen', this.regieFolded ? '0' : '1'); } catch {}
             this.renderRegie(true);
             return;
         }
@@ -709,10 +711,15 @@ const H24Page = {
     renderRegie(force = false) {
         const el = $('h24-regie');
         if (!el) return;
-        el.hidden = !this.me.regie;
+        const btn = document.querySelector('[data-h24-regie-toggle]');
+        if (btn) { btn.hidden = !this.me.regie; btn.setAttribute('aria-expanded', String(!this.regieFolded)); }
+        el.hidden = !this.me.regie || this.regieFolded;
         if (!this.me.regie) return;
         const p = window.phantomChessboard;
         const status = phantomStatus(this.regie.live);
+        // Le point du bouton garde l'état du Phantom visible, régie fermée
+        if (btn) btn.dataset.status = status;
+        if (this.regieFolded) { this.regieKey = null; return; }
         const server = this.state?.regie || {};
         if (this.cam.devices === null) { this.cam.devices = []; listCameras().then(d => { this.cam.devices = d; this.renderRegie(true); }); }
         const camLive = !!this.camSender?.active;
@@ -731,9 +738,9 @@ const H24Page = {
             <button type="button" class="h24-regie__head" data-h24-regie="fold" aria-expanded="${!this.regieFolded}">
                 <i class="fas fa-sliders-h"></i> ${esc(t('h24.regie.title', null, 'Régie'))}
                 <span class="h24-regie__dot h24-regie__dot--${status}" title="${esc(label)}"></span>
-                <i class="fas fa-chevron-${this.regieFolded ? 'down' : 'up'} h24-regie__chev"></i>
+                <i class="fas fa-times h24-regie__chev"></i>
             </button>
-            <div class="h24-regie__body"${this.regieFolded ? ' hidden' : ''}>
+            <div class="h24-regie__body">
             <div class="h24-regie__row">
                 <span class="h24-regie__dot h24-regie__dot--${status}"></span><span class="h24-regie__status">${esc(label)}</span>
             </div>
@@ -960,15 +967,7 @@ const H24Page = {
         else if (!g.turnEndsAt) msg = last;
         else if (!this.me.login) msg = t('h24.watchOnly', null, 'Tu regardes. Connecte-toi pour jouer.');
         else if (!this.me.team) msg = t('h24.joinToVote', null, 'Rejoins une équipe pour voter.');
-        else if (mine && myVotes(this.me).length) {
-            const mv = myVotes(this.me);
-            const max = this.me.maxVotes || 1;
-            msg = max > 1
-                ? t('h24.yourVotes', { moves: mv.join(', '), n: mv.length, max }, `Tes votes : ${mv.join(', ')} (${mv.length}/${max})`)
-                : t('h24.yourVote', { move: mv[0] }, `Ton vote : ${mv[0]}`);
-        }
-        else if (mine && g.turn !== this.me.team && s.mode === 'teams') msg = t('h24.bothSides', { side }, 'Ton équipe joue aussi ce camp.');
-        else if (mine) msg = t('h24.clickToVote', null, 'Clique un coup ou déplace une pièce');
+        else if (mine) return this.setGuide(hint, ...this.voteGuide(g.turn, t('h24.clickToVote', null, 'Clique un coup ou déplace une pièce')));
         else if (s.mode === 'teams') msg = t('h24.flowVoteOf', { side }, g.turn === 'w' ? 'Vote des Blancs' : 'Vote des Noirs');
         else msg = last;
         // Chat Twitch relié : les viewers votent aussi
@@ -985,9 +984,7 @@ const H24Page = {
         const mine = myVotes(this.me)[0];
         let msg, go = false;
         if (!this.me.login) msg = t('h24.pred.login', null, 'Connecte-toi avec Twitch pour deviner les coups');
-        else if (mine) msg = t('h24.pred.myGuess', { move: fmtMove(mine) }, `Ta devinette : ${mine}`);
-        else { msg = t('h24.pred.guess', { side }, `Devine le prochain coup des ${side}`); go = true; }
-        if (this.me.chat && this.me.login) msg += ' · ' + t('h24.pred.chat', null, 'tes viewers devinent aussi dans ton chat (ex. e4, blancs)');
+        else return this.voteGuide(g.turn, t('h24.pred.guess', { side }, `Devine le prochain coup des ${side}`));
         return [[msg, last].filter(Boolean).join(' · '), go];
     },
 
@@ -1017,6 +1014,14 @@ const H24Page = {
             return [[end?.title || t('h24.recapTitle', null, 'Fin de partie'), n ? t('h24.flowNextIn', { n }, `Vote dans ${n} s`) : ''].filter(Boolean).join(' · '), false];
         }
         return ['', false];
+    },
+
+    /** À toi de voter : juste « Votez », qui pulse, avec la pièce du camp au trait (le détail reste en infobulle) */
+    voteGuide(turn, tip) {
+        const c = turn === 'b' ? 'b' : 'w';
+        const html = `<img class="h24-guide__piece" src="${window.pieceUrl?.(c + 'K') || ''}" alt="">`
+            + `<span class="h24-guide__vote h24-guide__vote--${c}">${esc(t('h24.pred.vote', null, 'Votez'))}</span>`;
+        return [tip, true, html];
     },
 
     setGuide(hint, msg, go, html = '') {
@@ -1427,7 +1432,7 @@ const H24Page = {
             });
             const picked = myVotes(this.me).map(clean);
             list.innerHTML = Object.entries(groups).filter(([, a]) => a.length).map(([piece, a]) => `
-                <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : PIECE_ICONS[turn][piece]}</span>${
+                <ul class="moves-group"><span class="piece-icon">${piece === 'O' ? '⬚' : window.pieceIcon ? window.pieceIcon(turn + piece) : PIECE_ICONS[turn][piece]}</span>${
                     a.map(m => `<li><button type="button" ${mine ? '' : 'tabindex="-1" disabled'} class="${picked.includes(m) ? 'is-mine' : ''}" data-move="${esc(m)}" data-h24-move="${esc(m)}">${esc(fmtMove(m))}</button></li>`).join('')
                 }</ul>`).join('');
         }
