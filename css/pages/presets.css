@@ -396,7 +396,10 @@ body:not(.sandbox-launch) #page-sandbox .new-tabs {
 /* Étape 1 (/new) : les quatre modes seuls, sans « Comment ça marche » ni Précédent */
 .new-tabs__back, .new-tabs__mode { display: none; }
 .new-tabs:not(.is-compact) .new-how { display: none; }
-.new-pick { max-width: 1000px; }
+.new-pick { max-width: 1240px; }
+/* Cinq modes sur une ligne en grand écran */
+.new-pick .new-tabs:not(.is-compact) .new-tabs__grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.new-tab__tag .nav__game-dot { display: inline-block; width: 7px; height: 7px; margin-right: 2px; vertical-align: 1px; }
 .new-pick .new-tabs { margin-top: 4vh; }
 .new-pick .new-tab { padding: 24px; }
 .new-pick .new-tab__desc { font-size: 0.95rem; }

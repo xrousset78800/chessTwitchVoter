@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Tournoi",
+    "tournament": "Pronos live",
     "new": "Nouveau",
     "browse": "Parcourir",
     "game": "Partie en cours",
@@ -375,6 +375,7 @@
     "title": "Nouvelle partie",
     "subtitle": "Choisis comment ton chat va jouer, règle deux ou trois choses, lance.",
     "tag": {
+      "live": "En direct",
       "rush": "Contre la montre",
       "mono": "Inscription join",
       "multi": "2 chaînes",
@@ -382,8 +383,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "{n} matchs en direct",
+      "one": "1 match en direct",
+      "none": "Aucun match en direct pour le moment : reviens pendant un tournoi.",
+      "cta": "Pronostiquer"
+    },
     "tour": {
-      "badge": "Tournois en direct",
+      "badge": "Pronos live",
       "title": "Pronostique les grands tournois",
       "text": "Les parties des tournois chess.com en cours, en direct sur le site. Choisis un match, suis-le coup par coup et devine ce que les joueurs vont jouer.",
       "cta": "Voir les matchs en direct",
@@ -434,7 +441,7 @@
       "watchText": "Rien à installer : tape ton coup dans le chat de la chaîne. Pour gagner XP et succès à ton nom, connecte-toi avec Twitch ici."
     },
     "modes": {
-      "title": "Quatre façons de jouer",
+      "title": "Cinq façons de jouer",
       "play": "Jouer →",
       "multi": "Ton chat contre celui d'un autre streamer, chacun vote les coups de son camp."
     },
@@ -532,8 +539,8 @@
     "unlockTitle": "Une fois connecté",
     "unlock1": "<b>Parties Twitch</b> : les coups votés par ton chat sont joués sur l'échiquier.",
     "unlock2": "<b>Live Chess</b> : suis une partie Chess.com en direct, coup par coup.",
-    "unlock3": "<b>Tournoi</b> : choisis une partie d'un tournoi Chess.com en cours et regarde-la se jouer.",
-    "unlockHint": "Les onglets Live Chess et Tournoi apparaissent dans le menu dès que le Phantom est connecté.",
+    "unlock3": "<b>Pronos live</b> : choisis une partie d'un tournoi Chess.com en cours et regarde-la se jouer.",
+    "unlockHint": "Les onglets Live Chess et Pronos live apparaissent dans le menu dès que le Phantom est connecté.",
     "reqTitle": "Avant de te connecter",
     "req1": "Bluetooth activé sur l'ordinateur",
     "req2": "Chrome ou Edge sur ordinateur (Web Bluetooth : pas Firefox ni Safari)",
@@ -986,6 +993,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "Ton chat pronostique un vrai match de tournoi : le prochain coup du joueur et le vainqueur.",
+      "how1": "Choisis un match en cours d'un tournoi Chess.com : il se joue en direct sur l'échiquier.",
+      "how2": "Avant chaque coup, joue sur l'échiquier celui que tu attends ; ton chat propose le sien en l'écrivant (e4, O-O…).",
+      "how3": "Pronostique aussi le vainqueur (Blancs, nulle, Noirs) : chaque bonne réponse rapporte de l'XP et des pions."
+    },
     "howTitle": "Comment ça marche",
     "options": "Options",
     "modeOptions": "Options du mode",
@@ -1111,7 +1124,7 @@
     "tour": {
       "events": "Tournois en cours",
       "change": "Changer",
-      "title": "Tournois en direct",
+      "title": "Pronos live",
       "filter": "Filtrer les tournois ou un joueur…",
       "manualSlug": "Entrer un slug manuellement",
       "eval": "Évaluation",

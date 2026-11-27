@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Torneo",
+    "tournament": "Pronostici live",
     "new": "Nuova",
     "browse": "Esplora",
     "game": "Partita in corso",
@@ -375,6 +375,7 @@
     "title": "Nuova partita",
     "subtitle": "Scegli come giocherà la tua chat, regola un paio di cose e parti.",
     "tag": {
+      "live": "In diretta",
       "rush": "Contro il tempo",
       "mono": "Iscrizione join",
       "multi": "2 canali",
@@ -446,8 +447,8 @@
     "unlockTitle": "Una volta collegata",
     "unlock1": "<b>Partite Twitch</b>: le mosse votate dalla tua chat vengono giocate sulla scacchiera.",
     "unlock2": "<b>Live Chess</b>: segui in diretta una partita Chess.com, mossa per mossa.",
-    "unlock3": "<b>Torneo</b>: scegli una partita di un torneo Chess.com in corso e guardala giocare.",
-    "unlockHint": "Le schede Live Chess e Torneo compaiono nel menu appena il Phantom è collegato.",
+    "unlock3": "<b>Pronostici live</b>: scegli una partita di un torneo Chess.com in corso e guardala giocare.",
+    "unlockHint": "Le schede Live Chess e Pronostici live compaiono nel menu appena il Phantom è collegato.",
     "reqTitle": "Prima di collegarti",
     "req1": "Bluetooth attivo sul computer",
     "req2": "Chrome o Edge su computer (Web Bluetooth: non Firefox né Safari)",
@@ -900,6 +901,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "La tua chat pronostica una vera partita di torneo: la prossima mossa del giocatore e il vincitore.",
+      "how1": "Scegli una partita in corso di un torneo Chess.com: si gioca in diretta sulla scacchiera.",
+      "how2": "Prima di ogni mossa, gioca sulla scacchiera quella che ti aspetti; la tua chat propone la sua scrivendola (e4, O-O…).",
+      "how3": "Pronostica anche il vincitore (Bianco, patta, Nero): ogni risposta giusta fa guadagnare XP e pedoni."
+    },
     "howTitle": "Come funziona",
     "options": "Opzioni",
     "modeOptions": "Opzioni della modalità",
@@ -1066,7 +1073,7 @@
       "inProgress": "In corso",
       "roomEnded": "terminato",
       "roomRound": "turno {r} il {date}",
-      "title": "Tornei in diretta"
+      "title": "Pronostici live"
     },
     "review": {
       "first": "Inizio (Home)",
@@ -1169,8 +1176,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "{n} partite in diretta",
+      "one": "1 partita in diretta",
+      "none": "Nessuna partita in diretta al momento: torna durante un torneo.",
+      "cta": "Pronostica"
+    },
     "tour": {
-      "badge": "Tornei in diretta",
+      "badge": "Pronostici live",
       "title": "Pronostica i grandi tornei",
       "text": "Le partite dei tornei chess.com in corso, in diretta sul sito. Scegli un match, seguilo mossa per mossa e indovina cosa giocheranno i giocatori.",
       "cta": "Vedi i match in diretta",
@@ -1221,7 +1234,7 @@
       "watchText": "Niente da installare: scrivi la tua mossa nella chat del canale. Per ottenere XP e traguardi a tuo nome, accedi qui con Twitch."
     },
     "modes": {
-      "title": "Quattro modi di giocare",
+      "title": "Cinque modi di giocare",
       "play": "Gioca →",
       "multi": "La tua chat contro quella di un altro streamer, ognuno vota le mosse del proprio colore."
     },

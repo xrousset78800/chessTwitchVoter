@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Toernooi",
+    "tournament": "Live voorspellen",
     "new": "Nieuw",
     "browse": "Bekijken",
     "game": "Lopende partij",
@@ -375,6 +375,7 @@
     "title": "Nieuw spel",
     "subtitle": "Kies hoe je chat gaat spelen, stel een paar dingen in en ga.",
     "tag": {
+      "live": "Live",
       "rush": "Tegen de klok",
       "mono": "Inschrijving join",
       "multi": "2 kanalen",
@@ -446,8 +447,8 @@
     "unlockTitle": "Eenmaal verbonden",
     "unlock1": "<b>Twitch-partijen</b>: de zetten waarop je chat stemt worden op het bord gespeeld.",
     "unlock2": "<b>Live Chess</b>: volg een Chess.com-partij live, zet voor zet.",
-    "unlock3": "<b>Toernooi</b>: kies een partij uit een lopend Chess.com-toernooi en zie hem gespeeld worden.",
-    "unlockHint": "De tabbladen Live Chess en Toernooi verschijnen in het menu zodra de Phantom verbonden is.",
+    "unlock3": "<b>Live voorspellen</b>: kies een partij uit een lopend Chess.com-toernooi en zie hem gespeeld worden.",
+    "unlockHint": "De tabbladen Live Chess en Live voorspellen verschijnen in het menu zodra de Phantom verbonden is.",
     "reqTitle": "Voordat je verbindt",
     "req1": "Bluetooth ingeschakeld op je computer",
     "req2": "Chrome of Edge op desktop (Web Bluetooth: geen Firefox of Safari)",
@@ -900,6 +901,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "Jouw chat voorspelt een echte toernooipartij: de volgende zet van de speler en de winnaar.",
+      "how1": "Kies een lopende partij uit een Chess.com-toernooi: die wordt live op het bord gespeeld.",
+      "how2": "Speel vóór elke zet op het bord de zet die je verwacht; je chat stelt de zijne voor door hem te typen (e4, O-O…).",
+      "how3": "Voorspel ook de winnaar (wit, remise, zwart): elk goed antwoord levert XP en pionnen op."
+    },
     "howTitle": "Zo werkt het",
     "options": "Opties",
     "modeOptions": "Opties van de modus",
@@ -1066,7 +1073,7 @@
       "inProgress": "Bezig",
       "roomEnded": "afgelopen",
       "roomRound": "ronde {r} op {date}",
-      "title": "Toernooien live"
+      "title": "Live voorspellen"
     },
     "review": {
       "first": "Begin (Home)",
@@ -1169,8 +1176,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "{n} live partijen",
+      "one": "1 live partij",
+      "none": "Nu geen live partijen: kom terug tijdens een toernooi.",
+      "cta": "Voorspellen"
+    },
     "tour": {
-      "badge": "Toernooien live",
+      "badge": "Live voorspellen",
       "title": "Voorspel de grote toernooien",
       "text": "De lopende partijen van chess.com-toernooien, live op de site. Kies een wedstrijd, volg hem zet voor zet en raad wat de spelers gaan spelen.",
       "cta": "Bekijk de live wedstrijden",
@@ -1221,7 +1234,7 @@
       "watchText": "Niets te installeren: typ je zet in de chat van het kanaal. Om XP en prestaties op jouw naam te krijgen, log hier in met Twitch."
     },
     "modes": {
-      "title": "Vier manieren om te spelen",
+      "title": "Vijf manieren om te spelen",
       "play": "Spelen →",
       "multi": "Jouw chat tegen die van een andere streamer, elk stemt over de zetten van zijn eigen kleur."
     },

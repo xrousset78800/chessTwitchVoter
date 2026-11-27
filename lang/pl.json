@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Turniej",
+    "tournament": "Typy na żywo",
     "new": "Nowa gra",
     "browse": "Przeglądaj",
     "game": "Trwająca partia",
@@ -375,6 +375,7 @@
     "title": "Nowa partia",
     "subtitle": "Wybierz, jak Twój czat będzie grał, ustaw dwie-trzy rzeczy i startuj.",
     "tag": {
+      "live": "Na żywo",
       "rush": "Na czas",
       "mono": "Zapisy join",
       "multi": "2 kanały",
@@ -446,8 +447,8 @@
     "unlockTitle": "Po połączeniu",
     "unlock1": "<b>Partie Twitch</b>: ruchy wybrane przez twój czat są wykonywane na szachownicy.",
     "unlock2": "<b>Live Chess</b>: śledź partię Chess.com na żywo, ruch po ruchu.",
-    "unlock3": "<b>Turniej</b>: wybierz partię z trwającego turnieju Chess.com i oglądaj, jak się toczy.",
-    "unlockHint": "Zakładki Live Chess i Turniej pojawiają się w menu, gdy tylko Phantom zostanie połączony.",
+    "unlock3": "<b>Typy na żywo</b>: wybierz partię z trwającego turnieju Chess.com i oglądaj, jak się toczy.",
+    "unlockHint": "Zakładki Live Chess i Typy na żywo pojawiają się w menu, gdy tylko Phantom zostanie połączony.",
     "reqTitle": "Przed połączeniem",
     "req1": "Włączony Bluetooth w komputerze",
     "req2": "Chrome lub Edge na komputerze (Web Bluetooth: nie Firefox ani Safari)",
@@ -900,6 +901,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "Twój czat typuje prawdziwą partię turniejową: następny ruch zawodnika i zwycięzcę.",
+      "how1": "Wybierz trwającą partię z turnieju Chess.com: rozgrywa się na żywo na szachownicy.",
+      "how2": "Przed każdym ruchem zagraj na szachownicy ten, którego się spodziewasz; czat proponuje swój, wpisując go (e4, O-O…).",
+      "how3": "Typuj też zwycięzcę (białe, remis, czarne): każda trafna odpowiedź daje XP i pionki."
+    },
     "howTitle": "Jak to działa",
     "options": "Opcje",
     "modeOptions": "Opcje trybu",
@@ -1066,7 +1073,7 @@
       "inProgress": "W toku",
       "roomEnded": "zakończone",
       "roomRound": "runda {r} dnia {date}",
-      "title": "Turnieje na żywo"
+      "title": "Typy na żywo"
     },
     "review": {
       "first": "Początek (Home)",
@@ -1169,8 +1176,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "Partie na żywo: {n}",
+      "one": "1 partia na żywo",
+      "none": "Teraz brak partii na żywo: wróć w trakcie turnieju.",
+      "cta": "Typuj"
+    },
     "tour": {
-      "badge": "Turnieje na żywo",
+      "badge": "Typy na żywo",
       "title": "Typuj wielkie turnieje",
       "text": "Trwające partie turniejów chess.com, na żywo na stronie. Wybierz mecz, śledź go ruch po ruchu i zgaduj, co zagrają gracze.",
       "cta": "Zobacz mecze na żywo",
@@ -1221,7 +1234,7 @@
       "watchText": "Nic nie trzeba instalować: wpisz swój ruch na czacie kanału. Aby zdobywać XP i osiągnięcia na swoje konto, zaloguj się tutaj przez Twitch."
     },
     "modes": {
-      "title": "Cztery sposoby gry",
+      "title": "Pięć sposobów gry",
       "play": "Graj →",
       "multi": "Twój czat przeciw czatowi innego streamera, każdy głosuje na ruchy swojej strony."
     },

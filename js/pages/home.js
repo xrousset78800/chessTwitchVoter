@@ -3,7 +3,10 @@
  * La démo du haut rejoue un vote du chat en boucle (faux votes) sur un échiquier
  * qui suit le thème, la matière et les pièces choisis (classes de boardTheme.css).
  */
+import { go } from '../core/route.js';
+
 const tr = (key, params) => window.i18n?.t?.(key, params) ?? key;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // 1.e4 e5 2.Cf3 Cc6 : le chat choisit le 3e coup des Blancs
 const FEN = 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R';
@@ -96,6 +99,79 @@ function renderAuth() {
     document.querySelectorAll('#page-home .home-step__ok').forEach(s => { s.hidden = !user; });
 }
 
+// ───────────── Pronos live : match du moment (accueil) et point « en direct » du menu ─────────────
+const LIVE_MS = 120000;
+let live = null;            // { games } : dernière liste de /api/tournament/live
+
+const votesOf = g => (g.votes ? Object.values(g.votes).reduce((a, b) => a + (+b || 0), 0) : 0);
+const eloOf = g => (+g.white?.elo || 0) + (+g.black?.elo || 0);
+/** Match mis en avant : le plus pronostiqué, sinon le plus fort */
+const featured = () => [...(live?.games || [])].sort((a, b) => votesOf(b) - votesOf(a) || eloOf(b) - eloOf(a))[0] || null;
+
+/** Petit échiquier statique (Blancs en bas) */
+function miniBoard(fen) {
+    const rows = String(fen || '').split(' ')[0].split('/');
+    if (rows.length !== 8 || !window.pieceUrl) return '';
+    let html = '';
+    rows.forEach((row, r) => {
+        let c = 0;
+        for (const ch of row) {
+            if (/\d/.test(ch)) {
+                for (let k = 0; k < +ch; k++, c++) html += `<div class="mini-board__sq${(r + c) % 2 ? ' is-dark' : ''}"></div>`;
+            } else {
+                const p = (ch === ch.toUpperCase() ? 'w' : 'b') + ch.toUpperCase();
+                html += `<div class="mini-board__sq${(r + c) % 2 ? ' is-dark' : ''}"><img src="${esc(window.pieceUrl(p))}" alt=""></div>`;
+                c++;
+            }
+        }
+    });
+    return `<div class="mini-board">${html}</div>`;
+}
+
+function renderPick() {
+    const box = document.getElementById('home-pick');
+    if (!box || !live) return;
+    box.hidden = false;
+    const g = featured();
+    if (!g) { box.innerHTML = `<p class="home-pick__none">${esc(tr('home.picks.none'))}</p>`; return; }
+    const n = live.games.length;
+    const count = n === 1 ? tr('home.picks.one') : tr('home.picks.count', { n });
+    const url = `/tournament?event=${encodeURIComponent(g.event?.slug || '')}&room=${encodeURIComponent(g.room?.slug || '')}&game=${encodeURIComponent(g.id)}`;
+    const player = (p = {}, side) => `<span class="home-pick__player"><span class="home-pick__side is-${side}"></span>`
+        + `${p.title ? `<span class="player-title">${esc(p.title)}</span>` : ''}<span class="home-pick__name">${esc(p.name || '?')}</span>`
+        + `${p.elo ? `<small>${esc(p.elo)}</small>` : ''}</span>`;
+    box.innerHTML = `<div class="home-pick__head"><span class="home-dot"></span> ${esc(count)}</div>
+        <a class="home-pick__card" href="${esc(url)}" data-home-pick>
+            <span class="home-pick__board">${miniBoard(g.fen)}</span>
+            <span class="home-pick__info">
+                <span class="home-pick__event">${esc(g.event?.name || '')}${g.room?.name && g.room.name !== g.event?.name ? ` · ${esc(g.room.name)}` : ''}</span>
+                ${player(g.white, 'w')}${player(g.black, 'b')}
+                <span class="home-btn home-btn--primary home-pick__go"><i class="fas fa-crosshairs" aria-hidden="true"></i> ${esc(tr('home.picks.cta'))}</span>
+            </span>
+        </a>`;
+}
+
+async function loadLive() {
+    if (document.hidden && live) return;
+    try {
+        const r = await fetch('/api/tournament/live');
+        if (!r.ok) throw new Error(r.status);
+        const d = await r.json();
+        live = { games: Array.isArray(d.games) ? d.games : [] };
+    } catch {
+        live = live || { games: [] };
+    }
+    document.querySelectorAll('[data-picks-dot]').forEach(d => { d.hidden = !live.games.length; });
+    if (isActive()) renderPick();
+}
+
+/** Ouvre le match mis en avant sur la page Pronos live */
+function openPick() {
+    const g = featured();
+    go('/tournament');
+    if (g) setTimeout(() => window.tournamentPredict?.openLiveGame?.(g), 0);
+}
+
 const HomePage = {
     bound: false,
     init() {
@@ -105,6 +181,10 @@ const HomePage = {
             this.bound = true;
             page.addEventListener('click', (e) => {
                 if (e.target.closest('[data-home-login]')) return window.twitchAuth?.login();
+                if (e.target.closest('[data-home-pick]') && !(e.ctrlKey || e.metaKey || e.shiftKey || e.button)) {
+                    e.preventDefault();
+                    return openPick();
+                }
                 const scroll = e.target.closest('[data-home-scroll]');
                 if (scroll) {
                     e.preventDefault();
@@ -115,6 +195,8 @@ const HomePage = {
         renderBoard();
         renderVotes();
         renderAuth();
+        renderPick();
+        loadLive();
         clearInterval(timer);
         const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
         if (!still) timer = setInterval(tick, TICK_MS);
@@ -128,7 +210,10 @@ const HomePage = {
 
 const isActive = () => document.getElementById('page-home')?.classList.contains('is-active');
 window.addEventListener('twitchAuthChange', () => { if (isActive()) renderAuth(); });
-window.addEventListener('pieceSetChanged', () => { if (isActive()) renderBoard(); });
-window.addEventListener('languageChanged', () => { if (isActive()) { renderVotes(); renderAuth(); } });
+window.addEventListener('pieceSetChanged', () => { if (isActive()) { renderBoard(); renderPick(); } });
+window.addEventListener('languageChanged', () => { if (isActive()) { renderVotes(); renderAuth(); renderPick(); } });
+// Point « en direct » du menu Pronos live : vérifié au chargement puis toutes les 2 minutes
+loadLive();
+setInterval(loadLive, LIVE_MS);
 
 export default HomePage;

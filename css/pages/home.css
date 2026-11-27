@@ -179,7 +179,8 @@
 .home-who__card p { margin: 4px 0 0; color: var(--text-secondary); }
 
 /* Modes */
-.home-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.home-modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.home-mode__tag .home-dot { display: inline-block; width: 7px; height: 7px; margin-right: 2px; vertical-align: 1px; }
 .home-mode {
     display: flex;
     flex-direction: column;
@@ -277,6 +278,27 @@
 .home-tour { display: flex; flex-wrap: wrap; gap: 24px 40px; align-items: center; }
 .home-tour__text { flex: 1 1 380px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .home-tour__text p { margin: 0; color: var(--text-secondary); max-width: 36em; }
+/* Match du moment (home.js) : petit échiquier, joueurs, bouton Pronostiquer */
+.home-pick[hidden] { display: none; }
+.home-pick { display: flex; flex-direction: column; gap: 8px; max-width: 460px; }
+.home-pick__head { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+.home-pick__card {
+    display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px;
+    border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-card); color: var(--text-primary); text-decoration: none;
+    transition: border-color .15s, background .15s;
+}
+.home-pick__card:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.home-pick__board { width: 112px; }
+.home-pick__info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.home-pick__event { color: var(--text-secondary); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-pick__player { display: flex; align-items: center; gap: 6px; min-width: 0; font-weight: 600; }
+.home-pick__player .home-pick__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-pick__player small { color: var(--text-secondary); font-weight: 400; }
+.home-pick__side { flex: 0 0 9px; width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35); }
+.home-pick__side.is-w { background: #f2f2f2; }
+.home-pick__side.is-b { background: #222; }
+.home-pick__go { align-self: flex-start; margin-top: 4px; padding: 8px 14px; font-size: 0.9rem; }
+.home-pick__none { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
 .home-tour__points { flex: 1 1 340px; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .home-tour__points li {
     display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px;

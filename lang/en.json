@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Tournament",
+    "tournament": "Live picks",
     "new": "New",
     "browse": "Browse",
     "game": "Game in progress",
@@ -375,6 +375,7 @@
     "title": "New game",
     "subtitle": "Pick how your chat will play, tweak a thing or two, launch.",
     "tag": {
+      "live": "Live",
       "rush": "Against the clock",
       "mono": "Sign up with join",
       "multi": "2 channels",
@@ -382,8 +383,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "{n} live games",
+      "one": "1 live game",
+      "none": "No live games right now: come back during a tournament.",
+      "cta": "Predict"
+    },
     "tour": {
-      "badge": "Live tournaments",
+      "badge": "Live picks",
       "title": "Predict the big tournaments",
       "text": "Games from ongoing chess.com tournaments, live on the site. Pick a game, follow it move by move and guess what the players will play.",
       "cta": "See live games",
@@ -434,7 +441,7 @@
       "watchText": "Nothing to install: type your move in the channel's chat. To earn XP and achievements in your name, log in with Twitch here."
     },
     "modes": {
-      "title": "Four ways to play",
+      "title": "Five ways to play",
       "play": "Play →",
       "multi": "Your chat against another streamer's, each votes the moves of its side."
     },
@@ -532,8 +539,8 @@
     "unlockTitle": "Once connected",
     "unlock1": "<b>Twitch games</b>: the moves your chat votes for are played on the board.",
     "unlock2": "<b>Live Chess</b>: follow a Chess.com game live, move by move.",
-    "unlock3": "<b>Tournament</b>: pick a game from an ongoing Chess.com tournament and watch it being played.",
-    "unlockHint": "The Live Chess and Tournament tabs appear in the menu as soon as the Phantom is connected.",
+    "unlock3": "<b>Live picks</b>: pick a game from an ongoing Chess.com tournament and watch it being played.",
+    "unlockHint": "The Live Chess and Live picks tabs appear in the menu as soon as the Phantom is connected.",
     "reqTitle": "Before connecting",
     "req1": "Bluetooth turned on on your computer",
     "req2": "Chrome or Edge on desktop (Web Bluetooth: not Firefox or Safari)",
@@ -986,6 +993,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "Your chat predicts a real tournament game: the player's next move and the winner.",
+      "how1": "Pick a game in progress from a Chess.com tournament: it plays out live on the board.",
+      "how2": "Before each move, play the one you expect on the board; your chat suggests its own by typing it (e4, O-O…).",
+      "how3": "Also predict the winner (White, draw, Black): every correct answer earns XP and pawns."
+    },
     "howTitle": "How it works",
     "options": "Options",
     "modeOptions": "Mode options",
@@ -1111,7 +1124,7 @@
     "tour": {
       "events": "Ongoing tournaments",
       "change": "Change",
-      "title": "Live tournaments",
+      "title": "Live picks",
       "filter": "Filter tournaments or a player…",
       "manualSlug": "Enter a slug manually",
       "eval": "Evaluation",

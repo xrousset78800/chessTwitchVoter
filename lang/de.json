@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Turnier",
+    "tournament": "Live-Tipps",
     "new": "Neu",
     "browse": "Entdecken",
     "game": "Laufende Partie",
@@ -375,6 +375,7 @@
     "title": "Neue Partie",
     "subtitle": "Wähl, wie dein Chat spielt, stell zwei, drei Dinge ein, los geht's.",
     "tag": {
+      "live": "Live",
       "rush": "Auf Zeit",
       "mono": "Anmeldung per join",
       "multi": "2 Kanäle",
@@ -446,8 +447,8 @@
     "unlockTitle": "Sobald verbunden",
     "unlock1": "<b>Twitch-Partien</b>: Die Züge, für die dein Chat stimmt, werden auf dem Brett gespielt.",
     "unlock2": "<b>Live Chess</b>: Verfolge eine Chess.com-Partie live, Zug für Zug.",
-    "unlock3": "<b>Turnier</b>: Wähle eine Partie aus einem laufenden Chess.com-Turnier und schau zu, wie sie gespielt wird.",
-    "unlockHint": "Die Tabs Live Chess und Turnier erscheinen im Menü, sobald das Phantom verbunden ist.",
+    "unlock3": "<b>Live-Tipps</b>: Wähle eine Partie aus einem laufenden Chess.com-Turnier und schau zu, wie sie gespielt wird.",
+    "unlockHint": "Die Tabs Live Chess und Live-Tipps erscheinen im Menü, sobald das Phantom verbunden ist.",
     "reqTitle": "Vor dem Verbinden",
     "req1": "Bluetooth auf deinem Computer eingeschaltet",
     "req2": "Chrome oder Edge am Desktop (Web Bluetooth: nicht Firefox oder Safari)",
@@ -900,6 +901,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "Dein Chat tippt eine echte Turnierpartie: den nächsten Zug des Spielers und den Sieger.",
+      "how1": "Wähle eine laufende Partie aus einem Chess.com-Turnier: Sie läuft live auf dem Brett.",
+      "how2": "Spiele vor jedem Zug den erwarteten Zug auf dem Brett; dein Chat schlägt seinen vor, indem er ihn schreibt (e4, O-O…).",
+      "how3": "Tippe auch den Sieger (Weiß, Remis, Schwarz): Jede richtige Antwort bringt XP und Bauern."
+    },
     "howTitle": "So funktioniert's",
     "options": "Optionen",
     "modeOptions": "Modus-Optionen",
@@ -1066,7 +1073,7 @@
       "inProgress": "Läuft",
       "roomEnded": "beendet",
       "roomRound": "Runde {r} am {date}",
-      "title": "Live-Turniere"
+      "title": "Live-Tipps"
     },
     "review": {
       "first": "Anfang (Pos1)",
@@ -1169,8 +1176,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "{n} Live-Partien",
+      "one": "1 Live-Partie",
+      "none": "Gerade keine Live-Partie: Schau während eines Turniers wieder vorbei.",
+      "cta": "Tippen"
+    },
     "tour": {
-      "badge": "Live-Turniere",
+      "badge": "Live-Tipps",
       "title": "Tippe auf die großen Turniere",
       "text": "Die laufenden Partien der Chess.com-Turniere, live auf der Seite. Such dir ein Match aus, verfolge es Zug für Zug und errate, was die Spieler ziehen.",
       "cta": "Live-Matches ansehen",
@@ -1221,7 +1234,7 @@
       "watchText": "Nichts zu installieren: Tippe deinen Zug in den Chat des Kanals. Um XP und Erfolge auf deinen Namen zu sammeln, melde dich hier mit Twitch an."
     },
     "modes": {
-      "title": "Vier Arten zu spielen",
+      "title": "Fünf Arten zu spielen",
       "play": "Spielen →",
       "multi": "Dein Chat gegen den eines anderen Streamers, jeder stimmt über die Züge seiner Seite ab."
     },

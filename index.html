@@ -102,14 +102,14 @@
                 <button type="button" class="nav__game-quit" id="nav-game-quit" data-i18n-title="nav.quit" title="Quitter la partie" hidden><i class="fas fa-times"></i></button>
                 <a class="nav__link" data-navigate="/new" data-i18n="nav.new">Nouveau</a>
                 <a class="nav__link nav__link--h24" data-navigate="/24h"><span class="nav__game-dot"></span> <span data-i18n="nav.h24">24/24</span></a>
-                <a class="nav__link" data-navigate="/browse" data-i18n="nav.browse">Parcourir</a>
-                <a class="nav__link" data-navigate="/tournament"><span data-i18n="nav.tournament">Tournoi</span></a>
+                <a class="nav__link nav__link--picks" data-navigate="/tournament"><span class="nav__game-dot" data-picks-dot hidden></span> <span data-i18n="nav.tournament">Pronos live</span></a>
                 <span class="nav__cursor" aria-hidden="true"></span>
             </div>
 
             <div class="nav__status">
-                <!-- Records, Succès, Boutique : icônes seules, à part des autres liens -->
+                <!-- Parcourir, Records, Succès, Boutique : icônes seules, à part des autres liens -->
                 <div class="nav__icons">
+                    <a class="nav__link nav__icon" data-navigate="/browse" data-i18n-title="nav.browse" title="Parcourir"><i class="fas fa-compass" aria-hidden="true"></i><span class="visually-hidden" data-i18n="nav.browse">Parcourir</span></a>
                     <a class="nav__link nav__icon" data-navigate="/records" data-i18n-title="nav.records" title="Records"><i class="fas fa-trophy" aria-hidden="true"></i><span class="visually-hidden" data-i18n="nav.records">Records</span></a>
                     <a class="nav__link nav__icon" data-navigate="/achievements" data-i18n-title="nav.achievements" title="Succès"><i class="fas fa-medal" aria-hidden="true"></i><span class="visually-hidden" data-i18n="nav.achievements">Succès</span></a>
                     <a class="nav__link nav__icon" data-navigate="/shop" data-i18n-title="nav.shop" title="Boutique"><i class="fas fa-store" aria-hidden="true"></i><span class="visually-hidden" data-i18n="nav.shop">Boutique</span></a>
@@ -151,6 +151,26 @@
                             <div id="home-demo-votes" class="home-demo__votes"></div>
                             <div id="home-demo-chat" class="home-demo__chat"></div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Pronos live : juste sous l'accueil, avec le match du moment (home.js, /api/tournament/live) -->
+                <section class="home-band home-band--picks" id="home-picks">
+                    <div class="home-wrap home-tour">
+                        <div class="home-tour__text">
+                            <span class="home-live__badge"><span class="home-dot"></span> <span data-i18n="home.tour.badge">Tournois en direct</span></span>
+                            <h2 class="home-h2" data-i18n="home.tour.title">Pronostique les grands tournois</h2>
+                            <p data-i18n="home.tour.text">Les parties des tournois chess.com en cours, en direct sur le site. Choisis un match, suis-le coup par coup et devine ce que les joueurs vont jouer.</p>
+                            <div class="home-pick" id="home-pick" hidden></div>
+                            <div class="home-actions">
+                                <a class="home-btn home-btn--ghost" data-navigate="/tournament" data-i18n="home.tour.cta">Voir les matchs en direct</a>
+                            </div>
+                        </div>
+                        <ul class="home-tour__points">
+                            <li><i class="fas fa-crosshairs" aria-hidden="true"></i><span><strong data-i18n="home.tour.p1">Devine le prochain coup</strong><small data-i18n="home.tour.p1d">Joue le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.</small></span></li>
+                            <li><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="home.tour.p2">Choisis le vainqueur</strong><small data-i18n="home.tour.p2d">Blancs, nulle ou Noirs, à tout moment. La cote suit l'évaluation de la partie : miser sur l'outsider rapporte plus.</small></span></li>
+                            <li><i class="fas fa-magnifying-glass" aria-hidden="true"></i><span><strong data-i18n="home.tour.p3">Tous les matchs au même endroit</strong><small data-i18n="home.tour.p3d">Les parties en cours avec les votes de la communauté, et la recherche par nom de joueur.</small></span></li>
+                        </ul>
                     </div>
                 </section>
 
@@ -219,7 +239,7 @@
 
                 <section class="home-wrap home-modes-wrap">
                     <div class="home-head home-head--row">
-                        <h2 class="home-h2" data-i18n="home.modes.title">Quatre façons de jouer</h2>
+                        <h2 class="home-h2" data-i18n="home.modes.title">Cinq façons de jouer</h2>
                     </div>
                     <div class="home-modes">
                         <a class="home-mode" data-navigate="/rush">
@@ -246,24 +266,12 @@
                             <p data-i18n="newInfo.free.desc">Tout le chat vote, sans inscription : vote libre, problèmes, contre Stockfish, chat contre chat…</p>
                             <span class="home-mode__go" data-i18n="home.modes.play">Jouer →</span>
                         </a>
-                    </div>
-                </section>
-
-                <section class="home-band">
-                    <div class="home-wrap home-tour">
-                        <div class="home-tour__text">
-                            <span class="home-live__badge"><span class="home-dot"></span> <span data-i18n="home.tour.badge">Tournois en direct</span></span>
-                            <h2 class="home-h2" data-i18n="home.tour.title">Pronostique les grands tournois</h2>
-                            <p data-i18n="home.tour.text">Les parties des tournois chess.com en cours, en direct sur le site. Choisis un match, suis-le coup par coup et devine ce que les joueurs vont jouer.</p>
-                            <div class="home-actions">
-                                <a class="home-btn home-btn--primary" data-navigate="/tournament" data-i18n="home.tour.cta">Voir les matchs en direct</a>
-                            </div>
-                        </div>
-                        <ul class="home-tour__points">
-                            <li><i class="fas fa-crosshairs" aria-hidden="true"></i><span><strong data-i18n="home.tour.p1">Devine le prochain coup</strong><small data-i18n="home.tour.p1d">Joue le coup sur l'échiquier avant le joueur. Trouvé : XP et pions, avec un bonus toutes les 5 bonnes réponses d'affilée.</small></span></li>
-                            <li><i class="fas fa-trophy" aria-hidden="true"></i><span><strong data-i18n="home.tour.p2">Choisis le vainqueur</strong><small data-i18n="home.tour.p2d">Blancs, nulle ou Noirs, à tout moment. La cote suit l'évaluation de la partie : miser sur l'outsider rapporte plus.</small></span></li>
-                            <li><i class="fas fa-magnifying-glass" aria-hidden="true"></i><span><strong data-i18n="home.tour.p3">Tous les matchs au même endroit</strong><small data-i18n="home.tour.p3d">Les parties en cours avec les votes de la communauté, et la recherche par nom de joueur.</small></span></li>
-                        </ul>
+                        <a class="home-mode home-mode--live" data-navigate="/tournament">
+                            <span class="home-mode__top"><span class="home-mode__icon"><i class="fas fa-crosshairs"></i></span><span class="home-mode__tag"><span class="home-dot"></span> <span data-i18n="newTabs.tag.live">En direct</span></span></span>
+                            <h3 data-i18n="nav.tournament">Pronos live</h3>
+                            <p data-i18n="newInfo.live.desc">Ton chat pronostique un vrai match de tournoi : le prochain coup du joueur et le vainqueur.</p>
+                            <span class="home-mode__go" data-i18n="home.modes.play">Jouer →</span>
+                        </a>
                     </div>
                 </section>
 
@@ -360,6 +368,20 @@
                         <span class="new-tab__desc" data-i18n="newInfo.free.desc">Tout le chat vote, sans inscription : vote libre, problèmes, contre Stockfish, chat contre chat…</span>
                         <span class="new-tab__more">
                             <span class="new-tab__intro" data-i18n="newInfo.free.intro">Pas d'inscription ici : tout ton chat vote, coup après coup. Pars d'une configuration prête à l'emploi, ou choisis Personnaliser pour régler le mode de jeu et chaque option du vote.</span>
+                        </span>
+                    </a>
+                    <!-- Pronos live : un vrai match de tournoi, en direct -->
+                    <a class="new-tab new-tab--live" data-navigate="/tournament" data-new-tab="tournament">
+                        <span class="new-tab__top"><span class="new-tab__icon"><i class="fas fa-crosshairs" aria-hidden="true"></i></span><span class="new-tab__tag"><span class="nav__game-dot"></span> <span data-i18n="newTabs.tag.live">En direct</span></span></span>
+                        <span class="new-tab__title" data-i18n="nav.tournament">Pronos live</span>
+                        <span class="new-tab__desc" data-i18n="newInfo.live.desc">Ton chat pronostique un vrai match de tournoi : le prochain coup du joueur et le vainqueur.</span>
+                        <span class="new-tab__more">
+                            <span class="new-tab__how-title" data-i18n="newInfo.howTitle">Comment ça marche</span>
+                            <ol class="preset__how new-tab__how">
+                                <li data-i18n="newInfo.live.how1">Choisis un match en cours d'un tournoi Chess.com : il se joue en direct sur l'échiquier.</li>
+                                <li data-i18n="newInfo.live.how2">Avant chaque coup, joue sur l'échiquier celui que tu attends ; ton chat propose le sien en l'écrivant (e4, O-O…).</li>
+                                <li data-i18n="newInfo.live.how3">Pronostique aussi le vainqueur (Blancs, nulle, Noirs) : chaque bonne réponse rapporte de l'XP et des pions.</li>
+                            </ol>
                         </span>
                     </a>
                     </nav>

@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Turnuva",
+    "tournament": "Canlı tahmin",
     "new": "Yeni",
     "browse": "Göz at",
     "game": "Süren oyun",
@@ -375,6 +375,7 @@
     "title": "Yeni oyun",
     "subtitle": "Sohbetinin nasıl oynayacağını seç, iki üç ayar yap, başlat.",
     "tag": {
+      "live": "Canlı",
       "rush": "Zamana karşı",
       "mono": "join ile kayıt",
       "multi": "2 kanal",
@@ -446,8 +447,8 @@
     "unlockTitle": "Bağlandıktan sonra",
     "unlock1": "<b>Twitch oyunları</b>: chat'inin oyladığı hamleler tahtada oynanır.",
     "unlock2": "<b>Live Chess</b>: bir Chess.com oyununu canlı, hamle hamle takip et.",
-    "unlock3": "<b>Turnuva</b>: süren bir Chess.com turnuvasından bir oyun seç ve oynanışını izle.",
-    "unlockHint": "Live Chess ve Turnuva sekmeleri, Phantom bağlanır bağlanmaz menüde görünür.",
+    "unlock3": "<b>Canlı tahmin</b>: süren bir Chess.com turnuvasından bir oyun seç ve oynanışını izle.",
+    "unlockHint": "Live Chess ve Canlı tahmin sekmeleri, Phantom bağlanır bağlanmaz menüde görünür.",
     "reqTitle": "Bağlanmadan önce",
     "req1": "Bilgisayarında Bluetooth açık",
     "req2": "Masaüstünde Chrome veya Edge (Web Bluetooth: Firefox ve Safari olmaz)",
@@ -900,6 +901,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "Sohbetin gerçek bir turnuva oyununu tahmin eder: oyuncunun bir sonraki hamlesini ve kazananı.",
+      "how1": "Bir Chess.com turnuvasından süren bir oyun seç: tahtada canlı oynanır.",
+      "how2": "Her hamleden önce beklediğin hamleyi tahtada oyna; sohbetin kendi hamlesini yazarak önerir (e4, O-O…).",
+      "how3": "Kazananı da tahmin et (beyaz, berabere, siyah): her doğru cevap XP ve piyon kazandırır."
+    },
     "howTitle": "Nasıl çalışır",
     "options": "Seçenekler",
     "modeOptions": "Mod seçenekleri",
@@ -1066,7 +1073,7 @@
       "inProgress": "Devam ediyor",
       "roomEnded": "bitti",
       "roomRound": "{r}. tur {date}",
-      "title": "Canlı turnuvalar"
+      "title": "Canlı tahmin"
     },
     "review": {
       "first": "Baş (Home)",
@@ -1169,8 +1176,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "{n} canlı oyun",
+      "one": "1 canlı oyun",
+      "none": "Şu anda canlı oyun yok: bir turnuva sırasında tekrar gel.",
+      "cta": "Tahmin et"
+    },
     "tour": {
-      "badge": "Canlı turnuvalar",
+      "badge": "Canlı tahmin",
       "title": "Büyük turnuvalar için tahmin yap",
       "text": "Devam eden chess.com turnuva oyunları sitede canlı. Bir maç seç, hamle hamle takip et ve oyuncuların ne oynayacağını tahmin et.",
       "cta": "Canlı maçları gör",
@@ -1221,7 +1234,7 @@
       "watchText": "Kurulacak bir şey yok: hamleni kanalın sohbetine yaz. XP ve başarımlar adına yazılsın istiyorsan burada Twitch ile giriş yap."
     },
     "modes": {
-      "title": "Oynamanın dört yolu",
+      "title": "Oynamanın beş yolu",
       "play": "Oyna →",
       "multi": "Senin sohbetin başka bir yayıncının sohbetine karşı, herkes kendi tarafının hamlelerine oy verir."
     },

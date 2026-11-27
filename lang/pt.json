@@ -6,7 +6,7 @@
     "mono": "Mono",
     "multi": "Multi",
     "live": "Live Chess",
-    "tournament": "Torneio",
+    "tournament": "Palpites ao vivo",
     "new": "Novo",
     "browse": "Explorar",
     "game": "Partida em andamento",
@@ -375,6 +375,7 @@
     "title": "Nova partida",
     "subtitle": "Escolha como seu chat vai jogar, ajuste duas ou três coisas e comece.",
     "tag": {
+      "live": "Ao vivo",
       "rush": "Contra o relógio",
       "mono": "Inscrição join",
       "multi": "2 canais",
@@ -446,8 +447,8 @@
     "unlockTitle": "Depois de conectar",
     "unlock1": "<b>Partidas Twitch</b>: os lances votados pelo seu chat são jogados no tabuleiro.",
     "unlock2": "<b>Live Chess</b>: acompanhe uma partida do Chess.com ao vivo, lance a lance.",
-    "unlock3": "<b>Torneio</b>: escolha uma partida de um torneio do Chess.com em andamento e assista a ela sendo jogada.",
-    "unlockHint": "As abas Live Chess e Torneio aparecem no menu assim que o Phantom é conectado.",
+    "unlock3": "<b>Palpites ao vivo</b>: escolha uma partida de um torneio do Chess.com em andamento e assista a ela sendo jogada.",
+    "unlockHint": "As abas Live Chess e Palpites ao vivo aparecem no menu assim que o Phantom é conectado.",
     "reqTitle": "Antes de conectar",
     "req1": "Bluetooth ativado no computador",
     "req2": "Chrome ou Edge no computador (Web Bluetooth: não funciona no Firefox nem no Safari)",
@@ -900,6 +901,12 @@
     }
   },
   "newInfo": {
+    "live": {
+      "desc": "Seu chat dá palpites numa partida real de torneio: o próximo lance do jogador e o vencedor.",
+      "how1": "Escolha uma partida em andamento de um torneio do Chess.com: ela é jogada ao vivo no tabuleiro.",
+      "how2": "Antes de cada lance, faça no tabuleiro o que você espera; seu chat sugere o dele digitando-o (e4, O-O…).",
+      "how3": "Dê também um palpite sobre o vencedor (brancas, empate, pretas): cada acerto rende XP e peões."
+    },
     "howTitle": "Como funciona",
     "options": "Opções",
     "modeOptions": "Opções do modo",
@@ -1066,7 +1073,7 @@
       "inProgress": "Em andamento",
       "roomEnded": "encerrado",
       "roomRound": "rodada {r} em {date}",
-      "title": "Torneios ao vivo"
+      "title": "Palpites ao vivo"
     },
     "review": {
       "first": "Início (Home)",
@@ -1169,8 +1176,14 @@
     }
   },
   "home": {
+    "picks": {
+      "count": "{n} partidas ao vivo",
+      "one": "1 partida ao vivo",
+      "none": "Nenhuma partida ao vivo agora: volte durante um torneio.",
+      "cta": "Dar palpite"
+    },
     "tour": {
-      "badge": "Torneios ao vivo",
+      "badge": "Palpites ao vivo",
       "title": "Dê palpites nos grandes torneios",
       "text": "As partidas dos torneios do chess.com em andamento, ao vivo no site. Escolha um jogo, acompanhe lance a lance e adivinhe o que os jogadores vão jogar.",
       "cta": "Ver jogos ao vivo",
@@ -1221,7 +1234,7 @@
       "watchText": "Nada para instalar: digite seu lance no chat do canal. Para ganhar XP e conquistas no seu nome, conecte-se com a Twitch aqui."
     },
     "modes": {
-      "title": "Quatro jeitos de jogar",
+      "title": "Cinco jeitos de jogar",
       "play": "Jogar →",
       "multi": "Seu chat contra o de outro streamer, cada um vota nos lances do seu lado."
     },

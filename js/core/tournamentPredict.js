@@ -857,7 +857,7 @@
         for (const sq of want) document.querySelector(`#liveBoardT [data-square="${sq}"]`)?.classList.add('highlight-last-move-live');
     }
 
-    window.tournamentPredict = { chatVote, chatWinner, canDrag, dropMove };
+    window.tournamentPredict = { chatVote, chatWinner, canDrag, dropMove, openLiveGame };
 
     // ───────────── Colonne de gauche : tournois en cours / matchs en direct ─────────────
     const SIDE_KEY = 'cgTourSide';
