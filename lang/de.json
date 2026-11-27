@@ -867,6 +867,9 @@
     "camUnsupported": "Dein Browser kann dieses Video nicht abspielen: Bitte aktualisiere ihn (aktuelles Chrome, Edge, Firefox oder Safari)",
     "liveShow": "Anzeigen",
     "liveHide": "Einklappen",
+    "liveFloat": "Kleines Fenster",
+    "liveOverlay": "Auf dem Brett einblenden",
+    "liveOpacity": "Video-Deckkraft",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Regie",

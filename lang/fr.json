@@ -959,6 +959,9 @@
     "camUnsupported": "Ton navigateur ne peut pas lire cette vidéo : mets-le à jour (Chrome, Edge, Firefox ou Safari récents)",
     "liveShow": "Afficher",
     "liveHide": "Replier",
+    "liveFloat": "Petite fenêtre",
+    "liveOverlay": "Incruster sur l'échiquier",
+    "liveOpacity": "Opacité de la vidéo",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Régie",

@@ -867,6 +867,9 @@
     "camUnsupported": "Seu navegador não consegue reproduzir este vídeo: atualize-o (Chrome, Edge, Firefox ou Safari recentes)",
     "liveShow": "Mostrar",
     "liveHide": "Recolher",
+    "liveFloat": "Janela pequena",
+    "liveOverlay": "Sobrepor no tabuleiro",
+    "liveOpacity": "Opacidade do vídeo",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Controle",

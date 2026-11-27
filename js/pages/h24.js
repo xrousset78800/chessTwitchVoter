@@ -85,6 +85,10 @@ const H24Page = {
     camPlayer: null,
     camWatching: false,
     liveFolded: (() => { try { return localStorage.getItem('h24LiveFolded') === '1'; } catch { return false; } })(),
+    // Vue réelle : incrustée sur l'échiquier (en fondu) ou petite fenêtre déplaçable ; opacité, position et largeur gardées
+    liveMode: (() => { try { return localStorage.getItem('h24LiveMode') === 'float' ? 'float' : 'overlay'; } catch { return 'overlay'; } })(),
+    liveOpacity: (() => { try { const v = parseFloat(localStorage.getItem('h24LiveOpacity')); return v >= 0.15 && v <= 1 ? v : 0.5; } catch { return 0.5; } })(),
+    liveFloat: (() => { try { return JSON.parse(localStorage.getItem('h24LiveFloat') || 'null'); } catch { return null; } })(),
     // Régie fermée par défaut : le petit bouton orange de la barre d'outils l'ouvre
     regieFolded: (() => { try { return localStorage.getItem('h24RegieOpen') !== '1'; } catch { return true; } })(),
     // Panneaux Équipes / Historique repliés (retenu par navigateur)
@@ -198,6 +202,7 @@ const H24Page = {
             const rg = e.target.closest('[data-h24-regie]');
             if (rg) { this.regieAction(rg.dataset.h24Regie); return; }
             if (e.target.closest('[data-h24-live-toggle]')) { this.foldLive(!this.liveFolded); return; }
+            if (e.target.closest('[data-h24-live-mode]')) { this.setLiveMode(this.liveMode === 'overlay' ? 'float' : 'overlay'); return; }
             if (e.target.closest('[data-h24-mute]')) { this.setVolume(this.muted && !this.volume ? 0.6 : this.volume, !this.muted); return; }
             if (e.target.closest('[data-h24-bot-add]')) { this.socket?.emit('h24:regie', { addBot: this.botLevel || 1500 }); return; }
             const rb = e.target.closest('[data-h24-bot-remove]');
@@ -893,6 +898,102 @@ const H24Page = {
         if (msg.textContent !== text) { msg.textContent = text; msg.hidden = !text; }
     },
 
+    setLiveMode(mode) {
+        this.liveMode = mode === 'float' ? 'float' : 'overlay';
+        try { localStorage.setItem('h24LiveMode', this.liveMode); } catch {}
+        this.renderLive();
+    },
+
+    saveLiveFloat() {
+        try { localStorage.setItem('h24LiveFloat', JSON.stringify(this.liveFloat)); } catch {}
+    },
+
+    /** Petite fenêtre : toujours entièrement visible (fenêtre du navigateur redimensionnée, écran plus petit…) */
+    clampLive(box) {
+        const w = box.offsetWidth || 360, h = box.offsetHeight || 220;
+        const f = this.liveFloat || {};
+        const x = Number.isFinite(f.x) ? f.x : innerWidth - w - 16;
+        const y = Number.isFinite(f.y) ? f.y : innerHeight - h - 110;
+        box.style.left = `${Math.round(Math.max(0, Math.min(x, innerWidth - w)))}px`;
+        box.style.top = `${Math.round(Math.max(0, Math.min(y, innerHeight - h)))}px`;
+    },
+
+    /** Place le bloc selon le mode : sur l'échiquier, ou en petite fenêtre au-dessus de la page */
+    placeLive(box) {
+        if (!this._liveBound) this.bindLive(box);
+        const float = this.liveMode === 'float';
+        const host = float ? $('page-h24') : $('h24-board-wrap');
+        if (host && box.parentElement !== host) host.appendChild(box);
+        box.classList.toggle('is-overlay', !float);
+        box.classList.toggle('is-float', float);
+        box.style.setProperty('--live-opacity', String(this.liveOpacity));
+        const op = $('h24-live-opacity');
+        if (op && document.activeElement !== op) op.value = String(Math.round(this.liveOpacity * 100));
+        if (float) {
+            const w = this.liveFloat?.w;
+            box.style.width = w ? `${Math.max(200, Math.min(w, innerWidth * 0.9))}px` : '';
+            if (!box.hidden) this.clampLive(box);
+        } else {
+            box.style.left = box.style.top = box.style.width = '';
+        }
+        const md = $('h24-live-mode');
+        if (md) {
+            md.innerHTML = `<i class="fas fa-${float ? 'chess-board' : 'window-restore'}"></i>`;
+            md.title = float ? t('h24.liveOverlay', null, 'Incruster sur l\'échiquier') : t('h24.liveFloat', null, 'Petite fenêtre');
+        }
+    },
+
+    /** Glisser la petite fenêtre par sa barre, garder sa largeur quand on la redimensionne, régler l'opacité */
+    bindLive(box) {
+        this._liveBound = true;
+        const head = box.querySelector('.h24-live__head');
+        let drag = null;
+        head?.addEventListener('pointerdown', (e) => {
+            if (!box.classList.contains('is-float') || e.button || e.target.closest('button, a, input')) return;
+            const r = box.getBoundingClientRect();
+            drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
+            head.setPointerCapture?.(e.pointerId);
+            box.classList.add('is-dragging');
+            e.preventDefault();
+        });
+        head?.addEventListener('pointermove', (e) => {
+            if (!drag || e.pointerId !== drag.id) return;
+            this.liveFloat = { ...(this.liveFloat || {}), x: e.clientX - drag.dx, y: e.clientY - drag.dy };
+            this.clampLive(box);
+        });
+        const end = (e) => {
+            if (!drag || e.pointerId !== drag.id) return;
+            drag = null;
+            box.classList.remove('is-dragging');
+            // Position réelle (après les bornes de l'écran)
+            this.liveFloat = { ...(this.liveFloat || {}), x: box.offsetLeft, y: box.offsetTop };
+            this.saveLiveFloat();
+        };
+        head?.addEventListener('pointerup', end);
+        head?.addEventListener('pointercancel', end);
+        // Coin de redimensionnement : la nouvelle largeur est gardée
+        if (typeof ResizeObserver === 'function') {
+            let timer = null;
+            new ResizeObserver(() => {
+                if (!box.classList.contains('is-float') || box.hidden || !box.style.width && !box.offsetWidth) return;
+                const w = Math.round(box.offsetWidth);
+                if (!w || w === this.liveFloat?.w) return;
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    this.liveFloat = { ...(this.liveFloat || {}), w };
+                    this.clampLive(box);
+                    this.saveLiveFloat();
+                }, 200);
+            }).observe(box);
+        }
+        $('h24-live-opacity')?.addEventListener('input', (e) => {
+            this.liveOpacity = Math.max(0.15, Math.min(1, Number(e.target.value) / 100 || 0.5));
+            box.style.setProperty('--live-opacity', String(this.liveOpacity));
+            try { localStorage.setItem('h24LiveOpacity', String(this.liveOpacity)); } catch {}
+        });
+        window.addEventListener('resize', () => { if (box.classList.contains('is-float') && !box.hidden) this.clampLive(box); });
+    },
+
     foldLive(folded) {
         this.liveFolded = folded;
         try { localStorage.setItem('h24LiveFolded', folded ? '1' : '0'); } catch {}
@@ -907,6 +1008,7 @@ const H24Page = {
         const camOn = !!this.state?.regie?.cam;   // la caméra de la régie passe avant la chaîne Twitch
         box.hidden = !channel && !camOn;
         box.classList.toggle('is-folded', this.liveFolded);
+        this.placeLive(box);
         const frame = $('h24-live-frame');
         const src = this.liveFolded ? ''
             : camOn ? 'cam'

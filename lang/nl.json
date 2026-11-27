@@ -867,6 +867,9 @@
     "camUnsupported": "Je browser kan deze video niet afspelen: werk hem bij (recente Chrome, Edge, Firefox of Safari)",
     "liveShow": "Tonen",
     "liveHide": "Inklappen",
+    "liveFloat": "Klein venster",
+    "liveOverlay": "Over het bord leggen",
+    "liveOpacity": "Dekking van de video",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Regie",

@@ -867,6 +867,9 @@
     "camUnsupported": "Il tuo browser non riesce a riprodurre questo video: aggiornalo (Chrome, Edge, Firefox o Safari recenti)",
     "liveShow": "Mostra",
     "liveHide": "Riduci",
+    "liveFloat": "Finestra piccola",
+    "liveOverlay": "Sovrapponi alla scacchiera",
+    "liveOpacity": "Opacità del video",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Regia",

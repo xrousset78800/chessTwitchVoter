@@ -867,6 +867,9 @@
     "camUnsupported": "Твой браузер не может воспроизвести это видео: обнови его (свежий Chrome, Edge, Firefox или Safari)",
     "liveShow": "Показать",
     "liveHide": "Свернуть",
+    "liveFloat": "Маленькое окно",
+    "liveOverlay": "Наложить на доску",
+    "liveOpacity": "Прозрачность видео",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Пульт",

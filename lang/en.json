@@ -959,6 +959,9 @@
     "camUnsupported": "Your browser can't play this video: please update it (recent Chrome, Edge, Firefox or Safari)",
     "liveShow": "Show",
     "liveHide": "Fold",
+    "liveFloat": "Small window",
+    "liveOverlay": "Overlay on the board",
+    "liveOpacity": "Video opacity",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Control room",

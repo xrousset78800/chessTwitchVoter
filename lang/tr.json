@@ -867,6 +867,9 @@
     "camUnsupported": "Tarayıcın bu videoyu oynatamıyor: lütfen güncelle (güncel Chrome, Edge, Firefox veya Safari)",
     "liveShow": "Göster",
     "liveHide": "Daralt",
+    "liveFloat": "Küçük pencere",
+    "liveOverlay": "Tahtanın üzerine yerleştir",
+    "liveOpacity": "Video opaklığı",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Reji",

@@ -867,6 +867,9 @@
     "camUnsupported": "Twoja przeglądarka nie może odtworzyć tego wideo: zaktualizuj ją (aktualny Chrome, Edge, Firefox lub Safari)",
     "liveShow": "Pokaż",
     "liveHide": "Zwiń",
+    "liveFloat": "Małe okno",
+    "liveOverlay": "Nałóż na szachownicę",
+    "liveOpacity": "Krycie wideo",
     "pausePhantom": "Phantom…",
     "regie": {
       "title": "Reżyserka",

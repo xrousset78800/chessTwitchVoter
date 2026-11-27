@@ -1076,6 +1076,10 @@
                             <div class="h24-live__head">
                                 <span class="h24-live__title"><i class="fas fa-video"></i> <span data-i18n="h24.liveTitle">Vue réelle</span></span>
                                 <a class="h24-live__link" id="h24-live-link" target="_blank" rel="noopener"></a>
+                                <!-- Incrustée : opacité de la vidéo posée sur l'échiquier -->
+                                <input type="range" class="h24-live__opacity" id="h24-live-opacity" min="15" max="100" step="5" value="50" data-i18n-title="h24.liveOpacity" title="Opacité de la vidéo">
+                                <!-- Bascule : incrustée sur l'échiquier ↔ petite fenêtre déplaçable -->
+                                <button type="button" class="h24-live__toggle" id="h24-live-mode" data-h24-live-mode><i class="fas fa-window-restore"></i></button>
                                 <button type="button" class="h24-live__toggle" id="h24-live-toggle" data-h24-live-toggle><i class="fas fa-chevron-up"></i></button>
                             </div>
                             <div class="h24-live__frame" id="h24-live-frame"></div>
