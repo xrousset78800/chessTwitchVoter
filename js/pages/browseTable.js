@@ -179,10 +179,11 @@ const BrowseTable = {
             return true;
         });
         const by = {
-            spectators: (a, b) => (b.spectators || 0) - (a.spectators || 0) || (b.moveCount || 0) - (a.moveCount || 0),
+            // À spectateurs égaux : les parties les moins avancées d'abord
+            spectators: (a, b) => (b.spectators || 0) - (a.spectators || 0) || (a.moveCount || 0) - (b.moveCount || 0),
             // Moins de coups d'abord (parties qui commencent)
             moves:      (a, b) => (a.moveCount || 0) - (b.moveCount || 0),
-            players:    (a, b) => (b.players || 0) - (a.players || 0),
+            players:    (a, b) => (b.players || 0) - (a.players || 0) || (a.moveCount || 0) - (b.moveCount || 0),
             recent:     (a, b) => (b.startedAt || 0) - (a.startedAt || 0)
         }[f.sort] || (() => 0);
         return list.sort(by);
