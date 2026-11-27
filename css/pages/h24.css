@@ -786,11 +786,3 @@ body #page-h24 #h24-votes-panel.is-live #h24-wheel-area.wheel-area--docked { opa
 .h24-vlist { display: flex; flex-direction: column; padding: 4px 2px; }
 .h24-vlist > .live-card { margin: 0; }
 .h24-vlist .tv-list { max-height: 420px; }
-/* Pièce du coup, à la couleur du camp au trait */
-.tv-grp .tv-piece { flex: 0 0 20px; width: 20px; height: 20px; margin-right: -4px; object-fit: contain; }
-/* Tirage : la ligne du coup tiré s'allume, les autres s'effacent, le votant tiré est mis en avant */
-.tv-groups.has-drawn > .tv-grp:not(.is-drawn) { opacity: .45; }
-.tv-grp.is-drawn { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 3px 0 0 var(--accent); border-radius: 6px; }
-.tv-grp.is-drawn .tv-move { color: var(--accent); }
-.tv-faces .tv-pic.is-winner { position: relative; z-index: 2; flex-basis: 26px; width: 26px; height: 26px; margin-left: 0; margin-right: 4px;
-    box-shadow: 0 0 0 2px var(--accent), 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent); }

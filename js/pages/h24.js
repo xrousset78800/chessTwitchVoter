@@ -1606,7 +1606,7 @@ const H24Page = {
         clearTimeout(this.pvTimer);
         if (flash) this.pvTimer = setTimeout(() => this.render(), 5100 - (Date.now() + (this.skew || 0) - flash.at));
         const rows = flash ? flash.who : (P.guesses || []);
-        const cardVoters = this.votersCard(rows, { flash: !!flash, over, turn: flash ? null : g.turn,
+        const cardVoters = this.votersCard(rows, { flash: !!flash, over, turn: flash ? (g.turn === 'w' ? 'b' : 'w') : g.turn,
             gain: `+1 pt${P.moveCoins ? ` · +${P.moveCoins} <i class="fas fa-chess-pawn"></i>` : ''}`,
             footer: flash ? `<p class="tp-hint">${esc(fmtMove(flash.san))} · ${esc(t('h24.pred.found', { n: flash.n, total: flash.total }, `${flash.n} / ${flash.total} l'avaient trouvé`))}</p>` : '' });
         // Pronostics dans la colonne de gauche, comme sur la page Tournois ; la partie et les votants à droite
@@ -1620,61 +1620,15 @@ const H24Page = {
     /** Carte « Votants » de la page Tournois : une ligne par coup (part des votes, photos, nombre) ;
      *  flash : la ligne du coup joué reçoit ✓ (et le gain), les autres ✗ */
     votersCard(rows, { flash = false, over = false, gain = '', footer = '', empty = '', turn = null, drawn = null, winner = null } = {}) {
-        const me = this.me.login;
-        const who = (v) => (v.u || '?') + (v.v === 'chat' ? ` · ${t('voters.chat', null, 'Chat Twitch')}` : v.v === 'bot' ? ` · ${t('voters.bot', null, 'Bot de test')}` : '');
-        const face = (v) => {
-            const a = ` data-u="${esc(v.u || '')}" title="${esc(who(v))}"`, w = v.u && v.u === winner ? ' is-winner' : '';
-            return v.v === 'bot' ? `<span class="tv-pic is-bot${w}"${a}><i class="fas fa-robot"></i></span>`
-                : v.p ? `<img class="tv-pic${w}" src="${esc(v.p)}" alt="" loading="lazy" referrerpolicy="no-referrer"${a}>`
-                : `<span class="tv-pic${w}"${a}>${esc((v.u || '?')[0].toUpperCase())}</span>`;
-        };
-        // Pièce jouée, à la couleur du camp au trait (jeu de pièces choisi)
-        const piece = (m) => {
-            if (!turn || !window.pieceUrl) return '';
-            const c = String(m || '')[0];
-            const p = c === 'O' || c === '0' ? 'K' : 'KQRBN'.includes(c) ? c : 'P';
-            return `<img class="tv-piece" src="${esc(window.pieceUrl(turn + p))}" alt="">`;
-        };
-        const groups = [...rows.reduce((m, v) => {
-            if (!m.has(v.m)) m.set(v.m, []);
-            m.get(v.m).push(v);
-            return m;
-        }, new Map()).entries()].map(([m, list]) => ({ m, list, hit: !!(flash && list[0].hit) }))
-            .sort((a, b) => (b.hit - a.hit) || b.list.length - a.list.length);
-        const MAXF = 10;
-        const row = (gr, i) => {
-            const mark = !flash ? '' : gr.hit
-                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${gain ? `<b class="tv-gain">${gain}</b>` : ''}</span>`
-                : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
-            const more = gr.list.length - MAXF;
-            const isDrawn = drawn && gr.m === drawn;
-            // Le vainqueur du tirage en tête de sa ligne
-            if (isDrawn && winner) gr.list = [...gr.list.filter(v => v.u === winner), ...gr.list.filter(v => v.u !== winner)];
-            return `<li class="tv-item tv-grp${gr.list.some(v => v.u === me) ? ' is-me' : ''}${flash ? (gr.hit ? ' is-hit' : ' is-miss') : ''}${isDrawn ? ' is-drawn' : ''}" data-m="${esc(gr.m)}" style="--i:${i};--p:${Math.round(100 * gr.list.length / rows.length)}%">
-                ${piece(gr.m)}<span class="tv-move">${esc(fmtMove(gr.m))}</span>
-                <span class="tv-faces">${gr.list.slice(0, MAXF).map(face).join('')}${more > 0 ? `<span class="tv-more">+${more}</span>` : ''}</span>
-                <span class="tv-n">${gr.list.length}</span>${mark}</li>`;
-        };
-        return `<div class="live-card tv-card">
-            <div class="live-card__title tv-head"><span><i class="fas fa-users"></i> ${esc(t('voters.title', null, 'Votants'))}</span> <span class="tv-headright"><small class="tv-count">${rows.length || ''}</small></span></div>
-            <div class="tv-body">
-                ${rows.length ? `<ul class="tv-list tv-groups${flash ? ' is-flash' : ''}${drawn ? ' has-drawn' : ''}">${groups.map(row).join('')}</ul>`
-                    : `<p class="tp-hint">${esc(over ? t('predict.ended', null, 'Partie terminée') : empty || t('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
-                ${footer}
-            </div></div>`;
+        const src = v => v.v === 'bot' ? 'bot' : v.v === 'chat' ? 'chat' : 'site';
+        const list = rows.map(v => ({ login: v.u, name: v.u, pic: v.p, src: src(v), key: v.m, label: fmtMove(v.m), san: v.m, hit: !!v.hit }));
+        return window.VotersCard.card(list, { me: this.me.login, turn, flash, gain, drawn, winner, footer,
+            empty: over ? t('predict.ended', null, 'Partie terminée') : empty });
     },
 
-    /** Tirage terminé : la ligne du coup tiré passe en tête et s'allume, le votant tiré au sort est mis en avant */
+    /** Tirage terminé : la ligne du coup tiré passe en tête et s'allume, le votant tiré est mis en avant */
     markVoters(move, voter) {
-        const ul = $('h24-votes')?.querySelector('.h24-vlist .tv-list');
-        if (!ul || !move) return;
-        const row = [...ul.querySelectorAll('.tv-grp')].find(li => li.dataset.m === move);
-        if (!row) return;
-        ul.classList.add('has-drawn');
-        row.classList.add('is-drawn');
-        ul.prepend(row);
-        const face = voter && [...row.querySelectorAll('.tv-pic')].find(f => f.dataset.u === voter);
-        if (face) { face.classList.add('is-winner'); face.parentElement.prepend(face); }
+        window.VotersCard.mark($('h24-votes')?.querySelector('.h24-vlist'), move, voter);
     },
 
     /** Mode bande : le total des votes du tour dans l'étiquette « Votes » (et plus en bas de la colonne de droite) */

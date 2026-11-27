@@ -587,7 +587,7 @@
         else if (endWin.tries < 3) setTimeout(renderVoters, 3000);
     }
     /** Partie terminée : qui a voté 1-0 / ½ / 0-1 (site + chat), le bon résultat et les pions gagnés */
-    function renderEndVoters(el, c, face, me) {
+    function renderEndVoters(el, c, me) {
         const result = PICKS.includes(c.g.result) ? c.g.result : c.g.result === '½-½' ? '1/2-1/2' : null;
         if (endWin.key !== c.key || !endWin.list) loadEndWinners(c);
         const site = endWin.key === c.key ? endWin.list || [] : [];
@@ -600,26 +600,17 @@
         el.dataset.sig = sig;
         el.querySelector('.tv-count').textContent = list.length ? String(list.length) : '';
         const label = p => p === '1/2-1/2' ? '½-½' : p;
-        const order = [...PICKS].sort((a, b) => (b === result) - (a === result));
-        const MAXF = 10;
-        const pawn = n => `<b class="tv-gain">+${n} <i class="fas fa-chess-pawn"></i></b>`;
-        const row = (p, i) => {
-            const gr = list.filter(v => v.pick === p).sort((a, b) => b.coins - a.coins);
-            const hit = result === p;
-            const coins = gr.reduce((s, v) => s + (v.coins || 0), 0);
-            const mine = gr.find(v => v.login === me);
-            const mark = !result ? '' : hit
-                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${coins ? pawn(mine?.coins || coins) : ''}</span>`
-                : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
-            const more = gr.length - MAXF;
-            const tip = v => `${v.name || v.login}${v.coins ? ` · +${v.coins} ♟` : ''}`;
-            return `<li class="tv-item tv-grp${mine ? ' is-me' : ''}${result ? (hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i};--p:${list.length ? Math.round(100 * gr.length / list.length) : 0}%" title="${esc(T('predict.' + PICK_KEY[p]))}">
-                <span class="tv-move">${esc(label(p))}</span>
-                <span class="tv-faces">${gr.slice(0, MAXF).map(v => face(v).replace(/title="[^"]*"/, `title="${esc(tip(v))}"`)).join('')}${more > 0 ? `<span class="tv-more">+${more}</span>` : ''}</span>
-                <span class="tv-n">${gr.length}</span>${mark}</li>`;
+        const rows = list.sort((a, b) => b.coins - a.coins).map(v => ({ login: v.login, name: v.name, pic: v.src === 'bot' ? null : picOf(v), src: v.src,
+            key: v.pick, label: label(v.pick), hit: v.pick === result, tip: `${v.name || v.login}${v.coins ? ` · +${v.coins} ♟` : ''}` }));
+        const keys = [...PICKS].sort((a, b) => (b === result) - (a === result)).map(p => ({ key: p, label: label(p), title: T('predict.' + PICK_KEY[p]) }));
+        const pawn = n => `+${n} <i class="fas fa-chess-pawn"></i>`;
+        const gain = g => {
+            const coins = g.list.reduce((s, v) => s + (list.find(x => x.login === v.login)?.coins || 0), 0);
+            const mine = list.find(x => x.login === me && x.pick === g.key);
+            return coins ? pawn(mine?.coins || coins) : '';
         };
         el.querySelector('.tv-body').innerHTML = `<p class="tp-hint tv-endhead"><i class="fas fa-trophy"></i> ${esc(T('predict.winnerTitle', null, 'Vainqueur'))}${result ? ` · <strong>${esc(label(result))}</strong>` : ''}</p>
-            ${list.length ? `<ul class="tv-list tv-groups is-flash">${order.map(row).join('')}</ul>`
+            ${list.length ? window.VotersCard.list(rows, { me, flash: !!result, gain, keys })
                 : `<p class="tp-hint">${esc(T('tlive.noVotes', null, 'Aucun vote'))}</p>`}`;
     }
     function renderVoters() {
@@ -628,55 +619,24 @@
         const c = current();
         el.hidden = !c;
         if (!c) return;
-        const me0 = window.twitchAuth?.user?.login?.toLowerCase();
-        if (c.ended && !(voters.flash?.key === c.key)) {
-            const face0 = v => {
-                if (v.src === 'bot') return `<span class="tv-pic is-bot" title=""><i class="fas fa-robot"></i></span>`;
-                const url = picOf(v);
-                return url ? `<img class="tv-pic" src="${esc(url)}" alt="" loading="lazy" title="">`
-                    : `<span class="tv-pic" title="">${esc(String(v.name || v.login || '?')[0].toUpperCase())}</span>`;
-            };
-            renderEndVoters(el, c, face0, me0);
-            return;
-        }
+        const me = window.twitchAuth?.user?.login?.toLowerCase();
+        if (c.ended && !(voters.flash?.key === c.key)) { renderEndVoters(el, c, me); return; }
         const flash = voters.flash?.key === c.key ? voters.flash : null;
         const list = flash ? flash.list : votersOf(c.key, c.fen);
-        const me = window.twitchAuth?.user?.login?.toLowerCase();
         const sig = JSON.stringify([flash?.at, c.ended, chatOn(), list.map(v => [v.login, v.uci, picOf(v)]), document.documentElement.lang]);
         if (el.dataset.sig === sig) return;
         el.dataset.sig = sig;
         el.querySelector('.tv-count').textContent = list.length ? String(list.length) : '';
-        const srcName = v => (v.name || v.login || '?') + (v.src === 'chat' ? ` · ${T('voters.chat', null, 'Chat Twitch')}` : v.src === 'bot' ? ` · ${T('voters.bot', null, 'Bot de test')}` : '');
-        const face = v => {
-            if (v.src === 'bot') return `<span class="tv-pic is-bot" title="${esc(srcName(v))}"><i class="fas fa-robot"></i></span>`;
-            const url = picOf(v);
-            return url ? `<img class="tv-pic" src="${esc(url)}" alt="" loading="lazy" title="${esc(srcName(v))}">`
-                : `<span class="tv-pic" title="${esc(srcName(v))}">${esc(String(v.name || v.login || '?')[0].toUpperCase())}</span>`;
-        };
-        // Votants regroupés par coup : une ligne par coup (part des votes, photos des votants, nombre) ;
-        // au coup joué, la ligne gagnante reçoit ✓ et le gain, les autres ✗
-        const groups = [...list.reduce((m, v) => {
-            const k = v.uci || v.san;
-            if (!m.has(k)) m.set(k, { san: v.san, list: [] });
-            m.get(k).list.push(v);
-            return m;
-        }, new Map()).values()].sort((a, b) => (flash ? (b.list[0].hit ? 1 : 0) - (a.list[0].hit ? 1 : 0) : 0) || b.list.length - a.list.length);
-        const MAXF = 10;
-        const row = (gr, i) => {
-            const hit = flash && gr.list[0].hit;
-            const gain = hit && gr.list.find(v => v.gain)?.gain;
-            const mark = !flash ? '' : hit
-                ? `<span class="tv-mark is-hit"><i class="fas fa-check"></i>${gain ? `<b class="tv-gain">+${gain} XP</b>` : ''}</span>`
-                : '<span class="tv-mark is-miss"><i class="fas fa-xmark"></i></span>';
-            const more = gr.list.length - MAXF;
-            return `<li class="tv-item tv-grp${gr.list.some(v => v.login === me) ? ' is-me' : ''}${flash ? (hit ? ' is-hit' : ' is-miss') : ''}" style="--i:${i};--p:${Math.round(100 * gr.list.length / list.length)}%">
-                <span class="tv-move">${esc(sanLocal(gr.san))}</span>
-                <span class="tv-faces">${gr.list.slice(0, MAXF).map(face).join('')}${more > 0 ? `<span class="tv-more">+${more}</span>` : ''}</span>
-                <span class="tv-n">${gr.list.length}</span>${mark}</li>`;
-        };
+        // Camp qui joue : celui de la position (au coup joué, celui qui vient de jouer)
+        const side = String(c.fen || '').split(' ')[1];
+        const turn = flash ? (side === 'w' ? 'b' : 'w') : side;
+        const rows = list.map(v => ({ login: v.login, name: v.name, pic: v.src === 'bot' ? null : picOf(v), src: v.src,
+            key: v.uci || v.san, label: sanLocal(v.san), san: v.san, hit: !!v.hit, gain: v.gain }));
+        // Votants regroupés par coup ; au coup joué, la ligne gagnante reçoit ✓ et le gain, les autres ✗
+        const gain = g => { const n = g.list.find(v => v.gain)?.gain; return n ? `+${n} XP` : ''; };
         el.querySelector('.tv-body').innerHTML = `
-            ${list.length ? `<ul class="tv-list tv-groups${flash ? ' is-flash' : ''}">${groups.map(row).join('')}</ul>`
-                : `<p class="tp-hint">${esc(c.ended ? T('predict.ended', null, 'Partie terminée') : T('voters.none', null, 'Pas encore de prono pour ce coup.'))}</p>`}
+            ${window.VotersCard.list(rows, { me, turn, flash: !!flash, gain,
+                empty: c.ended ? T('predict.ended', null, 'Partie terminée') : T('voters.none', null, 'Pas encore de prono pour ce coup.') })}
             ${!list.length && !flash && !c.ended && chatOn() ? `<p class="tp-hint">${esc(T('predict.chatHint', null, ''))}</p>` : ''}`;
     }
 
