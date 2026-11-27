@@ -868,6 +868,7 @@
     "liveShow": "Göster",
     "liveHide": "Daralt",
     "liveFloat": "Küçük pencere",
+    "fetchingGames": "Süren oyunlar alınıyor…",
     "liveOverlay": "Tahtanın üzerine yerleştir",
     "liveOpacity": "Video opaklığı",
     "pausePhantom": "Phantom…",

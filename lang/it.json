@@ -868,6 +868,7 @@
     "liveShow": "Mostra",
     "liveHide": "Riduci",
     "liveFloat": "Finestra piccola",
+    "fetchingGames": "Recupero delle partite in corso…",
     "liveOverlay": "Sovrapponi alla scacchiera",
     "liveOpacity": "Opacità del video",
     "pausePhantom": "Phantom…",

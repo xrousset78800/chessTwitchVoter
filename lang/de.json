@@ -868,6 +868,7 @@
     "liveShow": "Anzeigen",
     "liveHide": "Einklappen",
     "liveFloat": "Kleines Fenster",
+    "fetchingGames": "Laufende Partien werden geladen…",
     "liveOverlay": "Auf dem Brett einblenden",
     "liveOpacity": "Video-Deckkraft",
     "pausePhantom": "Phantom…",

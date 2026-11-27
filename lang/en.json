@@ -960,6 +960,7 @@
     "liveShow": "Show",
     "liveHide": "Fold",
     "liveFloat": "Small window",
+    "fetchingGames": "Fetching live games…",
     "liveOverlay": "Overlay on the board",
     "liveOpacity": "Video opacity",
     "pausePhantom": "Phantom…",

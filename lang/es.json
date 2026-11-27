@@ -868,6 +868,7 @@
     "liveShow": "Mostrar",
     "liveHide": "Plegar",
     "liveFloat": "Ventana pequeña",
+    "fetchingGames": "Recuperando las partidas en curso…",
     "liveOverlay": "Superponer en el tablero",
     "liveOpacity": "Opacidad del vídeo",
     "pausePhantom": "Phantom…",

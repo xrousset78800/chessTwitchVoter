@@ -143,6 +143,9 @@
 .h24-card[hidden], #h24-votes-panel[hidden] { display: none; }
 .h24-card__title { margin: 0; font-size: 1.15rem; }
 .h24-card__sub, .h24-card__total, .h24-card__next { margin: 0; color: var(--text-secondary); font-size: 0.85rem; }
+/* Vote du mode en attente des parties à suivre */
+.h24-card__fetching { display: flex; align-items: center; gap: 0.45em; }
+.h24-choices.is-loading { opacity: 0.45; pointer-events: none; }
 .h24-card__cta { justify-content: center; padding: 12px; font-size: 1rem; }
 .h24-card__ok { margin: 0; color: var(--accent); font-weight: 700; }
 

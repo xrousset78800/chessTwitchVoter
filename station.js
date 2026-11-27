@@ -385,7 +385,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             options: s.options,
             teams: s.teams,
             viewers: viewers(),
-            ballot: s.ballot && { id: s.ballot.id, choices: s.ballot.choices, games: s.ballot.games || null, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how,
+            ballot: s.ballot && { id: s.ballot.id, loading: !!s.ballot.loading, choices: s.ballot.choices, games: s.ballot.games || null, tally: tally(s.ballot.votes), total: s.ballot.votes.size, winner: s.ballot.winner, how: s.ballot.how,
                 recent: (s.ballot.recent || []).slice(-20).map(r => tickerItem(r, { c: r.c })), recentN: s.ballot.recentN || 0 },
             bots: botCount(),
             botList: botList(),
@@ -459,26 +459,40 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
         emit();
     }
 
-    function startModeVote(ready = false) {
-        // Pas encore de partie à suivre (serveur tout juste relancé, partie vedette Lichess finie…) : le récap
-        // patiente le temps de les relire (12 s au plus) pour que « Prédiction » soit là dès l'ouverture du vote
-        if (!ready && liveGames && !pred.cands.length && s.phase === 'recap' && Date.now() - (pred.heldAt || 0) > 60000) {
-            pred.heldAt = Date.now();
-            s.endsAt = Date.now() + 12000;
-            emit();
-            const cycle = s.cycle;
-            refreshCands().then(() => {
-                if (s.phase === 'recap' && s.cycle === cycle && !s.paused && pred.cands.length) startModeVote(true);
-            });
-            return;
-        }
+    function startModeVote() {
         s.recap = null;
         // Prédiction proposée seulement s'il y a des parties longues en direct
         s.ballot = { id: 'mode', choices: ENTRIES.filter(m => m !== 'predict' || pred.cands.length), def: 'classic', votes: new Map() };
         s.ballotQueue = [];
+        // Pas encore de partie à suivre (serveur tout juste relancé, partie vedette Lichess finie…) : on les relit
+        // avant d'ouvrir le vote (« Récupération des parties en cours… »), pour que toutes les options arrivent ensemble
+        if (liveGames && !pred.cands.length) {
+            setPhase('voteMode', null);
+            emitMeAll();
+            return waitCands();
+        }
         refreshCands();
         setPhase('voteMode', DUR.voteMode);
         emitMeAll();
+    }
+
+    /** Vote du mode en attente des parties à suivre : ouvert (chrono lancé) dès qu'elles sont là, 12 s au plus */
+    function waitCands() {
+        const b = s.ballot;
+        if (!b) return;
+        b.loading = true;
+        emit();
+        let done = false;
+        const finish = () => {
+            if (done || s.ballot !== b || s.phase !== 'voteMode' || b.winner != null) return;
+            done = true;
+            b.loading = false;
+            if (pred.cands.length && !b.choices.includes('predict')) b.choices = [...b.choices, 'predict'];
+            setPhase('voteMode', DUR.voteMode);
+            emitMeAll();
+        };
+        refreshCands().then(finish, finish);
+        setTimeout(finish, 12000).unref?.();
     }
 
     /** Ferme le vote en cours ; forced = choix imposé par la régie (clic sur une option) */
@@ -874,7 +888,8 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
             }
         }).catch(() => {});
     }
-    refreshCands();
+    // Démarrage : le premier vote du mode attend lui aussi les parties à suivre
+    if (liveGames) { s.endsAt = null; waitCands(); } else refreshCands();
     // Liste tenue à jour en continu (sinon vide ou périmée au vote du mode, et « Prédiction » arrive en retard) ;
     // les sources sont en cache (30 s chess.com, 60 s Lichess TV) : relire souvent ne coûte presque rien
     setInterval(refreshCands, 30 * 1000).unref?.();
@@ -1295,7 +1310,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     }
     function voteBallot(login, choice, via) {
         const b = s.ballot;
-        if (!b || b.winner !== undefined || !LOGIN_RE.test(login || '')) return false;
+        if (!b || b.loading || b.winner !== undefined || !LOGIN_RE.test(login || '')) return false;
         const c = b.choices.find(x => String(x) === String(choice));
         if (c === undefined) return false;
         b.votes.set(login, c);
@@ -1349,7 +1364,7 @@ module.exports = function station({ io, verifyTwitchToken, dataDir, log = consol
     function botSituation() {
         const g = s.game;
         if (s.phase === 'signup') return { key: `signup:${s.cycle}`, until: s.endsAt };
-        if ((s.phase === 'voteMode' || s.phase === 'voteOptions') && s.ballot) return { key: `ballot:${s.cycle}:${s.ballot.id}`, until: s.endsAt };
+        if ((s.phase === 'voteMode' || s.phase === 'voteOptions') && s.ballot && !s.ballot.loading) return { key: `ballot:${s.cycle}:${s.ballot.id}`, until: s.endsAt };
         if (s.phase === 'play' && g?.predict && !g.result) return { key: `pmove:${s.cycle}:${g.history.length}`, until: Date.now() + 20000 };
         if (s.phase === 'play' && g?.turnEndsAt && !g.draw && !g.result) {
             return { key: `move:${s.cycle}:${g.puzzleIndex || 0}:${g.history.length}`, until: g.turnEndsAt };

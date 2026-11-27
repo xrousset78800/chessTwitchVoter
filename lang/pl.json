@@ -868,6 +868,7 @@
     "liveShow": "Pokaż",
     "liveHide": "Zwiń",
     "liveFloat": "Małe okno",
+    "fetchingGames": "Pobieranie trwających partii…",
     "liveOverlay": "Nałóż na szachownicę",
     "liveOpacity": "Krycie wideo",
     "pausePhantom": "Phantom…",

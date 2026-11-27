@@ -868,6 +868,7 @@
     "liveShow": "Показать",
     "liveHide": "Свернуть",
     "liveFloat": "Маленькое окно",
+    "fetchingGames": "Загружаем текущие партии…",
     "liveOverlay": "Наложить на доску",
     "liveOpacity": "Прозрачность видео",
     "pausePhantom": "Phantom…",

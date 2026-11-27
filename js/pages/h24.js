@@ -1132,6 +1132,7 @@ const H24Page = {
         const b = s.ballot;
         if (s.paused) return [s.pauseReason === 'phantom' ? t('h24.pausePhantom', null, 'Phantom…') : t('timerRing.paused', null, 'pause'), false];
         if ((s.phase === 'voteMode' || s.phase === 'voteOptions') && b) {
+            if (b.loading) return [t('h24.fetchingGames', null, 'Récupération des parties en cours…'), false];
             if (b.winner != null) return [t('h24.guideDecided', { choice: choiceLabel(b.id, b.winner) }, `Choix retenu : ${choiceLabel(b.id, b.winner)}`), false];
             if (this.me.ballot != null) return [t('h24.yourVote', { move: choiceLabel(b.id, this.me.ballot) }, `Ton vote : ${choiceLabel(b.id, this.me.ballot)}`), false];
             if (this.me.login) return [t('h24.guideClickOption', null, 'Choisis une option'), true];
@@ -1854,7 +1855,7 @@ const H24Page = {
             const counts = Object.fromEntries((b.tally || []).map(x => [x.k, x.n]));
             const mine = this.me.ballot;
             const decided = b.winner !== undefined && b.winner !== null;
-            const canVote = !!this.me.login && !decided;
+            const canVote = !!this.me.login && !decided && !b.loading;
             if (b.id === 'game' && b.games) {
                 ballotGames = b.games;
                 this.loadFidePics(Object.values(b.games).flatMap(x => [x.white?.fide, x.black?.fide]));
@@ -1877,6 +1878,12 @@ const H24Page = {
                 return `${clock}${gauge}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
                     <div class="h24-choices${listCls} is-decided">${buttons}</div>${votes}
                     <p class="h24-card__total">${esc(t('h24.ballotTotal', { n: b.total }, `${b.total} vote(s)`))}${how ? ' · ' + esc(how) : ''}</p>${next}`;
+            }
+            // Parties à suivre en cours de lecture : options grisées, le vote (et son chrono) s'ouvre juste après
+            if (b.loading) {
+                return `${clock}${gauge}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
+                <p class="h24-card__sub h24-card__fetching"><i class="fas fa-circle-notch fa-spin"></i> ${esc(t('h24.fetchingGames', null, 'Récupération des parties en cours…'))}</p>
+                <div class="h24-choices${listCls} is-loading">${buttons}</div>`;
             }
             return `${clock}${gauge}<h2 class="h24-card__title">${esc(t(`h24.ballot.${b.id}`, null, b.id))}</h2>
                 <div class="h24-choices${listCls}">${buttons}</div>${votes}

@@ -960,6 +960,7 @@
     "liveShow": "Afficher",
     "liveHide": "Replier",
     "liveFloat": "Petite fenêtre",
+    "fetchingGames": "Récupération des parties en cours…",
     "liveOverlay": "Incruster sur l'échiquier",
     "liveOpacity": "Opacité de la vidéo",
     "pausePhantom": "Phantom…",
