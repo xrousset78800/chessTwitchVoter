@@ -223,9 +223,10 @@ class PhantomChessboard {
         try {
             // Exécuter le mouvement et attendre BLE_MOVE_DONE
             const isMove = this.lastFenSent !== null;   // sinon mise en place complète (GAME_START)
-            await this.syncPositionAndWait(fen);
+            const r = await this.syncPositionAndWait(fen);
             if (isMove) this.movesSinceCal++;
-            this.log('✅ Mouvement terminé', 'success');
+            if (r === 'timeout') this.log("⏭️ Pas de confirmation de l'échiquier : on passe à la suite", 'warn');
+            else this.log('✅ Mouvement terminé', 'success');
         } catch (error) {
             this.log(`❌ Erreur mouvement: ${error.message}`, 'error');
         }
@@ -261,14 +262,17 @@ class PhantomChessboard {
             // Créer une promesse qui sera résolue par handleGameNotification
             this.moveDoneResolver = resolve;
 
-            // Timeout de sécurité
-            // Mise en place complète (nouvelle partie, après réparation) : bien plus long qu'un coup
-            const timeoutMs = this.lastFenSent === null ? 120000 : this.MOVE_TIMEOUT_MS;
-            this.moveTimeout = setTimeout(() => {
-                this.log(`⚠️ Timeout mouvement (${timeoutMs / 1000}s)`, 'warn');
+            // Délai de sécurité, compté depuis le dernier signal de l'échiquier (relancé par bumpMoveTimeout) :
+            // une mise en place complète (nouvelle partie, rangement, après réparation) peut durer plusieurs minutes
+            const timeoutMs = this.lastFenSent === null ? 360000 : this.MOVE_TIMEOUT_MS;
+            this.moveTimeoutMs = timeoutMs;
+            this.moveTimeoutFire = () => {
+                this.log(`⚠️ Timeout mouvement (${timeoutMs / 1000}s sans nouvelles de l'échiquier)`, 'warn');
+                this.moveTimeout = null;
                 this.moveDoneResolver = null;
-                resolve(); // On continue quand même
-            }, timeoutMs);
+                resolve('timeout'); // On continue quand même
+            };
+            this.moveTimeout = setTimeout(this.moveTimeoutFire, timeoutMs);
 
             try {
                 // Convertir FEN en matrice 10x10
@@ -299,6 +303,13 @@ class PhantomChessboard {
                 reject(error);
             }
         });
+    }
+
+    /** L'échiquier a donné signe de vie pendant un mouvement : le délai de sécurité repart de zéro */
+    bumpMoveTimeout() {
+        if (!this.moveTimeout || !this.moveDoneResolver || !this.moveTimeoutFire) return;
+        clearTimeout(this.moveTimeout);
+        this.moveTimeout = setTimeout(this.moveTimeoutFire, this.moveTimeoutMs);
     }
 
     // ========== CONVERSION FEN → MATRICE 10x10 ==========
@@ -435,6 +446,7 @@ class PhantomChessboard {
                     const state = new TextDecoder().decode(e.target.value);
                     if (state === this.boardState) return;
                     this.boardState = state;
+                    this.bumpMoveTimeout();
                     this.log(`📊 État: ${state}`, 'received');
                     this.watchWaitingSide(state);
                 };
@@ -491,6 +503,7 @@ class PhantomChessboard {
             const opCode = bytes[0];
             const opName = this.OP_CODE_NAMES[opCode] || `0x${opCode.toString(16)}`;
             const dataStr = strValue.substring(1);
+            if (opCode !== this.OP_CODES.BLE_MOVE_DONE) this.bumpMoveTimeout();
 
             // Erreur de l'échiquier : texte complet (une fois par message, puis un compteur)
             if (opCode === this.OP_CODES.ERROR_MSG) {
